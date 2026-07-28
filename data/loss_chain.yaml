@@ -182,6 +182,78 @@ stages:
         confidence: estimate
         source: project-estimate-unsourced
 
+  - slug: retail_shrink
+    domain: poultry
+    label: Supermarket shrink
+    sequence: 72
+    phase: retail
+    applies_to: product
+    optional: 1
+    default_enabled: 0
+    description: >-
+      Wings a grocery store took delivery of but never sold: spoilage,
+      sell-by expiry, damage, and trim at the meat counter.
+    notes: >-
+      OFF by default because it is CHANNEL-SPECIFIC, not universal. A
+      restaurant wing moves through foodservice distribution and never sees
+      a supermarket, so applying this on top of kitchen_loss would double
+      count. Enable it for the grocery path - someone buying a tray of wings
+      to cook at home - and leave it off for the restaurant path.
+
+      Worth noting how good this number is. ERS used to assume a flat 7%
+      retail loss for every meat and poultry category. This study replaced
+      that assumption with measured supermarket scanner data, and chicken
+      came in at 4.0% - not quite half the old guess.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.958
+        survive_mode: 0.960
+        survive_hi: 0.963
+        confidence: measured
+        source: ers-supermarket-loss
+        notes: >-
+          ERS EIB-44 Table 5: chicken supermarket loss 3.7% in 2005 and 4.2%
+          in 2006, a 4.0% two-year average. Narrow band because both years
+          were measured directly rather than assumed. For comparison the
+          same table puts beef at 4.3%, pork at 4.4%, turkey at 3.5%, and
+          veal - the worst - at 25.4%.
+
+  - slug: kitchen_loss
+    domain: poultry
+    label: Restaurant pre-consumer loss
+    sequence: 75
+    phase: kitchen
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Wings the kitchen bought but never served: spoilage, freezer burn,
+      over-ordering, overproduction, dropped or mis-cooked product.
+    notes: >-
+      These wings still cost chickens. To put twelve wings in front of you,
+      the kitchen had to take delivery of more than twelve - so this stage
+      genuinely raises the birds-required number, and at roughly 4% it is
+      comparable in size to wing damage back at the plant.
+
+      Deliberately EXCLUDES post-consumer plate waste, which is about 70% of
+      all foodservice waste. If you are served twelve wings and leave three,
+      twelve wings still reached your plate. Our question stops at the plate,
+      so plate waste cannot change the answer. See the plate_waste stage
+      below for the version of the question where it does.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.900
+        survive_mode: 0.958
+        survive_hi: 0.970
+        confidence: industry
+        source: refed-foodservice
+        notes: >-
+          Mode from the ~4.2% of purchases unutilised in commercial kitchens;
+          band spans ReFED's 4-10% pre-consumer range, corroborated by EPA's
+          4-13%-of-food-cost figure and 1-6% spoilage range.
+
   - slug: cook_loss
     domain: poultry
     label: Cook loss
@@ -204,3 +276,36 @@ stages:
         survive_hi: 0.850
         confidence: estimate
         source: project-estimate-unsourced
+
+  - slug: plate_waste
+    domain: poultry
+    label: Post-consumer plate waste
+    sequence: 90
+    phase: kitchen
+    applies_to: product
+    optional: 1
+    default_enabled: 0
+    description: Wings served to the customer but left uneaten.
+    notes: >-
+      OFF by default, and the reasoning matters. If you are served twelve
+      wings and eat nine, twelve wings still reached your plate - so this
+      cannot change "how many chickens for the wings on my plate".
+
+      Turn it on and the question becomes "how many chickens for the wings I
+      actually ATE", which is legitimate but different. Plate waste is the
+      largest single category in foodservice at roughly 70% of all waste, so
+      enabling it moves the answer a lot. Keeping the two questions apart is
+      the entire point of the toggle.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.700
+        survive_mode: 0.850
+        survive_hi: 0.950
+        confidence: estimate
+        source: refed-foodservice
+        notes: >-
+          ReFED attributes ~70% of foodservice waste to post-consumer plate
+          waste, driven largely by oversized portions, but gives no clean
+          per-item uneaten fraction. This band is our estimate and is the
+          weakest number in the model.

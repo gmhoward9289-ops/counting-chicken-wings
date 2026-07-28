@@ -89,6 +89,76 @@
   source_type: trade_press
   notes: Producer market shares and processing volumes.
 
+- slug: ers-supermarket-loss
+  title: >-
+    Supermarket Loss Estimates for Fresh Fruit, Vegetables, Meat, Poultry,
+    and Seafood and Their Use in the ERS Loss-Adjusted Food Availability Data
+  publisher: USDA Economic Research Service (EIB-44)
+  url: https://www.ers.usda.gov/publications/44309
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Retail-level shrink. ERS previously assumed a flat 7% retail loss for
+    every meat, poultry, and seafood category; this study replaced that with
+    measured supermarket estimates, cutting loss-adjusted fresh meat,
+    poultry, and seafood availability by 7.3% for 2012.
+
+- slug: refed-foodservice
+  title: Foodservice methodology, Insights Engine Food Waste Monitor
+  publisher: ReFED
+  url: https://docs.refed.org/methodologies/food_waste_monitor/foodservice.html
+  retrieved_on: '2026-07-28'
+  source_type: trade_body
+  notes: >-
+    Restaurants and foodservice generated 12.5 million tons of surplus food
+    in 2024. Pre-consumer waste - spoilage, over-ordering, overproduction -
+    runs 4% to 10% of food purchased. Separately, roughly 4.2% of food
+    purchases go unutilised in commercial kitchens on average across
+    Leanpath's client base. Post-consumer plate waste is about 70% of total
+    foodservice waste but is deliberately EXCLUDED from this model: those
+    wings reached the plate, which is where our question stops.
+
+- slug: epa-foodservice-waste
+  title: Food waste reduction in commercial kitchens (Winnow, EPA materials)
+  publisher: US Environmental Protection Agency
+  url: https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Food waste typically runs 4% to 13% of food costs in commercial
+    kitchens. Spoilage specifically ranges 1-5% in prepare-ahead operations
+    and 1-6% in cook-to-order operations. Corroborates the ReFED band.
+
+- slug: cold-chain-refrigeration-losses
+  title: >-
+    The impact of refrigeration on food losses and associated greenhouse gas
+    emissions throughout the supply chain
+  publisher: Environmental Research Letters (IOP)
+  url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    Models food loss across 10 supply chain stages and finds improved
+    refrigeration cuts losses 26-63% for meat, milk, and produce. IMPORTANTLY
+    it does NOT break out a transport-stage loss rate, and the authors state
+    that underlying food loss rate data "remain uncertain". Cited here as
+    evidence that a clean transit figure does not exist, not as a source for
+    one. For meat the paper finds post-harvest handling and storage, not
+    transport, is where refrigeration matters most.
+
+- slug: cold-chain-transport-trade
+  title: Overcoming challenges in refrigerated transport
+  publisher: The National Provisioner
+  url: https://www.provisioneronline.com/articles/116667-overcoming-challenges-in-refrigerated-transport
+  retrieved_on: '2026-07-28'
+  source_type: trade_press
+  notes: >-
+    Qualitative. Identifies the loss mechanisms for meat in transit -
+    temperature excursion triggering load rejection at the receiving dock,
+    physical damage, and mishandling - and notes temperature abuse during
+    LOADING causes more rejected shipments than transit failures. No
+    quantified rejection rate is given, in this or any source found.
+
 - slug: derived-dressing-yield
   title: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings
