@@ -165,14 +165,20 @@ stages:
 
   - slug: distribution_shrink
     domain: poultry
-    label: Distribution shrink
+    label: Distribution shrink (mass)
     sequence: 70
     phase: distribution
     applies_to: mass
     optional: 0
     default_enabled: 1
-    description: Freezer burn, drip loss, and damage in transit and storage.
-    notes: UNSOURCED PLACEHOLDER. Mass only.
+    description: >-
+      Freezer burn, sublimation, and drip loss in cold storage and transit.
+    notes: >-
+      Mass only. A freezer-burned wing is a lighter wing, not a missing one,
+      so this cannot move a count answer. The count-affecting half of
+      in-transit loss lives in transit_rejection below - they were originally
+      one stage, which was wrong, because it silently prevented any transit
+      loss from reaching the count.
     factors:
       - species: broiler
         product: whole_wing
@@ -181,6 +187,41 @@ stages:
         survive_hi: 1.000
         confidence: estimate
         source: project-estimate-unsourced
+
+  - slug: transit_rejection
+    domain: poultry
+    label: In-transit loss and load rejection
+    sequence: 71
+    phase: distribution
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Whole cases lost between plant and kitchen: loads rejected at the
+      receiving dock for temperature excursion, plus crushed, punctured, and
+      mishandled cases.
+    notes: >-
+      UNSOURCED. This loss is real - the trade literature is unambiguous that
+      temperature excursions trigger immediate load rejection, and that
+      loading is a bigger culprit than transit itself - but no citable US
+      figure for FROZEN poultry exists in anything we searched. The
+      peer-reviewed cold-chain modelling declines to break transport out as
+      a stage at all.
+
+      The band is set low and deliberately wide for a specific reason:
+      wings ship IQF FROZEN, and essentially the entire cold-chain loss
+      literature concerns fresh or chilled product. Frozen product tolerates
+      transit far better, so borrowing a fresh-meat loss rate here would
+      overstate it badly. Treat 1% as a placeholder that wants replacing with
+      a real number.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.985
+        survive_mode: 0.990
+        survive_hi: 0.998
+        confidence: estimate
+        source: cold-chain-transport-trade
 
   - slug: retail_shrink
     domain: poultry
