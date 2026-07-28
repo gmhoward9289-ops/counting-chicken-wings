@@ -148,6 +148,33 @@ facts:
     placement: learning
     surprise: 3
 
+  - slug: line-speed-and-broken-wings
+    headline: Some plants run 175 birds a minute, others 140
+    body: >-
+      Plants under the New Poultry Inspection System may run 175 birds per
+      minute; everyone else is capped at 140. That matters for wings
+      specifically, because the damage that breaks them happens at
+      shackling, and comment records tie faster lines to birds being hung
+      improperly. Regulators counter that fast plants meet food safety
+      standards - which is true, and a different question. Salmonella
+      performance tells you nothing about how many wings got broken.
+    source: fsis-line-speed-rule
+    placement: learning
+    surprise: 4
+
+  - slug: chilling-changes-weight-not-count
+    headline: How a plant chills its birds swings wing weight by 10%
+    body: >-
+      Air chilling makes a carcass LOSE about 2.5-2.8% of its weight.
+      Immersion chilling makes it GAIN 4% and sometimes over 9%. That gap is
+      larger than any loss in this entire model - and it cannot change the
+      answer by a fraction, because chilling changes what a wing weighs, not
+      how many wings a chicken has. Buy wings by the pound and it matters
+      enormously. Order a dozen and it does not matter at all.
+    source: chilling-method-yield
+    placement: both
+    surprise: 5
+
   - slug: chunks-are-breast-too
     headline: The "chunks" are not wing either
     body: >-

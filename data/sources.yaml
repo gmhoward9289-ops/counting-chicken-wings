@@ -312,6 +312,46 @@
     "chunks" contain no wing meat either, and the phrase "with rib meat" is
     a breast-yield allowance rather than a different cut sneaking in.
 
+- slug: fsis-line-speed-rule
+  title: >-
+    Maximum Line Speed Rates for Young Chicken and Turkey Establishments
+    Operating Under the New Poultry Inspection System
+  publisher: USDA Food Safety and Inspection Service / Federal Register
+  url: https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
+  published_on: '2026-02-19'
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Plants under the New Poultry Inspection System may run 175 birds per
+    minute; everyone else is capped at 140. 47 plants held waivers as of
+    2018. FSIS proposed formalising 175 bpm in February 2026.
+
+    Directly relevant to wing damage: comment records attribute improperly
+    hung shackles, insufficient bleeding, and scalding of live birds to
+    faster lines - shackling being the exact mechanism behind broken wings.
+    FSIS counters that waiver plants meet or exceed food safety standards.
+    Note that food safety and carcass DAMAGE are different questions; the
+    FSIS defence addresses the former, not the latter.
+
+- slug: chilling-method-yield
+  title: >-
+    Moisture retention by water- and air-chilled broilers, and effect of
+    immersion or dry air chilling on carcass moisture retention
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S105661711931205X
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    Air chilling LOSES 2.5-2.84% of prechill weight; immersion chilling
+    GAINS 4.14% in one study and 9.3% in another, with a range of 3.4-14.7%.
+    Overall carcass yield: immersion +6.5%, combination inline air +1.98%,
+    air chill -1.10%.
+
+    This is a MASS effect only. Chilling method changes what a wing weighs
+    by up to a tenth; it cannot change how many wings a chicken has. It
+    therefore belongs in the mass stages and can never move a count answer -
+    but it matters a great deal to anyone buying wings by the pound.
+
 - slug: derived-dressing-yield
   title: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings

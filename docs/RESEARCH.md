@@ -383,7 +383,60 @@ changes the grower-pay figure structurally, not just numerically.
 
 ---
 
-## 11. Open research items
+## 11. Producer and processing differences
+
+Two mechanisms genuinely differ between plants, and they affect *different*
+halves of the model. Both are documented; neither yet has per-producer numbers,
+because that needs plant-level data we do not have.
+
+### Line speed — affects the COUNT
+
+Source: [FSIS maximum line speed rule](https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken)
+
+| Regime | Speed |
+|---|---:|
+| New Poultry Inspection System (NPIS) | **175 birds/min** |
+| Everyone else | **140 birds/min** |
+
+47 plants held waivers as of 2018; FSIS proposed formalising 175 bpm in February
+2026. Comment records attribute improperly hung shackles, insufficient bleeding,
+and scalding of live birds to faster lines — and **shackling is the exact
+mechanism behind broken wings**. A 25% faster line plausibly means more shackling
+errors, which means more wing damage, which raises birds-required.
+
+FSIS's defence is that waiver plants meet or exceed *food safety* standards.
+That is a real finding but a different question: Salmonella performance says
+nothing about how many wings got broken. Worth being precise about, because the
+two are routinely conflated in the public argument.
+
+**Not yet modelled.** We would need per-plant line speed joined to per-plant
+damage rates. The FSIS establishment directory gives the former; nobody publishes
+the latter.
+
+### Chilling method — affects MASS only
+
+Source: [Poultry Science, chilling method and moisture retention](https://www.sciencedirect.com/science/article/pii/S105661711931205X)
+
+| Method | Weight change |
+|---|---:|
+| Air chill | **−2.5% to −2.84%** |
+| Immersion chill | **+4.14%**, up to **+9.3%** (range 3.4–14.7%) |
+
+Overall carcass yield: immersion **+6.5%**, combination inline air **+1.98%**,
+air chill **−1.10%**.
+
+That is a swing of roughly 10 percentage points between the two methods — larger
+than any loss factor in the entire model. And yet **it cannot move the count by
+even a fraction**. Chilling changes what a wing weighs, not how many wings a
+chicken has.
+
+This is the cleanest illustration in the project of why `applies_to` exists. A
+consumer buying wings **by the pound** is materially affected by chilling method;
+a consumer ordering **a dozen wings** is not affected at all.
+
+---
+
+## 12. Open research items
 
 - [ ] FSIS establishment numbers and plant-level bird size programs
 - [ ] **Producer-level processing differences** — Tyson vs Pilgrim's vs
