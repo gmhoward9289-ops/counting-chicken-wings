@@ -216,6 +216,16 @@ stages:
       a real number.
     factors:
       - species: broiler
+        product: boneless_wing
+        survive_lo: 0.980
+        survive_mode: 0.995
+        survive_hi: 0.999
+        confidence: estimate
+        source: project-estimate-unsourced
+        notes: >-
+          Same unsourced band as bone-in; boneless ships frozen in the same
+          cold chain.
+      - species: broiler
         product: whole_wing
         survive_lo: 0.985
         survive_mode: 0.990
@@ -283,6 +293,16 @@ stages:
       so plate waste cannot change the answer. See the plate_waste stage
       below for the version of the question where it does.
     factors:
+      - species: broiler
+        product: boneless_wing
+        survive_lo: 0.900
+        survive_mode: 0.958
+        survive_hi: 0.970
+        confidence: industry
+        source: refed-foodservice
+        notes: >-
+          Same ReFED kitchen-loss band as bone-in. Spoilage and
+          overproduction do not care whether the item has a bone in it.
       - species: broiler
         product: whole_wing
         survive_lo: 0.900

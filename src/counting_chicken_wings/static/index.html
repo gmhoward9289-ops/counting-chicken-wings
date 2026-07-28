@@ -124,6 +124,7 @@
 
 <nav>
   <button class="on" data-v="calc">Calculator</button>
+  <button data-v="sci">Scientific</button>
   <button data-v="mix">Mixing simulator</button>
   <button data-v="states">By state</button>
   <button data-v="trends">Trends</button>
@@ -173,6 +174,106 @@
   </div>
 
   <div class="panel" id="resultfact"></div>
+</section>
+
+<!-- ------------------------------------------------ scientific -->
+<section class="view" id="v-sci">
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label>Wings</label>
+        <input type="number" id="s-count" value="12" min="1" step="1">
+      </div>
+      <div>
+        <label>Supply chain</label>
+        <select id="s-chain"></select>
+      </div>
+      <div>
+        <label>Confidence interval</label>
+        <select id="s-ci">
+          <option value="0.50">50%</option>
+          <option value="0.80">80%</option>
+          <option value="0.90" selected>90%</option>
+          <option value="0.95">95%</option>
+          <option value="0.99">99%</option>
+        </select>
+      </div>
+      <div>
+        <label>Minimum evidence grade</label>
+        <select id="s-conf">
+          <option value="">Use everything</option>
+          <option value="industry">Industry or better</option>
+          <option value="study">Study or better</option>
+          <option value="derived">Derived or better</option>
+          <option value="measured">Measured only</option>
+        </select>
+      </div>
+      <div>
+        <label>Iterations</label>
+        <select id="s-iter">
+          <option value="2000">2,000</option>
+          <option value="20000" selected>20,000</option>
+          <option value="100000">100,000</option>
+        </select>
+      </div>
+    </div>
+    <p class="note" style="margin-top:14px">
+      The interval is a percentile band over the Monte Carlo draws — both the
+      loss factors and the mixing pool sizes are resampled from their recorded
+      lo/mode/hi. The evidence filter drops loss stages weaker than the grade
+      you pick, which shows how much of the answer depends on figures we could
+      not source.
+    </p>
+    <div id="s-excluded"></div>
+  </div>
+
+  <div class="panel">
+    <div class="grid2">
+      <div style="text-align:center;padding:10px 0">
+        <div class="big" id="s-req">—</div>
+        <div class="note">chickens required</div>
+        <div class="note" id="s-req-ci" style="margin-top:6px"></div>
+      </div>
+      <div style="text-align:center;padding:10px 0">
+        <div class="big" id="s-dist">—</div>
+        <div class="note">distinct chickens on the plate</div>
+        <div class="note" id="s-dist-ci" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Where the uncertainty comes from</h3>
+    <p class="muted">
+      Each bar swings one stage across its own lo/hi with every other stage
+      held at its mode. The longest bar is where more research would pay off
+      most. Mass-only stages register zero — they cannot move a count however
+      uncertain they are.
+    </p>
+    <div id="s-tornado" style="height:340px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Distribution of the answer</h3>
+    <div id="s-hist" style="height:320px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>How the floor becomes the requirement</h3>
+    <p class="muted">
+      Every count-affecting stage, in order, compounding on the one before it.
+    </p>
+    <div id="s-waterfall" style="height:320px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Evidence behind the count</h3>
+    <p class="muted">
+      Counting only stages that can move the count. Mass-only stages are
+      excluded because their evidence quality is irrelevant to this answer.
+    </p>
+    <div id="s-evidence" style="height:230px"></div>
+  </div>
 </section>
 
 <!-- ------------------------------------------------ mixing -->

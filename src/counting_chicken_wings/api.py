@@ -14,7 +14,13 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import db as dbm
-from .model import expected_distinct, run
+from .model import (
+    CONFIDENCE_RANK,
+    expected_distinct,
+    meets_confidence,
+    run,
+    sensitivity,
+)
 
 STATIC = Path(__file__).parent / "static"
 
@@ -126,6 +132,141 @@ def calculate(
             ],
             "mixing_notes": res.mixing_notes,
             "sources": sources,
+        }
+    finally:
+        conn.close()
+
+
+def _histogram(values: list[float], bins: int = 40) -> dict:
+    """Bin samples for a chart. Returned as counts plus bin centres."""
+    if not values:
+        return {"centres": [], "counts": [], "width": 0.0}
+    lo, hi = values[0], values[-1]
+    if hi <= lo:
+        return {"centres": [lo], "counts": [len(values)], "width": 0.0}
+    width = (hi - lo) / bins
+    counts = [0] * bins
+    for v in values:
+        i = min(bins - 1, int((v - lo) / width))
+        counts[i] += 1
+    centres = [lo + width * (i + 0.5) for i in range(bins)]
+    return {"centres": centres, "counts": counts, "width": width}
+
+
+@app.get("/api/scientific")
+def scientific(
+    count: float = Query(12, gt=0, le=100000),
+    product: str = "whole_wing",
+    chain: str | None = None,
+    pieces: bool = False,
+    include_mortality: bool = False,
+    iterations: int = Query(20000, ge=100, le=200000),
+    confidence_level: float = Query(0.90, gt=0.0, lt=1.0),
+    min_confidence: str | None = None,
+    seed: int | None = 12345,
+):
+    """Full uncertainty analysis: Monte Carlo, tornado, and evidence mix.
+
+    `confidence_level` sets the reported interval width. `min_confidence`
+    drops loss stages weaker than the given evidence grade, so you can see
+    how much of the answer depends on figures we could not source.
+    """
+    if min_confidence and min_confidence not in CONFIDENCE_RANK:
+        raise HTTPException(
+            422, f"min_confidence must be one of {list(CONFIDENCE_RANK)}"
+        )
+
+    conn = dbm.connect()
+    try:
+        try:
+            prod = dbm.get_product(conn, product)
+        except KeyError:
+            raise HTTPException(404, f"unknown product: {product}")
+
+        units = count
+        if pieces:
+            seg = conn.execute(
+                """SELECT COUNT(*) FROM product_segment
+                   WHERE product_id = ? AND sold_as_product = 1""",
+                (prod["id"],),
+            ).fetchone()[0] or 1
+            units = count / seg
+
+        chain = chain or dbm.default_supply_chain(conn)
+        upi = prod["units_per_individual_mode"]
+        loss = dbm.load_loss_stages(
+            conn, prod["species_slug"], prod["slug"],
+            include_optional=include_mortality,
+        )
+        mixing = dbm.load_mixing_stages(conn, chain)
+
+        res = run(
+            units_requested=units, units_per_individual=upi,
+            loss_stages=loss, mixing_stages=mixing,
+            iterations=iterations, seed=seed,
+            confidence_level=confidence_level,
+            min_confidence=min_confidence, keep_samples=True,
+        )
+
+        kept = [s for s in loss
+                if meets_confidence(s.confidence, min_confidence)]
+        tornado = sensitivity(units, upi, kept)
+
+        # How much of the answer rests on each evidence grade. Counted over
+        # stages that can actually move the count -- mass-only stages are
+        # excluded because their evidence quality is irrelevant to it.
+        mix: dict[str, int] = {}
+        for s in kept:
+            if s.applies_to in ("individual", "product"):
+                mix[s.confidence] = mix.get(s.confidence, 0) + 1
+
+        # Waterfall: floor, then each count-affecting stage's contribution.
+        waterfall, running = [], res.floor
+        for s in sorted(kept, key=lambda x: x.sequence):
+            if s.applies_to not in ("individual", "product"):
+                continue
+            after = running / s.survive_mode
+            waterfall.append({
+                "label": s.label, "slug": s.slug,
+                "from": running, "to": after, "delta": after - running,
+                "confidence": s.confidence,
+            })
+            running = after
+
+        return {
+            "question": {
+                "count": count, "units": units, "chain": chain,
+                "product": prod["label"],
+                "individual_plural": prod["individual_plural"],
+                "iterations": iterations,
+                "confidence_level": confidence_level,
+                "min_confidence": min_confidence,
+                "seed": seed,
+            },
+            "answer": {
+                "floor": res.floor,
+                "ceiling": units,
+                "required": res.required,
+                "required_lo": res.required_lo,
+                "required_hi": res.required_hi,
+                "distinct": res.distinct_mean,
+                "distinct_lo": res.distinct_lo,
+                "distinct_hi": res.distinct_hi,
+                "excluded_stages": res.excluded_stages,
+            },
+            "required_hist": _histogram(res.required_samples),
+            "distinct_hist": _histogram(res.distinct_samples),
+            "tornado": [
+                {
+                    "slug": t.slug, "label": t.label,
+                    "applies_to": t.applies_to, "confidence": t.confidence,
+                    "low": t.low_result, "high": t.high_result,
+                    "swing": t.swing, "share": t.share,
+                }
+                for t in tornado
+            ],
+            "waterfall": waterfall,
+            "evidence_mix": mix,
         }
     finally:
         conn.close()

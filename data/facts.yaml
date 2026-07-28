@@ -147,3 +147,76 @@ facts:
     source: project-estimate-unsourced
     placement: learning
     surprise: 3
+
+  - slug: boneless-wings-contain-no-wing
+    headline: A boneless wing contains no wing
+    body: >-
+      It is breast meat, cut into chunks and breaded. Tyson's own foodservice
+      catalogue files the product under "boneless wings & chunks" and
+      describes it as whole muscle chicken breast - the industry is not
+      hiding this, the name just does not mean what it says. The honest
+      count of wings in a dozen boneless wings is zero.
+    source: tyson-foodservice-boneless
+    placement: both
+    surprise: 5
+
+  - slug: boneless-takes-a-third-of-a-chicken
+    headline: A dozen boneless wings takes about a third of a chicken
+    body: >-
+      A 6.62 lb broiler carries roughly 691 g of boneless breast, and a
+      commercial boneless wing is about 20 g of raw breast meat - so one bird
+      makes around 34 of them. Twelve pieces is therefore about 0.35 of a
+      chicken. A dozen bone-in wings needs six whole chickens. Same menu
+      section, same price bracket, and roughly a seventeenfold difference in
+      how many birds it took.
+    source: tyson-foodservice-boneless
+    placement: both
+    surprise: 5
+
+  - slug: boneless-portion-is-not-anatomy
+    headline: How many boneless wings a chicken makes is a business decision
+    body: >-
+      A chicken has exactly two wings and no processor can change that. But
+      the number of boneless wings per bird depends purely on how large the
+      chunks are cut - somewhere between 25 and 43 pieces per bird for
+      plausible portion sizes. For bone-in wings the floor is anatomy. For
+      boneless it is a portioning choice, which is why this project stores
+      the two with different confidence.
+    source: tyson-foodservice-boneless
+    placement: learning
+    surprise: 4
+
+  - slug: wing-tips-are-a-third-segment
+    headline: Every wing has a third segment you never see
+    body: >-
+      A whole wing is a drumette, a flat, and a tip. The tip is mostly skin,
+      bone, and cartilage with almost no meat, so it is cut off and diverted
+      before the wings ever reach a restaurant. When a menu says twelve
+      wings, twelve tips went somewhere else.
+    source: boneless-wing-method
+    placement: both
+    surprise: 4
+
+  - slug: wing-tips-are-an-export-business
+    headline: Wing tips and chicken paws are a $648 million export market
+    body: >-
+      What Americans discard, China buys. Wing tips and paws are sold there
+      for soups, stews, and snacking, and together they make up roughly a
+      $648 million annual US export market. Paws fetch $0.80 to $1.00 a pound
+      exported against $0.05 to $0.10 a pound as domestic animal feed - close
+      to ten times the value for the identical product.
+    source: usapeec-paws-export
+    placement: learning
+    surprise: 5
+
+  - slug: wing-tips-domestic-fate
+    headline: At home, wing tips become stock, pet food, or fertilizer
+    body: >-
+      Tips that do not get exported are ground into pet food, rendered into
+      chemicals and fertilizer, or simmered into commercial stock. Rendering
+      the whole volume would return less than a tenth of what the export
+      market pays, which is why a trade dispute over chicken feet is a real
+      and expensive thing.
+    source: usapeec-paws-export
+    placement: learning
+    surprise: 4

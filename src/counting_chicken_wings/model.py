@@ -150,6 +150,37 @@ class MixingStage:
     description: str = ""
     confidence: str = "estimate"
     source_slug: str | None = None
+    # Pool sizes are estimates with real spread. Scientific mode samples
+    # these alongside the loss factors instead of pinning them at the mode,
+    # so the reported band reflects mixing uncertainty too. Default to the
+    # point value when a range was not supplied.
+    pool_lo: int = 0
+    pool_hi: int = 0
+
+    def band(self) -> tuple[int, int, int]:
+        lo = self.pool_lo or self.pool
+        hi = self.pool_hi or self.pool
+        return min(lo, self.pool), self.pool, max(hi, self.pool)
+
+
+# Evidence grades, best first. Scientific mode can require a minimum grade
+# and re-run with weaker figures excluded, which answers a question worth
+# asking: how much of the result depends on numbers we could not source?
+CONFIDENCE_RANK = {
+    "measured": 0,
+    "derived": 1,
+    "study": 2,
+    "industry": 3,
+    "estimate": 4,
+}
+
+
+def meets_confidence(level: str | None, minimum: str | None) -> bool:
+    """True if `level` is at least as well-evidenced as `minimum`."""
+    if not minimum:
+        return True
+    return (CONFIDENCE_RANK.get(level or "estimate", 99)
+            <= CONFIDENCE_RANK.get(minimum, 99))
 
 
 # How thoroughly a 'separating' stage pulls an individual's two units apart.
@@ -372,12 +403,31 @@ class Result:
     trace: list[StepTrace] = field(default_factory=list)
     mixing_notes: list[str] = field(default_factory=list)
     iterations: int = 0
+    # The interval actually reported, e.g. 0.90 for a 5th-95th percentile
+    # band. Recorded on the result so a chart can never mislabel its axis.
+    confidence_level: float = 0.90
+    # Raw Monte Carlo draws, kept for histograms. Empty unless requested.
+    required_samples: list[float] = field(default_factory=list)
+    distinct_samples: list[float] = field(default_factory=list)
+    excluded_stages: list[str] = field(default_factory=list)
 
 
 def _triangular(lo: float, mode: float, hi: float, rng: random.Random) -> float:
     if lo == hi:
         return mode
     return rng.triangular(lo, hi, mode)
+
+
+def _percentile(sorted_vals: list[float], q: float) -> float:
+    """Linear-interpolated percentile on an already-sorted list."""
+    if not sorted_vals:
+        return 0.0
+    if len(sorted_vals) == 1:
+        return sorted_vals[0]
+    pos = q * (len(sorted_vals) - 1)
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_vals) - 1)
+    return sorted_vals[lo] + (sorted_vals[hi] - sorted_vals[lo]) * (pos - lo)
 
 
 def run(
@@ -387,14 +437,28 @@ def run(
     mixing_stages: list[MixingStage],
     iterations: int = 0,
     seed: int | None = None,
+    confidence_level: float = 0.90,
+    min_confidence: str | None = None,
+    keep_samples: bool = False,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
 
-    With iterations > 0 the loss chain is resampled from each stage's
-    triangular lo/mode/hi to produce a 5th-95th percentile band, so the
-    stated uncertainty comes from the recorded uncertainty of the inputs
-    rather than being asserted.
+    With iterations > 0 both the loss chain AND the mixing pool sizes are
+    resampled from their triangular lo/mode/hi bands, so the reported
+    interval reflects the recorded uncertainty of the inputs rather than
+    being asserted. `confidence_level` sets the interval width -- 0.90 gives
+    a 5th-95th percentile band, 0.99 gives 0.5th-99.5th.
+
+    `min_confidence` drops loss stages whose evidence grade is weaker than
+    the given level, which answers "what does the answer look like using
+    only figures we could actually source?".
     """
+    excluded = [s.slug for s in loss_stages
+                if not meets_confidence(s.confidence, min_confidence)]
+    if excluded:
+        loss_stages = [s for s in loss_stages
+                       if meets_confidence(s.confidence, min_confidence)]
+
     floor = floor_individuals(units_requested, units_per_individual)
     required, trace = required_individuals(
         units_requested, units_per_individual, loss_stages
@@ -433,12 +497,17 @@ def run(
         paired_individuals=distinct_in_container,
         trace=trace,
         mixing_notes=notes,
+        confidence_level=confidence_level,
+        excluded_stages=excluded,
     )
     res.required_lo = res.required_hi = required
+    res.distinct_lo = res.distinct_hi = distinct
 
     if iterations > 0:
         rng = random.Random(seed)
-        samples = []
+        req_s: list[float] = []
+        dist_s: list[float] = []
+
         for _ in range(iterations):
             picks = {
                 s.slug: _triangular(s.survive_lo, s.survive_mode,
@@ -448,11 +517,104 @@ def run(
             r, _ = required_individuals(
                 units_requested, units_per_individual, loss_stages, picks
             )
-            samples.append(r)
-        samples.sort()
+            req_s.append(r)
+
+            # Resample the mixing cascade too. Pool sizes are among the
+            # softest numbers in the model, so holding them fixed would
+            # understate the spread on the headline figure.
+            if mixing_stages:
+                jittered = []
+                for m in mixing_stages:
+                    lo, mode, hi = m.band()
+                    p = max(1, int(_triangular(lo, mode, hi, rng)))
+                    jittered.append(MixingStage(
+                        slug=m.slug, label=m.label, pool=p,
+                        mixing_kind=m.mixing_kind,
+                    ))
+                c, d, _ = resolve_pool(
+                    jittered, units_requested, units_per_individual
+                )
+            else:
+                c, d, _ = resolve_pool(
+                    [], units_requested, units_per_individual
+                )
+            dist_s.append(
+                expected_distinct_general(int(units_requested), c, d)
+            )
+
+        req_s.sort()
+        dist_s.sort()
+        tail = (1.0 - confidence_level) / 2.0
+
         res.iterations = iterations
-        res.required = sum(samples) / len(samples)
-        res.required_lo = samples[int(0.05 * len(samples))]
-        res.required_hi = samples[min(len(samples) - 1, int(0.95 * len(samples)))]
+        res.required = sum(req_s) / len(req_s)
+        res.required_lo = _percentile(req_s, tail)
+        res.required_hi = _percentile(req_s, 1.0 - tail)
+        res.distinct_mean = sum(dist_s) / len(dist_s)
+        res.distinct_lo = _percentile(dist_s, tail)
+        res.distinct_hi = _percentile(dist_s, 1.0 - tail)
+
+        if keep_samples:
+            res.required_samples = req_s
+            res.distinct_samples = dist_s
 
     return res
+
+
+# ---------------------------------------------------------------------------
+# Sensitivity
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Sensitivity:
+    slug: str
+    label: str
+    applies_to: str
+    confidence: str
+    low_result: float          # birds required with this stage at survive_hi
+    high_result: float         # birds required with this stage at survive_lo
+    swing: float               # high - low, the tornado bar width
+    share: float = 0.0         # fraction of total swing across all stages
+
+
+def sensitivity(
+    units_requested: float,
+    units_per_individual: float,
+    loss_stages: list[LossStage],
+) -> list[Sensitivity]:
+    """One-at-a-time tornado: which stage moves the answer most?
+
+    Each stage is swung across its own lo/hi while every other stage is held
+    at its mode. The result is directly interpretable as "how much does our
+    uncertainty about THIS number cost us?", which is what decides where
+    more research is worth doing.
+
+    Mass-only stages come back with zero swing, correctly: they cannot move
+    a count no matter how uncertain they are. That is a useful thing to see
+    on the chart rather than something to hide.
+    """
+    out: list[Sensitivity] = []
+    for target in loss_stages:
+        best = {target.slug: target.survive_hi}    # least loss
+        worst = {target.slug: target.survive_lo}   # most loss
+        lo_r, _ = required_individuals(
+            units_requested, units_per_individual, loss_stages, best
+        )
+        hi_r, _ = required_individuals(
+            units_requested, units_per_individual, loss_stages, worst
+        )
+        out.append(Sensitivity(
+            slug=target.slug,
+            label=target.label,
+            applies_to=target.applies_to,
+            confidence=target.confidence,
+            low_result=lo_r,
+            high_result=hi_r,
+            swing=hi_r - lo_r,
+        ))
+
+    total = sum(s.swing for s in out) or 1.0
+    for s in out:
+        s.share = s.swing / total
+    out.sort(key=lambda s: s.swing, reverse=True)
+    return out

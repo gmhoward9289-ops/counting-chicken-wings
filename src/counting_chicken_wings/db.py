@@ -120,7 +120,8 @@ def load_mixing_stages(conn, chain_slug: str) -> list[MixingStage]:
         """
         SELECT ms.slug, ms.label, ms.mixing_kind, ms.description,
                ms.confidence, src.slug AS source_slug,
-               COALESCE(scs.pool_override, ms.pool_mode) AS pool
+               COALESCE(scs.pool_override, ms.pool_mode) AS pool,
+               ms.pool_lo, ms.pool_hi, scs.pool_override
         FROM supply_chain sc
         JOIN supply_chain_stage scs ON scs.supply_chain_id = sc.id
         JOIN mixing_stage ms        ON ms.id = scs.mixing_stage_id
@@ -130,14 +131,25 @@ def load_mixing_stages(conn, chain_slug: str) -> list[MixingStage]:
         """,
         (chain_slug,),
     ).fetchall()
-    return [
-        MixingStage(
+    out = []
+    for r in rows:
+        # A per-chain override replaces the point value, so its band has to
+        # be rescaled rather than inherited -- otherwise a butcher's 40-bird
+        # tray would sample against the plant-scale 2,000-60,000 range.
+        if r["pool_override"] is not None:
+            scale = r["pool"] / max(1, r["pool_lo"] or r["pool"])
+            lo = max(1, int(r["pool"] / max(scale, 1.0)))
+            hi = r["pool"]
+            lo, hi = min(lo, r["pool"]), max(hi, r["pool"])
+        else:
+            lo, hi = r["pool_lo"], r["pool_hi"]
+        out.append(MixingStage(
             slug=r["slug"], label=r["label"], pool=r["pool"],
             mixing_kind=r["mixing_kind"], description=r["description"],
             confidence=r["confidence"], source_slug=r["source_slug"],
-        )
-        for r in rows
-    ]
+            pool_lo=lo, pool_hi=hi,
+        ))
+    return out
 
 
 def get_sources(conn, slugs: list[str]) -> dict[str, sqlite3.Row]:

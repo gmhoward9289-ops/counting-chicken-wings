@@ -46,6 +46,22 @@ def colour(enabled: bool):
     return lambda s, c: f"{c}{s}{RESET}"
 
 
+def fmt_count(value: float) -> str:
+    """Format an individual count without inventing precision.
+
+    A boneless-wing floor of 12/34.5 is 0.34782608..., and printing all of
+    that implies the portion size is known to seven figures when it is the
+    least certain input in the model. Two significant figures is honest.
+    """
+    if value >= 100:
+        return f"{value:,.0f}"
+    if value >= 10:
+        return f"{value:.1f}"
+    if value >= 1:
+        return f"{value:.2f}".rstrip("0").rstrip(".")
+    return f"{value:.2g}"
+
+
 def fmt_distinct(value: float, ceiling: float) -> str:
     """Format the distinct count without hiding how close to the ceiling it is.
 
@@ -104,20 +120,34 @@ def cmd_count(args) -> int:
     )
 
     # ---- the answer ----------------------------------------------------
+    # Wording follows the product, not the word "wing". A boneless wing is
+    # breast meat, so calling it a wing here would repeat the very error the
+    # program exists to correct.
+    unit_word = product["unit_name"]
+    units_word = unit_word if units == 1 else f"{unit_word}s"
+    contains_none = (product["named_part_content"] or 0) == 0
+
     print()
     if args.pieces:
         print(f"  {args.count:g} wing pieces is {units:g} whole wings.")
+    if contains_none:
+        named = product["named_part"] or unit_word
+        print(f"  {c(f'A {product['label'].lower()} contains no {named}.',
+                     BOLD)}"
+              f"  It is {product['source_part']} meat.")
+        print()
+
     shown = fmt_distinct(res.distinct_mean, units)
-    print(f"  {c(f'It took at least {res.floor:g} {plural}.', BOLD)}")
-    print(f"  The wings on your plate came from about "
+    print(f"  {c(f'It took at least {fmt_count(res.floor)} {plural}.', BOLD)}")
+    print(f"  The {units_word} on your plate came from about "
           f"{c(f'{shown} different {plural}', BOLD)}.")
     print()
-    print(f"  {DIM}floor {res.floor:g}  ...  ceiling {units:g}   "
+    print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling {units:g}   "
           f"(supply chain: {chain}){RESET}")
 
     if res.required > res.floor + 1e-9:
-        print(f"  {DIM}{res.required:.2f} {plural} had to enter the system "
-              f"to yield {units:g} sellable wings.{RESET}")
+        print(f"  {DIM}{fmt_count(res.required)} {plural} had to enter the "
+              f"system to yield {units:g} sellable {units_word}.{RESET}")
 
     if args.include_mortality:
         print(f"  {DIM}includes grow-out mortality{RESET}")

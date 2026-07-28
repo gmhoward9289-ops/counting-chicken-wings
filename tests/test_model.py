@@ -11,6 +11,7 @@ from counting_chicken_wings.model import (
     LossStage,
     MixingStage,
     expected_distinct,
+    expected_distinct_general,
     floor_individuals,
     required_individuals,
     resolve_pool,
@@ -83,8 +84,22 @@ def test_cannot_draw_more_than_the_container_holds():
 # ---------------------------------------------------------------------------
 
 def test_no_mixing_means_the_answer_is_the_floor():
-    container, paired, _ = resolve_pool([], 12, 2.0)
-    assert expected_distinct(12, container, paired) == pytest.approx(6.0)
+    container, distinct_in_container, _ = resolve_pool([], 12, 2.0)
+    got = expected_distinct_general(12, container, distinct_in_container)
+    assert got == pytest.approx(6.0)
+
+
+def test_boneless_wings_take_a_fraction_of_a_bird():
+    """A boneless wing is breast meat; a bird yields tens of pieces.
+
+    The general formula has to cope with ~34.5 units per individual, not
+    just the bone-in case of exactly two.
+    """
+    floor = floor_individuals(12, 34.5)
+    assert floor < 1.0
+    container, distinct_in_container, _ = resolve_pool([], 12, 34.5)
+    got = expected_distinct_general(12, container, distinct_in_container)
+    assert got == pytest.approx(floor, rel=1e-6)
 
 
 def test_separating_stage_pushes_toward_the_ceiling():
@@ -97,11 +112,14 @@ def test_separating_stage_pushes_toward_the_ceiling():
         MixingStage("g", "Grading", 20000, "separating"),
         MixingStage("b", "Bin", 2000, "random"),
     ]
-    c1, p1, _ = resolve_pool(random_only, 12, 2.0)
-    c2, p2, _ = resolve_pool(with_grading, 12, 2.0)
-    # Grading actively splits pairs, so fewer survive to the container.
-    assert p2 < p1
-    assert expected_distinct(12, c2, p2) >= expected_distinct(12, c1, p1)
+    c1, d1, _ = resolve_pool(random_only, 12, 2.0)
+    c2, d2, _ = resolve_pool(with_grading, 12, 2.0)
+    # resolve_pool returns DISTINCT individuals represented in the container.
+    # Grading splits pairs, so the same number of units in the container comes
+    # from more separate birds.
+    assert d2 > d1
+    assert (expected_distinct_general(12, c2, d2)
+            >= expected_distinct_general(12, c1, d1))
 
 
 # ---------------------------------------------------------------------------
@@ -207,3 +225,54 @@ def test_monte_carlo_is_reproducible_with_a_seed():
     a = run(12, 2.0, stages, COMMODITY, iterations=500, seed=42)
     b = run(12, 2.0, stages, COMMODITY, iterations=500, seed=42)
     assert a.required == pytest.approx(b.required)
+
+
+# ---------------------------------------------------------------------------
+# Boneless wings -- many units per individual
+# ---------------------------------------------------------------------------
+
+BONELESS_PER_BIRD = 34.5
+
+
+def test_boneless_floor_is_a_fraction_of_a_chicken():
+    """A dozen boneless wings is well under one bird's worth of breast."""
+    floor = floor_individuals(12, BONELESS_PER_BIRD)
+    assert floor == pytest.approx(0.348, abs=0.01)
+    assert floor < 1.0
+
+
+def test_boneless_and_bone_in_differ_by_more_than_an_order_of_magnitude():
+    bone_in = floor_individuals(12, 2)
+    boneless = floor_individuals(12, BONELESS_PER_BIRD)
+    assert bone_in / boneless > 15
+
+
+def test_many_units_per_individual_still_bounded_by_the_draw():
+    """The generalized formula must never exceed the number drawn."""
+    for upi in (2.0, 5.0, 34.5, 100.0):
+        c, d, _ = resolve_pool(COMMODITY, 12, upi)
+        got = expected_distinct_general(12, c, d)
+        assert got <= 12.0 + 1e-9, upi
+        assert got > 0
+
+
+def test_general_formula_matches_the_two_unit_case():
+    """expected_distinct is the upi=2 special case of the general formula."""
+    for container, paired in ((12, 6), (100, 50), (2000, 1000), (4000, 0)):
+        distinct = container - paired
+        assert expected_distinct_general(12, container, distinct) == \
+            pytest.approx(expected_distinct(12, container, paired), abs=1e-9)
+
+
+def test_a_single_individual_supplying_everything_gives_one():
+    """One bird yielding all 12 pieces must report exactly one bird."""
+    assert expected_distinct_general(12, 12, 1) == pytest.approx(1.0)
+
+
+def test_boneless_run_floor_below_one_but_distinct_near_twelve():
+    """The headline contrast: a third of a chicken, a dozen chickens."""
+    res = run(12, BONELESS_PER_BIRD, [], COMMODITY)
+    assert res.floor < 1.0
+    assert res.distinct_mean > 11.9
+    # Distinct is bounded by the draw, never by the floor.
+    assert res.distinct_mean <= 12.0 + 1e-9

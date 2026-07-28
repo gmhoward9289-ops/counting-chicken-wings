@@ -130,6 +130,9 @@ class Builder:
                 units_per_individual_hi=p["units_per_individual_hi"],
                 unit_name=p["unit_name"],
                 is_anatomical_constant=p.get("is_anatomical_constant", 0),
+                source_part=p.get("source_part"),
+                named_part=p.get("named_part"),
+                named_part_content=p.get("named_part_content", 1.0),
                 source_id=self.src(p["source"], f"product {p['slug']}"),
                 notes=p.get("notes"),
             )

@@ -109,6 +109,21 @@ CREATE TABLE product (
     units_per_individual_hi   REAL NOT NULL,
 
     unit_name           TEXT    NOT NULL,          -- 'wing', 'gallon', 'lb'
+
+    -- Which part of the individual this product actually comes from.
+    -- Exists because product NAMES lie: a "boneless wing" is breast meat
+    -- and contains no wing whatsoever. Storing the anatomical truth
+    -- separately from the marketing name makes that queryable instead of
+    -- leaving it as a footnote nobody reads.
+    source_part         TEXT,                      -- 'wing', 'breast'
+    -- The part the product's NAME claims it is, which is not always the
+    -- part it comes from. A "boneless wing" names the wing and is made of
+    -- breast, so named_part='wing' while source_part='breast'.
+    named_part          TEXT,
+    -- How many actual units of the NAMED part the product contains.
+    -- 1.0 for a real wing, 0.0 for a boneless wing.
+    named_part_content  REAL    NOT NULL DEFAULT 1.0
+                            CHECK (named_part_content >= 0),
     -- For countable products only: is units_per_individual a hard anatomical
     -- constant? A chicken has exactly 2 wings -- that is what makes the
     -- floor a genuine floor rather than an average.
