@@ -159,6 +159,33 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
+- slug: tyson-foodservice-boneless
+  title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
+  publisher: Tyson Foodservice
+  url: https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
+  retrieved_on: '2026-07-28'
+  source_type: industry_spec
+  notes: >-
+    Manufacturer piece weights for commercial boneless wings: 0.76 oz and
+    0.79 oz per finished breaded piece. A 3.78 oz portion is about six
+    pieces. Note the product category name Tyson itself uses - "boneless
+    wings & chunks" - and the descriptor "whole muscle chicken breast".
+    These are breast chunks, and the manufacturer does not pretend
+    otherwise.
+
+- slug: usapeec-paws-export
+  title: Chinese appetite for chicken paws proves a boon for U.S. producers
+  publisher: USA Poultry & Egg Export Council
+  url: https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
+  retrieved_on: '2026-07-28'
+  source_type: trade_body
+  notes: >-
+    Chicken paws and wing tips together form roughly a $648 million annual
+    US export market, sold into China for soups, stews, and snacking.
+    Rendering the same volume domestically would return less than a tenth
+    of that. Paws fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as
+    domestic animal feed - close to a tenfold difference.
+
 - slug: derived-dressing-yield
   title: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings

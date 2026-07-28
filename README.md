@@ -123,11 +123,56 @@ Show the reasoning? [y/N]
 Answer `y` and it unfolds the full audit trail — every stage, the factor applied,
 the running bird count, and the citation for each number.
 
+### The web interface
+
+```bash
+pip install -e ".[gui]"
+wings gui
+```
+
+Six views: the calculator with its reasoning panel, a mixing simulator, a state
+choropleth, year-over-year trends, chicken facts, and a sources table. Every
+figure carries a colour-coded confidence badge — green measured, blue study,
+cyan industry, amber estimate — so you can see at a glance which numbers are
+solid and which are placeholders.
+
+### Rebuilding the database
+
+```bash
+python -m counting_chicken_wings.build
+```
+
+Facts live in readable YAML under `data/`; the `.db` is a build artifact and is
+gitignored. The build **fails** if any statistic cites a source that isn't in
+`sources.yaml`. `python -m counting_chicken_wings.audit` reports citation
+coverage and how much of the model still rests on estimates.
+
 ## Scope
 
-Broiler chickens only. The schema carries a species dimension so turkey can be
-added later without migration.
+Broiler chickens only, but the schema answers "how many X does it take to
+produce Y" in general. Turkey is already stubbed in as an inactive species to
+prove that adding one is data, not a migration.
+
+The abstraction splits on **countable** versus **continuous** yield. Wings and
+eggs are countable — the floor is `ceil(n ÷ units_per_individual)`, the 6-or-more
+logic. Milk and honey are continuous — the floor is a rate. The mixing model
+applies identically to both: a gallon of milk from a bulk tank contains milk
+from hundreds of cows for exactly the reason a dozen wings comes from twelve
+chickens.
+
+## Honesty about the data
+
+Of the loss factors currently in the model, 7 of 12 are unsourced estimates. But
+only 3 of those affect the **count** answer — the rest are mass-only and cannot
+move it. That distinction is tracked and reported by the audit rather than
+glossed over.
+
+The single biggest source of uncertainty is not a processing figure at all. It's
+whether "a dozen wings" means twelve whole wings or twelve menu pieces. That one
+ambiguity changes the answer more than every loss in the chain combined.
 
 ## Status
 
-Early. Research and schema are in place; the model and CLI are being built.
+Working end to end. Research, schema, YAML corpus, model, CLI, web GUI, CI, and
+21 tests are in place. Ongoing work is replacing estimate-grade figures with
+cited ones — see `docs/RESEARCH.md` open items.

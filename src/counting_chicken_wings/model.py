@@ -163,61 +163,69 @@ def resolve_pool(
     units_requested: int,
     units_per_individual: float,
 ) -> tuple[int, float, list[str]]:
-    """Reduce a mixing cascade to (container_units, paired_individuals, notes).
+    """Reduce a mixing cascade to (container_units, distinct_in_container, notes).
 
     Two quantities drive the answer:
 
       stream_individuals  the largest commingled population upstream
       container_units     the size of the container actually drawn from
 
-    An individual's units both end up in your container with probability
-    about (container/stream_units)^2, so expected pairs surviving to the
-    container is container^2 / (units_per_individual^2 * stream). Every
-    'separating' stage knocks that down further.
+    An individual is represented in your container unless *none* of its
+    `units_per_individual` units were drawn into it, which happens with
+    probability (1 - share)^upi. Working in terms of distinct individuals
+    rather than surviving pairs is what lets this handle bone-in wings
+    (2 units per bird) and boneless wings (tens of pieces per bird) with
+    one formula.
     """
     notes: list[str] = []
+    upi = units_per_individual
 
     if not stages:
         # No mixing anywhere: the container is exactly what you cut up, and
         # every individual contributes all of its units. Answer == floor.
-        container = units_requested
-        paired = container / units_per_individual
+        container = max(units_requested, 1)
+        distinct = container / upi
         notes.append(
             "No mixing stages apply, so every unit stays with its "
             "individual and the answer is exactly the floor."
         )
-        return container, paired, notes
+        return container, distinct, notes
 
     stream = max(s.pool for s in stages)
     draw_stage = stages[-1]
-    container = max(
-        units_requested,
-        int(draw_stage.pool * units_per_individual),
-    )
+    container = max(units_requested, int(draw_stage.pool * upi))
 
-    stream_units = stream * units_per_individual
-    if stream_units <= 0:
+    if stream * upi <= 0:
         raise ValueError("stream must contain at least one unit")
 
-    # Expected individuals with both units still together in the container.
-    paired = (container ** 2) / (units_per_individual ** 2 * stream)
+    # Expected distinct individuals represented in the container: an
+    # individual is absent entirely only if none of its `upi` units were
+    # drawn into it from the stream.
+    share = min(1.0, container / (stream * upi))
+    distinct = stream * (1.0 - (1.0 - share) ** upi)
 
-    separating = [s for s in stages if s.mixing_kind == "separating"]
-    for s in separating:
-        paired *= (1.0 - SEPARATION_EFFICIENCY)
+    # A separating stage routes an individual's units into different
+    # streams, so more individuals are represented by fewer units each --
+    # which pushes distinct up toward the container size.
+    for s in stages:
+        if s.mixing_kind != "separating":
+            continue
+        distinct += (container - distinct) * SEPARATION_EFFICIENCY
         notes.append(
-            f"{s.label} actively separates an individual's units, cutting "
-            f"surviving pairs by {SEPARATION_EFFICIENCY:.0%}."
+            f"{s.label} actively separates an individual's units, so "
+            f"{SEPARATION_EFFICIENCY:.0%} of the units that would have "
+            f"shared a source are split apart."
         )
 
-    paired = max(0.0, min(paired, container / units_per_individual))
+    distinct = max(container / upi, min(distinct, float(container)))
 
+    per = container / distinct
     notes.append(
         f"Largest commingled pool is {stream:,} individuals; the container "
-        f"drawn from holds about {container:,} units, of which roughly "
-        f"{paired:.1f} individuals still have all their units together."
+        f"drawn from holds about {container:,} units representing roughly "
+        f"{distinct:,.0f} individuals, or {per:.3f} units each."
     )
-    return container, paired, notes
+    return container, distinct, notes
 
 
 # ---------------------------------------------------------------------------
@@ -392,17 +400,19 @@ def run(
         units_requested, units_per_individual, loss_stages
     )
 
-    container, paired, notes = resolve_pool(
+    container, distinct_in_container, notes = resolve_pool(
         mixing_stages, units_requested, units_per_individual
     )
-    distinct = expected_distinct(units_requested, container, paired)
+    distinct = expected_distinct_general(
+        int(units_requested), container, distinct_in_container
+    )
 
     trace.append(StepTrace(
         sequence=len(trace),
         kind="mixing",
         stage_slug="mixing_cascade",
         stage_label="Mixing cascade",
-        value_used=paired,
+        value_used=distinct_in_container,
         running_total=distinct,
         explanation=(
             f"Drawing {units_requested} units from a container of "
@@ -420,7 +430,7 @@ def run(
         distinct_lo=distinct,
         distinct_hi=distinct,
         container_units=container,
-        paired_individuals=paired,
+        paired_individuals=distinct_in_container,
         trace=trace,
         mixing_notes=notes,
     )
