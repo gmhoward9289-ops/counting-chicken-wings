@@ -262,7 +262,14 @@
     <h3>How the floor becomes the requirement</h3>
     <p class="muted">
       Every count-affecting stage, in order, compounding on the one before it.
+      This walk uses each stage's <b>mode</b>, so it lands slightly below the
+      headline figure above, which is the <b>mean</b> of the Monte Carlo draws.
+      The two differ because the lo/mode/hi bands are asymmetric — several
+      stages have more room to go wrong than to go right, which drags the mean
+      above the mode. That gap is a real feature of the data, not a rounding
+      artefact.
     </p>
+    <div id="s-waterfall-gap" class="note" style="margin:-8px 0 14px"></div>
     <div id="s-waterfall" style="height:320px"></div>
   </div>
 
@@ -389,7 +396,10 @@ document.querySelectorAll('nav button').forEach(b => {
 });
 
 // ---- calculator
+let calcSeq = 0;
+
 async function calc() {
+  const mine = ++calcSeq;
   const q = new URLSearchParams({
     count: $('#count').value || 12,
     chain: $('#chain').value,
@@ -397,6 +407,7 @@ async function calc() {
     include_mortality: $('#mort').checked,
   });
   const d = await api('/api/calculate?' + q);
+  if (mine !== calcSeq) return;     // superseded by a newer request
   const a = d.answer, plural = d.question.individual_plural;
 
   $('#hl').textContent = fmtDistinct(a.distinct, a.ceiling);
@@ -439,6 +450,7 @@ async function calc() {
        that survived.</p></div>` : '';
 
   const f = await api('/api/facts?placement=result&limit=1');
+  if (mine !== calcSeq) return;
   if (f.facts.length) {
     const x = f.facts[0];
     $('#resultfact').innerHTML =
@@ -453,7 +465,14 @@ const CONF_COLOUR = {
   industry: '#22d3ee', estimate: '#fbbf24',
 };
 
+// Requests are not guaranteed to resolve in the order they were sent, and a
+// 100,000-iteration run can easily finish after a 2,000-iteration one fired
+// later. Stamp each call and discard any response that has been superseded,
+// otherwise changing two controls quickly renders a stale answer.
+let sciSeq = 0;
+
 async function sci() {
+  const mine = ++sciSeq;
   const conf = $('#s-conf').value;
   const q = new URLSearchParams({
     count: $('#s-count').value || 12,
@@ -464,6 +483,7 @@ async function sci() {
   if (conf) q.set('min_confidence', conf);
 
   const d = await api('/api/scientific?' + q);
+  if (mine !== sciSeq) return;      // superseded by a newer request
   const a = d.answer, pct = Math.round(d.question.confidence_level * 100);
 
   $('#s-req').textContent = a.required.toFixed(2);
@@ -542,6 +562,12 @@ async function sci() {
     xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -35 }),
     yaxis: Object.assign({}, PLOT.yaxis, { title: 'chickens' }),
   }), CFG);
+
+  const modeEnd = w.length ? w[w.length - 1].to : a.floor;
+  $('#s-waterfall-gap').textContent =
+    `Mode path ends at ${modeEnd.toFixed(3)}; Monte Carlo mean is ` +
+    `${a.required.toFixed(3)} — a gap of ${(a.required - modeEnd).toFixed(3)} ` +
+    `chickens from band asymmetry.`;
 
   // Evidence mix across count-affecting stages.
   const keys = Object.keys(d.evidence_mix);
