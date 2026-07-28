@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # The build fails loudly if any statistic cites a source that does not
+      # exist in sources.yaml. This is the project's core guarantee, so it
+      # runs on every PR.
+      - name: Build database
+        run: python -m counting_chicken_wings.build
+
+      - name: Tests
+        run: pytest -q
+
+  citations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      # Separate job so the "is every number cited?" answer is visible as
+      # its own check rather than buried in the test log.
+      - name: Every statistic must cite a source
+        run: python -m counting_chicken_wings.audit
