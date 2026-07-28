@@ -215,11 +215,20 @@ For n = 12 whole wings:
 
 | Pool size B (birds) | E[distinct chickens] | Scenario |
 |---:|---:|---|
-| 6 | 6.00 | You break down exactly 6 birds yourself |
-| 12 | ~9.55 | Very small batch |
-| 50 | ~11.3 | Single-restaurant small lot |
-| 1,000 | ~11.96 | One combo bin |
-| 40,000 | ~11.99 | One plant shift |
+| 6 | 6.0000 | You break down exactly 6 birds yourself |
+| 7 | 6.9231 | Tiny batch |
+| 10 | 8.5263 | Very small batch |
+| 12 | 9.1304 | Small batch |
+| 25 | 10.6531 | Butcher-scale |
+| 50 | 11.3333 | Single-restaurant small lot |
+| 100 | 11.6683 | Small lot |
+| 1,000 | 11.9670 | One combo bin |
+| 40,000 | 11.9992 | One plant shift |
+| 1,000,000 | 12.0000 | Effectively the limit |
+
+Verified numerically. The curve rises steeply then flattens hard — by 100 birds
+you are already at 11.67, and everything past ~1,000 is indistinguishable from 12
+for practical purposes.
 
 **Conclusion: 6 is a hard floor, but it is only reachable by hand.** For anything
 that passed through a commodity supply chain, the answer is pinned just under 12.
