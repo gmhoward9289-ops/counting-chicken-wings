@@ -1,0 +1,11 @@
+# George owns everything. Combined with branch protection requiring Code
+# Owner review, no outside contribution reaches the default branch without
+# his approval.
+*   @gmhoward9289-ops
+
+# Called out explicitly so the intent survives someone loosening the
+# catch-all above: these are the project's credibility.
+/data/                                      @gmhoward9289-ops
+/docs/RESEARCH.md                           @gmhoward9289-ops
+/src/counting_chicken_wings/schema.sql      @gmhoward9289-ops
+/src/counting_chicken_wings/model.py        @gmhoward9289-ops

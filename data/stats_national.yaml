@@ -1,0 +1,49 @@
+# National broiler statistics.
+#
+# These two rows are the anchor of the entire project. Dressing yield is
+# NOT stored here - it is a view derived from certified_rtc_lb divided by
+# live_weight_lb, so it can never drift out of sync with the totals it
+# comes from.
+
+slaughter:
+  species: broiler
+  source: nass-poultry-slaughter-2025
+  years:
+    - year: 2025
+      head_slaughtered: 9579797000
+      live_weight_lb: 63443212000
+      certified_rtc_lb: 48006482000
+      avg_live_weight_lb: 6.62
+      postmortem_condemn_pct: 0.45
+      postmortem_condemn_lb: 216531000
+      notes: >-
+        Dressing yield derives to 75.67%. Multiplied out: 9.58 billion birds
+        times 2 wings is 19.16 billion whole wings physically available in
+        the United States in 2025.
+
+    - year: 2024
+      head_slaughtered: 9460743000
+      live_weight_lb: 62139063000
+      certified_rtc_lb: 46995202000
+      avg_live_weight_lb: 6.57
+      postmortem_condemn_pct: 0.46
+      postmortem_condemn_lb: 217122000
+
+# Grow-out performance. The mortality column feeds the optional
+# farm_mortality loss stage; the rest is trend material for the learning
+# centre.
+husbandry:
+  species: broiler
+  source: ncc-broiler-performance
+  size_unit: lb live weight
+  years:
+    - {year: 2015, cycle_days: 48.0, end_size: 6.12, feed_conversion: 1.89, mortality_pct: 4.80}
+    - {year: 2016, cycle_days: 47.0, end_size: 6.16, feed_conversion: 1.86, mortality_pct: 4.50}
+    - {year: 2017, cycle_days: 47.0, end_size: 6.20, feed_conversion: 1.83, mortality_pct: 4.50}
+    - {year: 2018, cycle_days: 47.0, end_size: 6.26, feed_conversion: 1.82, mortality_pct: 5.00}
+    - {year: 2019, cycle_days: 47.0, end_size: 6.32, feed_conversion: 1.80, mortality_pct: 5.00}
+    - {year: 2020, cycle_days: 47.0, end_size: 6.41, feed_conversion: 1.79, mortality_pct: 5.00}
+    - {year: 2021, cycle_days: 47.0, end_size: 6.46, feed_conversion: 1.79, mortality_pct: 5.30}
+    - {year: 2022, cycle_days: 47.0, end_size: 6.56, feed_conversion: 1.77, mortality_pct: 5.30}
+    - {year: 2023, cycle_days: 47.0, end_size: 6.54, feed_conversion: 1.75, mortality_pct: 5.70}
+    - {year: 2024, cycle_days: 47.4, end_size: 6.57, feed_conversion: 1.69, mortality_pct: 5.93}

@@ -1,0 +1,209 @@
+# The mixing cascade: stages that raise DISTINCT INDIVIDUALS REPRESENTED.
+#
+# This is the conceptual core of the project. Mixing begins the instant the
+# product separates from the individual and only ever increases the pool.
+#
+# THE KEY REFINEMENT
+# ------------------
+# It is not enough to track pool size. What matters is how many wings each
+# bird still contributes to the container you draw from.
+#
+#   k = 2  a bird's two wings are still travelling together in the pool
+#   k = 1  they have been separated into different streams
+#
+# Expected distinct birds when drawing n wings from B birds contributing
+# k wings each (W = B*k total wings):
+#
+#     E[distinct] = B * ( 1 - C(W-k, n) / C(W, n) )
+#
+# At k=1 this collapses to exactly n - every wing is a different bird.
+# At k=2 it gives the familiar 6..12 curve.
+#
+# So a 'separating' stage is far more powerful than a 'random' one. Size
+# grading does not shuffle a bird's two wings, it deliberately SPLITS them
+# whenever they differ in weight - and two wings off the same bird rarely
+# weigh exactly the same. This is why the answer sits near 12 rather than
+# somewhere in the middle of the band.
+#
+# Pool sizes below are OUR ESTIMATES, reasoned from line speeds and standard
+# container sizes. The qualitative conclusion is robust to them: the curve
+# flattens hard above ~1,000 birds, so any commodity-scale pool lands within
+# a hair of the ceiling.
+
+stages:
+  - slug: separation
+    domain: poultry
+    label: Cut-up line (wing separation)
+    sequence: 10
+    pool_lo: 500
+    pool_mode: 5000
+    pool_hi: 20000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      The first and most important mixing point. Wings are cut from the
+      carcass and drop onto a shared conveyor. A bird's left and right wing
+      part company here and, in a commodity plant, never meet again.
+
+  - slug: wing_chiller
+    domain: poultry
+    label: Wing chiller
+    sequence: 20
+    pool_lo: 2000
+    pool_mode: 20000
+    pool_hi: 60000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Bulk immersion or air chilling. Thousands of wings tumble together in
+      a single vessel with a residence time measured in tens of minutes.
+
+  - slug: size_grading
+    domain: poultry
+    label: Size grading (jumbo / large / medium)
+    sequence: 30
+    pool_lo: 2000
+    pool_mode: 20000
+    pool_hi: 60000
+    mixing_kind: separating
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Wings are weighed individually and routed to grade streams. This is
+      ACTIVE SEPARATION, not shuffling: a bird's two wings go to different
+      boxes whenever they fall on opposite sides of a grade boundary. The
+      single strongest driver pushing the answer toward 12.
+
+  - slug: combo_bin
+    domain: poultry
+    label: Combo bin
+    sequence: 40
+    pool_lo: 4000
+    pool_mode: 8700
+    pool_hi: 15000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Bulk container, commonly around 2,000 lb. At roughly 0.23 lb per whole
+      wing that is about 8,700 wings in one bin.
+
+  - slug: iqf_freezer
+    domain: poultry
+    label: IQF freezer tunnel
+    sequence: 50
+    pool_lo: 10000
+    pool_mode: 50000
+    pool_hi: 200000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Individually quick frozen on a continuous belt. Continuous flow means
+      no lot boundaries are preserved through this step.
+
+  - slug: case_pack
+    domain: poultry
+    label: Case pack
+    sequence: 60
+    pool_lo: 150
+    pool_mode: 175
+    pool_hi: 200
+    mixing_kind: none
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Boxed, commonly 40 lb - roughly 175 wings. Packing does not mix; it
+      draws from an already-mixed stream. By this point essentially every
+      wing in the case is from a different bird.
+
+  - slug: distributor
+    domain: poultry
+    label: Distributor warehouse
+    sequence: 70
+    pool_lo: 20000
+    pool_mode: 100000
+    pool_hi: 500000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Pallets assembled from many lots, plants, and sometimes producers.
+
+  - slug: restaurant_freezer
+    domain: poultry
+    label: Restaurant freezer bin
+    sequence: 80
+    pool_lo: 300
+    pool_mode: 2000
+    pool_hi: 10000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      The bin is topped up from multiple cases across multiple deliveries.
+      Old and new stock commingle - the practical reason a single order can
+      span weeks of production.
+
+  - slug: fryer_basket
+    domain: poultry
+    label: Fryer basket
+    sequence: 90
+    pool_lo: 300
+    pool_mode: 2000
+    pool_hi: 10000
+    mixing_kind: none
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      The draw itself. Twelve wings are scooped from the bin - the point at
+      which the question finally gets answered.
+
+# Named routes. Choosing one selects which stages apply, and that choice is
+# what moves the answer within the floor..n band.
+supply_chains:
+  - slug: commodity_foodservice
+    domain: poultry
+    label: Commodity foodservice
+    is_default: 1
+    description: >-
+      The normal path for wings at a restaurant, bar, or chain. Every mixing
+      stage applies. This is what almost everyone eating wings is actually
+      getting.
+    stages:
+      - separation
+      - wing_chiller
+      - size_grading
+      - combo_bin
+      - iqf_freezer
+      - case_pack
+      - distributor
+      - restaurant_freezer
+      - fryer_basket
+
+  - slug: local_butcher
+    domain: poultry
+    label: Local butcher
+    is_default: 0
+    description: >-
+      A small shop breaking down birds on site. Wings are separated and
+      pooled in a single tray, but there is no grading, no freezer tunnel,
+      and no distributor. Small pool, so the answer sits meaningfully below
+      the commodity ceiling.
+    stages:
+      - slug: separation
+        pool_override: 40
+      - slug: restaurant_freezer
+        pool_override: 40
+
+  - slug: whole_bird_home
+    domain: poultry
+    label: Whole birds at home
+    is_default: 0
+    description: >-
+      You buy six whole chickens and cut the wings off yourself. No mixing
+      at any point, so the answer is exactly the floor - the only realistic
+      way to get twelve wings from six chickens.
+    stages: []

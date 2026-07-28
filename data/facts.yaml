@@ -1,0 +1,149 @@
+# Points of fact surfaced in the learning centre and alongside results as
+# the user works through a question.
+#
+# Every fact carries a source. Facts with placement 'result' appear next to
+# the answer; 'learning' facts live in the learning centre; 'both' appear in
+# either. surprise ranks how counterintuitive a fact is - the UI leads with
+# high-surprise facts because those are what make people keep reading.
+
+facts:
+  - slug: two-wings-hard-floor
+    headline: A chicken has exactly two wings
+    body: >-
+      This is the only hard constant in the whole model. Every other number
+      here is an estimate layered on top of it. Twelve wings cannot come
+      from fewer than six chickens - not on the best day, not at any plant,
+      not anywhere. That is why the answer is "6 or more" rather than
+      "about 6".
+    source: wing-yield-eight-strains
+    placement: both
+    surprise: 2
+
+  - slug: ohio-vs-north-carolina
+    headline: An Ohio chicken weighs half what a North Carolina chicken does
+    body: >-
+      Ohio averaged 4.6 lb live weight in 2025; North Carolina averaged
+      8.4 lb. Same country, same year, same species - but they are different
+      businesses. Ohio runs small birds for fast food and tray pack; North
+      Carolina runs big birds for deboning. A pound of wings from each state
+      represents a very different number of chickens.
+    source: nass-poultry-slaughter-2025
+    placement: both
+    surprise: 5
+
+  - slug: wings-most-damaged-part
+    headline: Wings are the most damaged part of the chicken, by far
+    body: >-
+      Median wing injuries run 5.7% per load. Legs, breast, and shoulders
+      are each under 1%. Wings stick out, they get caught, and they break
+      during catching, loading, and shackling. This is the single largest
+      loss in the model and the main reason it takes more than six chickens.
+    source: wing-injuries-loading
+    placement: both
+    surprise: 4
+
+  - slug: bruising-happens-at-the-end
+    headline: 90% of bruising happens in the last 12 to 24 hours
+    body: >-
+      Not during the seven weeks of grow-out - during catching, loading,
+      transport, and shackling. By body region, bruises land on the breast
+      42% of the time, wings 33%, legs 25%. Almost all the damage in a
+      47-day life happens on the final day.
+    source: welfare-training-carcass-quality
+    placement: learning
+    surprise: 5
+
+  - slug: nineteen-billion-wings
+    headline: The US produced 19.16 billion whole wings in 2025
+    body: >-
+      9,579,797,000 broilers were slaughtered, and each had two wings. That
+      is about 56 whole wings for every person in the country, every year.
+    source: nass-poultry-slaughter-2025
+    placement: learning
+    surprise: 3
+
+  - slug: dressing-yield
+    headline: About three quarters of a live chicken becomes sellable meat
+    body: >-
+      63.44 billion lb went in live; 48.01 billion lb came out ready-to-cook.
+      That is a dressing yield of 75.67% - and it is not an estimate. It
+      falls straight out of two totals USDA measures directly.
+    source: derived-dressing-yield
+    placement: learning
+    surprise: 3
+
+  - slug: menu-wing-ambiguity
+    headline: A restaurant "dozen wings" usually is not twelve wings
+    body: >-
+      It is normally twelve PIECES - drumettes and flats. Each whole wing
+      splits into a drumette, a flat, and a tip, and the tip is diverted to
+      stock or rendering. So twelve pieces is six whole wings, which is
+      three chickens' worth of anatomy. This single ambiguity changes the
+      answer more than every processing loss combined.
+    source: boneless-wing-method
+    placement: both
+    surprise: 5
+
+  - slug: flat-beats-drumette
+    headline: The flat has a better meat yield than the drumette
+    body: >-
+      The drumette is heavier - 39.9 g against 30.7 g bone-in - but the flat
+      yields 80.1% boneless meat against the drumette's 74.9%. Bigger does
+      not mean meatier.
+    source: boneless-wing-method
+    placement: learning
+    surprise: 4
+
+  - slug: mortality-rising
+    headline: Broiler mortality has been getting worse since 2013
+    body: >-
+      It hit a historic low of 3.7% in 2013 and has climbed to 5.93% by 2024,
+      even as feed conversion kept improving from 1.75 to 1.69. Birds are
+      more efficient than they have ever been and also dying more often.
+    source: ncc-broiler-performance
+    placement: learning
+    surprise: 4
+
+  - slug: condemnation-is-tiny
+    headline: FSIS condemns less than half a percent
+    body: >-
+      Post-mortem condemnation ran 0.45% in 2025 and 0.46% in 2024 -
+      remarkably stable. People expect this to be the big loss in the
+      system. It is one of the smallest.
+    source: nass-poultry-slaughter-2025
+    placement: learning
+    surprise: 4
+
+  - slug: top-four-concentration
+    headline: Four companies produce well over half the chicken in America
+    body: >-
+      Tyson at 21.3%, Pilgrim's Pride at 15.8%, and Wayne-Sanderson at 14.4%
+      lead a top four holding roughly 58% of national output across about
+      180 plants. A wing picked at random has better than even odds of
+      coming from one of four companies.
+    source: wattpoultry-top-producers
+    placement: learning
+    surprise: 3
+
+  - slug: grading-splits-wings
+    headline: Size grading deliberately separates a bird's two wings
+    body: >-
+      Wings are weighed individually and sorted into jumbo, large, and
+      medium. Two wings off the same bird rarely weigh exactly the same, so
+      whenever they straddle a grade boundary they are routed into different
+      boxes. The supply chain is not merely shuffling wings - at this step
+      it is actively pulling pairs apart.
+    source: project-estimate-mixing
+    placement: both
+    surprise: 5
+
+  - slug: cook-loss-irrelevant
+    headline: Cooking changes the weight, never the count
+    body: >-
+      Frying costs a wing roughly 20% of its mass, which matters a great
+      deal for food cost and not at all here. Twelve wings go into the
+      fryer, twelve wings come out. Cook loss has zero effect on how many
+      chickens it took.
+    source: project-estimate-unsourced
+    placement: learning
+    surprise: 3

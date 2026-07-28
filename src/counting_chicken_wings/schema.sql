@@ -1,15 +1,27 @@
--- counting-chicken-wings : chicken statistics database
+-- counting-chicken-wings : "How many X does it take to produce Y?"
+--
+-- v1 answers this for broiler chickens and wings. The schema is deliberately
+-- general so turkey, then other food domains, drop in as DATA rather than as
+-- migrations. Nothing below hardcodes "chicken" or "wing".
 --
 -- Design rules, enforced by structure rather than convention:
---   1. Every numeric fact carries a source_id. There is no way to insert a
---      statistic without saying where it came from -- source_id is NOT NULL
---      on every table that holds a number.
---   2. Every estimated fact carries lo/mode/hi, not a bare point value. A
---      measured fact sets all three equal and marks confidence='measured'.
---   3. Species is a dimension from day one. v1 seeds broiler chicken only;
---      turkey drops in later with no migration.
---   4. Nothing is deleted. Superseded figures get valid_to set and stay
---      queryable, so a run from last year can be reproduced exactly.
+--   1. Every numeric fact carries a source_id, NOT NULL. There is no way to
+--      insert a statistic without saying where it came from.
+--   2. Every estimated fact carries lo/mode/hi, never a bare point value.
+--      Measured facts set all three equal and mark confidence='measured'.
+--   3. Nothing is deleted. Superseded figures get valid_to set and stay
+--      queryable, so an old run reproduces exactly.
+--
+-- The three-part model, identical across every domain:
+--   FLOOR    - the hard arithmetic minimum of individuals
+--   LOSS     - a chain of stages that raises the individuals required
+--   MIXING   - a cascade of pooling that raises the DISTINCT individuals
+--              actually represented in the portion you receive
+--
+-- Two yield modes:
+--   countable  - discrete parts (wings, eggs). floor = ceil(n / units_per_ind)
+--   continuous - mass or volume (milk, honey). floor = qty / yield_per_ind
+-- Mixing applies identically to both.
 
 PRAGMA foreign_keys = ON;
 
@@ -28,18 +40,18 @@ CREATE TABLE source (
     retrieved_on    TEXT    NOT NULL,
     source_type     TEXT    NOT NULL CHECK (source_type IN (
                         'government',     -- USDA NASS, FSIS
-                        'peer_reviewed',  -- journal article
+                        'peer_reviewed',
                         'trade_body',     -- National Chicken Council
-                        'trade_press',    -- WATTPoultry, Poultry Site
-                        'industry_spec',  -- equipment/packaging specs
+                        'trade_press',
+                        'industry_spec',  -- equipment / packaging specs
                         'derived',        -- computed from other sources
                         'estimate'        -- our own reasoned estimate
                     )),
     notes           TEXT
 );
 
--- A derived figure records which sources it was computed from, so the
--- audit trail can recurse (e.g. dressing yield <- two NASS totals).
+-- Derived figures record their parents, so the audit trail can recurse
+-- (e.g. dressing yield <- two NASS totals).
 CREATE TABLE source_derivation (
     derived_source_id  INTEGER NOT NULL REFERENCES source(id),
     parent_source_id   INTEGER NOT NULL REFERENCES source(id),
@@ -48,30 +60,101 @@ CREATE TABLE source_derivation (
 
 
 -- ---------------------------------------------------------------------------
--- Taxonomy / dimensions
+-- Domain taxonomy -- how the project grows
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE species (
+-- 'poultry', later 'red_meat', 'dairy', 'produce', 'apiculture'.
+-- Grouping only: no logic branches on domain.
+CREATE TABLE domain (
     id              INTEGER PRIMARY KEY,
-    slug            TEXT    NOT NULL UNIQUE,   -- 'broiler'
-    common_name     TEXT    NOT NULL,          -- 'Broiler chicken'
-    nass_category   TEXT,                      -- 'Young Chickens'
-    wings_per_bird  INTEGER NOT NULL DEFAULT 2,
+    slug            TEXT    NOT NULL UNIQUE,
+    label           TEXT    NOT NULL,
+    description     TEXT,
     active          INTEGER NOT NULL DEFAULT 1
 );
 
--- Small-bird / medium / big-bird programs. Drives wing size, and therefore
--- how many birds a given POUNDAGE of wings represents. Bird COUNT floor is
--- unaffected, which is a distinction the CLI should make explicit.
-CREATE TABLE bird_program (
+-- The "X" in "how many X". An individual organism: a broiler, a turkey,
+-- a dairy cow, an almond tree, a honeybee.
+CREATE TABLE species (
+    id                  INTEGER PRIMARY KEY,
+    domain_id           INTEGER NOT NULL REFERENCES domain(id),
+    slug                TEXT    NOT NULL UNIQUE,   -- 'broiler'
+    common_name         TEXT    NOT NULL,          -- 'Broiler chicken'
+    scientific_name     TEXT,
+    -- Noun for one individual, used verbatim in generated prose:
+    -- 'chicken', 'turkey', 'cow', 'bee', 'tree'.
+    individual_noun     TEXT    NOT NULL,
+    individual_plural   TEXT    NOT NULL,
+    -- How this species is counted in official statistics, if at all.
+    stat_category       TEXT,                      -- NASS 'Young Chickens'
+    active              INTEGER NOT NULL DEFAULT 1
+);
+
+-- The "Y" in "produce Y". A wing, a breast, a gallon of milk, a jar of honey.
+CREATE TABLE product (
     id                  INTEGER PRIMARY KEY,
     species_id          INTEGER NOT NULL REFERENCES species(id),
-    slug                TEXT    NOT NULL UNIQUE,  -- 'small_bird','big_bird'
+    slug                TEXT    NOT NULL UNIQUE,   -- 'whole_wing'
+    label               TEXT    NOT NULL,          -- 'Whole wing'
+    label_plural        TEXT    NOT NULL,
+
+    yield_mode          TEXT    NOT NULL CHECK (yield_mode IN
+                            ('countable','continuous')),
+
+    -- countable  : discrete parts per individual (2 wings per chicken).
+    -- continuous : quantity per individual in unit_name (gallons per cow).
+    -- lo/hi carry natural biological variation.
+    units_per_individual_lo   REAL NOT NULL,
+    units_per_individual_mode REAL NOT NULL,
+    units_per_individual_hi   REAL NOT NULL,
+
+    unit_name           TEXT    NOT NULL,          -- 'wing', 'gallon', 'lb'
+    -- For countable products only: is units_per_individual a hard anatomical
+    -- constant? A chicken has exactly 2 wings -- that is what makes the
+    -- floor a genuine floor rather than an average.
+    is_anatomical_constant INTEGER NOT NULL DEFAULT 0,
+
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT,
+
+    CHECK (units_per_individual_lo <= units_per_individual_mode
+       AND units_per_individual_mode <= units_per_individual_hi),
+    CHECK (units_per_individual_lo > 0)
+);
+
+-- Sub-parts of a countable product: drumette / flat / tip of a wing.
+-- Matters because a restaurant "wing" often means a SEGMENT, not a whole
+-- wing, and that single ambiguity halves or doubles the answer.
+CREATE TABLE product_segment (
+    id                  INTEGER PRIMARY KEY,
+    product_id          INTEGER NOT NULL REFERENCES product(id),
+    slug                TEXT    NOT NULL,          -- 'drumette','flat','tip'
     label               TEXT    NOT NULL,
-    live_weight_lo_lb   REAL    NOT NULL,
-    live_weight_mode_lb REAL    NOT NULL,
-    live_weight_hi_lb   REAL    NOT NULL,
-    typical_market      TEXT,                     -- 'fast food','deboning'
+    per_product_count   REAL    NOT NULL DEFAULT 1,
+    mass_grams          REAL,
+    edible_yield_pct    REAL,
+    -- Tips are usually diverted to stock/export/rendering, not sold as wings.
+    sold_as_product     INTEGER NOT NULL DEFAULT 1,
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT,
+    UNIQUE (product_id, slug)
+);
+
+-- Production programs: small-bird vs big-bird broilers, dairy breeds, etc.
+-- Drives product SIZE, and therefore how many individuals a given POUNDAGE
+-- represents. Does not change a countable floor -- a distinction the UI
+-- should state plainly.
+CREATE TABLE production_program (
+    id                  INTEGER PRIMARY KEY,
+    species_id          INTEGER NOT NULL REFERENCES species(id),
+    slug                TEXT    NOT NULL UNIQUE,   -- 'small_bird','big_bird'
+    label               TEXT    NOT NULL,
+    -- Generic size measure; for broilers this is live weight in lb.
+    size_lo             REAL,
+    size_mode           REAL,
+    size_hi             REAL,
+    size_unit           TEXT,
+    typical_market      TEXT,                      -- 'fast food','deboning'
     source_id           INTEGER NOT NULL REFERENCES source(id),
     notes               TEXT
 );
@@ -83,38 +166,47 @@ CREATE TABLE bird_program (
 
 CREATE TABLE producer (
     id                  INTEGER PRIMARY KEY,
-    slug                TEXT    NOT NULL UNIQUE,  -- 'tyson'
+    domain_id           INTEGER NOT NULL REFERENCES domain(id),
+    slug                TEXT    NOT NULL UNIQUE,   -- 'tyson'
     name                TEXT    NOT NULL,
     headquarters        TEXT,
-    market_share_pct    REAL,                     -- national broiler volume
-    head_per_week       INTEGER,
-    plant_count         INTEGER,
+    market_share_pct    REAL,
+    throughput_per_week INTEGER,                   -- individuals processed
+    facility_count      INTEGER,
     source_id           INTEGER NOT NULL REFERENCES source(id),
     as_of_year          INTEGER,
     notes               TEXT
 );
 
-CREATE TABLE establishment (
+-- A processing facility: slaughter plant, dairy, creamery, mill.
+CREATE TABLE facility (
     id                  INTEGER PRIMARY KEY,
-    fsis_est_number     TEXT    UNIQUE,           -- FSIS establishment no.
     producer_id         INTEGER REFERENCES producer(id),
+    regulator_id        TEXT    UNIQUE,            -- FSIS establishment no.
     name                TEXT    NOT NULL,
     state               TEXT,
     city                TEXT,
-    bird_program_id     INTEGER REFERENCES bird_program(id),
-    head_per_day        INTEGER,
-    does_cutup          INTEGER,                  -- 1 if wings separated here
+    program_id          INTEGER REFERENCES production_program(id),
+    throughput_per_day  INTEGER,
+    -- Does the first mixing point happen here? For wings this is the
+    -- cut-up line -- the moment the product separates from the individual.
+    does_separation     INTEGER,
     source_id           INTEGER NOT NULL REFERENCES source(id),
     notes               TEXT
 );
 
 
 -- ---------------------------------------------------------------------------
--- Observed statistics (measured, from government data)
+-- Observed statistics
+--
+-- These tables are intentionally domain-shaped. Slaughter statistics have
+-- genuinely different columns from milk production statistics, and forcing
+-- them into one generic key/value table would destroy queryability for no
+-- benefit. New domains add their own observation tables; the MODEL tables
+-- above and below stay generic.
 -- ---------------------------------------------------------------------------
 
--- National annual slaughter totals. These are the anchor of the whole model.
-CREATE TABLE national_slaughter_year (
+CREATE TABLE slaughter_stat_year (
     id                      INTEGER PRIMARY KEY,
     species_id              INTEGER NOT NULL REFERENCES species(id),
     year                    INTEGER NOT NULL,
@@ -128,27 +220,30 @@ CREATE TABLE national_slaughter_year (
     UNIQUE (species_id, year)
 );
 
--- State-level average live weight. This is where bird-size programs become
--- visible in public data (Ohio ~4.5 lb vs North Carolina ~8.6 lb).
-CREATE TABLE state_live_weight (
+-- Regional size variation. For broilers this is where production programs
+-- become visible in public data: Ohio ~4.5 lb vs North Carolina ~8.6 lb.
+CREATE TABLE regional_size_stat (
     id                  INTEGER PRIMARY KEY,
     species_id          INTEGER NOT NULL REFERENCES species(id),
-    state               TEXT    NOT NULL,
+    region              TEXT    NOT NULL,          -- state code or name
     year                INTEGER NOT NULL,
-    month               INTEGER,                  -- NULL = annual figure
-    avg_live_weight_lb  REAL    NOT NULL,
-    certified_lb        INTEGER,
+    month               INTEGER,                   -- NULL = annual
+    avg_size            REAL    NOT NULL,
+    size_unit           TEXT    NOT NULL,
+    volume              INTEGER,
+    volume_unit         TEXT,
     source_id           INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, state, year, month)
+    UNIQUE (species_id, region, year, month)
 );
 
--- Annual grow-out performance (NCC series): market age, weight, mortality.
-CREATE TABLE flock_performance_year (
+-- Grow-out / husbandry performance by year.
+CREATE TABLE husbandry_stat_year (
     id                  INTEGER PRIMARY KEY,
     species_id          INTEGER NOT NULL REFERENCES species(id),
     year                INTEGER NOT NULL,
-    market_age_days     REAL,
-    market_weight_lb    REAL,
+    cycle_days          REAL,                      -- market age
+    end_size            REAL,                      -- market weight
+    size_unit           TEXT,
     feed_conversion     REAL,
     mortality_pct       REAL,
     source_id           INTEGER NOT NULL REFERENCES source(id),
@@ -157,56 +252,55 @@ CREATE TABLE flock_performance_year (
 
 
 -- ---------------------------------------------------------------------------
--- The loss / yield chain
+-- The loss chain -- raises INDIVIDUALS REQUIRED
 -- ---------------------------------------------------------------------------
 
--- An ordered chain of stages between a placed chick and a wing on a plate.
--- Each stage multiplies the surviving fraction. Walking the chain backwards
--- from "12 wings on a plate" gives the birds required.
 CREATE TABLE loss_stage (
     id              INTEGER PRIMARY KEY,
+    domain_id       INTEGER NOT NULL REFERENCES domain(id),
     slug            TEXT    NOT NULL UNIQUE,
     label           TEXT    NOT NULL,
-    sequence        INTEGER NOT NULL UNIQUE,  -- farm -> plate ordering
-    phase           TEXT    NOT NULL CHECK (phase IN (
-                        'farm','transport','slaughter','cutup',
-                        'grading','further_processing','distribution','kitchen'
-                    )),
+    sequence        INTEGER NOT NULL,        -- origin -> plate ordering
+    -- Free text rather than CHECK: phases differ across domains and we do
+    -- not want a schema migration to add a dairy pipeline.
+    phase           TEXT    NOT NULL,
+
     applies_to      TEXT    NOT NULL CHECK (applies_to IN (
-                        'bird',      -- removes whole birds from the population
-                        'wing',      -- removes/downgrades individual wings
-                        'mass'       -- scales weight, not counts
+                        'individual',  -- removes whole individuals
+                        'product',     -- removes/downgrades product units
+                        'mass'         -- scales weight only, not counts
                     )),
-    -- Whether this stage counts toward the answer depends on the question
-    -- being asked. Farm mortality is the clearest case: it matters for
-    -- "how many chicks were placed" but not for "whose wings are on my plate".
+    -- Whether a stage counts depends on the question. Farm mortality is the
+    -- clearest case: it matters for "how many chicks were placed" but not
+    -- for "whose wings are on my plate".
     optional        INTEGER NOT NULL DEFAULT 0,
     default_enabled INTEGER NOT NULL DEFAULT 1,
     description     TEXT    NOT NULL,
-    notes           TEXT
+    notes           TEXT,
+    UNIQUE (domain_id, sequence)
 );
 
--- The actual numbers. Triangular lo/mode/hi drives Monte Carlo directly.
--- A stage can have several competing values (different producers, bird
--- programs, years, or sources) -- resolution is by specificity at query time.
+-- Survival fractions, triangular lo/mode/hi so Monte Carlo needs no extra
+-- config. A stage may hold several competing values (by producer, program,
+-- region, year); resolution is by specificity at query time.
 CREATE TABLE loss_factor (
     id                  INTEGER PRIMARY KEY,
     loss_stage_id       INTEGER NOT NULL REFERENCES loss_stage(id),
     species_id          INTEGER NOT NULL REFERENCES species(id),
-    -- Optional narrowing. NULL means "applies generally".
+    product_id          INTEGER REFERENCES product(id),
     producer_id         INTEGER REFERENCES producer(id),
-    bird_program_id     INTEGER REFERENCES bird_program(id),
-    state               TEXT,
+    program_id          INTEGER REFERENCES production_program(id),
+    region              TEXT,
     year                INTEGER,
 
-    -- Surviving fraction, not loss fraction: 0.9955 means 0.45% lost.
+    -- SURVIVING fraction, not loss fraction: 0.9955 means 0.45% lost.
     -- Values > 1.0 are legal and meaningful (marinade pickup adds mass).
     survive_lo          REAL    NOT NULL,
     survive_mode        REAL    NOT NULL,
     survive_hi          REAL    NOT NULL,
 
     confidence          TEXT    NOT NULL CHECK (confidence IN (
-                            'measured',   -- directly reported by government
+                            'measured',   -- reported directly by government
                             'derived',    -- computed from measured figures
                             'study',      -- peer-reviewed, may not generalize
                             'industry',   -- trade rule of thumb
@@ -214,7 +308,7 @@ CREATE TABLE loss_factor (
                         )),
     source_id           INTEGER NOT NULL REFERENCES source(id),
     valid_from          TEXT,
-    valid_to            TEXT,           -- NULL = current
+    valid_to            TEXT,            -- NULL = current
     notes               TEXT,
 
     CHECK (survive_lo <= survive_mode AND survive_mode <= survive_hi),
@@ -222,63 +316,46 @@ CREATE TABLE loss_factor (
 );
 
 CREATE INDEX idx_loss_factor_lookup
-    ON loss_factor (loss_stage_id, species_id, producer_id, bird_program_id);
+    ON loss_factor (loss_stage_id, species_id, producer_id, program_id);
 
-
--- ---------------------------------------------------------------------------
--- Wing anatomy and grading
--- ---------------------------------------------------------------------------
-
-CREATE TABLE wing_segment (
+-- Size/quality grading. Modeled separately from loss because grading is
+-- also a MIXING event: it does not shuffle an individual's units, it
+-- deliberately separates them when they differ in size.
+CREATE TABLE product_grade (
     id                  INTEGER PRIMARY KEY,
-    species_id          INTEGER NOT NULL REFERENCES species(id),
-    slug                TEXT    NOT NULL,      -- 'drumette','flat','tip'
+    product_id          INTEGER NOT NULL REFERENCES product(id),
+    slug                TEXT    NOT NULL,          -- 'jumbo','large','medium'
     label               TEXT    NOT NULL,
-    per_wing_count      INTEGER NOT NULL DEFAULT 1,
-    bone_in_grams       REAL,
-    boneless_yield_pct  REAL,
-    usually_sold_as_wing INTEGER NOT NULL DEFAULT 1,  -- tips: 0
+    units_per_lb_lo     REAL,
+    units_per_lb_hi     REAL,
+    typical_program_id  INTEGER REFERENCES production_program(id),
     source_id           INTEGER NOT NULL REFERENCES source(id),
-    notes               TEXT,
-    UNIQUE (species_id, slug)
-);
-
--- Size grading is a mixing stage in disguise: it does not shuffle a bird's
--- two wings, it deliberately SEPARATES them when they differ in weight.
-CREATE TABLE wing_grade (
-    id                  INTEGER PRIMARY KEY,
-    species_id          INTEGER NOT NULL REFERENCES species(id),
-    slug                TEXT    NOT NULL,      -- 'jumbo','large','medium'
-    label               TEXT    NOT NULL,
-    pieces_per_lb_lo    REAL,
-    pieces_per_lb_hi    REAL,
-    typical_program_id  INTEGER REFERENCES bird_program(id),
-    source_id           INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, slug)
+    UNIQUE (product_id, slug)
 );
 
 
 -- ---------------------------------------------------------------------------
--- The mixing cascade
+-- The mixing cascade -- raises DISTINCT INDIVIDUALS REPRESENTED
 -- ---------------------------------------------------------------------------
 
--- Ordered stages at which wings from different birds commingle. Mixing
--- starts at wing separation and only ever increases the pool. The pool size
--- at the point of draw determines expected distinct birds.
+-- Ordered points at which product from different individuals commingles.
+-- Mixing begins the instant the product separates from the individual and
+-- only ever increases the pool.
 CREATE TABLE mixing_stage (
     id                  INTEGER PRIMARY KEY,
+    domain_id           INTEGER NOT NULL REFERENCES domain(id),
     slug                TEXT    NOT NULL UNIQUE,
     label               TEXT    NOT NULL,
-    sequence            INTEGER NOT NULL UNIQUE,
+    sequence            INTEGER NOT NULL,
 
-    -- Pool size expressed in BIRDS represented at this stage.
-    pool_birds_lo       INTEGER NOT NULL,
-    pool_birds_mode     INTEGER NOT NULL,
-    pool_birds_hi       INTEGER NOT NULL,
+    -- Pool size expressed in INDIVIDUALS represented at this stage.
+    pool_lo             INTEGER NOT NULL,
+    pool_mode           INTEGER NOT NULL,
+    pool_hi             INTEGER NOT NULL,
 
-    -- 'random'    : passive commingling, wings shuffle
-    -- 'separating': actively splits a bird's two wings (size grading)
-    -- 'none'      : passthrough, preserves whatever pool arrived
+    -- 'random'     : passive commingling
+    -- 'separating' : actively splits one individual's units (size grading)
+    -- 'none'       : passthrough, preserves the pool that arrived
     mixing_kind         TEXT    NOT NULL CHECK (mixing_kind IN
                             ('random','separating','none')),
 
@@ -286,14 +363,16 @@ CREATE TABLE mixing_stage (
     confidence          TEXT    NOT NULL,
     description         TEXT    NOT NULL,
 
-    CHECK (pool_birds_lo <= pool_birds_mode AND pool_birds_mode <= pool_birds_hi)
+    CHECK (pool_lo <= pool_mode AND pool_mode <= pool_hi),
+    UNIQUE (domain_id, sequence)
 );
 
--- Named end-to-end supply chains: 'commodity_foodservice', 'local_butcher',
--- 'whole_bird_home'. Selecting one picks which mixing stages apply, which is
--- what moves the answer within the 6-12 band.
+-- Named end-to-end routes: 'commodity_foodservice', 'local_butcher',
+-- 'whole_bird_home'. Choosing one selects which mixing stages apply, and
+-- that is what moves the answer within the floor..n band.
 CREATE TABLE supply_chain (
     id              INTEGER PRIMARY KEY,
+    domain_id       INTEGER NOT NULL REFERENCES domain(id),
     slug            TEXT    NOT NULL UNIQUE,
     label           TEXT    NOT NULL,
     description     TEXT    NOT NULL,
@@ -303,10 +382,39 @@ CREATE TABLE supply_chain (
 CREATE TABLE supply_chain_stage (
     supply_chain_id INTEGER NOT NULL REFERENCES supply_chain(id),
     mixing_stage_id INTEGER NOT NULL REFERENCES mixing_stage(id),
-    -- Optional per-chain override of the stage's default pool size.
-    pool_birds_override INTEGER,
+    pool_override   INTEGER,                       -- per-chain pool size
     PRIMARY KEY (supply_chain_id, mixing_stage_id)
 );
+
+
+-- ---------------------------------------------------------------------------
+-- Learning centre
+-- ---------------------------------------------------------------------------
+
+-- Points of fact, surfaced in the learning centre and alongside results as
+-- the user works through a question. Like everything else here, a fact
+-- cannot exist without a citation.
+CREATE TABLE fact (
+    id              INTEGER PRIMARY KEY,
+    slug            TEXT    NOT NULL UNIQUE,
+    domain_id       INTEGER REFERENCES domain(id),
+    headline        TEXT    NOT NULL,
+    body            TEXT    NOT NULL,
+    -- 'result'   : shown next to an answer
+    -- 'learning' : learning centre only
+    -- 'both'     : eligible for either
+    placement       TEXT    NOT NULL CHECK (placement IN
+                        ('result','learning','both')),
+    -- 1-5. The UI leads with high-surprise facts, because the
+    -- counterintuitive ones are what keep people reading.
+    surprise        INTEGER NOT NULL DEFAULT 3
+                        CHECK (surprise BETWEEN 1 AND 5),
+    source_id       INTEGER NOT NULL REFERENCES source(id),
+
+    CHECK (length(headline) > 0 AND length(body) > 0)
+);
+
+CREATE INDEX idx_fact_placement ON fact (placement, surprise DESC);
 
 
 -- ---------------------------------------------------------------------------
@@ -316,32 +424,33 @@ CREATE TABLE supply_chain_stage (
 CREATE TABLE run (
     id                  INTEGER PRIMARY KEY,
     created_at          TEXT    NOT NULL,
-    wings_requested     INTEGER NOT NULL,
-    wing_unit           TEXT    NOT NULL CHECK (wing_unit IN
-                            ('whole_wing','segment')),
     species_id          INTEGER NOT NULL REFERENCES species(id),
+    product_id          INTEGER NOT NULL REFERENCES product(id),
+    quantity            REAL    NOT NULL,
+    -- For countable products: 'unit' (whole wings) or 'segment' (pieces).
+    quantity_basis      TEXT    NOT NULL,
     producer_id         INTEGER REFERENCES producer(id),
-    bird_program_id     INTEGER REFERENCES bird_program(id),
+    program_id          INTEGER REFERENCES production_program(id),
     supply_chain_id     INTEGER REFERENCES supply_chain(id),
-    include_farm_loss   INTEGER NOT NULL DEFAULT 0,
+    include_optional_losses INTEGER NOT NULL DEFAULT 0,
 
     -- Results
-    birds_floor         REAL,   -- the hard minimum (wings / 2)
-    birds_required      REAL,   -- after walking the loss chain backwards
-    distinct_birds_mean REAL,   -- expected distinct birds actually represented
-    distinct_birds_p05  REAL,
-    distinct_birds_p95  REAL,
-    iterations          INTEGER,
-    db_version          TEXT
+    floor_individuals       REAL,   -- hard minimum
+    required_individuals    REAL,   -- after walking the loss chain backwards
+    distinct_mean           REAL,   -- expected distinct individuals
+    distinct_p05            REAL,
+    distinct_p95            REAL,
+    iterations              INTEGER,
+    db_version              TEXT
 );
 
--- Per-stage audit trail. This is what the "show the reasoning?" prompt
--- unfolds -- one row per stage, in order, with the value used and its source.
+-- Per-stage audit trail. This is what the "show the reasoning" toggle
+-- unfolds: one row per stage, in order, value used, and citation.
 CREATE TABLE run_step (
     id              INTEGER PRIMARY KEY,
     run_id          INTEGER NOT NULL REFERENCES run(id) ON DELETE CASCADE,
     sequence        INTEGER NOT NULL,
-    kind            TEXT    NOT NULL CHECK (kind IN ('loss','mixing')),
+    kind            TEXT    NOT NULL CHECK (kind IN ('floor','loss','mixing')),
     stage_slug      TEXT    NOT NULL,
     stage_label     TEXT    NOT NULL,
     value_used      REAL    NOT NULL,
@@ -355,28 +464,30 @@ CREATE INDEX idx_run_step_run ON run_step (run_id, sequence);
 
 
 -- ---------------------------------------------------------------------------
--- Convenience views
+-- Views
 -- ---------------------------------------------------------------------------
 
--- National dressing yield, derived rather than stored, so it can never drift
--- out of sync with the NASS totals it comes from.
+-- Dressing yield derived, never stored, so it cannot drift from the NASS
+-- totals it comes from.
 CREATE VIEW v_dressing_yield AS
 SELECT
-    s.slug              AS species,
-    n.year,
-    n.certified_rtc_lb,
-    n.live_weight_lb,
-    CAST(n.certified_rtc_lb AS REAL) / n.live_weight_lb AS dressing_yield,
-    n.source_id
-FROM national_slaughter_year n
-JOIN species s ON s.id = n.species_id
-WHERE n.live_weight_lb IS NOT NULL
-  AND n.certified_rtc_lb IS NOT NULL;
+    sp.slug             AS species,
+    s.year,
+    s.certified_rtc_lb,
+    s.live_weight_lb,
+    CAST(s.certified_rtc_lb AS REAL) / s.live_weight_lb AS dressing_yield,
+    s.source_id
+FROM slaughter_stat_year s
+JOIN species sp ON sp.id = s.species_id
+WHERE s.live_weight_lb IS NOT NULL
+  AND s.certified_rtc_lb IS NOT NULL;
 
--- Every statistic in the database with its citation attached, for the
+-- Every current loss factor with its citation attached, for the
 -- "where did this number come from" drill-down.
 CREATE VIEW v_cited_factors AS
 SELECT
+    d.slug          AS domain,
+    sp.slug         AS species,
     ls.sequence,
     ls.slug         AS stage,
     ls.label        AS stage_label,
@@ -392,6 +503,24 @@ SELECT
     src.published_on
 FROM loss_factor lf
 JOIN loss_stage ls  ON ls.id  = lf.loss_stage_id
+JOIN species    sp  ON sp.id  = lf.species_id
+JOIN domain     d   ON d.id   = ls.domain_id
 JOIN source     src ON src.id = lf.source_id
 WHERE lf.valid_to IS NULL
-ORDER BY ls.sequence;
+ORDER BY d.slug, ls.sequence;
+
+-- Coverage dashboard: what is actually populated per domain. Drives the
+-- "add to it every day" workflow -- shows at a glance where the gaps are.
+CREATE VIEW v_domain_coverage AS
+SELECT
+    d.slug                          AS domain,
+    COUNT(DISTINCT sp.id)           AS species_count,
+    COUNT(DISTINCT p.id)            AS product_count,
+    COUNT(DISTINCT ls.id)           AS loss_stage_count,
+    COUNT(DISTINCT ms.id)           AS mixing_stage_count
+FROM domain d
+LEFT JOIN species      sp ON sp.domain_id = d.id
+LEFT JOIN product      p  ON p.species_id = sp.id
+LEFT JOIN loss_stage   ls ON ls.domain_id = d.id
+LEFT JOIN mixing_stage ms ON ms.domain_id = d.id
+GROUP BY d.slug;

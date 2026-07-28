@@ -1,0 +1,206 @@
+# The loss chain: stages that raise INDIVIDUALS REQUIRED.
+#
+# Values are SURVIVING fractions, not loss fractions. 0.9955 means 0.45%
+# was lost. Values above 1.0 are legal and meaningful - marinade pickup
+# adds mass.
+#
+# applies_to matters enormously and is easy to get wrong:
+#   individual - removes whole birds from the population
+#   product    - removes or downgrades individual wings
+#   mass       - scales weight only
+#
+# For a COUNT question ("12 wings on my plate") only 'individual' and
+# 'product' stages affect the answer. Cook loss makes each wing lighter; it
+# does not make it fewer wings. The model enforces this rather than trusting
+# whoever writes the YAML to remember it.
+
+stages:
+  - slug: farm_mortality
+    domain: poultry
+    label: Grow-out mortality
+    sequence: 10
+    phase: grow_out
+    applies_to: individual
+    optional: 1
+    default_enabled: 0
+    description: >-
+      Birds that die during the ~47-day grow-out and never reach the plant.
+    notes: >-
+      OFF by default, deliberately. A chick that died at day 20 never became
+      a wing and never entered the wing supply, so it does not belong in
+      "whose wings are on my plate". Turn it on to answer the different
+      question "how many chicks had to be placed", which adds about 6%.
+    factors:
+      - species: broiler
+        survive_lo: 0.935
+        survive_mode: 0.9407
+        survive_hi: 0.950
+        confidence: industry
+        source: ncc-broiler-performance
+        year: 2024
+        notes: >-
+          2024 mortality 5.93%. Rising: the historic low was 3.7% in 2013.
+          Band spans the recent 5.0-6.5% range.
+
+  - slug: transport_doa
+    domain: poultry
+    label: Transport dead-on-arrival
+    sequence: 20
+    phase: transport
+    applies_to: individual
+    optional: 0
+    default_enabled: 1
+    description: Birds that die between catching and the plant.
+    notes: >-
+      UNSOURCED PLACEHOLDER. We know this loss is real and non-zero, but we
+      have not yet found a citable US figure. Kept enabled because omitting
+      a known loss biases the answer low, but the band is deliberately wide
+      and the UI flags it. Open item in docs/RESEARCH.md.
+    factors:
+      - species: broiler
+        survive_lo: 0.990
+        survive_mode: 0.996
+        survive_hi: 0.999
+        confidence: estimate
+        source: project-estimate-unsourced
+
+  - slug: postmortem_condemnation
+    domain: poultry
+    label: Post-mortem condemnation
+    sequence: 30
+    phase: slaughter
+    applies_to: individual
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Carcasses and parts condemned by FSIS inspection after slaughter.
+    notes: >-
+      The most reliable loss figure in the project - reported directly by
+      USDA. Note the denominator NASS uses: pounds condemned as a percent of
+      pounds certified PLUS post-mortem condemnations, not a percent of live
+      weight.
+    factors:
+      - species: broiler
+        survive_lo: 0.9954
+        survive_mode: 0.9955
+        survive_hi: 0.9955
+        confidence: measured
+        source: nass-poultry-slaughter-2025
+        year: 2025
+        notes: 0.45% in 2025, 0.46% in 2024. Remarkably stable.
+
+  - slug: wing_damage
+    domain: poultry
+    label: Wing damage and downgrade
+    sequence: 40
+    phase: harvest_and_cutup
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Wings broken, dislocated, or bruised during catching, loading,
+      shackling, stunning, and picking, then downgraded out of the
+      intact-wing stream.
+    notes: >-
+      The most important loss in this model and the least intuitive. Wings
+      are by a wide margin the most-damaged part of the bird - median 5.7%
+      injured per load, against under 1% for legs, breast, and shoulders.
+      This is why sellable whole wings per bird is meaningfully below 2, and
+      it is the main reason the birds-required number exceeds the floor.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.900
+        survive_mode: 0.943
+        survive_hi: 0.980
+        confidence: study
+        source: wing-injuries-loading
+        notes: >-
+          5.7% median wing injuries per load. Load-to-load variance is high,
+          hence the wide band. Corroborated in kind by bruise-distribution
+          data showing wings account for 33% of all bruising.
+
+  - slug: grading_downgrade
+    domain: poultry
+    label: Grading and trim loss
+    sequence: 50
+    phase: grading
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Wings pulled from the primary pack for size, colour, or trim defects.
+    notes: UNSOURCED PLACEHOLDER. Open item in docs/RESEARCH.md.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.950
+        survive_mode: 0.980
+        survive_hi: 0.995
+        confidence: estimate
+        source: project-estimate-unsourced
+
+  - slug: further_processing
+    domain: poultry
+    label: Further processing and marinade pickup
+    sequence: 60
+    phase: further_processing
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Freezing, glazing, and marination. Can ADD mass rather than remove it.
+    notes: >-
+      Deliberately spans 1.0 - marinade and glaze pickup routinely make the
+      packed weight exceed the input weight. Affects mass only; the wing
+      count is unchanged, so this never moves a count answer.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.980
+        survive_mode: 1.000
+        survive_hi: 1.120
+        confidence: estimate
+        source: project-estimate-unsourced
+
+  - slug: distribution_shrink
+    domain: poultry
+    label: Distribution shrink
+    sequence: 70
+    phase: distribution
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: Freezer burn, drip loss, and damage in transit and storage.
+    notes: UNSOURCED PLACEHOLDER. Mass only.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.970
+        survive_mode: 0.990
+        survive_hi: 1.000
+        confidence: estimate
+        source: project-estimate-unsourced
+
+  - slug: cook_loss
+    domain: poultry
+    label: Cook loss
+    sequence: 80
+    phase: kitchen
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: Moisture and fat lost during frying.
+    notes: >-
+      Mass only, and this is the clearest illustration of why applies_to
+      exists. Frying a wing makes it lighter. It does not make it a
+      fraction of a wing. Twelve wings go in the fryer and twelve wings come
+      out, so cook loss has ZERO effect on the how-many-chickens answer.
+    factors:
+      - species: broiler
+        product: whole_wing
+        survive_lo: 0.700
+        survive_mode: 0.780
+        survive_hi: 0.850
+        confidence: estimate
+        source: project-estimate-unsourced

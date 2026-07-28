@@ -1,0 +1,148 @@
+# Domains, species, products. v1 seeds broiler chicken only.
+# Turkey is stubbed inactive to prove the schema generalizes without
+# migration - flip active to 1 once its data is researched.
+
+domains:
+  - slug: poultry
+    label: Poultry
+    description: >-
+      Birds raised for meat and eggs. First domain implemented.
+    active: 1
+
+species:
+  - slug: broiler
+    domain: poultry
+    common_name: Broiler chicken
+    scientific_name: Gallus gallus domesticus
+    individual_noun: chicken
+    individual_plural: chickens
+    stat_category: Young Chickens
+    active: 1
+
+  # Stub. Proves a second species needs data, not schema changes.
+  - slug: turkey
+    domain: poultry
+    common_name: Turkey
+    scientific_name: Meleagris gallopavo
+    individual_noun: turkey
+    individual_plural: turkeys
+    stat_category: Young Turkeys
+    active: 0
+
+products:
+  - slug: whole_wing
+    species: broiler
+    label: Whole wing
+    label_plural: Whole wings
+    yield_mode: countable
+    units_per_individual_lo: 2
+    units_per_individual_mode: 2
+    units_per_individual_hi: 2
+    unit_name: wing
+    is_anatomical_constant: 1
+    source: wing-yield-eight-strains
+    notes: >-
+      A chicken has exactly two wings. This is what makes the floor a real
+      floor rather than an average: twelve wings cannot come from fewer than
+      six chickens, ever. Every other number in this project is an estimate
+      layered on top of that one hard fact.
+
+segments:
+  - product: whole_wing
+    slug: drumette
+    label: Drumette
+    per_product_count: 1
+    mass_grams: 39.9
+    edible_yield_pct: 74.9
+    sold_as_product: 1
+    source: boneless-wing-method
+    notes: Heaviest segment, closest to the body.
+
+  - product: whole_wing
+    slug: flat
+    label: Flat (wingette)
+    per_product_count: 1
+    mass_grams: 30.7
+    edible_yield_pct: 80.1
+    sold_as_product: 1
+    source: boneless-wing-method
+    notes: >-
+      Highest boneless yield of the three at 80.1%, despite weighing less
+      than the drumette.
+
+  - product: whole_wing
+    slug: tip
+    label: Wing tip
+    per_product_count: 1
+    sold_as_product: 0
+    source: boneless-wing-method
+    notes: >-
+      Mostly skin, bone, and cartilage. Usually diverted to stock, export,
+      or rendering rather than sold as a wing. This is why a restaurant
+      "dozen wings" is normally 12 drumettes-and-flats - i.e. 6 whole wings,
+      3 birds - rather than 12 whole wings. The unit ambiguity is the single
+      largest swing factor in the whole answer.
+
+programs:
+  - slug: small_bird
+    species: broiler
+    label: Small bird
+    size_lo: 4.0
+    size_mode: 4.6
+    size_hi: 5.5
+    size_unit: lb live weight
+    typical_market: Fast food, tray pack
+    source: nass-poultry-slaughter-2025
+    notes: >-
+      Ohio runs the lightest birds in the country at 4.6 lb annual average
+      for 2025.
+
+  - slug: medium_bird
+    species: broiler
+    label: Medium bird
+    size_lo: 5.5
+    size_mode: 6.4
+    size_hi: 7.2
+    size_unit: lb live weight
+    typical_market: Retail whole bird, cut-up parts
+    source: nass-poultry-slaughter-2025
+    notes: Georgia, Texas, Mississippi, Tennessee sit in this band.
+
+  - slug: big_bird
+    species: broiler
+    label: Big bird
+    size_lo: 7.2
+    size_mode: 8.4
+    size_hi: 9.5
+    size_unit: lb live weight
+    typical_market: Deboning, further processing
+    source: nass-poultry-slaughter-2025
+    notes: >-
+      North Carolina averaged 8.4 lb and Oklahoma 8.1 lb in 2025. A big-bird
+      wing is far heavier than a small-bird wing, so a POUND of wings from
+      North Carolina represents fewer birds than a pound from Ohio - but the
+      bird COUNT floor for a given number of wings is unchanged. Size
+      changes mass math, never the anatomical floor.
+
+grades:
+  - product: whole_wing
+    slug: jumbo
+    label: Jumbo
+    typical_program: big_bird
+    source: project-estimate-unsourced
+    notes: >-
+      Count-per-pound bands not yet sourced. Listed so the grading MIXING
+      step has something to separate on; the bands themselves are an open
+      research item.
+
+  - product: whole_wing
+    slug: large
+    label: Large
+    typical_program: medium_bird
+    source: project-estimate-unsourced
+
+  - product: whole_wing
+    slug: medium
+    label: Medium
+    typical_program: small_bird
+    source: project-estimate-unsourced

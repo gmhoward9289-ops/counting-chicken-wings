@@ -1,0 +1,53 @@
+# Major US broiler producers.
+#
+# Plant-level detail (FSIS establishment numbers, per-plant bird programs)
+# is an open research item - the FSIS Meat, Poultry and Egg Product
+# Inspection Directory is the public source and has not yet been ingested.
+
+producers:
+  - slug: tyson
+    domain: poultry
+    name: Tyson Foods
+    headquarters: Springdale, Arkansas
+    market_share_pct: 21.3
+    throughput_per_week: 45000000
+    source: wattpoultry-top-producers
+    as_of_year: 2024
+    notes: >-
+      Largest US poultry producer. Roughly 45 million birds a week - about
+      2.3 billion a year, or just under a quarter of the national flock.
+
+  - slug: pilgrims
+    domain: poultry
+    name: Pilgrim's Pride
+    headquarters: Greeley, Colorado
+    market_share_pct: 15.8
+    source: wattpoultry-top-producers
+    as_of_year: 2024
+
+  - slug: wayne_sanderson
+    domain: poultry
+    name: Wayne-Sanderson Farms
+    headquarters: Oakwood, Georgia
+    market_share_pct: 14.4
+    throughput_per_week: 20600000
+    facility_count: 23
+    source: wattpoultry-top-producers
+    as_of_year: 2024
+    notes: >-
+      Formed by the 2022 merger of Sanderson Farms and Wayne Farms, which
+      raised top-four concentration. About 1,071.2 million birds a year
+      across 23 facilities in seven states.
+
+# Industry-wide structure, for the learning centre.
+industry:
+  domain: poultry
+  source: ncc-key-facts
+  slaughter_plants: 180
+  integrated_companies: 30
+  contract_farms: 25000
+  top_four_share_pct: 58
+  notes: >-
+    Highly concentrated: the top four companies account for roughly 58% of
+    US broiler production. Practically, this means a randomly chosen wing
+    has better than even odds of coming from one of four companies.

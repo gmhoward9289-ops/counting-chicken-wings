@@ -1,0 +1,127 @@
+# Every statistic in this project traces to one of these.
+# The build refuses to insert a fact whose source_id is missing.
+
+- slug: nass-poultry-slaughter-2025
+  title: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+  published_on: '2026-02-01'
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Definitive US slaughter statistics. NASS reports the broiler population
+    under the category "Young Chickens", defined in the report as
+    "commercially grown broilers-fryers and other young immature birds such
+    as roasters and capons". Highest-confidence source in the project.
+
+- slug: ncc-broiler-performance
+  title: U.S. Broiler Performance
+  publisher: National Chicken Council
+  url: https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
+  retrieved_on: '2026-07-28'
+  source_type: trade_body
+  notes: >-
+    Year-by-year series of market age, market weight, feed conversion, and
+    grow-out mortality going back to 1925. Trade body rather than
+    government, so figures are tagged confidence=industry.
+
+- slug: ncc-key-facts
+  title: Broiler Chicken Industry Key Facts
+  publisher: National Chicken Council
+  url: https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
+  retrieved_on: '2026-07-28'
+  source_type: trade_body
+  notes: Industry structure - plant counts, company counts, contract farms.
+
+- slug: wing-yield-eight-strains
+  title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S003257911946625X/pdf
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
+    (6.7-7.3%), measured across eight commercial broiler strains.
+
+- slug: boneless-wing-method
+  title: >-
+    A method of production of boneless chicken wings (drumettes and winglets)
+    by separation of periosteum from bone without cutting skin and muscles
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
+    winglet 30.7 g at 80.1% boneless yield.
+
+- slug: wing-injuries-loading
+  title: >-
+    Rearing and handling injuries in broiler chickens and risk factors for
+    wing injuries during loading
+  publisher: Canadian Journal of Animal Science
+  url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    Median wing injuries per load 5.7%, against under 1% per load for legs,
+    breast, and shoulders. Wings are by a wide margin the most damaged part
+    of the bird. Load-to-load variance is high, so this is stored with a
+    wide lo/hi band.
+
+- slug: welfare-training-carcass-quality
+  title: >-
+    The Influence of Welfare Training on Bird Welfare and Carcass Quality in
+    Two Commercial Poultry Primary Processing Plants
+  publisher: Animals (PMC)
+  url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6719098/
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    90% of bruising occurs in the 12-24 hours before processing. Bruise
+    distribution by region: breast 42%, wings 33%, legs 25%.
+
+- slug: wattpoultry-top-producers
+  title: Top 10 US chicken producers grow in new directions
+  publisher: WATTPoultry / WATTAgNet
+  url: https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
+  retrieved_on: '2026-07-28'
+  source_type: trade_press
+  notes: Producer market shares and processing volumes.
+
+- slug: derived-dressing-yield
+  title: National dressing yield derived from NASS totals
+  publisher: counting-chicken-wings
+  retrieved_on: '2026-07-28'
+  source_type: derived
+  derived_from:
+    - nass-poultry-slaughter-2025
+  notes: >-
+    Ready-to-cook pounds divided by live weight pounds, both reported by
+    NASS for the same population and period. 48,006,482 / 63,443,212 =
+    0.75667 for 2025. Not an estimate - it falls directly out of two
+    measured totals.
+
+- slug: project-estimate-mixing
+  title: Mixing pool sizes reasoned from process equipment scale
+  publisher: counting-chicken-wings
+  retrieved_on: '2026-07-28'
+  source_type: estimate
+  notes: >-
+    Pool sizes for the mixing cascade are OUR ESTIMATES, reasoned from line
+    speeds, chiller residence times, and standard container sizes. They are
+    not measured. Flagged confidence=estimate throughout and shown as such
+    in the UI. The qualitative conclusion is robust to these values: the
+    distinct-individual curve flattens above roughly 1,000 individuals, so
+    any plausible commodity-scale pool lands within a hair of the ceiling.
+
+- slug: project-estimate-unsourced
+  title: Placeholder pending research
+  publisher: counting-chicken-wings
+  retrieved_on: '2026-07-28'
+  source_type: estimate
+  notes: >-
+    Explicit placeholder for stages we know exist but have not yet sourced
+    (transport DOA, grading downgrade, cook loss). Values are deliberately
+    wide and every one is listed in docs/RESEARCH.md open items. Anything
+    citing this source should be treated as unverified.
