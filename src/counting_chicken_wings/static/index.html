@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counting Chicken Wings</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+<style>
+  :root {
+    --bg: #12100e; --panel: #1c1917; --line: #322c28;
+    --ink: #f5f0e8; --dim: #a8a29e; --faint: #78716c;
+    --accent: #f59e0b; --accent2: #fb923c;
+    --measured: #4ade80; --derived: #4ade80; --study: #60a5fa;
+    --industry: #22d3ee; --estimate: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+  header { padding: 48px 0 28px; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.5px; }
+  .sub { color: var(--dim); margin: 0; }
+
+  nav { display: flex; gap: 4px; flex-wrap: wrap; margin: 24px 0 28px;
+        border-bottom: 1px solid var(--line); }
+  nav button {
+    background: none; border: 0; border-bottom: 2px solid transparent;
+    color: var(--dim); padding: 10px 14px; cursor: pointer; font-size: 14px;
+  }
+  nav button:hover { color: var(--ink); }
+  nav button.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line);
+           border-radius: 10px; padding: 22px; margin-bottom: 18px; }
+  .view { display: none; } .view.on { display: block; }
+
+  .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+  label { display: block; font-size: 12px; color: var(--dim);
+          text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+  input[type=number], select {
+    background: #0d0b0a; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 7px; padding: 9px 11px; font-size: 15px; min-width: 90px;
+  }
+  select { min-width: 200px; }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 14px;
+           color: var(--dim); cursor: pointer; }
+  .check input { accent-color: var(--accent); }
+
+  .answer { text-align: center; padding: 30px 12px 22px; }
+  .headline { font-size: 58px; font-weight: 700; letter-spacing: -2px;
+              color: var(--accent); line-height: 1; }
+  .headline-label { color: var(--dim); margin-top: 10px; font-size: 17px; }
+  .floorline { margin-top: 18px; padding-top: 16px;
+               border-top: 1px solid var(--line); color: var(--dim); }
+  .floorline b { color: var(--ink); }
+
+  .band { margin: 22px auto 0; max-width: 560px; }
+  .bandbar { position: relative; height: 8px; background: #0d0b0a;
+             border-radius: 4px; border: 1px solid var(--line); }
+  .bandfill { position: absolute; top: 0; bottom: 0; left: 0;
+              background: linear-gradient(90deg, var(--accent2), var(--accent));
+              border-radius: 4px; }
+  .bandends { display: flex; justify-content: space-between;
+              font-size: 12px; color: var(--faint); margin-top: 6px; }
+
+  details { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px; }
+  summary { cursor: pointer; color: var(--accent); font-size: 15px;
+            list-style: none; user-select: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸ "; }
+  details[open] summary::before { content: "▾ "; }
+
+  .step { border-left: 2px solid var(--line); padding: 10px 0 10px 16px;
+          margin: 14px 0; }
+  .step.count { border-left-color: var(--accent); }
+  .step h4 { margin: 0 0 4px; font-size: 15px; display: flex; gap: 9px;
+             align-items: center; flex-wrap: wrap; }
+  .step p { margin: 0; color: var(--dim); font-size: 14px; }
+  .cite { font-size: 12px; color: var(--faint); margin-top: 5px; }
+
+  .badge { font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+           padding: 2px 7px; border-radius: 20px; border: 1px solid; }
+  .b-measured, .b-derived { color: var(--measured); border-color: #14532d; background: #052e16; }
+  .b-study { color: var(--study); border-color: #1e3a5f; background: #0c1f33; }
+  .b-industry { color: var(--industry); border-color: #164e63; background: #083344; }
+  .b-estimate { color: var(--estimate); border-color: #713f12; background: #2a1a05; }
+
+  .fact { border-left: 3px solid var(--accent); padding: 12px 0 12px 16px;
+          margin: 16px 0; }
+  .fact h4 { margin: 0 0 5px; font-size: 16px; }
+  .fact p { margin: 0; color: var(--dim); font-size: 14px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px;
+           border-bottom: 1px solid var(--line); }
+  th { color: var(--faint); font-size: 11px; text-transform: uppercase;
+       letter-spacing: .06em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .slider { width: 100%; accent-color: var(--accent); }
+  .big { font-size: 34px; font-weight: 700; color: var(--accent);
+         font-variant-numeric: tabular-nums; }
+  .note { color: var(--faint); font-size: 13px; }
+  .warn { color: var(--estimate); }
+  h3 { margin: 0 0 4px; font-size: 17px; }
+  .muted { color: var(--dim); font-size: 14px; margin: 0 0 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Counting Chicken Wings</h1>
+  <p class="sub">How many chickens does it take to make a dozen wings?
+     Always six or more. Usually close to twelve.</p>
+</header>
+
+<nav>
+  <button class="on" data-v="calc">Calculator</button>
+  <button data-v="mix">Mixing simulator</button>
+  <button data-v="states">By state</button>
+  <button data-v="trends">Trends</button>
+  <button data-v="facts">Chicken facts</button>
+  <button data-v="sources">Sources</button>
+</nav>
+
+<!-- ------------------------------------------------ calculator -->
+<section class="view on" id="v-calc">
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label>How many wings</label>
+        <input type="number" id="count" value="12" min="1" step="1">
+      </div>
+      <div>
+        <label>Supply chain</label>
+        <select id="chain"></select>
+      </div>
+      <label class="check"><input type="checkbox" id="pieces">
+        Count as pieces (menu style)</label>
+      <label class="check"><input type="checkbox" id="mort">
+        Include grow-out mortality</label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="answer">
+      <div class="headline" id="hl">—</div>
+      <div class="headline-label" id="hl-label">different chickens</div>
+
+      <div class="band">
+        <div class="bandbar"><div class="bandfill" id="bandfill"></div></div>
+        <div class="bandends">
+          <span id="band-lo">floor</span><span id="band-hi">ceiling</span>
+        </div>
+      </div>
+
+      <div class="floorline" id="floorline"></div>
+    </div>
+
+    <details id="why">
+      <summary>Show the reasoning</summary>
+      <div id="trace"></div>
+      <div id="mixnotes"></div>
+    </details>
+  </div>
+
+  <div class="panel" id="resultfact"></div>
+</section>
+
+<!-- ------------------------------------------------ mixing -->
+<section class="view" id="v-mix">
+  <div class="panel">
+    <h3>The mixing simulator</h3>
+    <p class="muted">
+      Drag the pool size. This is the whole argument of the project in one
+      control: six chickens is only reachable if you cut up six chickens
+      yourself. Add any pooling at all and the count runs for the ceiling.
+    </p>
+    <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:260px">
+        <label>Pool size — chickens in the batch</label>
+        <input type="range" class="slider" id="pool" min="0" max="100" value="0">
+        <div class="note"><span id="poollabel">6</span> chickens in the pool</div>
+      </div>
+      <div style="text-align:center">
+        <div class="big" id="mixout">6.00</div>
+        <div class="note">distinct chickens in 12 wings</div>
+      </div>
+    </div>
+    <div id="mixchart" style="height:340px;margin-top:18px"></div>
+    <p class="note" id="mixnote"></p>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ states -->
+<section class="view" id="v-states">
+  <div class="panel">
+    <h3>Average broiler live weight by state</h3>
+    <p class="muted">
+      Ohio runs 4.6 lb birds. North Carolina runs 8.4 lb birds. Same species,
+      same year, different businesses — small-bird programs feed fast food,
+      big-bird programs feed deboning.
+    </p>
+    <div id="statemap" style="height:420px"></div>
+  </div>
+  <div class="panel">
+    <div id="statetable"></div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ trends -->
+<section class="view" id="v-trends">
+  <div class="panel">
+    <h3>Year over year</h3>
+    <p class="muted">
+      Birds get heavier and more feed-efficient every year — and they also
+      die more often than they did in 2013.
+    </p>
+    <div class="grid2">
+      <div id="t-weight" style="height:280px"></div>
+      <div id="t-mort" style="height:280px"></div>
+      <div id="t-fcr" style="height:280px"></div>
+      <div id="t-yield" style="height:280px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ facts -->
+<section class="view" id="v-facts">
+  <div class="panel"><div id="factlist"></div></div>
+</section>
+
+<!-- ------------------------------------------------ sources -->
+<section class="view" id="v-sources">
+  <div class="panel">
+    <h3>Every number here has a citation</h3>
+    <p class="muted">
+      Where a figure could not be sourced it is marked as an estimate rather
+      than dressed up as a fact. That distinction is the point.
+    </p>
+    <div id="sourcelist"></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = p => fetch(p).then(r => r.json());
+const PLOT = {
+  paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+  font: { color: '#a8a29e', size: 11 },
+  margin: { l: 50, r: 16, t: 30, b: 40 },
+  xaxis: { gridcolor: '#322c28', zerolinecolor: '#322c28' },
+  yaxis: { gridcolor: '#322c28', zerolinecolor: '#322c28' },
+};
+const CFG = { displayModeBar: false, responsive: true };
+let META = null, loaded = {};
+
+// Show enough decimals to keep a near-ceiling value visibly below it.
+function fmtDistinct(v, ceil) {
+  if (v >= ceil) return v.toFixed(2);
+  for (const p of [2,3,4,5,6]) {
+    const s = v.toFixed(p);
+    if (parseFloat(s) < ceil) return s;
+  }
+  return v.toFixed(6);
+}
+const badge = c => c ? `<span class="badge b-${c}">${c}</span>` : '';
+
+// ---- navigation
+document.querySelectorAll('nav button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    $('#v-' + b.dataset.v).classList.add('on');
+    load(b.dataset.v);
+  };
+});
+
+// ---- calculator
+async function calc() {
+  const q = new URLSearchParams({
+    count: $('#count').value || 12,
+    chain: $('#chain').value,
+    pieces: $('#pieces').checked,
+    include_mortality: $('#mort').checked,
+  });
+  const d = await api('/api/calculate?' + q);
+  const a = d.answer, plural = d.question.individual_plural;
+
+  $('#hl').textContent = fmtDistinct(a.distinct, a.ceiling);
+  $('#hl-label').textContent = 'different ' + plural + ' on your plate';
+
+  const span = a.ceiling - a.floor;
+  const pct = span > 0 ? ((a.distinct - a.floor) / span) * 100 : 100;
+  $('#bandfill').style.width = Math.max(1, pct) + '%';
+  $('#band-lo').textContent = 'floor ' + (+a.floor.toFixed(2)) + ' ' + plural;
+  $('#band-hi').textContent = 'ceiling ' + (+a.ceiling.toFixed(2));
+
+  let fl = `It took <b>at least ${+a.floor.toFixed(2)} ${plural}</b> — that
+    part is arithmetic, not estimation.`;
+  if (a.required > a.floor + 1e-9)
+    fl += ` Accounting for every loss from the farm to the fryer,
+      <b>${a.required.toFixed(2)}</b> ${plural} had to enter the system.`;
+  if (d.question.segments_per_unit)
+    fl = `${d.question.count} pieces is ${(+d.question.units.toFixed(2))}
+      whole wings. ` + fl;
+  $('#floorline').innerHTML = fl;
+
+  $('#trace').innerHTML = d.trace.map(s => {
+    const counts = s.kind !== 'loss' || !/does not change/.test(s.explanation);
+    const src = d.sources[s.source];
+    return `<div class="step ${counts ? 'count' : ''}">
+      <h4>${s.label} ${badge(s.confidence)}</h4>
+      <p>${s.explanation}</p>
+      ${src ? `<div class="cite">${src.title} — ${src.publisher}
+        ${src.url ? `· <a href="${src.url}" target="_blank" rel="noopener">source</a>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  $('#mixnotes').innerHTML = d.mixing_notes.length
+    ? `<div class="step count"><h4>Why not exactly the floor?</h4>
+       ${d.mixing_notes.map(n => `<p>• ${n}</p>`).join('')}
+       <p style="margin-top:8px">Mixing starts the instant the wings leave
+       the bird. On the cut-up line a chicken's two wings drop onto the same
+       conveyor and part company, then size grading actively splits any pair
+       that survived.</p></div>` : '';
+
+  const f = await api('/api/facts?placement=result&limit=1');
+  if (f.facts.length) {
+    const x = f.facts[0];
+    $('#resultfact').innerHTML =
+      `<div class="fact"><h4>${x.headline}</h4><p>${x.body}</p>
+       <div class="cite">${x.source_title} — ${x.publisher}</div></div>`;
+  }
+}
+
+// ---- mixing simulator
+let CURVE = null;
+async function initMix() {
+  CURVE = await api('/api/mixing-curve?draw=12');
+  const xs = CURVE.points.map(p => p.pool);
+  const ys = CURVE.points.map(p => p.distinct);
+  Plotly.newPlot('mixchart', [
+    { x: xs, y: ys, mode: 'lines', line: { color: '#f59e0b', width: 3 },
+      name: 'distinct chickens', hovertemplate:
+      '%{x:,} chickens in pool<br>%{y:.4f} distinct<extra></extra>' },
+    { x: [xs[0], xs[xs.length-1]], y: [CURVE.ceiling, CURVE.ceiling],
+      mode: 'lines', line: { color: '#78716c', dash: 'dot', width: 1 },
+      name: 'ceiling (12)', hoverinfo: 'skip' },
+    { x: [xs[0], xs[xs.length-1]], y: [CURVE.floor, CURVE.floor],
+      mode: 'lines', line: { color: '#78716c', dash: 'dot', width: 1 },
+      name: 'floor (6)', hoverinfo: 'skip' },
+  ], Object.assign({}, PLOT, {
+      xaxis: Object.assign({}, PLOT.xaxis, { type: 'log',
+        title: 'chickens in the pool (log scale)' }),
+      yaxis: Object.assign({}, PLOT.yaxis, { title: 'distinct chickens',
+        range: [5.5, 12.5] }),
+      showlegend: false,
+    }), CFG);
+  $('#mixnote').textContent = CURVE.note;
+  $('#pool').max = CURVE.points.length - 1;
+  mixMove();
+}
+function mixMove() {
+  if (!CURVE) return;
+  const p = CURVE.points[+$('#pool').value];
+  $('#poollabel').textContent = p.pool.toLocaleString();
+  $('#mixout').textContent = fmtDistinct(p.distinct, CURVE.ceiling);
+  Plotly.relayout('mixchart', {
+    shapes: [{ type: 'line', x0: p.pool, x1: p.pool, y0: 5.5, y1: 12.5,
+               line: { color: '#fb923c', width: 2 } }]
+  });
+}
+$('#pool').oninput = mixMove;
+
+// ---- states
+const ABBR = {Alabama:'AL',Arkansas:'AR',Delaware:'DE',Georgia:'GA',
+  Illinois:'IL',Iowa:'IA',Kentucky:'KY',Louisiana:'LA',Maryland:'MD',
+  Mississippi:'MS',Missouri:'MO','New Jersey':'NJ','New York':'NY',
+  'North Carolina':'NC',Ohio:'OH',Oklahoma:'OK',Pennsylvania:'PA',
+  'South Carolina':'SC',Tennessee:'TN',Texas:'TX',Vermont:'VT',Virginia:'VA'};
+
+async function initStates() {
+  const d = await api('/api/states');
+  const rows = d.regions.filter(r => ABBR[r.region]);
+  Plotly.newPlot('statemap', [{
+    type: 'choropleth', locationmode: 'USA-states',
+    locations: rows.map(r => ABBR[r.region]),
+    z: rows.map(r => r.avg_size),
+    text: rows.map(r => `${r.region}<br>${r.avg_size} lb<br>${r.program || ''}`),
+    hovertemplate: '%{text}<extra></extra>',
+    colorscale: [[0,'#451a03'],[0.5,'#d97706'],[1,'#fde68a']],
+    colorbar: { title: 'lb', thickness: 12 },
+  }], Object.assign({}, PLOT, {
+    geo: { scope: 'usa', bgcolor: 'rgba(0,0,0,0)',
+           lakecolor: 'rgba(0,0,0,0)', subunitcolor: '#322c28' },
+  }), CFG);
+
+  $('#statetable').innerHTML = `<table><tr><th>State</th>
+    <th class="num">Live weight</th><th>Program</th>
+    <th class="num">Production</th></tr>` +
+    d.regions.filter(r => r.region !== 'United States').map(r =>
+      `<tr><td>${r.region}</td><td class="num">${r.avg_size} lb</td>
+       <td>${r.program || '—'}</td>
+       <td class="num">${r.volume ? (r.volume/1000).toLocaleString(
+          undefined,{maximumFractionDigits:0}) + ' M lb' : '—'}</td></tr>`
+    ).join('') + '</table>';
+}
+
+// ---- trends
+async function initTrends() {
+  const d = await api('/api/trends');
+  const yr = d.husbandry.map(r => r.year);
+  const line = (div, x, y, title, colour) => Plotly.newPlot(div,
+    [{ x, y, mode: 'lines+markers', line: { color: colour, width: 2 } }],
+    Object.assign({}, PLOT, { title: { text: title, font: { size: 13 } } }),
+    CFG);
+  line('t-weight', yr, d.husbandry.map(r => r.end_size),
+       'Market weight (lb)', '#f59e0b');
+  line('t-mort', yr, d.husbandry.map(r => r.mortality_pct),
+       'Grow-out mortality (%) — rising since 2013', '#fb7185');
+  line('t-fcr', yr, d.husbandry.map(r => r.feed_conversion),
+       'Feed conversion ratio (lower is better)', '#60a5fa');
+  line('t-yield', d.dressing_yield.map(r => r.year),
+       d.dressing_yield.map(r => r.dressing_yield * 100),
+       'Dressing yield (%) — measured, not estimated', '#4ade80');
+}
+
+// ---- facts + sources
+async function initFacts() {
+  const d = await api('/api/facts?placement=learning&limit=30');
+  $('#factlist').innerHTML = d.facts.map(f =>
+    `<div class="fact"><h4>${f.headline}</h4><p>${f.body}</p>
+     <div class="cite">${f.source_title} — ${f.publisher}
+     ${f.url ? `· <a href="${f.url}" target="_blank" rel="noopener">source</a>` : ''}
+     </div></div>`).join('');
+}
+async function initSources() {
+  const d = await api('/api/sources');
+  $('#sourcelist').innerHTML = `<table><tr><th>Source</th><th>Type</th>
+    <th class="num">Figures</th></tr>` + d.sources.map(s =>
+    `<tr><td><b>${s.title}</b><br><span class="note">${s.publisher}
+     ${s.url ? `· <a href="${s.url}" target="_blank" rel="noopener">link</a>` : ''}</span></td>
+     <td>${badge(s.source_type === 'government' ? 'measured'
+        : s.source_type === 'peer_reviewed' ? 'study'
+        : s.source_type === 'estimate' ? 'estimate' : 'industry')}
+       <span class="note">${s.source_type.replace('_',' ')}</span></td>
+     <td class="num">${s.used_by}</td></tr>`).join('') + '</table>';
+}
+
+function load(v) {
+  if (loaded[v]) return;
+  loaded[v] = true;
+  ({ mix: initMix, states: initStates, trends: initTrends,
+     facts: initFacts, sources: initSources }[v] || (() => {}))();
+}
+
+// ---- boot
+(async () => {
+  META = await api('/api/meta');
+  $('#chain').innerHTML = META.chains.map(c =>
+    `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
+  ).join('');
+  ['count','chain','pieces','mort'].forEach(id => {
+    $('#' + id).addEventListener('change', calc);
+    $('#' + id).addEventListener('input', calc);
+  });
+  calc();
+})();
+</script>
+</body>
+</html>

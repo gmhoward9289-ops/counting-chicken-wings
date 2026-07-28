@@ -65,18 +65,65 @@ def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     return r
 
 
+def expected_distinct_general(
+    drawn: int,
+    container_units: int,
+    distinct_in_container: float,
+) -> float:
+    """Expected distinct individuals in a draw, for any units-per-individual.
+
+    The container holds `container_units` units contributed by
+    `distinct_in_container` individuals, so each contributes an average of
+    m = container_units / distinct_in_container units.
+
+    An individual is missed entirely with probability C(W-m, n) / C(W, n).
+    m is generally fractional, so rather than rounding or interpolating the
+    totals, split the population into the two adjacent integer classes that
+    reproduce both D and W exactly:
+
+        n_hi individuals contribute (lo+1) units
+        n_lo individuals contribute  lo    units
+        n_hi + n_lo = D          n_hi*(lo+1) + n_lo*lo = W
+
+    That is exact and physically meaningful, where interpolating the two
+    totals is neither -- it can produce a value above `drawn`, which is
+    impossible.
+    """
+    if drawn <= 0:
+        return 0.0
+    if drawn > container_units:
+        raise ValueError(
+            f"cannot draw {drawn} units from a container of {container_units}"
+        )
+    if distinct_in_container <= 0:
+        raise ValueError("container must represent at least one individual")
+
+    d = min(distinct_in_container, float(container_units))
+    lo = int(container_units / d)
+    if lo < 1:
+        lo = 1
+
+    n_hi = container_units - d * lo      # individuals contributing lo+1
+    n_lo = d - n_hi                      # individuals contributing lo
+    n_hi = max(0.0, n_hi)
+    n_lo = max(0.0, n_lo)
+
+    e = n_lo * (1.0 - _ratio_choose(container_units, lo, drawn))
+    if n_hi > 0:
+        e += n_hi * (1.0 - _ratio_choose(container_units, lo + 1, drawn))
+    return min(e, float(drawn))
+
+
 def expected_distinct(
     drawn: int,
     container_units: int,
     paired_individuals: float,
 ) -> float:
-    """Expected distinct individuals in a draw of `drawn` units.
+    """Two-units-per-individual case, expressed via the general formula.
 
-    The container holds `container_units` units. `paired_individuals` of the
-    individuals represented contributed 2 units each; the rest contributed
-    one apiece. Splitting the pool this way is what lets a single formula
-    cover everything from "you cut up six chickens yourself" to a national
-    commodity chain.
+    `paired_individuals` contributed 2 units each; the rest contributed one
+    apiece. Kept as its own entry point because bone-in wings -- the
+    project's headline question -- are exactly this case.
     """
     if drawn <= 0:
         return 0.0
