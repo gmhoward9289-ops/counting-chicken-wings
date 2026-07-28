@@ -447,6 +447,125 @@ async function calc() {
   }
 }
 
+// ---- scientific mode
+const CONF_COLOUR = {
+  measured: '#4ade80', derived: '#4ade80', study: '#60a5fa',
+  industry: '#22d3ee', estimate: '#fbbf24',
+};
+
+async function sci() {
+  const conf = $('#s-conf').value;
+  const q = new URLSearchParams({
+    count: $('#s-count').value || 12,
+    chain: $('#s-chain').value,
+    confidence_level: $('#s-ci').value,
+    iterations: $('#s-iter').value,
+  });
+  if (conf) q.set('min_confidence', conf);
+
+  const d = await api('/api/scientific?' + q);
+  const a = d.answer, pct = Math.round(d.question.confidence_level * 100);
+
+  $('#s-req').textContent = a.required.toFixed(2);
+  $('#s-req-ci').textContent =
+    `${pct}% interval  ${a.required_lo.toFixed(2)} – ${a.required_hi.toFixed(2)}`;
+  $('#s-dist').textContent = fmtDistinct(a.distinct, a.ceiling);
+  $('#s-dist-ci').textContent =
+    `${pct}% interval  ${fmtDistinct(a.distinct_lo, a.ceiling)} – ` +
+    `${fmtDistinct(a.distinct_hi, a.ceiling)}`;
+
+  $('#s-excluded').innerHTML = a.excluded_stages.length
+    ? `<div class="step"><h4>${a.excluded_stages.length} stage(s) excluded
+       ${badge('estimate')}</h4>
+       <p>Below the evidence grade you selected, so they are not contributing
+       to the numbers above: <b>${a.excluded_stages.join(', ')}</b>.
+       The result is therefore an <em>underestimate</em> — these are real
+       losses we simply cannot cite yet.</p></div>`
+    : '';
+
+  // Tornado, sorted by swing, coloured by evidence grade.
+  const t = d.tornado.filter(x => x.swing > 1e-9).reverse();
+  Plotly.newPlot('s-tornado', [{
+    type: 'bar', orientation: 'h',
+    x: t.map(x => x.swing), y: t.map(x => x.label),
+    marker: { color: t.map(x => CONF_COLOUR[x.confidence] || '#78716c') },
+    customdata: t.map(x => [x.share, x.confidence, x.low, x.high]),
+    hovertemplate: '%{y}<br>swing %{x:.4f} chickens<br>' +
+      '%{customdata[0]:.1%} of total uncertainty<br>' +
+      'grade: %{customdata[1]}<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    margin: { l: 210, r: 20, t: 10, b: 44 },
+    xaxis: Object.assign({}, PLOT.xaxis, { title: 'swing in chickens required' }),
+  }), CFG);
+
+  // Monte Carlo histogram with the interval marked.
+  const h = d.required_hist;
+  Plotly.newPlot('s-hist', [{
+    type: 'bar', x: h.centres, y: h.counts,
+    marker: { color: '#f59e0b' }, name: 'draws',
+    hovertemplate: '%{x:.3f} chickens<br>%{y:,} draws<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    bargap: 0.02,
+    xaxis: Object.assign({}, PLOT.xaxis, { title: 'chickens required' }),
+    yaxis: Object.assign({}, PLOT.yaxis, { title: 'draws' }),
+    shapes: [
+      { type: 'line', x0: a.required_lo, x1: a.required_lo, yref: 'paper',
+        y0: 0, y1: 1, line: { color: '#fb923c', width: 2, dash: 'dash' } },
+      { type: 'line', x0: a.required_hi, x1: a.required_hi, yref: 'paper',
+        y0: 0, y1: 1, line: { color: '#fb923c', width: 2, dash: 'dash' } },
+      { type: 'line', x0: a.required, x1: a.required, yref: 'paper',
+        y0: 0, y1: 1, line: { color: '#f5f0e8', width: 2 } },
+    ],
+    annotations: [
+      { x: a.required, yref: 'paper', y: 1.06, showarrow: false,
+        text: `mean ${a.required.toFixed(2)}`, font: { color: '#f5f0e8' } },
+      { x: a.required_lo, yref: 'paper', y: 1.06, showarrow: false,
+        text: a.required_lo.toFixed(2), font: { color: '#fb923c' } },
+      { x: a.required_hi, yref: 'paper', y: 1.06, showarrow: false,
+        text: a.required_hi.toFixed(2), font: { color: '#fb923c' } },
+    ],
+  }), CFG);
+
+  // Waterfall from floor to requirement.
+  const w = d.waterfall;
+  Plotly.newPlot('s-waterfall', [{
+    type: 'waterfall', orientation: 'v',
+    measure: ['absolute'].concat(w.map(() => 'relative')),
+    x: ['Anatomical floor'].concat(w.map(s => s.label)),
+    y: [a.floor].concat(w.map(s => s.delta)),
+    connector: { line: { color: '#322c28' } },
+    increasing: { marker: { color: '#fb923c' } },
+    totals: { marker: { color: '#f59e0b' } },
+    hovertemplate: '%{x}<br>%{y:+.4f} chickens<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    margin: { l: 50, r: 16, t: 10, b: 110 },
+    xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -35 }),
+    yaxis: Object.assign({}, PLOT.yaxis, { title: 'chickens' }),
+  }), CFG);
+
+  // Evidence mix across count-affecting stages.
+  const keys = Object.keys(d.evidence_mix);
+  Plotly.newPlot('s-evidence', [{
+    type: 'bar', orientation: 'h', x: keys.map(k => d.evidence_mix[k]),
+    y: keys, marker: { color: keys.map(k => CONF_COLOUR[k] || '#78716c') },
+    hovertemplate: '%{y}: %{x} stage(s)<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    margin: { l: 90, r: 20, t: 10, b: 40 },
+    xaxis: Object.assign({}, PLOT.xaxis, { title: 'count-affecting stages',
+      dtick: 1 }),
+  }), CFG);
+}
+
+function initSci() {
+  $('#s-chain').innerHTML = META.chains.map(c =>
+    `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
+  ).join('');
+  ['s-count','s-chain','s-ci','s-conf','s-iter'].forEach(id => {
+    $('#' + id).addEventListener('change', sci);
+  });
+  sci();
+}
+
 // ---- mixing simulator
 let CURVE = null;
 async function initMix() {
@@ -561,15 +680,31 @@ async function initSources() {
      <td class="num">${s.used_by}</td></tr>`).join('') + '</table>';
 }
 
-function load(v) {
+// Views that read META must not initialise before the boot fetch resolves.
+// A nav click can land first, and initSci reading META.chains on a null META
+// throws, aborting before it ever calls sci() -- which shows up as an empty
+// supply-chain dropdown and blank results rather than as a visible error.
+let READY = null;
+
+async function load(v) {
   if (loaded[v]) return;
   loaded[v] = true;
-  ({ mix: initMix, states: initStates, trends: initTrends,
-     facts: initFacts, sources: initSources }[v] || (() => {}))();
+  const init = { sci: initSci, mix: initMix, states: initStates,
+                 trends: initTrends, facts: initFacts,
+                 sources: initSources }[v];
+  if (!init) return;
+  try {
+    await READY;
+    await init();
+  } catch (err) {
+    // Let the view be retried rather than silently staying blank forever.
+    loaded[v] = false;
+    console.error(`failed to initialise "${v}"`, err);
+  }
 }
 
 // ---- boot
-(async () => {
+READY = (async () => {
   META = await api('/api/meta');
   $('#chain').innerHTML = META.chains.map(c =>
     `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
@@ -578,7 +713,7 @@ function load(v) {
     $('#' + id).addEventListener('change', calc);
     $('#' + id).addEventListener('input', calc);
   });
-  calc();
+  await calc();
 })();
 </script>
 </body>
