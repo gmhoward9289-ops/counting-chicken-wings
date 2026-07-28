@@ -240,13 +240,162 @@ The interesting output of the program is therefore not a single number but
 
 ---
 
-## 7. Open research items
+## 7. What the "chunks" actually are
+
+Tyson files the product line as **"boneless wings & chunks"**, which invites the
+question of whether *chunks* are a different cut that might contain wing meat.
+
+They are not. The ingredient statement across the line reads:
+
+> boneless, skinless chicken **breast** chunks **with rib meat**
+
+Source: [Tyson Foodservice product line](https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608)
+
+**"With rib meat" is the phrase to understand here**, because it sounds like a
+different cut sneaking in. It isn't. Rib meat is the portion left attached to the
+breast when the bird is deboned — part of the front quarter. FSIS permits a
+specified amount to remain on a boneless breast. It is not wing, not thigh, and
+not mechanically separated meat.
+
+So `named_part_content = 0.0` holds for both boneless wings *and* chunks: neither
+contains any wing meat.
+
+### "Wings" is a regulated term
+
+Source: [FSIS Food Standards and Labeling Policy Book](https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf)
+
+A product labelled *wings* must be the entire wing, all muscle and skin intact,
+with only the tip removable. Where bone has been removed, the product name must
+disclose it. "Boneless wing" satisfies that rule — the label is not a loophole,
+it is doing what the regulation asks. Which is precisely why a name containing no
+wing meat survives regulatory scrutiny.
+
+The policy book also defines **solid muscle** vs **chunked and formed** vs
+**ground and formed**. Tyson's is "whole muscle", the strongest of the three —
+real intact breast, not a reformed slurry. Worth stating, because the honest
+criticism of boneless wings is the *name*, not the meat quality.
+
+---
+
+## 8. Disease and historical shocks
+
+### Avian influenza is an egg story, not a wing story
+
+Sources: [CRS R48518](https://www.congress.gov/crs-product/R48518),
+[APHIS HPAI detections](https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks)
+
+168.62 million birds lost across 1,689 flocks between 2022 and April 2025. Split
+by sector:
+
+| Sector | Share of losses |
+|---|---:|
+| Table-egg layers | ~75% |
+| Turkeys | ~11% |
+| **Broilers** | **~8%** |
+
+That is roughly 4.5 million broilers a year against **9.58 billion** slaughtered —
+about **0.05%**. Broilers are less exposed because they live only ~47 days, sit on
+smaller farms, and are restocked quickly after a depopulation.
+
+**Modelling conclusion: HPAI does not get a loss stage.** It is a price-and-supply
+event for eggs, and at 0.05% of broiler throughput it sits well inside the noise
+of every other factor in the chain. Adding it would imply a precision we do not
+have. Noted here so the omission is a decision rather than an oversight.
+
+### Breast myopathies — the boneless-only problem
+
+Source: [PLOS ONE, Ontario prevalence study](https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0267019)
+
+| Condition | Prevalence |
+|---|---:|
+| White striping | **96.0%** |
+| Spaghetti meat | 36.3% |
+| Severe woody breast | 11.8% |
+| Fillets with >1 myopathy | 85.1% |
+
+Woody breast rose from ~5% in 2012 to 29% by 2015. **Risk increases with live
+weight**, so big-bird deboning flocks are the worst affected — and those are
+exactly the birds boneless product comes from.
+
+**This is a genuine asymmetry between the two products.** A bone-in wing loses
+~5.7% to *handling damage*. A boneless "wing" is drawn from a breast supply with
+a *muscle-quality* problem affecting nearly every fillet. Wings are small working
+muscles and do not develop these myopathies at all — the modern broiler's breast
+grew fast enough to outrun its own blood supply; its wings did not.
+
+---
+
+## 9. Resource footprint
+
+Source: [NCC Broiler Production System LCA, 2020 Update](https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf)
+
+Reference flow: one broiler at **6.37 lb live weight**.
+
+| Metric | Per bird | Per kg LW | 2010→2020 |
+|---|---:|---:|---:|
+| Global warming (kg CO₂ eq) | 2.90 | 1.00 | −18.1% |
+| Land use (m²a crop eq) | 5.26 | 1.85 | −13.0% |
+| Water (m³) | 0.73 | 0.25 | −13.0% |
+| Fossil resources (kg oil eq) | 0.61 | 0.21 | −22.1% |
+| Fine particulates (g PM2.5 eq) | 5.87 | 2.03 | −13.8% |
+
+The report also gives **1.053 baby chicks per broiler produced** to cover
+mortality — an independent corroboration of our `farm_mortality` stage (5.3%
+implies 1.056).
+
+### Allocation is the thing to get right
+
+**A dozen wings does not carry six birds' worth of footprint.** Wings are ~7.3%
+of live weight; the breast, thighs, and drums went onto other people's plates.
+
+- Naive: 6 birds × 2.90 kg = **17.4 kg CO₂e** — wrong by ~14×
+- Mass-allocated: ≈ **1.3 kg CO₂e**
+
+Mass allocation is the conservative standard. **Economic allocation would give a
+higher number**, because wings sell at a premium per pound relative to the rest
+of the carcass. The model uses mass and says so, rather than quietly picking the
+flattering one.
+
+Feed, derived from FCR 1.69 × 6.57 lb market weight: **~11 lb per bird**, so ~67 lb
+across six birds, of which the wings' honest share is **~4.9 lb**.
+
+---
+
+## 10. Economic impact
+
+Sources: [ERS grower fees](http://www.ers.usda.gov/data-products/charts-of-note/chart-detail?chartId=104642),
+[Poultry Site contract economics](https://www.thepoultrysite.com/articles/contract-broiler-production-questions-and-answers),
+[NCC key facts](https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/)
+
+- **Grower pay: 3.8–4.6 ¢ per lb live weight**, set by a relative *tournament*
+  system — a farm's rate depends on its performance against other farms
+  delivering the same week, so identical work can be paid differently.
+- Six birds at 6.62 lb = 39.7 lb → grower received **~$1.67** for raising them.
+  Allocated to the wings alone: **~12 cents**.
+- A 20,000 sq ft house grosses **$34–40k/yr** against **$28–30k** of costs,
+  leaving **$6–12k** to land, labour, and management during the 15-year mortgage.
+- **355,000 direct workers**, ~1.2 million indirect, **~25,000 contract family
+  farms**, **~180 plants**.
+
+A USDA AMS rule proposed in January 2025 would end negative performance-based pay
+adjustments and guarantee a minimum base rate. Worth tracking — if finalised it
+changes the grower-pay figure structurally, not just numerically.
+
+---
+
+## 11. Open research items
 
 - [ ] FSIS establishment numbers and plant-level bird size programs
+- [ ] **Producer-level processing differences** — Tyson vs Pilgrim's vs
+      Wayne-Sanderson line speeds, chiller type (air vs immersion), and whether
+      loss rates differ enough to justify per-producer factors
 - [ ] Transport DOA (dead-on-arrival) rate — sought, not yet sourced
 - [ ] Ante-mortem condemnation rate for young chickens specifically
 - [ ] Wing count-per-pound grading bands (jumbo / large / medium)
 - [ ] Cook loss / yield for fried wings
 - [ ] Marinade and glaze pickup (can be *negative* loss — adds weight)
 - [ ] Imported wing volume (Brazil) as a share of US wing supply
-- [ ] Combo bin and case pack standard sizes, to ground pool sizes in stage 6
+- [ ] Combo bin and case pack standard sizes, to ground pool sizes
+- [ ] Sodium, saturated fat, and cholesterol for both wing preparations —
+      currently only kcal / protein / fat / carbohydrate are populated
+- [ ] Whether myopathy rates justify a boneless-specific downgrade loss stage
