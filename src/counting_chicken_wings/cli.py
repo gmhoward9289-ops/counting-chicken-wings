@@ -131,8 +131,12 @@ def cmd_count(args) -> int:
     if args.pieces:
         print(f"  {args.count:g} wing pieces is {units:g} whole wings.")
     if contains_none:
+        # "contains no wing meat" -- singular, and about CONTENT rather than
+        # a count of objects. Saying "no wings" invites the reading that we
+        # are counting items, when the claim is that not one gram of the
+        # named part is present.
         named = product["named_part"] or unit_word
-        print(f"  {c(f'A {product['label'].lower()} contains no {named}.',
+        print(f"  {c(f'A {product['label'].lower()} contains no {named} meat.',
                      BOLD)}"
               f"  It is {product['source_part']} meat.")
         print()

@@ -403,6 +403,76 @@ CREATE TABLE supply_chain_stage (
 
 
 -- ---------------------------------------------------------------------------
+-- Nutrition
+-- ---------------------------------------------------------------------------
+
+-- Nutrition per product and preparation. Separate rows per preparation
+-- because breading and frying change the numbers far more than the bird
+-- does -- a fried breaded wing and a raw wing are not the same food.
+CREATE TABLE nutrition (
+    id                  INTEGER PRIMARY KEY,
+    product_id          INTEGER NOT NULL REFERENCES product(id),
+    preparation         TEXT    NOT NULL,   -- 'raw','fried_breaded'
+    label               TEXT    NOT NULL,
+    -- Everything per 100 g edible portion, the basis USDA publishes on.
+    kcal                REAL,
+    protein_g           REAL,
+    fat_g               REAL,
+    saturated_fat_g     REAL,
+    carbohydrate_g      REAL,
+    sodium_mg           REAL,
+    cholesterol_mg      REAL,
+    -- Typical edible mass of one unit, so per-piece values can be derived
+    -- rather than stored and drifting out of sync.
+    edible_g_per_unit   REAL,
+    fdc_id              TEXT,
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT,
+    UNIQUE (product_id, preparation)
+);
+
+
+-- ---------------------------------------------------------------------------
+-- Resource footprint and economic impact
+-- ---------------------------------------------------------------------------
+
+-- Lifecycle environmental cost, stored per individual AND per kg live
+-- weight because allocating to a single cut requires the mass basis.
+CREATE TABLE resource_footprint (
+    id                  INTEGER PRIMARY KEY,
+    species_id          INTEGER NOT NULL REFERENCES species(id),
+    metric              TEXT    NOT NULL,   -- 'global_warming','water',...
+    label               TEXT    NOT NULL,
+    unit                TEXT    NOT NULL,
+    per_individual      REAL,
+    per_kg_liveweight   REAL,
+    reference_lw_lb     REAL,               -- the LCA's reference flow
+    year                INTEGER,
+    pct_change_decade   REAL,               -- e.g. -18.1 for 2010->2020
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT,
+    UNIQUE (species_id, metric, year)
+);
+
+-- Human and economic side: who got paid, how many people were involved.
+CREATE TABLE economic_stat (
+    id                  INTEGER PRIMARY KEY,
+    domain_id           INTEGER NOT NULL REFERENCES domain(id),
+    slug                TEXT    NOT NULL UNIQUE,
+    label               TEXT    NOT NULL,
+    value_lo            REAL,
+    value_mode          REAL,
+    value_hi            REAL,
+    unit                TEXT    NOT NULL,
+    -- 'per_lb_liveweight', 'per_year', 'national' -- what the value is per.
+    basis               TEXT    NOT NULL,
+    confidence          TEXT    NOT NULL,
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT
+);
+
+
+-- ---------------------------------------------------------------------------
 -- Learning centre
 -- ---------------------------------------------------------------------------
 

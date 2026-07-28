@@ -68,7 +68,7 @@ products:
     named_part_content: 0.0
     source: tyson-foodservice-boneless
     notes: >-
-      A boneless wing contains no wing. It is breast meat cut into chunks
+      A boneless wing contains no wing meat. It is breast meat cut into chunks
       and breaded - Tyson's own foodservice catalogue files them under
       "boneless wings & chunks" and describes them as whole muscle chicken
       breast. named_part_content is 0.0 because the honest count of wings

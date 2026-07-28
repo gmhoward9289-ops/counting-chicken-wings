@@ -186,6 +186,132 @@
     of that. Paws fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as
     domestic animal feed - close to a tenfold difference.
 
+- slug: ncc-broiler-lca-2020
+  title: 'Broiler Production System Life Cycle Assessment: 2020 Update'
+  publisher: National Chicken Council / University of Arkansas
+  url: https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
+  published_on: '2021-09-01'
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    Full ReCiPe lifecycle assessment built on Agri-Stats national data.
+    Reference flow is one broiler at 6.37 lb live weight. Per average bird
+    in 2020: 2.90 kg CO2 eq, 5.26 m2a crop eq land, 0.73 m3 water, 0.61 kg
+    oil eq fossil resources, 5.87 g PM2.5 eq. Per kg live weight: 1.00,
+    1.85, 0.25, 0.21, 2.03 respectively. Improvements 2010-2020: global
+    warming -18.1%, land -13.0%, water -13.0%, fossil -22.1%, PM -13.8%.
+    Also gives 1.053 baby chicks per broiler produced to cover mortality,
+    which independently corroborates our farm_mortality stage.
+
+- slug: usda-fdc-wing-raw
+  title: 'Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)'
+  publisher: USDA FoodData Central
+  url: https://fdc.nal.usda.gov/food-details/172390/nutrients
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure
+    for an unbreaded, uncooked whole wing with skin.
+
+- slug: usda-fdc-wing-fried
+  title: 'Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)'
+  publisher: USDA FoodData Central
+  url: https://fdc.nal.usda.gov/food-details/170360/nutrients
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Breaded and fried. Roughly 59% of calories from fat against 27% from
+    protein - the breading and frying oil, not the bird, drive the change.
+
+- slug: fsis-poultry-labeling-standards
+  title: Food Standards and Labeling Policy Book
+  publisher: USDA Food Safety and Inspection Service
+  url: https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    "Wings" is a REGULATED term. A product labelled wings must be the entire
+    wing with all muscle and skin intact, except that the tip may be removed.
+    Where bone has been removed the name must say so. Also defines the
+    solid-muscle / chunked-and-formed / ground-and-formed distinction that
+    separates a whole-muscle boneless wing from a reformed nugget.
+
+- slug: aphis-hpai-detections
+  title: >-
+    Confirmations of Highly Pathogenic Avian Influenza in Commercial and
+    Backyard Flocks
+  publisher: USDA Animal and Plant Health Inspection Service
+  url: https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    1,689 confirmed flocks and 168.62 million birds affected between 2022
+    and April 2025.
+
+- slug: crs-hpai-outbreak
+  title: 'The Highly Pathogenic Avian Influenza (HPAI) Outbreak in Poultry, 2022-Present'
+  publisher: Congressional Research Service (R48518)
+  url: https://www.congress.gov/crs-product/R48518
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Splits losses by sector: table-egg layers roughly 75%, turkeys 11%,
+    BROILERS only about 8%. Broiler farms hold fewer birds, are restocked
+    faster, and the birds live ~47 days so cumulative exposure is far lower.
+    This is the key finding for our purposes - HPAI is overwhelmingly an egg
+    story, not a wing story.
+
+- slug: myopathy-prevalence-ontario
+  title: >-
+    Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
+    white striping) and associated risk factors in broiler chickens
+  publisher: PLOS ONE
+  url: https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0267019
+  retrieved_on: '2026-07-28'
+  source_type: peer_reviewed
+  notes: >-
+    White striping 96.0%, spaghetti meat 36.3%, severe woody breast 11.8%.
+    85.1% of fillets showed more than one myopathy. Risk rises with live
+    weight, so big-bird deboning flocks - precisely the birds boneless
+    product comes from - are the worst affected. Woody breast incidence rose
+    from about 5% in 2012 to 29% by 2015.
+
+- slug: ers-broiler-grower-fees
+  title: Fees paid to growers for raising broiler chickens varied widely in 2020
+  publisher: USDA Economic Research Service
+  url: http://www.ers.usda.gov/data-products/charts-of-note/chart-detail?chartId=104642
+  retrieved_on: '2026-07-28'
+  source_type: government
+  notes: >-
+    Grower pay clusters at 3.8 to 4.6 cents per pound of live weight, set by
+    a relative "tournament" system in which each farm's rate depends on its
+    performance against others delivering in the same period.
+
+- slug: poultrysite-contract-economics
+  title: 'Contract Broiler Production: Questions and Answers'
+  publisher: The Poultry Site
+  url: https://www.thepoultrysite.com/articles/contract-broiler-production-questions-and-answers
+  retrieved_on: '2026-07-28'
+  source_type: trade_press
+  notes: >-
+    A 20,000 sq ft house grosses roughly $34,000-$40,000 a year at average
+    performance against $28,000-$30,000 of fixed and cash costs, leaving
+    $6,000-$12,000 to the grower's land, labour, and management during the
+    15-year mortgage period.
+
+- slug: tyson-foodservice-chunks
+  title: Boneless wings and chunks product line, ingredient statements
+  publisher: Tyson Foodservice
+  url: https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
+  retrieved_on: '2026-07-28'
+  source_type: industry_spec
+  notes: >-
+    Ingredient statements across the line read "boneless, skinless chicken
+    BREAST chunks with rib meat". Rib meat is the portion left attached to
+    the breast during deboning - part of the front quarter, NOT the wing. So
+    "chunks" contain no wing meat either, and the phrase "with rib meat" is
+    a breast-yield allowance rather than a different cut sneaking in.
+
 - slug: derived-dressing-yield
   title: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings

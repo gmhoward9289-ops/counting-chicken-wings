@@ -1,0 +1,46 @@
+# Nutrition per 100 g edible portion, from USDA FoodData Central.
+#
+# Stored per preparation rather than per product, because breading and
+# frying change the numbers far more than the bird does. A raw wing and a
+# breaded fried wing are not the same food and should never share a row.
+#
+# Per-piece values are DERIVED from edible_g_per_unit at query time rather
+# than stored, so they cannot drift out of sync with the per-100 g figures.
+
+nutrition:
+  - product: whole_wing
+    preparation: raw
+    label: Whole wing, meat and skin, raw
+    kcal: 191
+    protein_g: 17.5
+    fat_g: 12.8
+    fdc_id: '172390'
+    # Drumette 39.9 g + flat 30.7 g = 70.6 g of sellable segments per whole
+    # wing; the tip is diverted and is mostly skin, bone, and cartilage.
+    edible_g_per_unit: 70.6
+    source: usda-fdc-wing-raw
+    notes: >-
+      The honest baseline: a whole wing before anyone breads or fries it.
+      Roughly 60% of its calories come from fat, which is inherent to the
+      cut - wings carry a high skin-to-meat ratio because they are mostly
+      skin, bone, and small muscles.
+
+  - product: whole_wing
+    preparation: fried_breaded
+    label: Fried chicken wing, meat, skin and breading
+    kcal: 180
+    protein_g: 12.2
+    fat_g: 11.8
+    carbohydrate_g: 6.3
+    fdc_id: '170360'
+    edible_g_per_unit: 70.6
+    source: usda-fdc-wing-fried
+    notes: >-
+      About 59% of calories from fat against 27% from protein. Note the
+      counterintuitive part: kcal per 100 g is LOWER than raw, because the
+      breading adds carbohydrate mass and absorbed water dilutes the
+      per-gram density. The piece is heavier and higher in total calories;
+      it is not more calorie-dense per gram.
+
+      Carbohydrate appears here and is zero in the raw wing - that is
+      entirely the breading, since chicken itself contains no carbohydrate.

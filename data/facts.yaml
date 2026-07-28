@@ -148,8 +148,137 @@ facts:
     placement: learning
     surprise: 3
 
+  - slug: chunks-are-breast-too
+    headline: The "chunks" are not wing either
+    body: >-
+      Tyson files boneless wings under "boneless wings & chunks", which
+      invites the question of whether chunks are a different cut. They are
+      not. The ingredient statement reads "boneless, skinless chicken breast
+      chunks with rib meat" - and rib meat is the portion left attached to
+      the breast when it is deboned, part of the front quarter. It is not
+      wing. Neither product contains any wing meat at all.
+    source: tyson-foodservice-chunks
+    placement: both
+    surprise: 4
+
+  - slug: wings-is-a-regulated-word
+    headline: '"Wings" is a regulated word, and boneless wings comply with it'
+    body: >-
+      USDA standards say a product labelled wings must be the entire wing,
+      all muscle and skin intact, with only the tip removable - and that
+      where bone has been removed the name must say so. "Boneless wing"
+      satisfies that rule by disclosing the missing bone. The label is not a
+      loophole; it is doing exactly what the regulation asks, which is why
+      the name survives despite containing no wing.
+    source: fsis-poultry-labeling-standards
+    placement: learning
+    surprise: 4
+
+  - slug: bird-flu-is-an-egg-story
+    headline: Bird flu barely touches chicken wings
+    body: >-
+      168.62 million birds have been lost to avian influenza since 2022, and
+      the headlines are relentless - but roughly 75% of those were egg-laying
+      hens and 11% turkeys. Broilers were about 8%, which works out near
+      0.05% of the 9.58 billion broilers slaughtered each year. Broilers live
+      only 47 days, sit on smaller farms, and get restocked fast, so their
+      cumulative exposure is low. Bird flu moves the price of eggs. It does
+      not meaningfully move the price or supply of wings.
+    source: crs-hpai-outbreak
+    placement: both
+    surprise: 5
+
+  - slug: nearly-every-breast-is-striped
+    headline: 96% of chicken breasts now show white striping
+    body: >-
+      White striping appears in essentially every commercial fillet. Severe
+      woody breast runs about 12%, up from roughly 5% in 2012, and spaghetti
+      meat 36%. More than 85% of fillets show more than one of these at once.
+      Crucially the risk rises with live weight - so the big-bird deboning
+      flocks that boneless product comes from are the worst affected. The
+      real wing has no equivalent problem: wings are small working muscles
+      and simply do not develop these myopathies.
+    source: myopathy-prevalence-ontario
+    placement: learning
+    surprise: 5
+
+  - slug: farmer-gets-twelve-cents
+    headline: The farmer got about twelve cents for your dozen wings
+    body: >-
+      Contract growers are paid 3.8 to 4.6 cents per pound of live weight.
+      Six birds at 6.62 lb is 39.7 lb, so raising them earned the grower
+      roughly $1.67 - and charging only the wings' share of that bird, about
+      12 cents. Growers are paid on a relative "tournament" basis against
+      other farms delivering the same week, so two people doing identical
+      work can be paid differently.
+    source: ers-broiler-grower-fees
+    placement: both
+    surprise: 5
+
+  - slug: feed-behind-a-dozen-wings
+    headline: A dozen wings represents about five pounds of feed
+    body: >-
+      At a feed conversion of 1.69 and a 6.57 lb market weight, one broiler
+      eats about 11 lb of feed. The six birds behind a dozen wings ate
+      roughly 67 lb between them - but the wings are only about 7% of the
+      bird, so their honest share is close to 4.9 lb of corn and soy. The
+      rest of that feed became somebody else's breast fillet.
+    source: ncc-broiler-performance
+    placement: learning
+    surprise: 4
+
+  - slug: footprint-must-be-allocated
+    headline: A dozen wings is not six chickens' worth of carbon
+    body: >-
+      One broiler carries about 2.90 kg of CO2 equivalent across its whole
+      life. It is tempting to multiply that by six - but wings are only
+      about 7% of the bird, and the breast, thighs and drums went to other
+      plates. Allocated by mass, a dozen wings carries closer to 1.3 kg CO2
+      equivalent. Charging the whole bird to the wings would overstate it
+      roughly fourteenfold.
+    source: ncc-broiler-lca-2020
+    placement: learning
+    surprise: 4
+
+  - slug: chicken-footprint-falling
+    headline: Chicken's footprint per bird has fallen every year
+    body: >-
+      Between 2010 and 2020 the industry cut greenhouse gas per kg of live
+      weight by 18%, fossil resource use by 22%, and land and water use by
+      13% each. Most of that came from feed efficiency: production rose 21%
+      while feed consumption rose only 11%. The same efficiency drive that
+      makes birds heavier and cheaper also made them lighter on the planet
+      per pound.
+    source: ncc-broiler-lca-2020
+    placement: learning
+    surprise: 4
+
+  - slug: wings-are-mostly-fat-calories
+    headline: About 60% of a wing's calories come from fat
+    body: >-
+      A raw whole wing with skin runs 191 kcal and 17.5 g of protein per
+      100 g. Wings carry a high skin-to-meat ratio because they are mostly
+      skin, bone, and small muscles - that is inherent to the cut, before
+      anyone has breaded or fried it.
+    source: usda-fdc-wing-raw
+    placement: both
+    surprise: 3
+
+  - slug: breading-adds-carbs-not-density
+    headline: Breading a wing lowers its calories per gram
+    body: >-
+      A breaded fried wing measures about 180 kcal per 100 g against 191 for
+      raw - which reads backwards until you notice why. Breading adds
+      carbohydrate and absorbed water, so the piece gets heavier faster than
+      it gets more caloric. The wing on your plate has more total calories;
+      it is simply less calorie-dense per gram. Chicken itself contains no
+      carbohydrate at all, so every gram of carb in a fried wing is breading.
+    source: usda-fdc-wing-fried
+    placement: learning
+    surprise: 5
+
   - slug: boneless-wings-contain-no-wing
-    headline: A boneless wing contains no wing
+    headline: A boneless wing contains no wing meat
     body: >-
       It is breast meat, cut into chunks and breaded. Tyson's own foodservice
       catalogue files the product under "boneless wings & chunks" and

@@ -1,0 +1,34 @@
+# Render blueprint. Connect the repo at https://dashboard.render.com/blueprints
+# and Render reads this file -- no dashboard configuration needed.
+#
+# The database is a build artifact and is gitignored, so it MUST be rebuilt
+# during the build step. That is a feature, not a workaround: the deployed
+# site is regenerated from the YAML corpus on every push, so a data change
+# and a code change ship the same way.
+#
+# The app is read-only at runtime, which is why there is no disk, no
+# database service, and nothing to back up here.
+
+services:
+  - type: web
+    name: counting-chicken-wings
+    runtime: python
+    plan: free
+    region: ohio
+    branch: master
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -e ".[gui]"
+      python -m counting_chicken_wings.build
+      python -m counting_chicken_wings.audit
+
+    # Render supplies $PORT. Binding to 0.0.0.0 is required; 127.0.0.1 would
+    # be unreachable from outside the container.
+    startCommand: uvicorn counting_chicken_wings.api:app --host 0.0.0.0 --port $PORT
+
+    healthCheckPath: /api/meta
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: '3.12'

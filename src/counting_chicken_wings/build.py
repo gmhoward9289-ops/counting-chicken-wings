@@ -333,6 +333,57 @@ class Builder:
                 source_id=self.src(f["source"], f"fact {f['slug']}"),
             )
 
+    def nutrition(self):
+        t = load("nutrition.yaml")
+        for n in t["nutrition"]:
+            self.ins(
+                "nutrition",
+                product_id=self.product[n["product"]],
+                preparation=n["preparation"], label=n["label"],
+                kcal=n.get("kcal"), protein_g=n.get("protein_g"),
+                fat_g=n.get("fat_g"),
+                saturated_fat_g=n.get("saturated_fat_g"),
+                carbohydrate_g=n.get("carbohydrate_g"),
+                sodium_mg=n.get("sodium_mg"),
+                cholesterol_mg=n.get("cholesterol_mg"),
+                edible_g_per_unit=n.get("edible_g_per_unit"),
+                fdc_id=n.get("fdc_id"),
+                source_id=self.src(n["source"],
+                                   f"nutrition {n['preparation']}"),
+                notes=n.get("notes"),
+            )
+
+    def resources(self):
+        t = load("resources.yaml")
+
+        fp = t["footprint"]
+        sp = self.species[fp["species"]]
+        sid = self.src(fp["source"], "resource footprint")
+        for m in fp["metrics"]:
+            self.ins(
+                "resource_footprint",
+                species_id=sp, metric=m["metric"], label=m["label"],
+                unit=m["unit"], per_individual=m.get("per_individual"),
+                per_kg_liveweight=m.get("per_kg_liveweight"),
+                reference_lw_lb=fp.get("reference_lw_lb"),
+                year=fp.get("year"),
+                pct_change_decade=m.get("pct_change_decade"),
+                source_id=sid, notes=m.get("notes"),
+            )
+
+        ec = t["economics"]
+        dom = self.domain[ec["domain"]]
+        for s in ec["stats"]:
+            self.ins(
+                "economic_stat",
+                domain_id=dom, slug=s["slug"], label=s["label"],
+                value_lo=s.get("value_lo"), value_mode=s.get("value_mode"),
+                value_hi=s.get("value_hi"), unit=s["unit"],
+                basis=s["basis"], confidence=s["confidence"],
+                source_id=self.src(s["source"], f"economic {s['slug']}"),
+                notes=s.get("notes"),
+            )
+
     def run(self):
         self.sources()
         self.taxonomy()
@@ -340,6 +391,8 @@ class Builder:
         self.loss_chain()
         self.mixing()
         self.stats()
+        self.nutrition()
+        self.resources()
         self.facts()
 
 
@@ -378,15 +431,20 @@ def build(db_path: Path = DEFAULT_DB) -> Path:
     if uncited:
         raise BuildError(f"{uncited} loss factors have no citation")
 
+    # A stage can legitimately hold several factors -- one per product, for
+    # instance -- so name the product alongside the stage. Listing the bare
+    # stage label made product-specific factors read as duplicates.
     est = conn.execute(
-        "SELECT ls.label FROM loss_factor lf "
+        "SELECT ls.label, COALESCE(p.label, 'all products') "
+        "FROM loss_factor lf "
         "JOIN loss_stage ls ON ls.id = lf.loss_stage_id "
-        "WHERE lf.confidence = 'estimate' ORDER BY ls.sequence"
+        "LEFT JOIN product p ON p.id = lf.product_id "
+        "WHERE lf.confidence = 'estimate' ORDER BY ls.sequence, p.label"
     ).fetchall()
     if est:
-        print(f"\n  {len(est)} stage(s) rest on unsourced estimates:")
-        for (label,) in est:
-            print(f"    - {label}")
+        print(f"\n  {len(est)} factor(s) rest on unsourced estimates:")
+        for label, prod in est:
+            print(f"    - {label}  [{prod}]")
 
     conn.close()
     return db_path

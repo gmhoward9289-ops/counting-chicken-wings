@@ -1,0 +1,141 @@
+# What it took to make the bird, and who got paid.
+#
+# ALLOCATION WARNING, and it matters more than any single figure here.
+#
+# A dozen wings does NOT carry six birds' worth of footprint. Wings are
+# about 7.3% of live weight; the rest of each bird became breast, thighs,
+# and drums that someone else ate. Charging the whole bird to the wings
+# would overstate the answer by roughly 14x.
+#
+# So every per-bird figure below is stored raw, and the model allocates by
+# MASS at query time. Mass allocation is the conservative, standard LCA
+# choice. Economic allocation would give a HIGHER number for wings, because
+# wings sell at a premium per pound relative to the rest of the carcass --
+# worth stating plainly rather than hiding behind one number.
+
+footprint:
+  species: broiler
+  source: ncc-broiler-lca-2020
+  reference_lw_lb: 6.37
+  year: 2020
+  metrics:
+    - metric: global_warming
+      label: Greenhouse gas
+      unit: kg CO2 eq
+      per_individual: 2.90
+      per_kg_liveweight: 1.00
+      pct_change_decade: -18.1
+      notes: >-
+        Driven down by an 8.7% feed conversion improvement and less
+        distillers' grain in the ration. Production rose 21% while feed use
+        rose only 11%.
+
+    - metric: land_use
+      label: Land use
+      unit: m2a crop eq
+      per_individual: 5.26
+      per_kg_liveweight: 1.85
+      pct_change_decade: -13.0
+      notes: Almost entirely feed crops, not the chicken house.
+
+    - metric: water
+      label: Water consumption
+      unit: m3
+      per_individual: 0.73
+      per_kg_liveweight: 0.25
+      pct_change_decade: -13.0
+      notes: >-
+        Dominated by feed crop irrigation. On-farm drinking and cleaning
+        water is under 10% of the total, so "how much water does a chicken
+        drink" is close to irrelevant to the footprint.
+
+    - metric: fossil_resources
+      label: Fossil resource use
+      unit: kg oil eq
+      per_individual: 0.61
+      per_kg_liveweight: 0.21
+      pct_change_decade: -22.1
+      notes: The largest improvement of the five categories.
+
+    - metric: particulate_matter
+      label: Fine particulate formation
+      unit: g PM2.5 eq
+      per_individual: 5.87
+      per_kg_liveweight: 2.03
+      pct_change_decade: -13.8
+
+# Feed, derived rather than asserted: feed conversion ratio times market
+# weight. FCR 1.69 (2024) against a 6.57 lb market weight.
+derived_feed:
+  species: broiler
+  source: ncc-broiler-performance
+  feed_lb_per_bird_lo: 10.5
+  feed_lb_per_bird_mode: 11.1
+  feed_lb_per_bird_hi: 11.7
+  notes: >-
+    1.69 lb of feed per lb of gain at a 6.57 lb market weight is about
+    11.1 lb of feed per bird. Six birds behind a dozen wings therefore ate
+    roughly 67 lb of feed - but only about 7.3% of that is chargeable to
+    the wings under mass allocation, so the wings' share is about 4.9 lb.
+
+economics:
+  domain: poultry
+  stats:
+    - slug: grower_pay_per_lb
+      label: Contract grower pay
+      value_lo: 0.038
+      value_mode: 0.042
+      value_hi: 0.046
+      unit: USD per lb live weight
+      basis: per_lb_liveweight
+      confidence: measured
+      source: ers-broiler-grower-fees
+      notes: >-
+        Paid under a relative "tournament" system: a farm's rate depends on
+        how it performed against other farms delivering the same week, so
+        two growers doing identical work can be paid differently.
+
+        Six birds at 6.62 lb is 39.7 lb of live weight, so the grower
+        received about $1.67 for raising them. Allocated to the wings alone
+        that is roughly 12 cents. The farmer's share of a dozen wings is
+        about the price of a stick of gum.
+
+    - slug: grower_net_annual
+      label: Grower net income per house
+      value_lo: 6000
+      value_mode: 9000
+      value_hi: 12000
+      unit: USD per year
+      basis: per_year
+      confidence: industry
+      source: poultrysite-contract-economics
+      notes: >-
+        A 20,000 sq ft house grosses $34,000-$40,000 against $28,000-$30,000
+        of costs during the 15-year mortgage period. The gross is large and
+        the margin is thin, which is the defining feature of contract
+        growing.
+
+    - slug: direct_jobs
+      label: Direct industry employment
+      value_mode: 355000
+      unit: workers
+      basis: national
+      confidence: industry
+      source: ncc-key-facts
+      notes: 355,000 direct and about 1.2 million indirect workers.
+
+    - slug: contract_farms
+      label: Contract family farms
+      value_mode: 25000
+      unit: farms
+      basis: national
+      confidence: industry
+      source: ncc-key-facts
+
+    - slug: slaughter_plants
+      label: Slaughter and evisceration plants
+      value_mode: 180
+      unit: plants
+      basis: national
+      confidence: industry
+      source: ncc-key-facts

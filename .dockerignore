@@ -1,0 +1,18 @@
+.git/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Rebuilt inside the image -- never copy a stale local one in.
+*.db
+*.sqlite
+*.sqlite3
+
+.pytest_cache/
+.ruff_cache/
+tests/
+docs/
+.github/
+.DS_Store
