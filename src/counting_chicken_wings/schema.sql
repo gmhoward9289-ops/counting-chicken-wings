@@ -710,6 +710,27 @@ CREATE INDEX idx_run_step_run ON run_step (run_id, sequence);
 -- Views
 -- ---------------------------------------------------------------------------
 
+-- regional_size_stat holds one row per species, and the species carry
+-- INCOMPATIBLE UNITS -- broiler live weight in pounds alongside layer output
+-- in eggs per year. Any query that forgets `WHERE species = ...` silently
+-- compares 5.6 lb against 224 eggs and reports nonsense, which is exactly
+-- what happened the moment egg data landed: the cross-validation suite
+-- started comparing pounds to eggs.
+--
+-- These views exist so callers cannot make that mistake. Read a view, never
+-- the table, and the species filter is not something anyone has to remember.
+CREATE VIEW v_broiler_size_stat AS
+SELECT r.*
+FROM regional_size_stat r
+JOIN species s ON s.id = r.species_id
+WHERE s.slug = 'broiler';
+
+CREATE VIEW v_layer_egg_stat AS
+SELECT r.*
+FROM regional_size_stat r
+JOIN species s ON s.id = r.species_id
+WHERE s.slug = 'layer_hen';
+
 -- Dressing yield derived, never stored, so it cannot drift from the NASS
 -- totals it comes from.
 CREATE VIEW v_dressing_yield AS

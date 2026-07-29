@@ -403,7 +403,7 @@ def states(year: int = 2025):
         rows = conn.execute(
             """SELECT r.region, r.avg_size, r.size_unit, r.volume,
                       r.volume_unit, s.slug AS source_slug
-               FROM regional_size_stat r
+               FROM v_broiler_size_stat r
                JOIN source s ON s.id = r.source_id
                WHERE r.year = ? AND r.month IS NULL
                ORDER BY r.avg_size DESC""",
@@ -446,7 +446,7 @@ def state_trend(region: str, year: int = 2025):
     conn = dbm.connect()
     try:
         rows = conn.execute(
-            """SELECT month, avg_size FROM regional_size_stat
+            """SELECT month, avg_size FROM v_broiler_size_stat
                WHERE region = ? AND year = ? AND month IS NOT NULL
                ORDER BY month""",
             (region, year),
@@ -507,13 +507,13 @@ def bird_size(year: int = 2025):
     try:
         regions = conn.execute(
             """SELECT region, avg_size, size_unit, volume
-               FROM regional_size_stat
+               FROM v_broiler_size_stat
                WHERE year = ? AND month IS NULL AND region != 'United States'
                ORDER BY avg_size DESC""",
             (year,),
         ).fetchall()
         national = conn.execute(
-            """SELECT avg_size FROM regional_size_stat
+            """SELECT avg_size FROM v_broiler_size_stat
                WHERE year = ? AND month IS NULL AND region = 'United States'""",
             (year,),
         ).fetchone()

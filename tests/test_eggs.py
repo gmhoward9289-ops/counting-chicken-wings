@@ -276,3 +276,59 @@ def test_layer_programs_span_backyard_to_industrial():
         assert sizes["backyard_flock"] < sizes["pasture_raised"]
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Unit collision between species -- a bug that actually happened
+# ---------------------------------------------------------------------------
+
+def test_species_views_keep_incompatible_units_apart():
+    """regional_size_stat mixes pounds and eggs; the views must separate them.
+
+    Adding egg data broke the cross-validation suite instantly, because its
+    query read regional_size_stat without a species filter and began
+    comparing Alabama's 5.6 lb broilers against its 224 eggs per layer. The
+    views exist so no caller has to remember the filter.
+    """
+    conn = dbm.connect()
+    try:
+        broiler = conn.execute(
+            "SELECT DISTINCT size_unit FROM v_broiler_size_stat"
+        ).fetchall()
+        layer = conn.execute(
+            "SELECT DISTINCT size_unit FROM v_layer_egg_stat"
+        ).fetchall()
+        assert [r[0] for r in broiler] == ["lb live weight"]
+        assert [r[0] for r in layer] == ["eggs per layer per year"]
+
+        # Both species really do carry rows for the same state and year --
+        # which is exactly why an unfiltered query is dangerous rather than
+        # merely untidy.
+        overlap = conn.execute("""
+            SELECT COUNT(*) FROM v_broiler_size_stat b
+            JOIN v_layer_egg_stat l
+              ON l.region = b.region AND l.year = b.year
+            WHERE b.month IS NULL AND l.month IS NULL
+        """).fetchone()[0]
+        assert overlap > 0, "expected states appearing in both series"
+    finally:
+        conn.close()
+
+
+def test_no_source_file_reads_the_shared_table_directly():
+    """Guard the convention rather than trusting everyone to recall it."""
+    import pathlib
+    pkg = pathlib.Path(__file__).parent.parent / "src" / "counting_chicken_wings"
+    offenders = []
+    for p in pkg.glob("*.py"):
+        # build.py legitimately writes to the table; everyone else reads views.
+        if p.name == "build.py":
+            continue
+        text = p.read_text()
+        for clause in ("FROM regional_size_stat", "JOIN regional_size_stat"):
+            if clause in text:
+                offenders.append(f"{p.name}: {clause}")
+    assert not offenders, (
+        "read v_broiler_size_stat or v_layer_egg_stat instead: "
+        + "; ".join(offenders)
+    )

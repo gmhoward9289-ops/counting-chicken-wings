@@ -259,7 +259,7 @@ def test_a_chicken_has_exactly_two_wings(db):
 def test_state_spread_survives_the_build(db):
     """Ohio-vs-North-Carolina is the learning centre's best hook."""
     rows = dict(db.execute("""
-        SELECT region, avg_size FROM regional_size_stat
+        SELECT region, avg_size FROM v_broiler_size_stat
         WHERE year = 2025 AND month IS NULL
           AND region IN ('Ohio', 'North Carolina')
     """).fetchall())

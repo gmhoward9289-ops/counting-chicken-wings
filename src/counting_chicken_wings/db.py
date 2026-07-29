@@ -10,7 +10,15 @@ import sqlite3
 from pathlib import Path
 
 from .build import DEFAULT_DB, build
-from .model import LossStage, MixingStage
+from .model import LossStage, MixingStage, RecurringYield
+
+# A recurring product needs a window before it means anything, and one day is
+# the honest default: "a dozen eggs" colloquially means a carton gathered
+# together, not a dozen accumulated over a fortnight. It is also the case
+# where the answer is hardest -- a hen lays at most one egg a day, so twelve
+# same-day eggs came from twelve different hens and no arrangement of the
+# supply chain can reduce it.
+DEFAULT_WINDOW_DAYS = 1.0
 
 
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
@@ -37,10 +45,41 @@ def get_product(conn, slug: str = "whole_wing") -> sqlite3.Row:
     return row
 
 
+def make_recurring(
+    product: sqlite3.Row,
+    window_days: float | None = None,
+) -> RecurringYield | None:
+    """Build a RecurringYield for a product, or None if it is timeless.
+
+    Returns None for countable and continuous products so callers can pass
+    the result straight through to `run()` without branching -- a chicken has
+    two wings and that needs no clock.
+    """
+    if product["yield_mode"] != "recurring":
+        return None
+
+    period = product["yield_period_days"]
+    if not period:
+        # yield_mode='recurring' without a period is incoherent: the rate has
+        # no denominator. Better to say so than to silently assume a year.
+        raise ValueError(
+            f"product {product['slug']!r} is recurring but has no "
+            f"yield_period_days, so its rate has no meaning"
+        )
+
+    return RecurringYield(
+        units_per_period=product["units_per_individual_mode"],
+        period_days=period,
+        window_days=window_days or DEFAULT_WINDOW_DAYS,
+        max_units_per_day=product["max_units_per_day"],
+    )
+
+
 def list_products(conn) -> list[sqlite3.Row]:
     return conn.execute(
-        """SELECT p.slug, p.label, p.unit_name, p.yield_mode,
-                  s.common_name AS species, s.active
+        """SELECT p.slug, p.label, p.label_plural, p.unit_name, p.yield_mode,
+                  p.yield_period_days, p.max_units_per_day,
+                  s.common_name AS species, s.individual_plural, s.active
            FROM product p JOIN species s ON s.id = p.species_id
            ORDER BY s.active DESC, p.slug"""
     ).fetchall()

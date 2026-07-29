@@ -420,3 +420,102 @@ facts:
     source: epa-foodservice-waste
     placement: learning
     surprise: 3
+
+  - slug: dozen-eggs-could-be-one-hen
+    headline: A dozen eggs might have come from a single chicken
+    body: >-
+      Wings and eggs ask the same question and get opposite answers. Twelve
+      wings can never come from fewer than six chickens, because a chicken
+      only has two. But a hen lays again tomorrow - so one hen, given about
+      fifteen days, can fill an entire carton by herself. For eggs the honest
+      answer runs from 1 chicken to 12, and which end you land on is a
+      question about patience rather than biology.
+    source: nass-chickens-eggs-2025
+    placement: both
+    surprise: 5
+
+  - slug: same-day-dozen-is-twelve-hens
+    headline: A dozen eggs gathered in one day came from twelve different hens
+    body: >-
+      A hen's ovulation cycle runs a little over 24 hours, so she lays at most
+      about one egg a day. No hen laid two of the eggs in a same-day carton,
+      which means twelve eggs means twelve hens - necessarily, with no
+      estimating involved. It is the same kind of hard fact as a chicken
+      having two wings, just arrived at through a clock instead of anatomy.
+    source: nass-chickens-eggs-2025
+    placement: both
+    surprise: 5
+
+  - slug: eggs-invert-the-wing-story
+    headline: With eggs, the floor rises to meet the ceiling
+    body: >-
+      For wings the minimum is six and mixing through the supply chain pushes
+      the real answer up toward twelve. For a same-day dozen of eggs the
+      minimum is already twelve, so the floor and the ceiling meet and there
+      is nothing left for the supply chain to move. Same question, opposite
+      structure.
+    source: nass-chickens-eggs-2025
+    placement: learning
+    surprise: 5
+
+  - slug: twelve-eggs-needs-fifteen-hens
+    headline: Getting a dozen eggs in one day actually takes about fifteen hens
+    body: >-
+      Twelve hens is the floor, but hens do not lay every single day. At the
+      US average rate of 0.789 eggs per hen per day, you need roughly 15.2
+      hens on hand to collect twelve eggs before sundown. The floor is what is
+      physically possible; fifteen is what it actually takes.
+    source: nass-chickens-eggs-2025
+    placement: learning
+    surprise: 4
+
+  - slug: low-egg-states-are-broiler-states
+    headline: Alabama's hens lay 100 fewer eggs a year than Montana's
+    body: >-
+      Alabama averaged 224 eggs per layer in 2025 and Montana 327. That is not
+      worse farming - it is a different bird doing a different job. Alabama's
+      layers are largely broiler-breeder hens producing hatching eggs that
+      become meat chickens, and breeder hens lay far fewer eggs than table-egg
+      strains. Of 377 million US layers, 60.7 million are hatching birds. A
+      state's eggs-per-layer figure is mostly a readout of which mix it runs.
+    source: nass-chickens-eggs-2025
+    placement: learning
+    surprise: 5
+
+  - slug: egg-data-agrees-with-itself
+    headline: The egg numbers check out against themselves, twice
+    body: >-
+      Average layers times eggs per layer reproduces reported total production
+      for every one of the 31 states with 2025 figures. And 288 eggs a year
+      divided by 365 days gives 0.789 eggs per hen per day, matching the
+      78.7 to 79.9 eggs per 100 layers that USDA reports from an entirely
+      separate monthly survey. Two unrelated tables landing on the same answer
+      is the strongest validation anywhere in this project.
+    source: nass-chickens-eggs-2025
+    placement: learning
+    surprise: 3
+
+  - slug: cage-free-does-not-change-the-count
+    headline: Cage-free changes the hen's life, not the arithmetic
+    body: >-
+      Cage-free, free range, and pasture-raised describe how hens are housed,
+      not how many. A cage-free house still holds tens or hundreds of
+      thousands of birds, so a same-day dozen is still twelve different hens.
+      The only setting where the number genuinely falls is a backyard flock -
+      six hens filling a carton over two weeks really is about six hens.
+    source: nass-chickens-eggs-monthly-2026
+    placement: both
+    surprise: 4
+
+  - slug: cracked-eggs-become-liquid-egg
+    headline: A cracked egg is not thrown away, it is rerouted
+    body: >-
+      A cracked shell is a "check", and along with dirty eggs it counts as
+      "restricted" - barred from the carton but allowed to go to a breaker
+      plant to become liquid egg. So it leaves the shell-egg stream without
+      leaving the food supply. USDA tolerances permit up to 7% checks in a
+      Grade A pack at origin, though that is a ceiling a pack must stay under,
+      not a rate anyone aims for.
+    source: ams-shell-egg-grades
+    placement: learning
+    surprise: 4

@@ -486,6 +486,19 @@ class Result:
     distinct_samples: list[float] = field(default_factory=list)
     excluded_stages: list[str] = field(default_factory=list)
 
+    # --- recurring products only (eggs, milk, honey) ---------------------
+    # None for timeless products. A chicken has two wings and the question
+    # needs no clock; "288 eggs per hen" means nothing until you say per what.
+    window_days: float | None = None
+    # The physiological floor: fewest individuals *capable* of the order in
+    # the window, from the per-day ceiling. Distinct from `floor`, which is
+    # what you actually need at the real production rate. For a dozen
+    # same-day eggs these are 12 and 15.2 -- and reporting only one of them
+    # is the trap this pair exists to avoid.
+    hard_floor: float | None = None
+    rate_per_day: float | None = None
+    cap_per_individual: float | None = None
+
 
 def _triangular(lo: float, mode: float, hi: float, rng: random.Random) -> float:
     if lo == hi:
@@ -515,8 +528,15 @@ def run(
     confidence_level: float = 0.90,
     min_confidence: str | None = None,
     keep_samples: bool = False,
+    recurring: RecurringYield | None = None,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
+
+    `recurring` turns a rate into an answer. Pass it for products that are
+    produced over time rather than harvested once, and `units_per_individual`
+    is then derived from the window instead of being taken at face value --
+    288 eggs a year is 0.79 in a day, and using the annual figure for a
+    same-day question understates the hens needed by roughly 285x.
 
     With iterations > 0 both the loss chain AND the mixing pool sizes are
     resampled from their triangular lo/mode/hi bands, so the reported
@@ -533,6 +553,14 @@ def run(
     if excluded:
         loss_stages = [s for s in loss_stages
                        if meets_confidence(s.confidence, min_confidence)]
+
+    # For a recurring product the per-individual yield is a function of the
+    # window, so it must be recomputed before anything downstream uses it --
+    # the loss chain and the mixing cascade both take it as an input.
+    hard_floor = None
+    if recurring is not None:
+        units_per_individual = recurring.units_per_individual
+        hard_floor, _ = recurring_floor(units_requested, recurring)
 
     floor = floor_individuals(units_requested, units_per_individual)
     required, trace = required_individuals(
@@ -574,6 +602,12 @@ def run(
         mixing_notes=notes,
         confidence_level=confidence_level,
         excluded_stages=excluded,
+        window_days=recurring.window_days if recurring else None,
+        hard_floor=hard_floor,
+        rate_per_day=recurring.rate_per_day if recurring else None,
+        cap_per_individual=(
+            recurring.cap_per_individual if recurring else None
+        ),
     )
     res.required_lo = res.required_hi = required
     res.distinct_lo = res.distinct_hi = distinct

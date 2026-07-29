@@ -72,8 +72,12 @@ def fmt_distinct(value: float, ceiling: float) -> str:
     never a value it reaches. Show enough digits to keep it below the bound.
     """
     gap = ceiling - value
-    if gap <= 0:
-        return f"{value:.2f}"
+    # Same-day eggs actually REACH the ceiling: a hen lays at most one a day,
+    # so twelve eggs in a day is exactly twelve hens. Printing "12.000000"
+    # there implies a limit being approached when it has been hit, which is
+    # the opposite of the truth. Wings approach and never arrive; eggs arrive.
+    if gap <= 5e-7:
+        return f"{value:g}"
     for places in (2, 3, 4, 5, 6):
         s = f"{value:.{places}f}"
         if float(s) < ceiling:
@@ -112,6 +116,10 @@ def cmd_count(args) -> int:
     )
     mixing = dbm.load_mixing_stages(conn, chain)
 
+    # None for wings; a rate-and-window for eggs. run() derives the effective
+    # per-individual yield from it, because 288 eggs a year is 0.79 in a day.
+    recurring = dbm.make_recurring(product, args.window_days)
+
     res = run(
         units_requested=int(units) if float(units).is_integer() else units,
         units_per_individual=upi,
@@ -119,6 +127,7 @@ def cmd_count(args) -> int:
         mixing_stages=mixing,
         iterations=args.iterations,
         seed=args.seed,
+        recurring=recurring,
     )
 
     # ---- the answer ----------------------------------------------------
@@ -144,12 +153,43 @@ def cmd_count(args) -> int:
         print()
 
     shown = fmt_distinct(res.distinct_mean, units)
-    print(f"  {c(f'It took at least {fmt_count(res.floor)} {plural}.', BOLD)}")
+
+    if res.hard_floor is not None:
+        # Recurring products have TWO floors and quoting only one misleads.
+        # hard_floor is physiology -- the fewest individuals capable of it.
+        # floor is what you actually need, always higher, because a hen does
+        # not lay every single day.
+        w = res.window_days
+        window_word = "in a single day" if w == 1 else f"over {w:g} days"
+        # Ceil for the count claim. A hard floor of 0.8 means one hen could
+        # cover it with room to spare -- but "at least 0.8 hens" is not a
+        # sentence about animals. The unrounded value stays in the detail
+        # line below, where it reads as a ratio rather than a headcount.
+        birds = math.ceil(res.hard_floor - 1e-9)
+        noun_word = plural if birds != 1 else noun
+        headline = (f"Gathered {window_word}, {units:g} {units_word} took at "
+                    f"least {birds:g} {noun_word}.")
+        print(f"  {c(headline, BOLD)}")
+        if res.floor > res.hard_floor + 1e-9:
+            need = f"{fmt_count(res.floor)} {plural}"
+            print(f"  At the real laying rate you would need about "
+                  f"{c(need, BOLD)} to count on it.")
+    else:
+        floor_line = f"It took at least {fmt_count(res.floor)} {plural}."
+        print(f"  {c(floor_line, BOLD)}")
+
     print(f"  The {units_word} on your plate came from about "
           f"{c(f'{shown} different {plural}', BOLD)}.")
     print()
-    print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling {units:g}   "
-          f"(supply chain: {chain}){RESET}")
+
+    if res.hard_floor is not None:
+        print(f"  {DIM}hard floor {fmt_count(res.hard_floor)}  ...  "
+              f"ceiling {units:g}   window {res.window_days:g}d, "
+              f"{res.rate_per_day:.2f} {unit_word}/{plural[:-1]}/day   "
+              f"(supply chain: {chain}){RESET}")
+    else:
+        print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling {units:g}   "
+              f"(supply chain: {chain}){RESET}")
 
     if res.required > res.floor + 1e-9:
         print(f"  {DIM}{fmt_count(res.required)} {plural} had to enter the "
@@ -249,12 +289,12 @@ def cmd_states(args) -> int:
     c = colour(sys.stdout.isatty() and not args.no_colour)
     conn = dbm.connect(args.db)
     rows = conn.execute(
-        """SELECT region, avg_size, volume FROM regional_size_stat
+        """SELECT region, avg_size, volume FROM v_broiler_size_stat
            WHERE year = 2025 AND month IS NULL AND region != 'United States'
            ORDER BY avg_size DESC"""
     ).fetchall()
     us = conn.execute(
-        """SELECT avg_size FROM regional_size_stat
+        """SELECT avg_size FROM v_broiler_size_stat
            WHERE year = 2025 AND month IS NULL AND region = 'United States'"""
     ).fetchone()
 
@@ -366,6 +406,12 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--pieces", action="store_true",
                         help="treat the count as SEGMENTS, the restaurant "
                              "convention, rather than whole wings")
+        sp.add_argument("--window-days", type=float, default=None,
+                        metavar="N",
+                        help="for recurring products (eggs): the window the "
+                             "question asks about. Defaults to 1 day, i.e. a "
+                             "carton gathered together. A dozen eggs needs 12 "
+                             "hens in a day but only 1 over a fortnight.")
         sp.add_argument("--include-mortality", action="store_true",
                         help="also count birds that died during grow-out")
         sp.add_argument("--explain", action="store_true",

@@ -381,6 +381,39 @@ class Builder:
                     avg_size=v, size_unit=unit, source_id=sid,
                 )
 
+    def egg_states(self):
+        """Eggs per layer and total production by state.
+
+        Shares regional_size_stat with the broiler live weights. Safe because
+        the table is keyed on species_id, so layer rows and broiler rows for
+        the same state and year cannot collide -- and "average size of the
+        thing this species yields" is the same shape of fact either way.
+
+        A state absent for a given year was suppressed by NASS, not zero. It
+        is simply omitted, so the union across years covers all 34 states even
+        though only 31 have 2025 figures.
+        """
+        st = load("stats_states_eggs.yaml")
+        sp = self.species[st["species"]]
+        sid = self.src(st["source"], "egg state stats")
+        unit = st["size_unit"]
+        vunit = st.get("volume_unit")
+        for r in st["regions"]:
+            for year in (2025, 2024):
+                eggs = r.get(f"eggs_per_layer_{year}")
+                if eggs is None:
+                    continue
+                total = r.get(f"total_eggs_million_{year}")
+                self.ins(
+                    "regional_size_stat",
+                    country_id=self.default_country,
+                    species_id=sp, region=r["region"], year=year, month=None,
+                    avg_size=eggs, size_unit=unit,
+                    volume=int(total) if total else None,
+                    volume_unit=vunit if total else None,
+                    source_id=sid,
+                )
+
     def production_value(self):
         """Broilers produced by state, from the NASS Production and Value
         summary.
@@ -526,6 +559,7 @@ class Builder:
         self.loss_chain()
         self.mixing()
         self.stats()
+        self.egg_states()
         self.production_value()
         self.census_states()
         self.quality()

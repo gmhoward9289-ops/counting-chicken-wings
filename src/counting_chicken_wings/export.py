@@ -76,7 +76,7 @@ EXPORTS: list[dict] = [
         "title": "average live weight by state",
         "sql": """SELECT region, year, avg_size AS avg_live_weight_lb,
                          volume AS certified_klb
-                  FROM regional_size_stat
+                  FROM v_broiler_size_stat
                   WHERE month IS NULL ORDER BY year DESC, avg_size DESC""",
         "note": "USDA NASS. Only states NASS publishes individually appear",
     },

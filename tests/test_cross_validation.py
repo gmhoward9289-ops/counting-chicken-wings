@@ -43,7 +43,7 @@ def overlapping(conn):
                p.derived_live_weight_lb AS derived,
                s.avg_size               AS slaughter
         FROM regional_production_year p
-        JOIN regional_size_stat s
+        JOIN v_broiler_size_stat s
           ON s.region = p.region AND s.year = p.year AND s.month IS NULL
         WHERE p.region != 'United States'
           AND p.derived_live_weight_lb IS NOT NULL
@@ -132,7 +132,7 @@ def test_production_report_recovers_a_state_slaughter_suppresses(db):
         r[0] for r in db.execute("""
             SELECT region FROM regional_production_year
             WHERE region != 'United States'
-            EXCEPT SELECT region FROM regional_size_stat
+            EXCEPT SELECT region FROM v_broiler_size_stat
         """).fetchall()
     }
     assert only_in_production, "second source no longer adds any state"
