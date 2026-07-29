@@ -17,6 +17,7 @@ audit trail.
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 
 from . import __version__
@@ -170,10 +171,20 @@ def cmd_count(args) -> int:
         headline = (f"Gathered {window_word}, {units:g} {units_word} took at "
                     f"least {birds:g} {noun_word}.")
         print(f"  {c(headline, BOLD)}")
-        if res.floor > res.hard_floor + 1e-9:
+        if res.floor >= 1.0:
+            # Above one individual the expected figure is a headcount, and
+            # it is the number that actually matters: physiology says 12 hens
+            # could do it, but hens do not lay every day, so you need ~15.
             need = f"{fmt_count(res.floor)} {plural}"
             print(f"  At the real laying rate you would need about "
                   f"{c(need, BOLD)} to count on it.")
+        else:
+            # Below one individual it is a ratio, not a headcount. "You would
+            # need 0.042 hens" is not a sentence; one hen covering it many
+            # times over is the same fact stated usefully.
+            share = res.floor * 100
+            print(f"  That is about {c(f'{share:.0f}% of one {noun}', BOLD)}"
+                  f"'s output over that window.")
     else:
         floor_line = f"It took at least {fmt_count(res.floor)} {plural}."
         print(f"  {c(floor_line, BOLD)}")

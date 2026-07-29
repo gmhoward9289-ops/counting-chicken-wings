@@ -131,8 +131,16 @@ def calculate(
     pieces: bool = False,
     include_mortality: bool = False,
     iterations: int = Query(0, ge=0, le=200000),
+    window_days: float | None = Query(None, gt=0, le=3650),
 ):
-    """The main calculation, with a full per-stage audit trail."""
+    """The main calculation, with a full per-stage audit trail.
+
+    `window_days` applies only to recurring products such as eggs, where the
+    per-individual yield is a rate and means nothing without a window.
+    Defaults to one day: a hen lays at most one egg a day, so twelve same-day
+    eggs came from twelve different hens, and no supply chain arrangement can
+    reduce that. Ignored for wings, which need no clock.
+    """
     conn = dbm.connect()
     try:
         try:
@@ -161,12 +169,18 @@ def calculate(
             if chain not in existing:
                 raise HTTPException(404, f"unknown supply chain: {chain}")
 
+        try:
+            recurring = dbm.make_recurring(prod, window_days)
+        except ValueError as e:
+            raise HTTPException(500, str(e))
+
         res = run(
             units_requested=units,
             units_per_individual=prod["units_per_individual_mode"],
             loss_stages=loss,
             mixing_stages=mixing,
             iterations=iterations,
+            recurring=recurring,
         )
 
         slugs = list({s.source_slug for s in res.trace if s.source_slug})
@@ -196,6 +210,16 @@ def calculate(
                 "iterations": res.iterations,
                 "container_units": res.container_units,
                 "paired_individuals": res.paired_individuals,
+                # Recurring products only; null for wings. hard_floor is the
+                # physiological minimum and `floor` is what you actually need
+                # at the real production rate -- for same-day eggs, 12 and
+                # 15.2. Both are returned because quoting either alone
+                # misleads.
+                "hard_floor": res.hard_floor,
+                "window_days": res.window_days,
+                "rate_per_day": res.rate_per_day,
+                "cap_per_individual": res.cap_per_individual,
+                "yield_mode": prod["yield_mode"],
             },
             "trace": [
                 {

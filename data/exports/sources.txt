@@ -41,6 +41,28 @@
     citing this source should be treated as unverified.
 
 [4]
+  slug: ams-shell-egg-grades
+  title: United States Standards, Grades, and Weight Classes for Shell Eggs
+  publisher: USDA Agricultural Marketing Service
+  source_type: government
+  retrieved_on: 2026-07-29
+  url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
+  notes:
+    Defines the defect categories and, importantly for us, the TOLERANCES -
+    which are ceilings the pack must stay under, not measured occurrence
+    rates. Consumer Grade AA at origin permits at most 5% checks (7% for
+    jumbo) and at most 0.50% leakers, dirties, and loss combined, with loss
+    itself capped at 0.30%. Grade A permits at most 7% checks (9% jumbo) and
+    1% combined. Anything stored from this source is therefore an UPPER BOUND
+    on the true rate and is flagged confidence=industry, never measured. A
+    pack running at the tolerance would be barely passing. Terminology: a
+    cracked shell is a "check". Dirty or cracked eggs are "restricted" and may
+    be diverted to an official egg products plant - a "breaker plant" - for
+    liquid egg. They are not destroyed, but they do leave the shell-egg
+    stream, which is what makes them a loss for the question "how many hens
+    for a dozen eggs in a carton".
+
+[5]
   slug: aphis-hpai-detections
   title:
     Confirmations of Highly Pathogenic Avian Influenza in Commercial and
@@ -55,7 +77,7 @@
     1,689 confirmed flocks and 168.62 million birds affected between 2022 and
     April 2025.
 
-[5]
+[6]
   slug: crs-hpai-outbreak
   title: The Highly Pathogenic Avian Influenza (HPAI) Outbreak in Poultry, 2022-Present
   publisher: Congressional Research Service (R48518)
@@ -69,7 +91,7 @@
     This is the key finding for our purposes - HPAI is overwhelmingly an egg
     story, not a wing story.
 
-[6]
+[7]
   slug: epa-foodservice-waste
   title: Food waste reduction in commercial kitchens (Winnow, EPA materials)
   publisher: US Environmental Protection Agency
@@ -83,7 +105,7 @@
     Spoilage specifically ranges 1-5% in prepare-ahead operations and 1-6% in
     cook-to-order operations. Corroborates the ReFED band.
 
-[7]
+[8]
   slug: ers-broiler-grower-fees
   title: Fees paid to growers for raising broiler chickens varied widely in 2020
   publisher: USDA Economic Research Service
@@ -97,7 +119,7 @@
     relative "tournament" system in which each farm's rate depends on its
     performance against others delivering in the same period.
 
-[8]
+[9]
   slug: ers-supermarket-loss
   title:
     Supermarket Loss Estimates for Fresh Fruit, Vegetables, Meat, Poultry, and
@@ -112,7 +134,7 @@
     measured supermarket estimates, cutting loss-adjusted fresh meat, poultry,
     and seafood availability by 7.3% for 2012.
 
-[9]
+[10]
   slug: fsis-line-speed-rule
   title:
     Maximum Line Speed Rates for Young Chicken and Turkey Establishments
@@ -135,7 +157,7 @@
     safety and carcass DAMAGE are different questions; the FSIS defence
     addresses the former, not the latter.
 
-[10]
+[11]
   slug: fsis-poultry-labeling-standards
   title: Food Standards and Labeling Policy Book
   publisher: USDA Food Safety and Inspection Service
@@ -151,7 +173,71 @@
     solid-muscle / chunked-and-formed / ground-and-formed distinction that
     separates a whole-muscle boneless wing from a reformed nugget.
 
-[11]
+[12]
+  slug: nass-census-agriculture-2022
+  title: Census of Agriculture 2022, broiler data by state
+  publisher: USDA National Agricultural Statistics Service (QuickStats)
+  source_type: government
+  published_on: 2024-02-13
+  retrieved_on: 2026-07-29
+  url: https://quickstats.nass.usda.gov/
+  notes:
+    The census breaks the suppression ceiling. NASS's annual SURVEY programme
+    withholds states with too few operations - the same 22-state cap applies
+    in the QuickStats API as in the PDFs, which was confirmed directly by
+    querying it. The CENSUS is a separate five-yearly enumeration with
+    different disclosure handling, and for broilers at state level it
+    publishes ALL 50 STATES with nothing withheld. California is the clearest
+    illustration: 313.7 million broilers sold in 2022, eighth largest in the
+    country, and absent from every year of both annual publications. Caveat
+    carried deliberately: these are SALES in a census year, not slaughter or
+    production, and they do not move until the 2027 census. They answer "which
+    states raise broilers and at what scale" - never mix them into an annual
+    time series.
+
+[13]
+  slug: nass-chickens-eggs-2025
+  title: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  source_type: government
+  published_on: 2026-02-17
+  retrieved_on: 2026-07-29
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+  notes:
+    The anchor for everything egg. Annual estimates cover December 1 of the
+    previous year through November 30, which is NOT a calendar year - do not
+    align it with the slaughter summary's calendar-year series. US 2025:
+    layers averaged 365 million, annual production per layer on hand 288 eggs,
+    total production 105 billion eggs (90.1 billion table, 15.2 billion
+    hatching). Internally consistent to a degree worth noting: average layers
+    times eggs per layer reproduces reported total production for all 31
+    states with 2025 figures, zero mismatches beyond 1%. And 288 eggs/year
+    divided by 365 days gives 0.789 eggs/hen/day, which independently matches
+    the 78.7-79.9 eggs per 100 layers per day reported in the monthly
+    releases. Two unrelated tables agreeing is the strongest validation in the
+    project. Coverage is BETTER than broilers: 34 states named across
+    2024-2025 against 23 for slaughter. Maryland, South Dakota, and Virginia
+    are suppressed for 2025 but present for 2024.
+
+[14]
+  slug: nass-chickens-eggs-monthly-2026
+  title: Chickens and Eggs, monthly releases 2026
+  publisher: USDA National Agricultural Statistics Service
+  source_type: government
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.nass.usda.gov/Surveys/Guide_to_NASS_Surveys/Chickens_and_Eggs/index.php
+  notes:
+    Monthly rate of lay and layer inventory. Rate of lay per day ran 79.1 (Jan
+    1), 78.9 (Feb 1), 79.9 (May 1), and 78.7 (Jun 1) eggs per 100 layers in
+    2026 - remarkably steady. June 1 2026 layer inventory 377 million total:
+    312 million table-egg, 60.7 million broiler-type hatching, 4.70 million
+    egg-type hatching. The table-egg versus hatching split matters for us:
+    they are different birds with very different lay rates, and a state's
+    headline eggs-per-layer figure is largely a readout of which mix it runs.
+
+[15]
   slug: nass-poultry-slaughter-2025
   title: Poultry Slaughter 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -165,7 +251,7 @@
     "commercially grown broilers-fryers and other young immature birds such as
     roasters and capons". Highest-confidence source in the project.
 
-[12]
+[16]
   slug: nass-production-value-2025
   title: Poultry - Production and Value 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -187,7 +273,7 @@
     Florida is individually reported here for 2024 while appearing in no year
     of the slaughter summary.
 
-[13]
+[17]
   slug: usda-fdc-wing-fried
   title: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
   publisher: USDA FoodData Central
@@ -198,7 +284,7 @@
     Breaded and fried. Roughly 59% of calories from fat against 27% from
     protein - the breading and frying oil, not the bird, drive the change.
 
-[14]
+[18]
   slug: usda-fdc-wing-raw
   title: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
   publisher: USDA FoodData Central
@@ -209,7 +295,7 @@
     Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure for
     an unbreaded, uncooked whole wing with skin.
 
-[15]
+[19]
   slug: tyson-foodservice-boneless
   title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
   publisher: Tyson Foodservice
@@ -225,7 +311,7 @@
     and the descriptor "whole muscle chicken breast". These are breast chunks,
     and the manufacturer does not pretend otherwise.
 
-[16]
+[20]
   slug: tyson-foodservice-chunks
   title: Boneless wings and chunks product line, ingredient statements
   publisher: Tyson Foodservice
@@ -241,7 +327,7 @@
     "chunks" contain no wing meat either, and the phrase "with rib meat" is a
     breast-yield allowance rather than a different cut sneaking in.
 
-[17]
+[21]
   slug: boneless-wing-method
   title:
     A method of production of boneless chicken wings (drumettes and winglets)
@@ -254,7 +340,7 @@
     Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
     winglet 30.7 g at 80.1% boneless yield.
 
-[18]
+[22]
   slug: chilling-method-yield
   title:
     Moisture retention by water- and air-chilled broilers, and effect of
@@ -272,7 +358,7 @@
     therefore belongs in the mass stages and can never move a count answer -
     but it matters a great deal to anyone buying wings by the pound.
 
-[19]
+[23]
   slug: cold-chain-refrigeration-losses
   title:
     The impact of refrigeration on food losses and associated greenhouse gas
@@ -290,7 +376,7 @@
     one. For meat the paper finds post-harvest handling and storage, not
     transport, is where refrigeration matters most.
 
-[20]
+[24]
   slug: myopathy-prevalence-ontario
   title:
     Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
@@ -306,7 +392,7 @@
     comes from - are the worst affected. Woody breast incidence rose from
     about 5% in 2012 to 29% by 2015.
 
-[21]
+[25]
   slug: ncc-broiler-lca-2020
   title: Broiler Production System Life Cycle Assessment: 2020 Update
   publisher: National Chicken Council / University of Arkansas
@@ -326,7 +412,7 @@
     chicks per broiler produced to cover mortality, which independently
     corroborates our farm_mortality stage.
 
-[22]
+[26]
   slug: welfare-training-carcass-quality
   title:
     The Influence of Welfare Training on Bird Welfare and Carcass Quality in
@@ -339,7 +425,7 @@
     90% of bruising occurs in the 12-24 hours before processing. Bruise
     distribution by region: breast 42%, wings 33%, legs 25%.
 
-[23]
+[27]
   slug: wing-injuries-loading
   title:
     Rearing and handling injuries in broiler chickens and risk factors for
@@ -354,7 +440,7 @@
     the bird. Load-to-load variance is high, so this is stored with a wide
     lo/hi band.
 
-[24]
+[28]
   slug: wing-yield-eight-strains
   title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
   publisher: Poultry Science
@@ -365,7 +451,7 @@
     Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
     (6.7-7.3%), measured across eight commercial broiler strains.
 
-[25]
+[29]
   slug: ncc-broiler-performance
   title: U.S. Broiler Performance
   publisher: National Chicken Council
@@ -379,7 +465,7 @@
     grow-out mortality going back to 1925. Trade body rather than government,
     so figures are tagged confidence=industry.
 
-[26]
+[30]
   slug: ncc-key-facts
   title: Broiler Chicken Industry Key Facts
   publisher: National Chicken Council
@@ -390,7 +476,7 @@
     https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
   notes: Industry structure - plant counts, company counts, contract farms.
 
-[27]
+[31]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -406,7 +492,7 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[28]
+[32]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -422,7 +508,7 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[29]
+[33]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -438,7 +524,7 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[30]
+[34]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -453,7 +539,7 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[31]
+[35]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet

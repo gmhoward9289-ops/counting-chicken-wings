@@ -205,12 +205,28 @@
   <div class="panel">
     <div class="controls">
       <div>
-        <label>How many wings</label>
+        <label>How many</label>
         <input type="number" id="count" value="12" min="1" step="1">
+      </div>
+      <div>
+        <label>Product</label>
+        <select id="product"></select>
       </div>
       <div>
         <label>Supply chain</label>
         <select id="chain"></select>
+      </div>
+      <!-- Recurring products only. A rate means nothing without a window, so
+           this appears for eggs and stays hidden for wings. -->
+      <div id="window-wrap" hidden>
+        <label>Gathered over</label>
+        <select id="window-days">
+          <option value="1" selected>1 day (one carton)</option>
+          <option value="7">1 week</option>
+          <option value="15">15 days</option>
+          <option value="30">1 month</option>
+          <option value="365">1 year</option>
+        </select>
       </div>
       <label class="check"><input type="checkbox" id="pieces">
         Count as pieces (menu style)</label>
@@ -589,7 +605,11 @@ let META = null, loaded = {};
 
 // Show enough decimals to keep a near-ceiling value visibly below it.
 function fmtDistinct(v, ceil) {
-  if (v >= ceil) return v.toFixed(2);
+  // Same-day eggs actually REACH the ceiling -- a hen lays at most one a day,
+  // so twelve eggs in a day is exactly twelve hens. Printing "12.000000"
+  // implies a limit being approached when it has been hit, which is the
+  // opposite of the truth. Wings approach and never arrive; eggs arrive.
+  if (ceil - v <= 5e-7) return String(+v.toFixed(2));
   for (const p of [2,3,4,5,6]) {
     const s = v.toFixed(p);
     if (parseFloat(s) < ceil) return s;
@@ -616,10 +636,15 @@ async function calc() {
   const mine = ++calcSeq;
   const q = new URLSearchParams({
     count: $('#count').value || 12,
+    product: $('#product').value || 'whole_wing',
     chain: $('#chain').value,
     pieces: $('#pieces').checked,
     include_mortality: $('#mort').checked,
   });
+  // Only meaningful for recurring products, and the server ignores it for
+  // the rest -- but sending it regardless would put a misleading window in
+  // the query string for wings.
+  if (!$('#window-wrap').hidden) q.set('window_days', $('#window-days').value);
   const d = await api('/api/calculate?' + q);
   if (mine !== calcSeq) return;     // superseded by a newer request
   const a = d.answer, plural = d.question.individual_plural;
@@ -627,17 +652,44 @@ async function calc() {
   $('#hl').textContent = fmtDistinct(a.distinct, a.ceiling);
   $('#hl-label').textContent = 'different ' + plural + ' on your plate';
 
-  const span = a.ceiling - a.floor;
-  const pct = span > 0 ? ((a.distinct - a.floor) / span) * 100 : 100;
-  $('#bandfill').style.width = Math.max(1, pct) + '%';
-  $('#band-lo').textContent = 'floor ' + (+a.floor.toFixed(2)) + ' ' + plural;
-  $('#band-hi').textContent = 'ceiling ' + (+a.ceiling.toFixed(2));
+  // The band runs floor..ceiling, so it must use the HARD floor. `a.floor` is
+  // the expected requirement, which for same-day eggs is 15.21 against a
+  // ceiling of 12 -- above the top of its own scale, which made the band
+  // meaningless and the label wrong.
+  const bandFloor = a.hard_floor != null ? a.hard_floor : a.floor;
+  const span = a.ceiling - bandFloor;
+  const pct = span > 0 ? ((a.distinct - bandFloor) / span) * 100 : 100;
+  $('#bandfill').style.width = Math.max(1, Math.min(100, pct)) + '%';
+  $('#band-lo').textContent = 'floor ' + (+bandFloor.toFixed(2)) + ' ' + plural;
+  $('#band-hi').textContent = span <= 1e-9
+    // Floor and ceiling coincide: there is no band left for the supply chain
+    // to move anything within, and saying so is the whole point of eggs.
+    ? 'ceiling ' + (+a.ceiling.toFixed(2)) + ' — floor meets ceiling'
+    : 'ceiling ' + (+a.ceiling.toFixed(2));
 
-  let fl = `It took <b>at least ${+a.floor.toFixed(2)} ${plural}</b> — that
-    part is arithmetic, not estimation.`;
-  if (a.required > a.floor + 1e-9)
-    fl += ` Accounting for every loss from the farm to the fryer,
-      <b>${a.required.toFixed(2)}</b> ${plural} had to enter the system.`;
+  let fl;
+  if (a.hard_floor != null) {
+    // Recurring products carry two floors and quoting one alone misleads.
+    // hard_floor is physiology; floor is what you actually need, because a
+    // hen does not lay every day.
+    const w = a.window_days;
+    const when = w === 1 ? 'in a single day' : `over ${w} days`;
+    const birds = Math.ceil(a.hard_floor - 1e-9);
+    fl = `Gathered ${when}, that took <b>at least ${birds}
+      ${birds === 1 ? d.question.individual_noun : plural}</b> — a hen lays at
+      most one egg a day, so that part is physiology, not estimation.`;
+    fl += a.floor >= 1
+      ? ` At the real laying rate you would need about
+          <b>${a.floor.toFixed(2)}</b> ${plural} to count on it.`
+      : ` That is about <b>${(a.floor * 100).toFixed(0)}%</b> of one
+          ${d.question.individual_noun}'s output over that window.`;
+  } else {
+    fl = `It took <b>at least ${+a.floor.toFixed(2)} ${plural}</b> — that
+      part is arithmetic, not estimation.`;
+    if (a.required > a.floor + 1e-9)
+      fl += ` Accounting for every loss from the farm to the fryer,
+        <b>${a.required.toFixed(2)}</b> ${plural} had to enter the system.`;
+  }
   if (d.question.segments_per_unit)
     fl = `${d.question.count} pieces is ${(+d.question.units.toFixed(2))}
       whole wings. ` + fl;
@@ -1203,7 +1255,25 @@ READY = (async () => {
   $('#chain').innerHTML = META.chains.map(c =>
     `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
   ).join('');
-  ['count','chain','pieces','mort'].forEach(id => {
+
+  const active = META.products.filter(p => p.active);
+  $('#product').innerHTML = active.map(p =>
+    `<option value="${p.slug}"${p.slug === 'whole_wing' ? ' selected' : ''}>${
+      p.label}</option>`).join('');
+
+  // The window control only makes sense for a rate, so it follows the
+  // selected product rather than sitting there permanently confusing anyone
+  // asking about wings.
+  const syncWindow = () => {
+    const p = active.find(x => x.slug === $('#product').value);
+    $('#window-wrap').hidden = !p || p.yield_mode !== 'recurring';
+    $('#pieces').closest('label').hidden =
+      !p || p.slug !== 'whole_wing';
+  };
+  $('#product').addEventListener('change', syncWindow);
+  syncWindow();
+
+  ['count','product','chain','pieces','mort','window-days'].forEach(id => {
     $('#' + id).addEventListener('change', calc);
     $('#' + id).addEventListener('input', calc);
   });

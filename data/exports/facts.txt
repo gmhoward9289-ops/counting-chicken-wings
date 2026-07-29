@@ -106,6 +106,36 @@
   url: https://www.sciencedirect.com/science/article/pii/S105661711931205X
 
 [7]
+  slug: dozen-eggs-could-be-one-hen
+  headline: A dozen eggs might have come from a single chicken
+  body:
+    Wings and eggs ask the same question and get opposite answers. Twelve
+    wings can never come from fewer than six chickens, because a chicken only
+    has two. But a hen lays again tomorrow - so one hen, given about fifteen
+    days, can fill an entire carton by herself. For eggs the honest answer
+    runs from 1 chicken to 12, and which end you land on is a question about
+    patience rather than biology.
+  surprise: 5
+  placement: both
+  source: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+
+[8]
+  slug: eggs-invert-the-wing-story
+  headline: With eggs, the floor rises to meet the ceiling
+  body:
+    For wings the minimum is six and mixing through the supply chain pushes
+    the real answer up toward twelve. For a same-day dozen of eggs the minimum
+    is already twelve, so the floor and the ceiling meet and there is nothing
+    left for the supply chain to move. Same question, opposite structure.
+  surprise: 5
+  placement: learning
+  source: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+
+[9]
   slug: farmer-gets-twelve-cents
   headline: The farmer got about twelve cents for your dozen wings
   body:
@@ -123,7 +153,7 @@
     
     http://www.ers.usda.gov/data-products/charts-of-note/chart-detail?chartId=104642
 
-[8]
+[10]
   slug: grading-splits-wings
   headline: Size grading deliberately separates a bird's two wings
   body:
@@ -137,7 +167,23 @@
   source: Mixing pool sizes reasoned from process equipment scale
   publisher: counting-chicken-wings
 
-[9]
+[11]
+  slug: low-egg-states-are-broiler-states
+  headline: Alabama's hens lay 100 fewer eggs a year than Montana's
+  body:
+    Alabama averaged 224 eggs per layer in 2025 and Montana 327. That is not
+    worse farming - it is a different bird doing a different job. Alabama's
+    layers are largely broiler-breeder hens producing hatching eggs that
+    become meat chickens, and breeder hens lay far fewer eggs than table-egg
+    strains. Of 377 million US layers, 60.7 million are hatching birds. A
+    state's eggs-per-layer figure is mostly a readout of which mix it runs.
+  surprise: 5
+  placement: learning
+  source: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+
+[12]
   slug: menu-wing-ambiguity
   headline: A restaurant "dozen wings" usually is not twelve wings
   body:
@@ -154,7 +200,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[10]
+[13]
   slug: nearly-every-breast-is-striped
   headline: 96% of chicken breasts now show white striping
   body:
@@ -173,7 +219,7 @@
   publisher: PLOS ONE
   url: https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0267019
 
-[11]
+[14]
   slug: ohio-vs-north-carolina
   headline: An Ohio chicken weighs half what a North Carolina chicken does
   body:
@@ -188,7 +234,22 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[12]
+[15]
+  slug: same-day-dozen-is-twelve-hens
+  headline: A dozen eggs gathered in one day came from twelve different hens
+  body:
+    A hen's ovulation cycle runs a little over 24 hours, so she lays at most
+    about one egg a day. No hen laid two of the eggs in a same-day carton,
+    which means twelve eggs means twelve hens - necessarily, with no
+    estimating involved. It is the same kind of hard fact as a chicken having
+    two wings, just arrived at through a clock instead of anatomy.
+  surprise: 5
+  placement: both
+  source: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+
+[16]
   slug: wing-tips-are-an-export-business
   headline: Wing tips and chicken paws are a $648 million export market
   body:
@@ -205,7 +266,7 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[13]
+[17]
   slug: avian-flu-scale
   headline: Bird flu has cost 168 million birds since 2022
   body:
@@ -225,7 +286,7 @@
     
     https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks
 
-[14]
+[18]
   slug: boneless-portion-is-not-anatomy
   headline: How many boneless wings a chicken makes is a business decision
   body:
@@ -243,7 +304,24 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
 
-[15]
+[19]
+  slug: cage-free-does-not-change-the-count
+  headline: Cage-free changes the hen's life, not the arithmetic
+  body:
+    Cage-free, free range, and pasture-raised describe how hens are housed,
+    not how many. A cage-free house still holds tens or hundreds of thousands
+    of birds, so a same-day dozen is still twelve different hens. The only
+    setting where the number genuinely falls is a backyard flock - six hens
+    filling a carton over two weeks really is about six hens.
+  surprise: 4
+  placement: both
+  source: Chickens and Eggs, monthly releases 2026
+  publisher: USDA National Agricultural Statistics Service
+  url:
+    
+    https://www.nass.usda.gov/Surveys/Guide_to_NASS_Surveys/Chickens_and_Eggs/index.php
+
+[20]
   slug: chicken-footprint-falling
   headline: Chicken's footprint per bird has fallen every year
   body:
@@ -260,7 +338,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[16]
+[21]
   slug: chunks-are-breast-too
   headline: The "chunks" are not wing either
   body:
@@ -278,7 +356,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
 
-[17]
+[22]
   slug: condemnation-is-tiny
   headline: FSIS condemns less than half a percent
   body:
@@ -291,7 +369,23 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[18]
+[23]
+  slug: cracked-eggs-become-liquid-egg
+  headline: A cracked egg is not thrown away, it is rerouted
+  body:
+    A cracked shell is a "check", and along with dirty eggs it counts as
+    "restricted" - barred from the carton but allowed to go to a breaker plant
+    to become liquid egg. So it leaves the shell-egg stream without leaving
+    the food supply. USDA tolerances permit up to 7% checks in a Grade A pack
+    at origin, though that is a ceiling a pack must stay under, not a rate
+    anyone aims for.
+  surprise: 4
+  placement: learning
+  source: United States Standards, Grades, and Weight Classes for Shell Eggs
+  publisher: USDA Agricultural Marketing Service
+  url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
+
+[24]
   slug: feed-behind-a-dozen-wings
   headline: A dozen wings represents about five pounds of feed
   body:
@@ -308,7 +402,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[19]
+[25]
   slug: flat-beats-drumette
   headline: The flat has a better meat yield than the drumette
   body:
@@ -323,7 +417,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[20]
+[26]
   slug: footprint-must-be-allocated
   headline: A dozen wings is not six chickens' worth of carbon
   body:
@@ -340,7 +434,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[21]
+[27]
   slug: line-speed-and-broken-wings
   headline: Some plants run 175 birds a minute, others 140
   body:
@@ -361,7 +455,7 @@
     
     https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
 
-[22]
+[28]
   slug: mortality-rising
   headline: Broiler mortality has been getting worse since 2013
   body:
@@ -376,7 +470,21 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[23]
+[29]
+  slug: twelve-eggs-needs-fifteen-hens
+  headline: Getting a dozen eggs in one day actually takes about fifteen hens
+  body:
+    Twelve hens is the floor, but hens do not lay every single day. At the US
+    average rate of 0.789 eggs per hen per day, you need roughly 15.2 hens on
+    hand to collect twelve eggs before sundown. The floor is what is
+    physically possible; fifteen is what it actually takes.
+  surprise: 4
+  placement: learning
+  source: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+
+[30]
   slug: wing-tips-are-a-third-segment
   headline: Every wing has a third segment you never see
   body:
@@ -392,7 +500,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[24]
+[31]
   slug: wing-tips-domestic-fate
   headline: At home, wing tips become stock, pet food, or fertilizer
   body:
@@ -409,7 +517,7 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[25]
+[32]
   slug: wings-is-a-regulated-word
   headline: "Wings" is a regulated word, and boneless wings comply with it
   body:
@@ -427,7 +535,7 @@
     
     https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
 
-[26]
+[33]
   slug: wings-most-damaged-part
   headline: Wings are the most damaged part of the chicken, by far
   body:
@@ -443,7 +551,7 @@
   publisher: Canadian Journal of Animal Science
   url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
 
-[27]
+[34]
   slug: cook-loss-irrelevant
   headline: Cooking changes the weight, never the count
   body:
@@ -455,7 +563,7 @@
   source: Placeholder pending research
   publisher: counting-chicken-wings
 
-[28]
+[35]
   slug: dressing-yield
   headline: About three quarters of a live chicken becomes sellable meat
   body:
@@ -467,7 +575,23 @@
   source: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings
 
-[29]
+[36]
+  slug: egg-data-agrees-with-itself
+  headline: The egg numbers check out against themselves, twice
+  body:
+    Average layers times eggs per layer reproduces reported total production
+    for every one of the 31 states with 2025 figures. And 288 eggs a year
+    divided by 365 days gives 0.789 eggs per hen per day, matching the 78.7 to
+    79.9 eggs per 100 layers that USDA reports from an entirely separate
+    monthly survey. Two unrelated tables landing on the same answer is the
+    strongest validation anywhere in this project.
+  surprise: 3
+  placement: learning
+  source: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+
+[37]
   slug: kitchen-waste-corroborated
   headline: Restaurant kitchens waste 4-13% of what they buy
   body:
@@ -486,7 +610,7 @@
     
     https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
 
-[30]
+[38]
   slug: nineteen-billion-wings
   headline: The US produced 19.16 billion whole wings in 2025
   body:
@@ -498,7 +622,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[31]
+[39]
   slug: top-four-concentration
   headline: Four companies produce well over half the chicken in America
   body:
@@ -514,7 +638,7 @@
     
     https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
 
-[32]
+[40]
   slug: transit-loss-is-unmeasured
   headline: Nobody publishes how many wings are lost in transit
   body:
@@ -534,7 +658,7 @@
   publisher: Environmental Research Letters (IOP)
   url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
 
-[33]
+[41]
   slug: wings-are-mostly-fat-calories
   headline: About 60% of a wing's calories come from fat
   body:
@@ -548,7 +672,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/172390/nutrients
 
-[34]
+[42]
   slug: two-wings-hard-floor
   headline: A chicken has exactly two wings
   body:
