@@ -48,12 +48,55 @@ def test_list_products_puts_active_species_first(conn):
 def test_each_stage_appears_at_most_once(conn):
     """A stage with one factor per product must not load twice.
 
-    This is the same confusion that made the audit double-list stages. Here
-    it would be far worse than cosmetic: the loss would be applied twice.
+    Note this passes trivially against the current corpus: the query filters
+    to a single product, so per-product factors already collapse to one row.
+    The case that actually exercises the dedupe is built explicitly in
+    test_specific_factor_beats_general_when_both_exist below.
     """
     stages = dbm.load_loss_stages(conn, "broiler", "whole_wing")
     slugs = [s.slug for s in stages]
     assert len(slugs) == len(set(slugs))
+
+
+def test_specific_factor_beats_general_when_both_exist(tmp_path):
+    """The ambiguous case: one stage, a general factor AND a specific one.
+
+    No current data hits this, so it has to be constructed. Without the
+    dedupe the stage loads twice and its loss is applied twice, silently
+    changing every answer the program gives. Resolution must be by
+    specificity -- the product-specific factor wins.
+    """
+    c = dbm.connect(tmp_path / "ambiguous.db")
+    try:
+        stage_id, species_id, source_id = c.execute("""
+            SELECT ls.id, lf.species_id, lf.source_id
+            FROM loss_stage ls JOIN loss_factor lf ON lf.loss_stage_id = ls.id
+            WHERE ls.slug = 'wing_damage' LIMIT 1
+        """).fetchone()
+
+        specific = c.execute(
+            "SELECT survive_mode FROM loss_factor "
+            "WHERE loss_stage_id = ? AND product_id IS NOT NULL",
+            (stage_id,),
+        ).fetchone()[0]
+
+        # A general factor for the same stage, deliberately different.
+        c.execute("""
+            INSERT INTO loss_factor
+              (loss_stage_id, species_id, product_id, survive_lo,
+               survive_mode, survive_hi, confidence, source_id)
+            VALUES (?, ?, NULL, 0.5, 0.5, 0.5, 'estimate', ?)
+        """, (stage_id, species_id, source_id))
+        c.commit()
+
+        loaded = dbm.load_loss_stages(c, "broiler", "whole_wing")
+        hits = [s for s in loaded if s.slug == "wing_damage"]
+
+        assert len(hits) == 1, "stage loaded twice; its loss would double-apply"
+        assert hits[0].survive_mode == pytest.approx(specific), \
+            "the general factor won; resolution is not by specificity"
+    finally:
+        c.close()
 
 
 def test_product_specific_factor_wins_over_general(conn):

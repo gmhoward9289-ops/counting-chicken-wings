@@ -14,6 +14,9 @@ gui = [
 ]
 dev = [
     "pytest>=8.0",
+    # FastAPI's TestClient is a thin wrapper over an HTTP client; without
+    # this the API tests cannot run at all.
+    "httpx2>=0.1",
 ]
 
 [project.scripts]
