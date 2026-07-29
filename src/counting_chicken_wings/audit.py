@@ -93,19 +93,28 @@ def audit(db_path: Path) -> int:
     if est:
         print("  These are listed as open items in docs/RESEARCH.md.")
 
-    # Stages whose count-affecting factors are unsourced matter far more
-    # than mass-only ones, which cannot move a count answer at all.
+    # Factors whose stage can move a count matter far more than mass-only
+    # ones, which cannot shift the answer however uncertain they are.
+    #
+    # A stage legitimately holds several factors -- typically one per product
+    # -- so name the product alongside the stage. Listing bare stage labels
+    # made product-specific factors read as duplicates, which looked like a
+    # data bug and inflated the apparent number of unsourced stages.
     critical = conn.execute("""
-        SELECT ls.label FROM loss_factor lf
+        SELECT ls.label, COALESCE(p.label, 'all products')
+        FROM loss_factor lf
         JOIN loss_stage ls ON ls.id = lf.loss_stage_id
+        LEFT JOIN product p ON p.id = lf.product_id
         WHERE lf.confidence = 'estimate'
           AND ls.applies_to IN ('individual','product')
-        ORDER BY ls.sequence
+        ORDER BY ls.sequence, p.label
     """).fetchall()
     if critical:
-        print(f"\n  {len(critical)} of those affect the COUNT answer:")
-        for (label,) in critical:
-            print(f"    - {label}")
+        stages = {label for label, _ in critical}
+        print(f"\n  {len(critical)} of those affect the COUNT answer, "
+              f"across {len(stages)} stage(s):")
+        for label, prod in critical:
+            print(f"    - {label}  [{prod}]")
     else:
         print("\n  None of them affect the count answer.")
 

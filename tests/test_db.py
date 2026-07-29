@@ -1,0 +1,201 @@
+"""Tests for the data-access layer.
+
+Most of this module is straightforward SQL, with one exception worth real
+scrutiny: load_loss_stages resolves competing factors by specificity, and
+silently picking the wrong one would change every answer the program gives
+without failing anything.
+"""
+
+import pytest
+
+from counting_chicken_wings import db as dbm
+
+
+@pytest.fixture(scope="module")
+def conn():
+    c = dbm.connect()
+    yield c
+    c.close()
+
+
+# ---------------------------------------------------------------------------
+# Products
+# ---------------------------------------------------------------------------
+
+def test_get_product_returns_species_wording(conn):
+    """The CLI and API build prose from these, so they must be present."""
+    p = dbm.get_product(conn, "whole_wing")
+    assert p["individual_noun"] == "chicken"
+    assert p["individual_plural"] == "chickens"
+    assert p["units_per_individual_mode"] == 2
+
+
+def test_unknown_product_raises_keyerror(conn):
+    with pytest.raises(KeyError):
+        dbm.get_product(conn, "griffin_wing")
+
+
+def test_list_products_puts_active_species_first(conn):
+    rows = dbm.list_products(conn)
+    actives = [r["active"] for r in rows]
+    assert actives == sorted(actives, reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# Loss stage resolution
+# ---------------------------------------------------------------------------
+
+def test_each_stage_appears_at_most_once(conn):
+    """A stage with one factor per product must not load twice.
+
+    This is the same confusion that made the audit double-list stages. Here
+    it would be far worse than cosmetic: the loss would be applied twice.
+    """
+    stages = dbm.load_loss_stages(conn, "broiler", "whole_wing")
+    slugs = [s.slug for s in stages]
+    assert len(slugs) == len(set(slugs))
+
+
+def test_product_specific_factor_wins_over_general(conn):
+    """transit_rejection carries a different figure per product."""
+    whole = {s.slug: s for s in
+             dbm.load_loss_stages(conn, "broiler", "whole_wing")}
+    boneless = {s.slug: s for s in
+                dbm.load_loss_stages(conn, "broiler", "boneless_wing")}
+    assert (whole["transit_rejection"].survive_mode
+            != boneless["transit_rejection"].survive_mode)
+
+
+def test_optional_stages_are_excluded_by_default(conn):
+    slugs = {s.slug for s in dbm.load_loss_stages(conn, "broiler",
+                                                  "whole_wing")}
+    assert "farm_mortality" not in slugs
+    assert "plate_waste" not in slugs
+
+
+def test_optional_stages_appear_when_requested(conn):
+    slugs = {s.slug for s in dbm.load_loss_stages(
+        conn, "broiler", "whole_wing", include_optional=True)}
+    assert "farm_mortality" in slugs
+
+
+def test_stages_come_back_in_pipeline_order(conn):
+    stages = dbm.load_loss_stages(conn, "broiler", "whole_wing")
+    seqs = [s.sequence for s in stages]
+    assert seqs == sorted(seqs)
+
+
+def test_every_loaded_stage_carries_its_citation(conn):
+    for s in dbm.load_loss_stages(conn, "broiler", "whole_wing"):
+        assert s.source_slug, s.slug
+        assert s.confidence, s.slug
+
+
+def test_bands_are_ordered_on_load(conn):
+    for s in dbm.load_loss_stages(conn, "broiler", "whole_wing"):
+        assert s.survive_lo <= s.survive_mode <= s.survive_hi, s.slug
+
+
+def test_mass_stages_are_flagged_as_not_affecting_count(conn):
+    by_slug = {s.slug: s for s in
+               dbm.load_loss_stages(conn, "broiler", "whole_wing")}
+    assert not by_slug["cook_loss"].affects_count()
+    assert by_slug["wing_damage"].affects_count()
+
+
+# ---------------------------------------------------------------------------
+# Supply chains and mixing
+# ---------------------------------------------------------------------------
+
+def test_default_supply_chain_exists_and_is_listed(conn):
+    default = dbm.default_supply_chain(conn)
+    assert default in {c["slug"] for c in dbm.list_supply_chains(conn)}
+
+
+def test_commodity_chain_loads_the_full_cascade(conn):
+    stages = dbm.load_mixing_stages(conn, "commodity_foodservice")
+    assert len(stages) > 5
+    assert any(s.mixing_kind == "separating" for s in stages)
+
+
+def test_home_chain_has_no_mixing_at_all(conn):
+    assert dbm.load_mixing_stages(conn, "whole_bird_home") == []
+
+
+def test_mixing_stages_come_back_in_order(conn):
+    stages = dbm.load_mixing_stages(conn, "commodity_foodservice")
+    labels = [s.label for s in stages]
+    assert labels[0].lower().startswith("cut-up")
+
+
+def test_pool_override_is_respected(conn):
+    """A butcher's tray must not inherit the plant-scale pool."""
+    butcher = dbm.load_mixing_stages(conn, "local_butcher")
+    commodity = dbm.load_mixing_stages(conn, "commodity_foodservice")
+    b_sep = next(s for s in butcher if s.slug == "separation")
+    c_sep = next(s for s in commodity if s.slug == "separation")
+    assert b_sep.pool < c_sep.pool
+
+
+def test_overridden_pool_band_is_rescaled_not_inherited(conn):
+    """Inheriting the plant band would sample a 40-bird tray up to 20,000."""
+    for s in dbm.load_mixing_stages(conn, "local_butcher"):
+        lo, mode, hi = s.band()
+        assert lo <= mode <= hi
+        assert hi <= max(mode * 10, mode + 1), s.slug
+
+
+def test_unknown_chain_loads_nothing(conn):
+    assert dbm.load_mixing_stages(conn, "not_a_chain") == []
+
+
+# ---------------------------------------------------------------------------
+# Sources and facts
+# ---------------------------------------------------------------------------
+
+def test_get_sources_maps_slugs_to_records(conn):
+    got = dbm.get_sources(conn, ["nass-poultry-slaughter-2025"])
+    assert "nass-poultry-slaughter-2025" in got
+    assert got["nass-poultry-slaughter-2025"]["publisher"]
+
+
+def test_get_sources_of_nothing_is_empty(conn):
+    assert dbm.get_sources(conn, []) == {}
+
+
+def test_get_sources_ignores_unknown_slugs(conn):
+    assert dbm.get_sources(conn, ["not-a-source"]) == {}
+
+
+def test_result_facts_exclude_learning_only_ones(conn):
+    for f in dbm.get_facts(conn, "result", limit=20):
+        assert f["source_title"]
+
+
+def test_facts_are_ordered_by_surprise(conn):
+    rows = dbm.get_facts(conn, "learning", limit=10)
+    surprises = [r["surprise"] for r in rows]
+    assert surprises == sorted(surprises, reverse=True)
+
+
+def test_fact_limit_is_honoured(conn):
+    assert len(dbm.get_facts(conn, "learning", limit=3)) <= 3
+
+
+# ---------------------------------------------------------------------------
+# Connection handling
+# ---------------------------------------------------------------------------
+
+def test_connect_builds_a_missing_database(tmp_path):
+    path = tmp_path / "fresh.db"
+    assert not path.exists()
+    c = dbm.connect(path)
+    try:
+        assert path.exists()
+        assert c.execute("SELECT COUNT(*) FROM source").fetchone()[0] > 0
+    finally:
+        c.close()
+
+
+def test_foreign_keys_are_enforced_on_every_connection(conn):
+    assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
