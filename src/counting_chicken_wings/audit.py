@@ -30,6 +30,7 @@ CITED_TABLES = [
     ("mixing_stage", "mixing stages"),
     ("slaughter_stat_year", "national slaughter stats"),
     ("regional_size_stat", "regional stats"),
+    ("regional_production_year", "regional production stats"),
     ("husbandry_stat_year", "husbandry stats"),
     ("quality_defect", "quality defects"),
     ("nutrition", "nutrition rows"),

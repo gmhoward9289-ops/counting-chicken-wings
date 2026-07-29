@@ -165,6 +165,23 @@ Where the project earns repeat visits rather than one look.
   the web header, and suits the project's tone. Do this before hunting for
   images.
 
+- [ ] **Fact voting: upvote, downvote, and a like button — no dislike.**
+  *From the note, missing on first capture.* Two separate signals, and the note
+  is precise about why they are separate:
+  - **Upvote / downvote = accuracy.** "Outsource accuracy" — let readers flag
+    figures that look wrong. This is genuinely valuable here, because 8 of 14
+    loss factors are unsourced estimates and readers who work in the industry
+    will spot bad numbers faster than we will.
+  - **Like = enjoyment**, with deliberately **no dislike**. Nothing to gain from
+    letting people register that a fact bored them.
+
+  Design notes: needs a `fact_vote` table, and a decision on identity — anonymous
+  votes are trivially gameable, but requiring accounts on a project like this
+  will kill participation. Recommend anonymous with rate limiting, and treat the
+  result as a **triage queue for us**, never as a published score. A downvote
+  should open a research task, not silently change what the page claims.
+  Pairs naturally with the card deck above.
+
 - [ ] **Graphics upgrade without copyright risk.** Ranked by safety:
   1. **Author our own** — ASCII, CSS/SVG shapes, generated diagrams. Zero risk.
   2. **Public domain** — USDA and other federal imagery is public domain by
