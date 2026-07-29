@@ -17,15 +17,17 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done ·
 
 | | |
 |---|---|
-| Deployed | https://counting-chicken-wings.onrender.com/ — live, 200 OK |
-| Cold start | 12–23s (Render free tier spins down; see M4) |
-| Tests | 156 passing (model 28, scientific 31, build 23, api 47, db 27) |
-| Facts | 31 |
-| Sources | 30 — 5 cited by nothing yet |
+| Released | **v1.0.0**, 2026-07-29 — see [CHANGELOG](../CHANGELOG.md) |
+| Deployed | https://counting-chicken-wings.onrender.com/ — v1.0 live |
+| Cold start | 12–23s. `/healthz` now exists for an external keep-warm cron; that is the only real fix short of an always-on instance |
+| Tests | 163 passing |
+| Facts | 34, surprise-ranked, served as a card deck |
+| Sources | 31 — 4 cited only in prose |
 | Loss factors | 14, of which 8 are unsourced estimates (5 affect the count) |
 | States with data | 22 |
 | Products | whole wing, boneless wing |
-| Unreachable data | nutrition, resource_footprint, economic_stat — built and cited, no API or UI |
+| GUI views | 9 |
+| Exports | `wings export` → 25 .txt/.csv files |
 
 ---
 
@@ -176,13 +178,13 @@ Where the project earns repeat visits rather than one look.
 
 ## M3 — Presentation and identity
 
-- [ ] **Interactive / slideshow facts page.** Current page is a flat list of
+- [x] **Interactive / slideshow facts page.** Current page is a flat list of
   31 facts. Options, cheapest first: card deck with keyboard and swipe
   navigation; filter by surprise rating; "random fact" button; a "did you
   know" that cycles. Recommend the card deck — it suits the existing
   surprise-ranked data with no new data model.
 
-- [ ] **ASCII chicken and project logo.** Wanted explicitly. ASCII art is
+- [x] **ASCII chicken and project logo.** Wanted explicitly. ASCII art is
   zero-risk on copyright since we author it, works in the CLI banner *and*
   the web header, and suits the project's tone. Do this before hunting for
   images.
@@ -216,20 +218,20 @@ Where the project earns repeat visits rather than one look.
 
 ## M4 — v1.0 release
 
-- [ ] **Define and cut v1.0.** Gate: M1 data complete or explicitly bounded,
+- [x] **Define and cut v1.0.** Gate: M1 data complete or explicitly bounded,
   M2 analysis pieces live, M3 identity done. Tag `v1.0.0`, write release
   notes, update README status.
 
-- [ ] **Deployment hardening.** Currently ~23s cold start on Render free tier.
+- [x] **Deployment hardening.** Currently ~23s cold start on Render free tier.
   Options: accept it and add a loading state so it doesn't look broken;
   external ping to keep warm; or paid tier. Recommend a loading state first —
   cheapest, and honest about what is happening.
 
-- [ ] **Plotly is loaded from CDN.** Works, but a public deployment now depends
+- [x] **Plotly is loaded from CDN.** Works, but a public deployment now depends
   on `cdn.plot.ly` staying up and on the client having network access to it.
   Decide: vendor it locally, or accept the dependency and document it.
 
-- [ ] **Data exports as .txt / .csv.** From the note: emit the fact sheets and
+- [x] **Data exports as .txt / .csv.** From the note: emit the fact sheets and
   data tables into the repo as plain text and CSV, chunked small, so local
   models can read them fast. This is genuinely useful beyond the AI use case —
   it makes the dataset citable and reusable by anyone. Add `wings export`

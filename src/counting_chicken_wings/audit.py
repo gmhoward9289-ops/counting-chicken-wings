@@ -19,30 +19,54 @@ from pathlib import Path
 
 from .build import DEFAULT_DB, build
 
-# (table, human label) for everything that must carry a source.
-CITED_TABLES = [
-    ("product", "products"),
-    ("product_segment", "wing segments"),
-    ("production_program", "production programs"),
-    ("product_grade", "product grades"),
-    ("producer", "producers"),
-    ("loss_factor", "loss factors"),
-    ("mixing_stage", "mixing stages"),
-    ("slaughter_stat_year", "national slaughter stats"),
-    ("regional_size_stat", "regional stats"),
-    ("regional_production_year", "regional production stats"),
-    ("husbandry_stat_year", "husbandry stats"),
-    ("quality_defect", "quality defects"),
-    ("nutrition", "nutrition rows"),
-    ("resource_footprint", "resource footprint"),
-    ("economic_stat", "economic stats"),
-    ("fact", "learning-centre facts"),
-]
+# Friendlier names for the report. Any table not listed falls back to its
+# own name, so this is presentation only -- never a gate on what gets checked.
+TABLE_LABELS = {
+    "product": "products",
+    "product_segment": "wing segments",
+    "production_program": "production programs",
+    "product_grade": "product grades",
+    "producer": "producers",
+    "loss_factor": "loss factors",
+    "mixing_stage": "mixing stages",
+    "slaughter_stat_year": "national slaughter stats",
+    "regional_size_stat": "regional stats",
+    "regional_production_year": "regional production stats",
+    "regional_census_stat": "census state stats",
+    "husbandry_stat_year": "husbandry stats",
+    "quality_defect": "quality defects",
+    "nutrition": "nutrition rows",
+    "resource_footprint": "resource footprint",
+    "economic_stat": "economic stats",
+    "fact": "learning-centre facts",
+}
 
-# Every table above must also appear in the orphan query below, or a source
-# cited only by a new table reads as orphaned. Kept as a list so the two
-# cannot drift: adding a table here fixes both checks at once.
-ORPHAN_TABLES = [t for t, _ in CITED_TABLES]
+
+def cited_tables(conn: sqlite3.Connection) -> list[tuple[str, str]]:
+    """Every table carrying a source_id, discovered from the schema.
+
+    This was a hand-maintained list twice, and it went stale twice -- each
+    time a new table was added, its source read as orphaned because the
+    audit did not know to look there. A list you must remember to update is
+    a list that will be wrong, so ask the database instead.
+    """
+    tables = [
+        r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%' ORDER BY name"
+        ).fetchall()
+    ]
+    out = []
+    for t in tables:
+        # run_step records which source a saved calculation used. It is a
+        # runtime artifact, not curated data, so auditing it says nothing
+        # about the corpus and reports an empty 0/0 on a fresh database.
+        if t in {"run", "run_step"}:
+            continue
+        cols = {c[1] for c in conn.execute(f"PRAGMA table_info({t})")}
+        if "source_id" in cols:
+            out.append((t, TABLE_LABELS.get(t, t.replace("_", " "))))
+    return out
 
 CONFIDENCE_ORDER = ["measured", "derived", "study", "industry", "estimate"]
 
@@ -54,8 +78,10 @@ def audit(db_path: Path) -> int:
     conn = sqlite3.connect(db_path)
     failures = 0
 
+    tables = cited_tables(conn)
+
     print("citation coverage")
-    for table, label in CITED_TABLES:
+    for table, label in tables:
         total = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
         missing = conn.execute(
             f"SELECT COUNT(*) FROM {table} WHERE source_id IS NULL"
@@ -68,7 +94,7 @@ def audit(db_path: Path) -> int:
     # dropped and its citation was left behind.
     clauses = " ".join(
         f"AND NOT EXISTS (SELECT 1 FROM {t} WHERE source_id = s.id)"
-        for t in ORPHAN_TABLES
+        for t, _ in tables
     )
     orphans = conn.execute(
         f"SELECT s.slug FROM source s WHERE 1=1 {clauses} ORDER BY s.slug"
