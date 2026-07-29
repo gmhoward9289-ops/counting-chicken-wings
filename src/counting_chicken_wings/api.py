@@ -42,6 +42,20 @@ def _source_payload(row) -> dict:
     }
 
 
+@app.get("/healthz")
+def healthz():
+    """Liveness check, deliberately cheap: no database, no imports.
+
+    Exists to be pinged. Render's free tier spins the service down after
+    idling, and the next visitor then waits ~20s for a cold start on the
+    HTML document itself -- which no amount of client-side loading UI can
+    disguise, because the browser has no page yet. An external cron hitting
+    this endpoint every few minutes is the only thing that actually fixes it
+    short of paying for an always-on instance.
+    """
+    return {"ok": True}
+
+
 @app.get("/api/brand")
 def brand():
     """ASCII identity, served rather than duplicated in the HTML.

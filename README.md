@@ -173,6 +173,15 @@ ambiguity changes the answer more than every loss in the chain combined.
 
 ## Status
 
-Working end to end. Research, schema, YAML corpus, model, CLI, web GUI, CI, and
-21 tests are in place. Ongoing work is replacing estimate-grade figures with
-cited ones — see `docs/RESEARCH.md` open items.
+**v1.0.0** — see [CHANGELOG.md](CHANGELOG.md).
+
+Live at https://counting-chicken-wings.onrender.com/ (free tier; a first visit
+may wait ~20s for a cold start).
+
+163 tests, 31 sources, 34 facts, 26 tables. Every statistic is cited and the
+build fails if one is not.
+
+Ongoing work, tracked in [docs/ROADMAP.md](docs/ROADMAP.md): replacing the 8
+estimate-grade loss factors with sourced ones, US regions, more producers and
+breeds, chicken manure, and USDA programs. International data and a Discord
+bot are deliberately post-1.0.

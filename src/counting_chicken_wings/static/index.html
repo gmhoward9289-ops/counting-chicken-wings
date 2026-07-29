@@ -113,6 +113,21 @@
   .verdict .v-val { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
   .verdict .v-key { font-size: 12px; color: var(--faint);
                     text-transform: uppercase; letter-spacing: .06em; }
+  /* Indeterminate busy bar for in-flight requests. */
+  #busy { position: fixed; top: 0; left: 0; right: 0; height: 2px;
+          background: transparent; z-index: 99; pointer-events: none; }
+  #busy.on::after {
+    content: ""; position: absolute; top: 0; height: 2px; width: 30%;
+    background: var(--accent); animation: slide 1.1s ease-in-out infinite;
+  }
+  @keyframes slide {
+    0%   { left: -30%; }
+    100% { left: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #busy.on::after { animation: none; left: 0; width: 100%; opacity: .5; }
+  }
+
   /* Fact card deck */
   .btn { background: #0d0b0a; color: var(--ink); border: 1px solid var(--line);
          border-radius: 7px; padding: 9px 14px; font-size: 14px;
@@ -159,6 +174,7 @@
 </style>
 </head>
 <body>
+<div id="busy" aria-hidden="true"></div>
 <div class="wrap">
 
 <header>
@@ -520,7 +536,47 @@
 
 <script>
 const $ = s => document.querySelector(s);
-const api = p => fetch(p).then(r => r.json());
+
+// In-flight request counter drives the busy bar. This helps with slow API
+// calls -- 100k Monte Carlo iterations is a real wait -- but it cannot help
+// with a cold start, since that stalls the HTML document before any of this
+// script exists.
+let INFLIGHT = 0;
+function busy(delta) {
+  INFLIGHT = Math.max(0, INFLIGHT + delta);
+  const el = document.getElementById('busy');
+  if (el) el.classList.toggle('on', INFLIGHT > 0);
+}
+const api = p => {
+  busy(1);
+  return fetch(p)
+    .then(r => {
+      if (!r.ok) throw new Error(`${p} -> ${r.status}`);
+      return r.json();
+    })
+    .finally(() => busy(-1));
+};
+// Plotly comes from a CDN, so a public deployment depends on that host being
+// reachable. If it is not, stub it rather than letting every chart-bearing
+// view die on "Plotly is not defined" -- the numbers all exist in the tables
+// and the API regardless, so the page stays useful.
+if (typeof Plotly === 'undefined') {
+  window.Plotly = {
+    newPlot(target) {
+      const el = typeof target === 'string'
+        ? document.getElementById(target) : target;
+      if (el) {
+        el.innerHTML = '<p class="note">Charts could not load — Plotly is ' +
+          'served from a CDN that is unreachable right now. Every figure is ' +
+          'still available in the tables below and from the API.</p>';
+        el.style.height = 'auto';
+      }
+      return Promise.resolve();
+    },
+    relayout() { return Promise.resolve(); },
+  };
+}
+
 const PLOT = {
   paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
   font: { color: '#a8a29e', size: 11 },
