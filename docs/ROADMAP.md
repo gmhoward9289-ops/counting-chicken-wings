@@ -18,12 +18,14 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done ·
 | | |
 |---|---|
 | Deployed | https://counting-chicken-wings.onrender.com/ — live, 200 OK |
-| Cold start | ~23s (Render free tier spins down; see M4) |
-| Tests | 59 passing |
+| Cold start | 12–23s (Render free tier spins down; see M4) |
+| Tests | 156 passing (model 28, scientific 31, build 23, api 47, db 27) |
 | Facts | 31 |
-| Sources | 30 |
+| Sources | 30 — 5 cited by nothing yet |
+| Loss factors | 14, of which 8 are unsourced estimates (5 affect the count) |
 | States with data | 22 |
 | Products | whole wing, boneless wing |
+| Unreachable data | nutrition, resource_footprint, economic_stat — built and cited, no API or UI |
 
 ---
 

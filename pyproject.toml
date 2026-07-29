@@ -16,7 +16,9 @@ dev = [
     "pytest>=8.0",
     # FastAPI's TestClient is a thin wrapper over an HTTP client; without
     # this the API tests cannot run at all.
-    "httpx2>=0.1",
+    # Floor matches starlette's own httpx2>=2.0.0. A looser bound lets a
+    # resolver pick an early httpx2 that lacks the API testclient calls.
+    "httpx2>=2.0",
 ]
 
 [project.scripts]
