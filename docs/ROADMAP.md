@@ -24,7 +24,7 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done ·
 | Facts | 34, surprise-ranked, served as a card deck |
 | Sources | 31 — 4 cited only in prose |
 | Loss factors | 14, of which 8 are unsourced estimates (5 affect the count) |
-| States with data | 22 |
+| States with data | 23 (union: 22 slaughter + Florida from production) |
 | Products | whole wing, boneless wing |
 | GUI views | 9 |
 | Exports | `wings export` → 25 .txt/.csv files |
@@ -149,7 +149,7 @@ separately because these need code, and one of them is a genuine design flaw.
 
 Where the project earns repeat visits rather than one look.
 
-- [ ] **"Why are chickens fatter in some states — and is fatter better?"**
+- [x] **"Why are chickens fatter in some states — and is fatter better?"**
   A flagship analysis piece, and we can already answer most of it:
   - *Why:* Ohio 4.6 lb vs North Carolina 8.4 lb is not biology, it is market
     segment. Small-bird programs serve fast food and tray pack; big-bird
