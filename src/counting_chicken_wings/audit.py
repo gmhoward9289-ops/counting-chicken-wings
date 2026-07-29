@@ -31,8 +31,17 @@ CITED_TABLES = [
     ("slaughter_stat_year", "national slaughter stats"),
     ("regional_size_stat", "regional stats"),
     ("husbandry_stat_year", "husbandry stats"),
+    ("quality_defect", "quality defects"),
+    ("nutrition", "nutrition rows"),
+    ("resource_footprint", "resource footprint"),
+    ("economic_stat", "economic stats"),
     ("fact", "learning-centre facts"),
 ]
+
+# Every table above must also appear in the orphan query below, or a source
+# cited only by a new table reads as orphaned. Kept as a list so the two
+# cannot drift: adding a table here fixes both checks at once.
+ORPHAN_TABLES = [t for t, _ in CITED_TABLES]
 
 CONFIDENCE_ORDER = ["measured", "derived", "study", "industry", "estimate"]
 
@@ -56,21 +65,13 @@ def audit(db_path: Path) -> int:
 
     # Orphaned sources are not an error, but they usually mean a fact was
     # dropped and its citation was left behind.
-    orphans = conn.execute("""
-        SELECT s.slug FROM source s
-        WHERE NOT EXISTS (SELECT 1 FROM loss_factor      WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM fact             WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM product          WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM product_segment  WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM producer         WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM mixing_stage     WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM slaughter_stat_year   WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM regional_size_stat    WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM husbandry_stat_year   WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM production_program    WHERE source_id = s.id)
-          AND NOT EXISTS (SELECT 1 FROM product_grade         WHERE source_id = s.id)
-        ORDER BY s.slug
-    """).fetchall()
+    clauses = " ".join(
+        f"AND NOT EXISTS (SELECT 1 FROM {t} WHERE source_id = s.id)"
+        for t in ORPHAN_TABLES
+    )
+    orphans = conn.execute(
+        f"SELECT s.slug FROM source s WHERE 1=1 {clauses} ORDER BY s.slug"
+    ).fetchall()
     if orphans:
         print(f"\n  {len(orphans)} source(s) cited by nothing:")
         for (slug,) in orphans:

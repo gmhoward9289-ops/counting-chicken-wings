@@ -1,0 +1,141 @@
+"""Cross-source validation.
+
+Most tests here check that the code does what it says. These check that two
+INDEPENDENT government publications agree with each other, which is a
+different and stronger claim: if NASS revises a series, or a parser silently
+misreads a column, these fail even though every unit test still passes.
+
+The two sources:
+
+  regional_size_stat        Poultry Slaughter summary. Young chickens
+                            slaughtered per calendar year, average live
+                            weight measured at the plant.
+
+  regional_production_year  Poultry Production and Value summary. Broilers
+                            produced Dec 1 - Nov 30, from a grower survey.
+
+Different population, different period, different methodology. Dividing
+production pounds by head should still land on the slaughter report's
+average live weight -- and it does, for every state both name.
+"""
+
+import sqlite3
+
+import pytest
+
+from counting_chicken_wings.build import DEFAULT_DB, build
+
+
+@pytest.fixture(scope="module")
+def db(tmp_path_factory):
+    path = tmp_path_factory.mktemp("xval") / "chickens.db"
+    build(path)
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    yield conn
+    conn.close()
+
+
+def overlapping(conn):
+    """States and years reported by both publications."""
+    return conn.execute("""
+        SELECT p.region, p.year,
+               p.derived_live_weight_lb AS derived,
+               s.avg_size               AS slaughter
+        FROM regional_production_year p
+        JOIN regional_size_stat s
+          ON s.region = p.region AND s.year = p.year AND s.month IS NULL
+        WHERE p.region != 'United States'
+          AND p.derived_live_weight_lb IS NOT NULL
+        ORDER BY p.region, p.year
+    """).fetchall()
+
+
+def test_the_two_publications_actually_overlap():
+    """Guard the guard: a join that matches nothing would pass everything."""
+    conn = sqlite3.connect(DEFAULT_DB)
+    conn.row_factory = sqlite3.Row
+    try:
+        assert len(overlapping(conn)) >= 14
+    finally:
+        conn.close()
+
+
+def test_production_reproduces_slaughter_live_weight(db):
+    """Production lb / head must reproduce the slaughter average live weight.
+
+    Tolerance is 0.06 lb because the slaughter annual figure is published to
+    one decimal, so 0.05 is pure rounding before any real disagreement.
+    """
+    mismatches = [
+        f"{r['region']} {r['year']}: derived {r['derived']:.2f} "
+        f"vs slaughter {r['slaughter']:.2f}"
+        for r in overlapping(db)
+        if abs(r["derived"] - r["slaughter"]) > 0.06
+    ]
+    assert not mismatches, "cross-source disagreement: " + "; ".join(mismatches)
+
+
+def test_national_totals_differ_and_that_is_correct(db):
+    """The two national figures MUST NOT match.
+
+    Produced counts broilers Dec 1 - Nov 30; slaughtered counts young
+    chickens per calendar year and also includes roasters and capons. If
+    these ever became equal it would mean one series had been loaded into
+    the other's table.
+    """
+    produced = db.execute(
+        """SELECT head_thousands * 1000 FROM regional_production_year
+           WHERE region = 'United States' AND year = 2025"""
+    ).fetchone()[0]
+    slaughtered = db.execute(
+        "SELECT head_slaughtered FROM slaughter_stat_year WHERE year = 2025"
+    ).fetchone()[0]
+
+    assert produced != slaughtered
+    # Same order of magnitude, though -- they describe the same industry.
+    assert 0.9 < produced / slaughtered < 1.0
+
+
+def test_production_report_recovers_a_state_slaughter_suppresses(db):
+    """The point of carrying a second publication.
+
+    NASS suppresses different states in different publications and years, so
+    the union covers more than either alone. Florida is the current example.
+    """
+    only_in_production = {
+        r[0] for r in db.execute("""
+            SELECT region FROM regional_production_year
+            WHERE region != 'United States'
+            EXCEPT SELECT region FROM regional_size_stat
+        """).fetchall()
+    }
+    assert only_in_production, "second source no longer adds any state"
+    assert "Florida" in only_in_production
+
+
+def test_derived_live_weight_matches_its_own_inputs(db):
+    """Internal consistency of the stored derivation.
+
+    derived_live_weight_lb is stored rather than computed at query time, so
+    it can drift from the columns it came from. This catches that.
+    """
+    bad = [
+        f"{r['region']} {r['year']}"
+        for r in db.execute("""
+            SELECT region, year, head_thousands, live_weight_klb,
+                   derived_live_weight_lb
+            FROM regional_production_year
+            WHERE head_thousands IS NOT NULL
+              AND derived_live_weight_lb IS NOT NULL
+        """).fetchall()
+        if abs(r["live_weight_klb"] / r["head_thousands"]
+               - r["derived_live_weight_lb"]) > 0.005
+    ]
+    assert not bad, "stored derivation drifted: " + ", ".join(bad)
+
+
+def test_every_production_row_is_cited(db):
+    assert db.execute(
+        "SELECT COUNT(*) FROM regional_production_year WHERE source_id IS NULL"
+    ).fetchone()[0] == 0

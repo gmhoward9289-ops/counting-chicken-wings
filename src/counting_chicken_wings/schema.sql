@@ -251,6 +251,39 @@ CREATE TABLE regional_size_stat (
     UNIQUE (species_id, region, year, month)
 );
 
+-- Broilers PRODUCED by region, from the NASS Production and Value summary.
+--
+-- Deliberately separate from regional_size_stat, which holds SLAUGHTER data.
+-- The two publications count different populations over different periods
+-- (produced Dec 1 - Nov 30 vs young chickens slaughtered per calendar year,
+-- the latter also covering roasters and capons), so merging them into one
+-- table would invite exactly the wrong query -- summing two overlapping
+-- measures of the same birds.
+--
+-- Carrying both is what lets the project cross-check itself: dividing
+-- live_weight_klb by head_thousands reproduces the slaughter report's state
+-- average live weight from an independent survey.
+--
+-- region = 'United States' holds the national row, as the source presents it.
+CREATE TABLE regional_production_year (
+    id                      INTEGER PRIMARY KEY,
+    species_id              INTEGER NOT NULL REFERENCES species(id),
+    region                  TEXT    NOT NULL,
+    year                    INTEGER NOT NULL,
+    head_thousands          INTEGER,
+    live_weight_klb         INTEGER,
+    value_kusd              INTEGER,
+    -- Stored rather than derived in a view because it is the cross-check
+    -- itself: a test asserts it matches regional_size_stat.
+    derived_live_weight_lb  REAL,
+    source_id               INTEGER NOT NULL REFERENCES source(id),
+    UNIQUE (species_id, region, year)
+);
+
+CREATE INDEX idx_regional_production_region
+    ON regional_production_year (region, year);
+
+
 -- Grow-out / husbandry performance by year.
 CREATE TABLE husbandry_stat_year (
     id                  INTEGER PRIMARY KEY,
@@ -399,6 +432,38 @@ CREATE TABLE supply_chain_stage (
     mixing_stage_id INTEGER NOT NULL REFERENCES mixing_stage(id),
     pool_override   INTEGER,                       -- per-chain pool size
     PRIMARY KEY (supply_chain_id, mixing_stage_id)
+);
+
+
+-- ---------------------------------------------------------------------------
+-- Quality defects
+-- ---------------------------------------------------------------------------
+
+-- Conditions that degrade meat quality without necessarily removing product.
+-- Modelled separately from loss_factor on purpose: a woody-breast fillet is
+-- still a fillet and still gets sold, so it does not belong in a chain whose
+-- factors reduce counts. Yet it is central to "is a fatter bird better?",
+-- which is a quality question, not a yield question.
+CREATE TABLE quality_defect (
+    id                  INTEGER PRIMARY KEY,
+    species_id          INTEGER NOT NULL REFERENCES species(id),
+    slug                TEXT    NOT NULL UNIQUE,
+    label               TEXT    NOT NULL,
+    -- Which part of the bird develops it. The asymmetry this captures is the
+    -- point: breast myopathies are near-universal while wings are immune.
+    affected_part       TEXT    NOT NULL,      -- 'breast','wing','leg'
+    severity            TEXT    NOT NULL,      -- 'any','moderate','severe'
+    prevalence_pct_lo   REAL,
+    prevalence_pct_mode REAL    NOT NULL,
+    prevalence_pct_hi   REAL,
+    -- How prevalence moves with live weight. This is what makes bigger birds
+    -- a trade rather than a free win.
+    weight_association  TEXT    NOT NULL CHECK (weight_association IN
+                            ('increases','none','decreases','unknown')),
+    first_year          INTEGER,               -- earliest reported figure
+    first_year_pct      REAL,                  -- for showing the trend
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT
 );
 
 

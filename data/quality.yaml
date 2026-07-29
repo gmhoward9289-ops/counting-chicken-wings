@@ -1,0 +1,95 @@
+# Meat quality defects.
+#
+# Kept out of the loss chain deliberately. A woody-breast fillet is still a
+# fillet and still gets sold, so it does not reduce any count. But it is the
+# whole substance of "is a fatter bird better?", which is a quality question
+# rather than a yield one.
+#
+# The asymmetry these rows encode is the interesting part: breast myopathies
+# are near-universal and get worse with live weight, while wings develop
+# none of them. Wings are small working muscles that never outgrew their own
+# blood supply. The breast did.
+
+defects:
+  - slug: white_striping
+    species: broiler
+    label: White striping
+    affected_part: breast
+    severity: any
+    prevalence_pct_mode: 96.0
+    weight_association: increases
+    source: myopathy-prevalence-ontario
+    notes: >-
+      Present in essentially every commercial fillet. Fat deposited between
+      muscle fibres, visible as pale stripes running with the grain.
+
+  - slug: spaghetti_meat
+    species: broiler
+    label: Spaghetti meat
+    affected_part: breast
+    severity: any
+    prevalence_pct_mode: 36.3
+    weight_association: increases
+    source: myopathy-prevalence-ontario
+    notes: >-
+      Muscle fibre bundles separate and the fillet pulls apart into strands.
+
+  - slug: woody_breast_severe
+    species: broiler
+    label: Woody breast (severe)
+    affected_part: breast
+    severity: severe
+    prevalence_pct_mode: 11.8
+    prevalence_pct_lo: 7.3
+    prevalence_pct_hi: 12.0
+    weight_association: increases
+    first_year: 2012
+    first_year_pct: 5.0
+    source: myopathy-prevalence-ontario
+    notes: >-
+      Hardened, rubbery fillet. Rose from about 5% in 2012 to 29% by 2015 and
+      has been reported affecting up to half of flocks. The clearest single
+      argument that the industry's pursuit of breast yield has a cost.
+
+  - slug: multiple_myopathy
+    species: broiler
+    label: More than one myopathy in the same fillet
+    affected_part: breast
+    severity: any
+    prevalence_pct_mode: 85.1
+    weight_association: increases
+    source: myopathy-prevalence-ontario
+    notes: >-
+      These conditions travel together, which is why they are usually
+      discussed as one problem rather than three.
+
+  - slug: wing_myopathy
+    species: broiler
+    label: Wing myopathy
+    affected_part: wing
+    severity: any
+    prevalence_pct_mode: 0.0
+    weight_association: none
+    source: myopathy-prevalence-ontario
+    notes: >-
+      A deliberate zero row, not missing data. No wing equivalent of these
+      myopathies is reported. Wings are small muscles the bird actually uses
+      and they did not undergo the selection pressure that outran the
+      breast's blood supply. This row exists so the comparison chart can show
+      the contrast rather than an empty gap.
+
+# Wings have their own problem, and it is mechanical rather than metabolic.
+# Recorded here so the two products can be compared on equal footing.
+  - slug: wing_handling_damage
+    species: broiler
+    label: Wing damage from handling
+    affected_part: wing
+    severity: any
+    prevalence_pct_mode: 5.7
+    weight_association: increases
+    source: wing-injuries-loading
+    notes: >-
+      Median wing injuries per load. Wings break during catching, loading and
+      shackling, against under 1% for legs, breast and shoulders. Heavier
+      birds are harder to handle, so this rises with live weight too - the
+      one respect in which a bigger bird is worse for wings specifically.

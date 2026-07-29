@@ -106,6 +106,16 @@
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 720px) { .grid3 { grid-template-columns: 1fr; } }
+  .verdict { border: 1px solid var(--line); border-radius: 9px;
+             padding: 16px; text-align: center; background: #0d0b0a; }
+  .verdict .v-val { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
+  .verdict .v-key { font-size: 12px; color: var(--faint);
+                    text-transform: uppercase; letter-spacing: .06em; }
+  .v-better { color: var(--measured); }
+  .v-worse  { color: #fb7185; }
+  .v-same   { color: var(--dim); }
 
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 8px 10px;
@@ -142,6 +152,8 @@
   <button data-v="sci">Scientific</button>
   <button data-v="mix">Mixing simulator</button>
   <button data-v="states">By state</button>
+  <button data-v="size">Is fatter better?</button>
+  <button data-v="impact">Nutrition &amp; impact</button>
   <button data-v="trends">Trends</button>
   <button data-v="facts">Chicken facts</button>
   <button data-v="sources">Sources</button>
@@ -336,6 +348,80 @@
   </div>
   <div class="panel">
     <div id="statetable"></div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ is fatter better -->
+<section class="view" id="v-size">
+  <div class="panel">
+    <h3>Is a fatter chicken a better chicken?</h3>
+    <p class="muted" id="size-intro"></p>
+    <div class="grid3" id="size-verdict"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Why birds differ by state</h3>
+    <p class="muted">
+      This is not biology, it is market segment. Small-bird programs serve
+      fast food and tray pack; big-bird programs serve deboning and further
+      processing. Same species, same year, different businesses.
+    </p>
+    <div id="size-programs"></div>
+    <div id="size-chart" style="height:360px;margin-top:8px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>What heavier birds cost you</h3>
+    <p class="muted">
+      Every quality defect measured gets <em>more</em> common as live weight
+      rises. Note the contrast between the two parts: the breast is riddled
+      with problems and the wing has essentially none.
+    </p>
+    <div id="size-defects" style="height:300px"></div>
+    <div id="size-defect-notes"></div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ nutrition & impact -->
+<section class="view" id="v-impact">
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label>How many</label>
+        <input type="number" id="i-count" value="12" min="1" step="1">
+      </div>
+      <div>
+        <label>Product</label>
+        <select id="i-product"></select>
+      </div>
+    </div>
+    <p class="note" id="i-alloc" style="margin-top:14px"></p>
+  </div>
+
+  <div class="panel">
+    <h3>Nutrition</h3>
+    <p class="muted">
+      Per 100 g from USDA FoodData Central, with per-piece values derived
+      from segment mass rather than stored separately.
+    </p>
+    <div id="i-nutrition"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Resource footprint</h3>
+    <p class="muted">
+      Two numbers per metric, and the gap between them is the point. The
+      naive figure charges whole birds to your order. The allocated figure
+      charges only this product's share of the bird, because the breast and
+      thighs fed other people.
+    </p>
+    <div id="i-footprint" style="height:340px"></div>
+    <div id="i-footprint-table"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Who got paid</h3>
+    <div id="i-econ"></div>
   </div>
 </section>
 
@@ -699,6 +785,172 @@ async function initTrends() {
        'Dressing yield (%) — measured, not estimated', '#4ade80');
 }
 
+// ---- is fatter better
+async function initSize() {
+  const d = await api('/api/bird-size');
+  const s = d.spread;
+
+  $('#size-intro').textContent = d.verdict.summary;
+
+  const V = [
+    ['Yield per bird', d.verdict.yield_per_bird, 'v-better'],
+    ['Quality per pound', d.verdict.quality_per_pound, 'v-worse'],
+    ['Wings per chicken', d.verdict.wing_count_floor, 'v-same'],
+  ];
+  $('#size-verdict').innerHTML = V.map(([k, v, cls]) =>
+    `<div class="verdict"><div class="v-val ${cls}">${v}</div>
+     <div class="v-key">${k}</div></div>`).join('');
+
+  $('#size-programs').innerHTML = `<table><tr><th>Program</th>
+    <th class="num">Live weight</th><th>Serves</th></tr>` +
+    d.programs.map(p => `<tr><td><b>${p.label}</b></td>
+      <td class="num">${p.size_lo}–${p.size_hi} ${p.size_unit || 'lb'}</td>
+      <td>${p.typical_market || '—'}</td></tr>`).join('') +
+    `</table><p class="note" style="margin-top:10px">
+     ${s.heaviest.region} averages ${s.heaviest.avg_size} lb against
+     ${s.lightest.region}'s ${s.lightest.avg_size} lb —
+     <b>${s.ratio.toFixed(2)}× heavier</b>, national average
+     ${d.national_avg} lb.</p>`;
+
+  // State weights, coloured by which program band they fall in.
+  const reg = d.regions;
+  Plotly.newPlot('size-chart', [{
+    type: 'bar', x: reg.map(r => r.region), y: reg.map(r => r.avg_size),
+    marker: {
+      color: reg.map(r => r.avg_size >= 7.2 ? '#fde68a'
+                        : r.avg_size >= 5.5 ? '#d97706' : '#7c2d12'),
+    },
+    hovertemplate: '%{x}<br>%{y} lb live weight<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    margin: { l: 50, r: 16, t: 10, b: 96 },
+    yaxis: Object.assign({}, PLOT.yaxis, { title: 'lb live weight' }),
+    xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -45 }),
+    shapes: d.national_avg ? [{
+      type: 'line', x0: -0.5, x1: reg.length - 0.5,
+      y0: d.national_avg, y1: d.national_avg,
+      line: { color: '#78716c', dash: 'dot', width: 1 },
+    }] : [],
+  }), CFG);
+
+  // Breast vs wing defects. The zero wing-myopathy row is deliberate: it
+  // makes the asymmetry visible instead of an absent category.
+  const def = d.defects.slice().reverse();
+  Plotly.newPlot('size-defects', [{
+    type: 'bar', orientation: 'h',
+    x: def.map(x => x.prevalence_pct_mode), y: def.map(x => x.label),
+    marker: { color: def.map(x => x.affected_part === 'wing'
+                                ? '#60a5fa' : '#fb7185') },
+    customdata: def.map(x => [x.affected_part, x.weight_association]),
+    hovertemplate: '%{y}<br>%{x}% of fillets<br>' +
+      'part: %{customdata[0]}<br>with weight: %{customdata[1]}<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    margin: { l: 250, r: 20, t: 10, b: 44 },
+    xaxis: Object.assign({}, PLOT.xaxis, { title: '% prevalence' }),
+  }), CFG);
+
+  $('#size-defect-notes').innerHTML = def.slice().reverse().map(x =>
+    `<div class="step ${x.affected_part === 'wing' ? '' : 'count'}">
+      <h4>${x.label} ${badge(x.affected_part === 'wing' ? 'study' : 'estimate')}
+      </h4>
+      <p>${x.notes || ''}</p>
+      <div class="cite">${x.source_title} — ${x.publisher}
+      ${x.url ? `· <a href="${x.url}" target="_blank" rel="noopener">source</a>` : ''}
+      </div></div>`).join('');
+}
+
+// ---- nutrition & impact
+async function impact() {
+  const count = $('#i-count').value || 12;
+  const product = $('#i-product').value || 'whole_wing';
+
+  const [n, f] = await Promise.all([
+    api(`/api/nutrition?product=${product}`),
+    api(`/api/footprint?count=${count}&product=${product}`),
+  ]);
+
+  $('#i-alloc').textContent = f.allocation_note;
+
+  $('#i-nutrition').innerHTML = n.nutrition.length
+    ? `<table><tr><th>Preparation</th><th class="num">kcal/100g</th>
+       <th class="num">per piece</th><th class="num">protein</th>
+       <th class="num">fat</th><th class="num">carbs</th></tr>` +
+      n.nutrition.map(r => `<tr><td><b>${r.label}</b></td>
+        <td class="num">${r.kcal ?? '—'}</td>
+        <td class="num">${r.per_unit ? r.per_unit.kcal.toFixed(0) : '—'}</td>
+        <td class="num">${r.protein_g ?? '—'} g</td>
+        <td class="num">${r.fat_g ?? '—'} g</td>
+        <td class="num">${r.carbohydrate_g ?? 0} g</td></tr>`).join('') +
+      '</table>' + n.nutrition.filter(r => r.notes).map(r =>
+        `<div class="step"><h4>${r.label}</h4><p>${r.notes}</p>
+         <div class="cite">${r.source_title} — ${r.publisher}</div></div>`
+      ).join('')
+    : '<p class="note">No nutrition data for this product yet.</p>';
+
+  const m = f.metrics.filter(x => x.allocated_total != null);
+  Plotly.newPlot('i-footprint', [
+    { type: 'bar', name: 'charged to whole birds',
+      x: m.map(x => x.label), y: m.map(x => x.naive_total),
+      marker: { color: '#57534e' },
+      hovertemplate: '%{x}<br>%{y:.2f}<extra>naive</extra>' },
+    { type: 'bar', name: 'this product’s share',
+      x: m.map(x => x.label), y: m.map(x => x.allocated_total),
+      marker: { color: '#f59e0b' },
+      hovertemplate: '%{x}<br>%{y:.2f}<extra>allocated</extra>' },
+  ], Object.assign({}, PLOT, {
+    barmode: 'group', showlegend: true,
+    legend: { orientation: 'h', y: 1.15 },
+    margin: { l: 56, r: 16, t: 30, b: 70 },
+    xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -20 }),
+    yaxis: Object.assign({}, PLOT.yaxis, { type: 'log',
+      title: 'log scale — units differ per metric' }),
+  }), CFG);
+
+  $('#i-footprint-table').innerHTML = `<table><tr><th>Metric</th>
+    <th class="num">Per bird</th><th class="num">Allocated to your order</th>
+    <th class="num">Since 2010</th><th>Unit</th></tr>` +
+    f.metrics.map(x => `<tr><td>${x.label}</td>
+      <td class="num">${x.per_individual ?? '—'}</td>
+      <td class="num">${x.allocated_total != null
+          ? x.allocated_total.toFixed(2) : '—'}</td>
+      <td class="num">${x.pct_change_decade != null
+          ? x.pct_change_decade + '%' : '—'}</td>
+      <td>${x.unit}</td></tr>`).join('') + '</table>';
+
+  const g = f.grower_pay;
+  $('#i-econ').innerHTML = (g ? `<div class="step count">
+      <h4>The farmer's share</h4>
+      <p>${f.birds.toFixed(2)} birds at
+      ${(g.live_weight_lb / f.birds).toFixed(2)} lb each is
+      ${g.live_weight_lb.toFixed(1)} lb of live weight. At
+      ${(g.rate * 100).toFixed(1)}¢ per lb the grower was paid
+      <b>$${g.paid_for_birds.toFixed(2)}</b> for raising them — of which
+      <b>$${g.allocated_to_product.toFixed(2)}</b> is this product's share.</p>
+    </div>` : '') +
+    `<table><tr><th>Measure</th><th class="num">Value</th><th>Unit</th>
+     <th>Basis</th></tr>` +
+    f.economics.map(e => `<tr><td><b>${e.label}</b></td>
+      <td class="num">${(e.value_mode ?? 0).toLocaleString()}</td>
+      <td>${e.unit}</td><td>${badge(e.confidence)}</td></tr>`).join('') +
+    '</table>';
+}
+
+async function initImpact() {
+  // Default to the headline product explicitly. Products come back ordered
+  // by slug, which puts "boneless_wing" first alphabetically -- and boneless
+  // has no nutrition rows yet, so the default view would open on an empty
+  // panel.
+  $('#i-product').innerHTML = META.products
+    .filter(p => p.active)
+    .map(p => `<option value="${p.slug}"${
+      p.slug === 'whole_wing' ? ' selected' : ''}>${p.label}</option>`)
+    .join('');
+  ['i-count', 'i-product'].forEach(id => {
+    $('#' + id).addEventListener('change', impact);
+    $('#' + id).addEventListener('input', impact);
+  });
+  await impact();
+}
+
 // ---- facts + sources
 async function initFacts() {
   const d = await api('/api/facts?placement=learning&limit=30');
@@ -731,6 +983,7 @@ async function load(v) {
   if (loaded[v]) return;
   loaded[v] = true;
   const init = { sci: initSci, mix: initMix, states: initStates,
+                 size: initSize, impact: initImpact,
                  trends: initTrends, facts: initFacts,
                  sources: initSources }[v];
   if (!init) return;

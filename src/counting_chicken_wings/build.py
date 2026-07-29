@@ -321,6 +321,35 @@ class Builder:
                     avg_size=v, size_unit=unit, source_id=sid,
                 )
 
+    def production_value(self):
+        """Broilers produced by state, from the NASS Production and Value
+        summary.
+
+        Kept apart from the slaughter series on purpose: different
+        publication, different population, different reporting period. The
+        national row arrives as region 'United States', exactly as the
+        source presents it.
+        """
+        t = load("production_value.yaml")
+        sp = self.species[t["species"]]
+        sid = self.src(t["source"], "production and value stats")
+
+        rows = [dict(r, region="United States") for r in t.get("national", [])]
+        rows += t.get("regions", [])
+
+        for r in rows:
+            self.ins(
+                "regional_production_year",
+                species_id=sp,
+                region=r["region"],
+                year=r["year"],
+                head_thousands=r.get("head_thousands"),
+                live_weight_klb=r.get("live_weight_klb"),
+                value_kusd=r.get("value_kusd"),
+                derived_live_weight_lb=r.get("derived_live_weight_lb"),
+                source_id=sid,
+            )
+
     def facts(self):
         t = load("facts.yaml")
         dom = self.domain.get("poultry")
@@ -331,6 +360,24 @@ class Builder:
                 headline=f["headline"], body=f["body"].strip(),
                 placement=f["placement"], surprise=f.get("surprise", 3),
                 source_id=self.src(f["source"], f"fact {f['slug']}"),
+            )
+
+    def quality(self):
+        t = load("quality.yaml")
+        for d in t["defects"]:
+            self.ins(
+                "quality_defect",
+                species_id=self.species[d["species"]],
+                slug=d["slug"], label=d["label"],
+                affected_part=d["affected_part"], severity=d["severity"],
+                prevalence_pct_lo=d.get("prevalence_pct_lo"),
+                prevalence_pct_mode=d["prevalence_pct_mode"],
+                prevalence_pct_hi=d.get("prevalence_pct_hi"),
+                weight_association=d["weight_association"],
+                first_year=d.get("first_year"),
+                first_year_pct=d.get("first_year_pct"),
+                source_id=self.src(d["source"], f"defect {d['slug']}"),
+                notes=d.get("notes"),
             )
 
     def nutrition(self):
@@ -391,6 +438,8 @@ class Builder:
         self.loss_chain()
         self.mixing()
         self.stats()
+        self.production_value()
+        self.quality()
         self.nutrition()
         self.resources()
         self.facts()

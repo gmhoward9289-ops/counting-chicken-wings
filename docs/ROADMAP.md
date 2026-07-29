@@ -68,6 +68,57 @@ data, not code.
   a starting point. The interesting question: how much of "modern broiler
   performance" is genetics versus husbandry?
 
+- [ ] **Imports.** Wings arrive from Brazil and Chile, especially around demand
+  spikes. Imported wings come from entirely different flocks under different
+  regulatory regimes, so **none of our USDA loss figures legitimately apply to
+  them.** Needs its own loss chain, or an explicit refusal to model them.
+  Sources: USDA FAS import data, ABPA for Brazil.
+
+- [ ] **Seasonality.** We already load month-by-month NASS live weights for all
+  22 states and currently only surface annual averages. Summer heat raises both
+  DOA and condemnation; the Super Bowl tightens wing supply enough to change
+  grade mix and import share. The monthly data is sitting in
+  `regional_size_stat` unused — this is the cheapest unexploited data in the
+  project.
+
+---
+
+## M1.5 — Model fidelity
+
+Gaps in what the model can *express*, as opposed to gaps in the data. Listed
+separately because these need code, and one of them is a genuine design flaw.
+
+- [ ] **Channel-aware loss stages.** *This is a real architectural gap.*
+  `supply_chain` currently selects which **mixing** stages apply but has no
+  say over which **loss** stages apply. So the grocery path and the restaurant
+  path cannot be modelled properly: `retail_shrink` is parked as
+  `optional`/default-off purely to stop it double-counting against
+  `kitchen_loss`, which is a workaround, not a model. Fix is a
+  `supply_chain_loss_stage` join table so a chain declares its own loss chain.
+  Until then, "grocery vs restaurant" is a manual flag rather than a real
+  scenario.
+
+- [ ] **Stunning method: CAS vs electrical waterbath.** The most promising
+  unexplored factor in the model. Controlled-atmosphere stunning does not
+  shackle live birds; electrical waterbath stunning does, and live shackling is
+  a leading cause of wing damage. Since wing damage is the **largest
+  count-affecting loss we have**, this plausibly moves the headline number more
+  than anything else on this list. Producer-specific and researchable.
+
+- [ ] **Line speed.** FSIS grants evisceration line-speed waivers and publishes
+  which establishments hold them. Faster lines plausibly mean more damage —
+  testable against the wing-damage figure.
+
+- [ ] **Fresh vs frozen.** Probably the largest single lever on the *distinct*
+  count, which nothing else on this list touches. Fresh wings move through a
+  short, fast chain with far less pooling; IQF frozen product passes more mixing
+  stages and sits longer. Fresh should land measurably lower on the 6–12 band.
+  Also covers pre-portioned supplier bags (the draw pool becomes the bag, not
+  the bin) and multi-distributor sourcing (roughly doubles the pool).
+
+- [ ] **Catching method.** Mechanical harvesters vs hand-catching crews have
+  different injury profiles.
+
 ---
 
 ## M2 — Content and analysis
@@ -154,6 +205,38 @@ Where the project earns repeat visits rather than one look.
 
 ## M5 — After 1.0
 
+- [ ] **Turkey.** *Stated from the outset as the second species, and it was
+  missing from this roadmap entirely — flagged on review.* The schema was
+  generalised specifically so this is data rather than a migration:
+  `species.turkey` is already seeded with `active: 0`, waiting on figures.
+
+  Most of the source work is already done and simply not extracted. The same
+  NASS Poultry Slaughter summary we parse for broilers reports **Young Turkeys**
+  in parallel tables — head slaughtered, live weight, pounds certified, and
+  post-mortem condemnation — so the national anchor and the derived dressing
+  yield come almost free. `tools/parse_nass.py` needs pointing at the turkey
+  page ranges, not rewriting.
+
+  What genuinely differs and must not be inherited from chicken:
+  - Turkeys are far heavier (~30+ lb live against 6.62 lb), so every mass-based
+    figure changes even though the wing *count* floor stays at 2 per bird.
+  - Turkey wings are rarely sold as wings — they go to further processing, deli
+    meat, and stock. The interesting turkey question is probably breast, not
+    wings, which is a good test of whether the product abstraction really holds.
+  - Grow-out is ~14-20 weeks against 47 days, with its own mortality profile.
+  - NCC has no turkey series; the National Turkey Federation is the analogue.
+
+  Do **not** copy chicken loss factors across. Wing damage, condemnation, and
+  mixing pool sizes all need turkey-specific sourcing or an explicit note that
+  a figure is chicken-derived.
+
+- [ ] **Repo governance: branch protection.** Requires GitHub Pro on a private
+  repo — both the classic branch-protection and rulesets APIs return 403 on the
+  current plan. `.github/CODEOWNERS` is already in place and auto-requests
+  George's review on every PR, but nothing *blocks* a merge yet. Revisit when
+  Pro is added; the config to apply is settled (require PR, require Code Owner
+  review, 1 approval, admins exempt so solo work is not deadlocked).
+
 - [!] **International: country selector, top 50 max.** Only countries with
   readily available data, per the note. Realistic tiers: FAOSTAT gives
   production for nearly every country; slaughter *and* processing loss detail
@@ -176,13 +259,42 @@ Where the project earns repeat visits rather than one look.
 
 ---
 
+## Housekeeping
+
+- [ ] **README status section is stale.** It claims 21 tests and "7 of 12 loss
+  factors are unsourced estimates"; actual is 156 tests and 8 of 14. Since the
+  README's credibility rests on being honest about data quality, a wrong count
+  there is worse than no count. Consider generating that section from
+  `audit.py` output so it cannot drift again.
+
+- [ ] **Unreachable data has no route to the user.** `nutrition`,
+  `resource_footprint`, and `economic_stat` are built and cited but exposed by
+  neither the API nor the UI. Either surface them or mark them explicitly
+  deferred — cited data nobody can see is cost without benefit.
+
+- [ ] **Five sources are cited by nothing.** The audit reports these. Each is
+  either a research lead not yet used or a leftover from a dropped fact; worth
+  triaging which.
+
+---
+
 ## Sequencing recommendation
 
 1. **M3 identity first** — ASCII logo and the facts card deck are fast, visible,
    and make every subsequent demo better.
 2. **M2 "is fatter better"** — highest payoff per unit effort, since the data
    is already in the database.
-3. **M1 data** — the long pole. Start with regions and producers, which are
+3. **M1.5 channel-aware loss stages** — promoted, because it is a genuine design
+   flaw rather than a missing feature. It is also small, and it unblocks any
+   honest treatment of retail vs foodservice vs imports.
+4. **M1 seasonality** — cheapest data win available: the monthly series is
+   already loaded and unused.
+5. **M1 data** — the long pole. Start with regions and producers, which are
    unblocked; treat the suppressed states as bounded rather than open.
-4. **M4 cut 1.0.**
-5. **M5** once 1.0 is stable.
+6. **M4 cut 1.0.**
+7. **M5 turkey**, then international once 1.0 is stable.
+
+The one judgement call worth revisiting: **fresh vs frozen (M1.5)** is the only
+item on the list that moves the *distinct* number, which is the project's
+headline answer. Everything else refines birds-required. If the distinct figure
+is the point, that item deserves to be earlier than its milestone suggests.

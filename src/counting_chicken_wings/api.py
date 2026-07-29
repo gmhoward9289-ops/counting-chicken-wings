@@ -432,6 +432,215 @@ def trends():
         conn.close()
 
 
+@app.get("/api/bird-size")
+def bird_size(year: int = 2025):
+    """Is a fatter bird better? Everything needed to answer it.
+
+    Composes state weights, production programs, and quality defects so the
+    trade-off is visible in one payload: heavier birds yield more meat per
+    bird, and carry worse meat quality per pound.
+    """
+    conn = dbm.connect()
+    try:
+        regions = conn.execute(
+            """SELECT region, avg_size, size_unit, volume
+               FROM regional_size_stat
+               WHERE year = ? AND month IS NULL AND region != 'United States'
+               ORDER BY avg_size DESC""",
+            (year,),
+        ).fetchall()
+        national = conn.execute(
+            """SELECT avg_size FROM regional_size_stat
+               WHERE year = ? AND month IS NULL AND region = 'United States'""",
+            (year,),
+        ).fetchone()
+        programs = conn.execute(
+            """SELECT p.slug, p.label, p.size_lo, p.size_mode, p.size_hi,
+                      p.size_unit, p.typical_market, p.notes,
+                      s.slug AS source_slug
+               FROM production_program p JOIN source s ON s.id = p.source_id
+               ORDER BY p.size_lo"""
+        ).fetchall()
+        defects = conn.execute(
+            """SELECT q.slug, q.label, q.affected_part, q.severity,
+                      q.prevalence_pct_lo, q.prevalence_pct_mode,
+                      q.prevalence_pct_hi, q.weight_association,
+                      q.first_year, q.first_year_pct, q.notes,
+                      s.slug AS source_slug, s.title AS source_title,
+                      s.publisher, s.url
+               FROM quality_defect q JOIN source s ON s.id = q.source_id
+               ORDER BY q.prevalence_pct_mode DESC"""
+        ).fetchall()
+
+        rows = [dict(r) for r in regions]
+        if rows:
+            lightest, heaviest = rows[-1], rows[0]
+            ratio = heaviest["avg_size"] / lightest["avg_size"]
+        else:
+            lightest = heaviest = None
+            ratio = None
+
+        return {
+            "year": year,
+            "national_avg": national["avg_size"] if national else None,
+            "regions": rows,
+            "programs": [dict(p) for p in programs],
+            "defects": [dict(d) for d in defects],
+            "spread": {
+                "lightest": lightest,
+                "heaviest": heaviest,
+                "ratio": ratio,
+            },
+            # The verdict, stated rather than left for the reader to assemble.
+            "verdict": {
+                "yield_per_bird": "better",
+                "quality_per_pound": "worse",
+                "wing_count_floor": "unchanged",
+                "summary": (
+                    "Heavier birds give more meat per bird and better "
+                    "processing economics. They also carry worse meat "
+                    "quality: every breast myopathy measured gets more "
+                    "common as live weight rises, and heavier birds are "
+                    "harder to handle so more wings break. The anatomical "
+                    "floor does not move at all -- a chicken has two wings "
+                    "whatever it weighs. So 'fatter is better' is true for "
+                    "yield, false for quality, and irrelevant to the count."
+                ),
+            },
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/nutrition")
+def nutrition(product: str | None = None):
+    """Nutrition per product and preparation, with citations."""
+    conn = dbm.connect()
+    try:
+        sql = """SELECT n.preparation, n.label, n.kcal, n.protein_g, n.fat_g,
+                        n.saturated_fat_g, n.carbohydrate_g, n.sodium_mg,
+                        n.cholesterol_mg, n.edible_g_per_unit, n.fdc_id,
+                        n.notes, p.slug AS product, p.label AS product_label,
+                        p.unit_name, s.slug AS source_slug,
+                        s.title AS source_title, s.publisher, s.url
+                 FROM nutrition n
+                 JOIN product p ON p.id = n.product_id
+                 JOIN source s  ON s.id = n.source_id"""
+        params: tuple = ()
+        if product:
+            sql += " WHERE p.slug = ?"
+            params = (product,)
+        sql += " ORDER BY p.slug, n.preparation"
+        rows = [dict(r) for r in conn.execute(sql, params)]
+
+        # Per-piece values are derived here rather than stored, so they can
+        # never drift out of sync with the per-100 g figures.
+        for r in rows:
+            g = r.get("edible_g_per_unit")
+            if not g:
+                continue
+            scale = g / 100.0
+            r["per_unit"] = {
+                k: (r[k] * scale if r.get(k) is not None else None)
+                for k in ("kcal", "protein_g", "fat_g", "saturated_fat_g",
+                          "carbohydrate_g", "sodium_mg", "cholesterol_mg")
+            }
+        return {"nutrition": rows}
+    finally:
+        conn.close()
+
+
+@app.get("/api/footprint")
+def footprint(count: float = Query(12, gt=0), product: str = "whole_wing"):
+    """Resource and economic footprint, mass-allocated to the product.
+
+    A dozen wings does NOT carry six birds' worth of anything. Wings are
+    about 7% of live weight and the rest of the bird fed other people, so
+    every figure here is scaled by the product's mass share. Both the raw
+    per-bird number and the allocated share are returned, because the gap
+    between them is the whole point.
+    """
+    conn = dbm.connect()
+    try:
+        try:
+            prod = dbm.get_product(conn, product)
+        except KeyError:
+            raise HTTPException(404, f"unknown product: {product}")
+
+        metrics = conn.execute(
+            """SELECT r.metric, r.label, r.unit, r.per_individual,
+                      r.per_kg_liveweight, r.reference_lw_lb, r.year,
+                      r.pct_change_decade, r.notes, s.slug AS source_slug,
+                      s.title AS source_title, s.publisher, s.url
+               FROM resource_footprint r JOIN source s ON s.id = r.source_id
+               ORDER BY r.metric"""
+        ).fetchall()
+        econ = conn.execute(
+            """SELECT e.slug, e.label, e.value_lo, e.value_mode, e.value_hi,
+                      e.unit, e.basis, e.confidence, e.notes,
+                      s.slug AS source_slug, s.title AS source_title,
+                      s.publisher, s.url
+               FROM economic_stat e JOIN source s ON s.id = e.source_id
+               ORDER BY e.slug"""
+        ).fetchall()
+
+        upi = prod["units_per_individual_mode"]
+        birds = count / upi
+
+        # Mass share of the bird this product represents. Whole wings run
+        # ~7.3% of live weight; boneless is breast, ~23%.
+        mass_share = 0.073 if prod["slug"] == "whole_wing" else 0.23
+
+        out = []
+        for m in metrics:
+            d = dict(m)
+            per_bird = d["per_individual"]
+            d["birds"] = birds
+            d["naive_total"] = (per_bird * birds) if per_bird else None
+            d["allocated_total"] = (
+                per_bird * birds * mass_share if per_bird else None
+            )
+            out.append(d)
+
+        grower = next((dict(e) for e in econ
+                       if e["slug"] == "grower_pay_per_lb"), None)
+        grower_pay = None
+        if grower and grower["value_mode"]:
+            lw = conn.execute(
+                """SELECT avg_live_weight_lb FROM slaughter_stat_year
+                   ORDER BY year DESC LIMIT 1"""
+            ).fetchone()
+            avg_lw = lw["avg_live_weight_lb"] if lw else 6.62
+            total_lb = birds * avg_lw
+            grower_pay = {
+                "live_weight_lb": total_lb,
+                "paid_for_birds": total_lb * grower["value_mode"],
+                "allocated_to_product":
+                    total_lb * grower["value_mode"] * mass_share,
+                "rate": grower["value_mode"],
+                "source": grower["source_slug"],
+            }
+
+        return {
+            "product": prod["label"],
+            "count": count,
+            "birds": birds,
+            "mass_share": mass_share,
+            "allocation_note": (
+                "Scaled by mass share. Charging the whole bird to this "
+                "product would overstate it by about "
+                f"{1 / mass_share:.0f}x, since the rest of the bird was "
+                "eaten by someone else. Economic allocation would give a "
+                "higher figure, because wings sell at a premium per pound."
+            ),
+            "metrics": out,
+            "economics": [dict(e) for e in econ],
+            "grower_pay": grower_pay,
+        }
+    finally:
+        conn.close()
+
+
 @app.get("/api/facts")
 def facts(placement: str = "learning", limit: int = 20):
     conn = dbm.connect()

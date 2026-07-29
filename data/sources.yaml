@@ -1,6 +1,29 @@
 # Every statistic in this project traces to one of these.
 # The build refuses to insert a fact whose source_id is missing.
 
+- slug: nass-production-value-2025
+  title: Poultry - Production and Value 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/plva0426.pdf
+  published_on: '2026-04-30'
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Broilers PRODUCED by state - head, live weight, and value - over
+    December 1 to November 30. A different publication and a different
+    population from the Poultry Slaughter summary, which counts young
+    chickens SLAUGHTERED per calendar year and also includes roasters and
+    capons. 2025: 9.40 billion produced against 9.58 billion slaughtered.
+    The two must never be summed or treated as one series.
+
+    Carried for two reasons. First, it independently CONFIRMS our state
+    live weights: production pounds divided by head reproduces the slaughter
+    report's state average for all 14 states the 2025 table names, exactly,
+    from a separate survey. Second, it RECOVERS STATES - NASS suppresses
+    different states in different years and publications, and Florida is
+    individually reported here for 2024 while appearing in no year of the
+    slaughter summary.
+
 - slug: nass-poultry-slaughter-2025
   title: Poultry Slaughter 2025 Summary
   publisher: USDA National Agricultural Statistics Service
