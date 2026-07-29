@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import sys
 
+from . import __version__
 from . import db as dbm
 from .brand import banner
 from .model import run
@@ -346,6 +347,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="wings",
         description="How many chickens does it take to make a dozen wings?",
         parents=[common],
+    )
+    # Root-only, not on `common`: `wings count --version` would be noise.
+    p.add_argument(
+        "--version", action="version",
+        version=f"counting-chicken-wings {__version__}",
     )
     sub = p.add_subparsers(dest="cmd", parser_class=argparse.ArgumentParser)
 

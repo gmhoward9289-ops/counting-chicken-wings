@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [master, main]
+    tags: ['v*']
   pull_request:
 
 jobs:
@@ -44,5 +45,46 @@ jobs:
 
       # Separate job so the "is every number cited?" answer is visible as
       # its own check rather than buried in the test log.
+      #
+      # This is also what Render runs in buildCommand, so a failure here
+      # means the deploy would fail too. Keeping it as its own check makes
+      # that visible before the push rather than after.
       - name: Every statistic must cite a source
         run: python -m counting_chicken_wings.audit
+
+  # Guards the one thing a single-source-of-truth version cannot guard by
+  # itself: that the tag someone typed matches what pyproject.toml declares.
+  # Without this, `git tag v1.1.0` on a 1.0.0 tree publishes a release whose
+  # own metadata contradicts its name, and nothing complains.
+  version-consistency:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Tag must match pyproject version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(python -c 'import counting_chicken_wings as c; print(c.__version__)')"
+          echo "tag:         $tag"
+          echo "pyproject:   $pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME declares $tag but the package reports $pkg. Bump pyproject.toml or retag."
+            exit 1
+          fi
+          echo "versions agree"
+
+      - name: Changelog must mention this version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          if ! grep -q "$tag" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no entry for $tag."
+            exit 1
+          fi
+          echo "changelog entry present"

@@ -42,13 +42,26 @@ TABLE_LABELS = {
 }
 
 
-def cited_tables(conn: sqlite3.Connection) -> list[tuple[str, str]]:
+def cited_tables(conn: sqlite3.Connection) -> list[tuple[str, str, bool]]:
     """Every table carrying a source_id, discovered from the schema.
 
-    This was a hand-maintained list twice, and it went stale twice -- each
-    time a new table was added, its source read as orphaned because the
-    audit did not know to look there. A list you must remember to update is
-    a list that will be wrong, so ask the database instead.
+    Returns (table, label, required). `required` comes from the schema's own
+    NOT NULL declaration on source_id, because that is where the intent
+    already lives:
+
+      source_id INTEGER NOT NULL   a statistic. citation mandatory, and
+                                   SQLite enforces it at insert time.
+      source_id INTEGER            a dimension. "The United States exists"
+                                   is not a claim and needs no citation.
+
+    Deriving this rather than asserting it fixes a real failure. `country` is
+    a dimension with a deliberately nullable source_id, but the audit
+    demanded a citation anyway, exited 1, and took the Render build down --
+    buildCommand runs the audit. Two parts of the codebase disagreed about
+    the same contract, so now only one of them defines it.
+
+    This list was hand-maintained twice and went stale twice, hence asking
+    the database instead.
     """
     tables = [
         r[0] for r in conn.execute(
@@ -63,9 +76,13 @@ def cited_tables(conn: sqlite3.Connection) -> list[tuple[str, str]]:
         # about the corpus and reports an empty 0/0 on a fresh database.
         if t in {"run", "run_step"}:
             continue
-        cols = {c[1] for c in conn.execute(f"PRAGMA table_info({t})")}
-        if "source_id" in cols:
-            out.append((t, TABLE_LABELS.get(t, t.replace("_", " "))))
+        for c in conn.execute(f"PRAGMA table_info({t})"):
+            if c[1] == "source_id":
+                required = bool(c[3])          # PRAGMA column 3 is notnull
+                out.append(
+                    (t, TABLE_LABELS.get(t, t.replace("_", " ")), required)
+                )
+                break
     return out
 
 CONFIDENCE_ORDER = ["measured", "derived", "study", "industry", "estimate"]
@@ -81,20 +98,27 @@ def audit(db_path: Path) -> int:
     tables = cited_tables(conn)
 
     print("citation coverage")
-    for table, label in tables:
+    for table, label, required in tables:
         total = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
         missing = conn.execute(
             f"SELECT COUNT(*) FROM {table} WHERE source_id IS NULL"
         ).fetchone()[0]
-        mark = "ok " if missing == 0 else "FAIL"
+        if missing == 0:
+            mark = "ok  "
+        elif required:
+            mark = "FAIL"
+        else:
+            # Dimension table: uncited rows are expected, not a defect.
+            mark = "dim "
         print(f"  [{mark}] {label:<28} {total - missing:>5}/{total:<5} cited")
-        failures += missing
+        if required:
+            failures += missing
 
     # Orphaned sources are not an error, but they usually mean a fact was
     # dropped and its citation was left behind.
     clauses = " ".join(
         f"AND NOT EXISTS (SELECT 1 FROM {t} WHERE source_id = s.id)"
-        for t, _ in tables
+        for t, _, _ in tables
     )
     orphans = conn.execute(
         f"SELECT s.slug FROM source s WHERE 1=1 {clauses} ORDER BY s.slug"
