@@ -56,6 +56,55 @@ def healthz():
     return {"ok": True}
 
 
+@app.get("/api/version")
+def version():
+    """What is actually deployed here.
+
+    Exists because this was not answerable from outside. Recent commits added
+    schema and data without new endpoints, so feature-probing could not
+    distinguish a current build from one several commits stale -- and
+    render.yaml tracks `branch: master` rather than a tag, so the deployed
+    code is whatever master last was, not necessarily a release.
+
+    RENDER_GIT_COMMIT is injected by Render at build time; it is absent when
+    running locally, which is itself informative.
+    """
+    import os
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as pkg_version
+
+    try:
+        pkg = pkg_version("counting-chicken-wings")
+    except PackageNotFoundError:          # running from source, not installed
+        pkg = None
+
+    sha = os.environ.get("RENDER_GIT_COMMIT")
+    conn = dbm.connect()
+    try:
+        counts = {
+            t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+            for t in ("source", "fact", "loss_factor", "product",
+                      "quality_defect", "regional_size_stat")
+        }
+        # Row counts are the practical way to tell a data-only change apart
+        # from a code change, since data ships in the same push.
+        tables = conn.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+
+    return {
+        "package_version": pkg,
+        "git_commit": sha,
+        "git_commit_short": sha[:7] if sha else None,
+        "render_service": os.environ.get("RENDER_SERVICE_NAME"),
+        "branch": os.environ.get("RENDER_GIT_BRANCH"),
+        "table_count": tables,
+        "row_counts": counts,
+    }
+
+
 @app.get("/api/brand")
 def brand():
     """ASCII identity, served rather than duplicated in the HTML.
