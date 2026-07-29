@@ -1,5 +1,84 @@
 # Changelog
 
+## Unreleased
+
+Eggs become a first-class product rather than a proof that the schema
+generalises. Per [docs/VERSIONING.md](docs/VERSIONING.md) data additions are
+MINOR, so this is a 1.1.0 candidate.
+
+### The recurring-yield window
+
+`model.py` had `RecurringYield` and `recurring_floor` and nothing called them,
+so `wings 12 --product table_egg` reported a floor of **0.042 hens** — the
+annual rate applied to a same-day question — while the distinct count on the
+same screen said 12. The two contradicted each other by 285x.
+
+The window is now plumbed through `run()`, `db`, the CLI (`--window-days`) and
+the API (`window_days`), defaulting to one day:
+
+| Window | Hard floor | Expected | Distinct |
+|---|---|---|---|
+| 1 day | **12 hens** | 15.2 | 12 |
+| 15 days | 1 hen | 1.01 | ~12 |
+
+Both floors are reported, because either alone misleads: 12 is physiology,
+15.2 is what you need since hens do not lay daily.
+
+**Eggs invert the wing story.** Wings have a floor of 6 that mixing pushes up
+toward 12. Same-day eggs have a floor that *rises to meet* the ceiling at 12,
+leaving the supply chain nothing to move.
+
+### Eggs get their own loss chain
+
+Almost nothing carried over — an egg is never slaughtered, cut up, or breaded.
+Five new stages in `data/loss_chain_eggs.yaml`, built on USDA's own grading
+distinction:
+
+- **Check** — shell cracked, membranes intact. A *downgrade*: it leaves the
+  shell-egg stream for the breaker plant and becomes liquid egg.
+- **Leaker** — contents escaping. A true loss.
+
+Plus in-transit breakage, kitchen breakage, and layer mortality (off by
+default, like grow-out mortality). A dozen eggs now needs **16.1 hens** into
+the system against a 15.2 floor.
+
+Note the contrast with wings: frozen IQF wings are robust enough that no
+citable transit figure exists, while eggs are fragile enough that the industry
+measures breakage closely.
+
+### Egg data
+
+- **Nutrition** (FDC 171287): 143 kcal, 12.56 g protein, 9.51 g fat, 372 mg
+  cholesterol per 100 g. Raw only — a wing has one dominant preparation, an
+  egg has none, and asserting one would invent a default.
+- **National totals**: 365.1M layers, 288 eggs each, 105.2B eggs (90.1B table).
+  The corpus had 34 states but no US row.
+- **Three new facts**, including the companion to the bird-flu figure: layers
+  fell 3% and production 4%, while broilers lost ~0.05%. Same virus, same
+  country — a broiler lives 47 days and a layer lives years.
+
+### Also
+
+- `data/<prefix>*.yaml` globbing now applies to `loss_chain` and `nutrition`,
+  not just `taxonomy`, so a new product line stays a new file.
+- Fixed `fmtDistinct` printing `12.000000` for same-day eggs, in Python and
+  JS. Wings approach the ceiling and never arrive; eggs arrive, and six
+  decimals implied the opposite.
+- Fixed the GUI band running from the expected floor, so eggs showed
+  "floor 15.21" against a ceiling of 12 — above its own scale.
+- The calculator had **no product selector**, so eggs were unreachable from
+  the web UI entirely. Added, with the window control shown only for
+  recurring products.
+
+### Known gaps
+
+- Layer mortality and kitchen breakage are unsourced estimates.
+- Check and leaker rates are grading *tolerances*, which are ceilings a pack
+  must stay under rather than measured rates, so they overstate real loss.
+- No egg mixing cascade of its own; eggs reuse the broiler chains, which is
+  wrong in detail — an egg carton is not a combo bin.
+
+
 ## v1.0.0 — 2026-07-29
 
 First release. Answers "how many chickens does it take to make a dozen

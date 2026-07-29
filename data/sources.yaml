@@ -480,6 +480,41 @@
     birds with very different lay rates, and a state's headline eggs-per-layer
     figure is largely a readout of which mix it runs.
 
+- slug: usda-fdc-egg-raw
+  title: 'Egg, whole, raw, fresh (FDC 171287)'
+  publisher: USDA FoodData Central
+  url: https://fdc.nal.usda.gov/food-details/171287/nutrients
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Per 100 g of edible contents: 143 kcal, 12.56 g protein, 9.51 g fat,
+    372 mg cholesterol. A US large egg is about 50 g of contents, so roughly
+    72 kcal and 6.3 g protein each.
+
+    Only a raw row is carried. A wing has one dominant preparation - breaded
+    and deep fried - which makes raw-versus-fried an informative pair. An egg
+    has no canonical preparation, and scrambling in butter changes the numbers
+    because of the butter. Storing one arbitrary cooked row would assert a
+    default that does not exist.
+
+- slug: eggs-unlimited-breakage
+  title: 'Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers'
+  publisher: Eggs Unlimited
+  url: https://www.eggsunlimited.com/broken-eggs-101-commercial-guide/
+  retrieved_on: '2026-07-29'
+  source_type: trade_press
+  notes: >-
+    In-transit breakage expectations from the buy side. Commercial buyers
+    expect under 1% for Grade A shell eggs; well-run short hauls come in under
+    0.5%; long hauls and export run 1.5-2% without optimised handling.
+
+    Trade press rather than a measured study, so confidence=industry. Carried
+    because it is the only quantified transit figure found for eggs, and the
+    contrast with wings is instructive: frozen IQF wings are robust enough
+    that no citable transit figure exists at all, while eggs are fragile
+    enough that the industry measures breakage closely - it is what the
+    invoice argument is about.
+
 - slug: ams-shell-egg-grades
   title: United States Standards, Grades, and Weight Classes for Shell Eggs
   publisher: USDA Agricultural Marketing Service

@@ -4,6 +4,17 @@
 # -------------------------------------------------
 
 [1]
+  product: table_egg
+  preparation: raw
+  label: Egg, whole, raw, fresh
+  kcal: 143.0
+  protein_g: 12.56
+  fat_g: 9.51
+  edible_g_per_unit: 50.0
+  fdc_id: 171287
+  source: usda-fdc-egg-raw
+
+[2]
   product: whole_wing
   preparation: fried_breaded
   label: Fried chicken wing, meat, skin and breading
@@ -15,7 +26,7 @@
   fdc_id: 170360
   source: usda-fdc-wing-fried
 
-[2]
+[3]
   product: whole_wing
   preparation: raw
   label: Whole wing, meat and skin, raw

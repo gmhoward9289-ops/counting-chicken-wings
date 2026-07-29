@@ -1,0 +1,167 @@
+# The egg loss chain. Merged with loss_chain.yaml at build time.
+#
+# Almost nothing carries over from wings, which is why this is a separate
+# file. An egg is never slaughtered, never cut up, never breaded, never
+# fried. Every stage in the broiler chain from postmortem_condemnation to
+# cook_loss is simply inapplicable.
+#
+# WHAT EGGS HAVE INSTEAD: they break.
+#
+# A wing can be bruised, downgraded, and still sold as a wing. An egg either
+# holds or it does not, and USDA's grading standards draw the line precisely:
+#
+#   CHECK    shell cracked, inner membranes intact. Still food -- it is
+#            diverted to the breaking plant and becomes liquid egg. A
+#            DOWNGRADE, exactly analogous to a damaged wing leaving the
+#            intact-wing stream.
+#   LEAKER   contents escaping. A true loss.
+#
+# That distinction is the reason checks and leakers are modelled as separate
+# stages rather than one "breakage" figure: they have different magnitudes
+# and different destinations.
+#
+# One more asymmetry worth stating. Because a hen lays at most one egg a day,
+# losses raise the number of hen-DAYS required but cannot lower the hard
+# floor of a same-day dozen. Twelve eggs gathered in one day came from twelve
+# hens whatever the breakage rate, because breakage removes eggs, not the
+# physiological ceiling on how fast one hen can produce them.
+
+stages:
+  - slug: layer_mortality
+    domain: poultry
+    label: Layer flock mortality
+    sequence: 15
+    phase: laying
+    applies_to: individual
+    optional: 1
+    default_enabled: 0
+    description: >-
+      Hens that die during the laying cycle and stop producing.
+    notes: >-
+      OFF by default, for the same reason as broiler grow-out mortality: a hen
+      that died last month did not lay the egg in your hand. Turn it on to ask
+      "how many hens had to be placed to sustain this rate", which is a
+      different question.
+
+      UNSOURCED. US commercial layer mortality over a full cycle is
+      commonly discussed in the 5-10% range but we have not found a citable
+      national figure, and 2022-2025 is badly distorted by avian influenza
+      depopulations, which are not ordinary mortality.
+    factors:
+      - species: layer_hen
+        product: table_egg
+        survive_lo: 0.900
+        survive_mode: 0.940
+        survive_hi: 0.970
+        confidence: estimate
+        source: project-estimate-unsourced
+
+  - slug: egg_checks
+    domain: poultry
+    label: Checks (cracked shell, membrane intact)
+    sequence: 45
+    phase: grading
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Eggs whose shell cracked but whose inner membranes held. Pulled from
+      the shell-egg pack and diverted to breaking for liquid egg.
+    notes: >-
+      A downgrade rather than a loss -- the egg is still food, just not a
+      shell egg any more. This is the closest egg analogue to wing damage,
+      and like wing damage it is the largest count-affecting loss in its
+      chain.
+
+      The figure here is a grading TOLERANCE, not a measured rate, and that
+      distinction matters. USDA Grade A permits up to 7% checks (9% for
+      jumbo) and Grade AA up to 5%. A lot at the tolerance still grades; a
+      lot above it does not. Real rates sit below the ceiling, so treating
+      the tolerance as the rate overstates the loss -- hence a mode well
+      under the 7% bound and a band that reaches it.
+    factors:
+      - species: layer_hen
+        product: table_egg
+        survive_lo: 0.930
+        survive_mode: 0.965
+        survive_hi: 0.985
+        confidence: industry
+        source: ams-shell-egg-grades
+
+  - slug: egg_leakers
+    domain: poultry
+    label: Leakers, dirties and loss
+    sequence: 46
+    phase: grading
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Eggs whose contents are escaping, or which are rejected as dirty or as
+      loss from blood and meat spots. Not recoverable as food.
+    notes: >-
+      A true loss, unlike a check. USDA Grade A permits at most 1% leakers,
+      dirties and loss in any combination, with loss specifically capped at
+      0.30%; Grade AA halves the combined figure to 0.50%. Small next to
+      checks, and worth keeping separate precisely because the destination
+      differs -- a check becomes liquid egg, a leaker becomes nothing.
+    factors:
+      - species: layer_hen
+        product: table_egg
+        survive_lo: 0.990
+        survive_mode: 0.995
+        survive_hi: 0.997
+        confidence: industry
+        source: ams-shell-egg-grades
+
+  - slug: egg_transit_breakage
+    domain: poultry
+    label: In-transit breakage
+    sequence: 73
+    phase: distribution
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Eggs broken between the grading plant and the shelf.
+    notes: >-
+      Commercial buyers expect under 1% for Grade A shell eggs, and well-run
+      short hauls come in under 0.5%. Long hauls and export shipments run
+      1.5-2% without optimised handling, which is the band's upper end.
+
+      Note the contrast with wings: frozen IQF wings are robust in transit
+      and we could find no citable figure for them at all. Eggs are the
+      opposite -- fragile, and the industry measures breakage closely because
+      it is the number the invoice argument is about.
+    factors:
+      - species: layer_hen
+        product: table_egg
+        survive_lo: 0.980
+        survive_mode: 0.992
+        survive_hi: 0.997
+        confidence: industry
+        source: eggs-unlimited-breakage
+
+  - slug: egg_kitchen_breakage
+    domain: poultry
+    label: Kitchen and consumer breakage
+    sequence: 76
+    phase: kitchen
+    applies_to: product
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Eggs cracked in the carton at home or in a commercial kitchen before
+      they could be used, plus shells dropped in cooking.
+    notes: >-
+      UNSOURCED. Real and familiar to anyone who has opened a carton to find
+      one stuck to the bottom, but we have found no measured figure. The band
+      is deliberately narrow and small; treat it as a placeholder.
+    factors:
+      - species: layer_hen
+        product: table_egg
+        survive_lo: 0.980
+        survive_mode: 0.990
+        survive_hi: 0.998
+        confidence: estimate
+        source: project-estimate-unsourced

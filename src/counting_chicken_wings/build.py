@@ -38,6 +38,36 @@ def load(name: str):
         return yaml.safe_load(fh)
 
 
+def merge_files(prefix: str) -> dict[str, list]:
+    """Merge every data/<prefix>*.yaml into one dict of concatenated sections.
+
+    A new product line is a new FILE rather than an edit threaded into an
+    existing one. That keeps each subject's data next to its own commentary,
+    stops daily additions colliding in one growing file, and matters more than
+    it sounds for eggs: an egg is never slaughtered, cut up, or breaded, so
+    its loss chain has almost nothing in common with a wing's. Forcing both
+    into one file would interleave two unrelated pipelines.
+
+    Files are concatenated in filename order with the unsuffixed base file
+    first, so domains and species it defines exist before a later file
+    references them.
+    """
+    merged: dict[str, list] = {}
+    base = f"{prefix}.yaml"
+    paths = sorted(
+        DATA.glob(f"{prefix}*.yaml"),
+        key=lambda p: (p.name != base, p.name),
+    )
+    if not paths:
+        raise BuildError(f"no {prefix}*.yaml found in {DATA}")
+    for p in paths:
+        part = load(p.name) or {}
+        for key, rows in part.items():
+            if rows:
+                merged.setdefault(key, []).extend(rows)
+    return merged
+
+
 class Builder:
     def __init__(self, conn: sqlite3.Connection):
         self.c = conn
@@ -133,27 +163,7 @@ class Builder:
         return self.country[code]
 
     def taxonomy(self):
-        # Merged across every data/taxonomy*.yaml, so a new product line is a
-        # new FILE rather than an edit threaded into an existing one. Keeps
-        # each subject's data and its commentary together, and keeps daily
-        # additions from colliding in one growing file.
-        #
-        # Sections are concatenated in filename order, with the base
-        # taxonomy.yaml first so domains and species it defines exist before
-        # a later file references them.
-        merged: dict[str, list] = {}
-        paths = sorted(
-            DATA.glob("taxonomy*.yaml"),
-            key=lambda p: (p.name != "taxonomy.yaml", p.name),
-        )
-        if not paths:
-            raise BuildError("no taxonomy*.yaml found in data/")
-        for p in paths:
-            part = load(p.name) or {}
-            for key, rows in part.items():
-                if rows:
-                    merged.setdefault(key, []).extend(rows)
-        t = merged
+        t = merge_files("taxonomy")
 
         for d in t["domains"]:
             self.domain[d["slug"]] = self.ins(
@@ -245,7 +255,7 @@ class Builder:
             )
 
     def loss_chain(self):
-        t = load("loss_chain.yaml")
+        t = merge_files("loss_chain")
         for st in t["stages"]:
             sid = self.ins(
                 "loss_stage",
@@ -501,7 +511,7 @@ class Builder:
             )
 
     def nutrition(self):
-        t = load("nutrition.yaml")
+        t = merge_files("nutrition")
         for n in t["nutrition"]:
             self.ins(
                 "nutrition",

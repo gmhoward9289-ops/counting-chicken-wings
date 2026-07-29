@@ -245,3 +245,14 @@ regions:
     eggs_per_layer_2024: 313
     total_eggs_million_2024: 2425.8
     avg_layers_thousand_2024: 7748
+  # The national row, from the same NASS table as the states above. Layers
+  # fell 3% year over year and eggs per layer 1%, which together give the 4%
+  # production drop -- the avian influenza signal that broilers, at roughly
+  # 0.05% of throughput, never showed.
+  - region: United States
+    eggs_per_layer_2025: 288
+    total_eggs_million_2025: 105246.5
+    avg_layers_thousand_2025: 365131
+    eggs_per_layer_2024: 290
+    total_eggs_million_2024: 109129.4
+    avg_layers_thousand_2024: 376752

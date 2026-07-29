@@ -274,6 +274,23 @@
     of the slaughter summary.
 
 [17]
+  slug: usda-fdc-egg-raw
+  title: Egg, whole, raw, fresh (FDC 171287)
+  publisher: USDA FoodData Central
+  source_type: government
+  retrieved_on: 2026-07-29
+  url: https://fdc.nal.usda.gov/food-details/171287/nutrients
+  notes:
+    Per 100 g of edible contents: 143 kcal, 12.56 g protein, 9.51 g fat, 372
+    mg cholesterol. A US large egg is about 50 g of contents, so roughly 72
+    kcal and 6.3 g protein each. Only a raw row is carried. A wing has one
+    dominant preparation - breaded and deep fried - which makes
+    raw-versus-fried an informative pair. An egg has no canonical preparation,
+    and scrambling in butter changes the numbers because of the butter.
+    Storing one arbitrary cooked row would assert a default that does not
+    exist.
+
+[18]
   slug: usda-fdc-wing-fried
   title: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
   publisher: USDA FoodData Central
@@ -284,7 +301,7 @@
     Breaded and fried. Roughly 59% of calories from fat against 27% from
     protein - the breading and frying oil, not the bird, drive the change.
 
-[18]
+[19]
   slug: usda-fdc-wing-raw
   title: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
   publisher: USDA FoodData Central
@@ -295,7 +312,7 @@
     Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure for
     an unbreaded, uncooked whole wing with skin.
 
-[19]
+[20]
   slug: tyson-foodservice-boneless
   title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
   publisher: Tyson Foodservice
@@ -311,7 +328,7 @@
     and the descriptor "whole muscle chicken breast". These are breast chunks,
     and the manufacturer does not pretend otherwise.
 
-[20]
+[21]
   slug: tyson-foodservice-chunks
   title: Boneless wings and chunks product line, ingredient statements
   publisher: Tyson Foodservice
@@ -327,7 +344,7 @@
     "chunks" contain no wing meat either, and the phrase "with rib meat" is a
     breast-yield allowance rather than a different cut sneaking in.
 
-[21]
+[22]
   slug: boneless-wing-method
   title:
     A method of production of boneless chicken wings (drumettes and winglets)
@@ -340,7 +357,7 @@
     Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
     winglet 30.7 g at 80.1% boneless yield.
 
-[22]
+[23]
   slug: chilling-method-yield
   title:
     Moisture retention by water- and air-chilled broilers, and effect of
@@ -358,7 +375,7 @@
     therefore belongs in the mass stages and can never move a count answer -
     but it matters a great deal to anyone buying wings by the pound.
 
-[23]
+[24]
   slug: cold-chain-refrigeration-losses
   title:
     The impact of refrigeration on food losses and associated greenhouse gas
@@ -376,7 +393,7 @@
     one. For meat the paper finds post-harvest handling and storage, not
     transport, is where refrigeration matters most.
 
-[24]
+[25]
   slug: myopathy-prevalence-ontario
   title:
     Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
@@ -392,7 +409,7 @@
     comes from - are the worst affected. Woody breast incidence rose from
     about 5% in 2012 to 29% by 2015.
 
-[25]
+[26]
   slug: ncc-broiler-lca-2020
   title: Broiler Production System Life Cycle Assessment: 2020 Update
   publisher: National Chicken Council / University of Arkansas
@@ -412,7 +429,7 @@
     chicks per broiler produced to cover mortality, which independently
     corroborates our farm_mortality stage.
 
-[26]
+[27]
   slug: welfare-training-carcass-quality
   title:
     The Influence of Welfare Training on Bird Welfare and Carcass Quality in
@@ -425,7 +442,7 @@
     90% of bruising occurs in the 12-24 hours before processing. Bruise
     distribution by region: breast 42%, wings 33%, legs 25%.
 
-[27]
+[28]
   slug: wing-injuries-loading
   title:
     Rearing and handling injuries in broiler chickens and risk factors for
@@ -440,7 +457,7 @@
     the bird. Load-to-load variance is high, so this is stored with a wide
     lo/hi band.
 
-[28]
+[29]
   slug: wing-yield-eight-strains
   title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
   publisher: Poultry Science
@@ -451,7 +468,7 @@
     Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
     (6.7-7.3%), measured across eight commercial broiler strains.
 
-[29]
+[30]
   slug: ncc-broiler-performance
   title: U.S. Broiler Performance
   publisher: National Chicken Council
@@ -465,7 +482,7 @@
     grow-out mortality going back to 1925. Trade body rather than government,
     so figures are tagged confidence=industry.
 
-[30]
+[31]
   slug: ncc-key-facts
   title: Broiler Chicken Industry Key Facts
   publisher: National Chicken Council
@@ -476,7 +493,7 @@
     https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
   notes: Industry structure - plant counts, company counts, contract farms.
 
-[31]
+[32]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -492,7 +509,7 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[32]
+[33]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -508,7 +525,7 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[33]
+[34]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -524,7 +541,25 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[34]
+[35]
+  slug: eggs-unlimited-breakage
+  title: Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers
+  publisher: Eggs Unlimited
+  source_type: trade_press
+  retrieved_on: 2026-07-29
+  url: https://www.eggsunlimited.com/broken-eggs-101-commercial-guide/
+  notes:
+    In-transit breakage expectations from the buy side. Commercial buyers
+    expect under 1% for Grade A shell eggs; well-run short hauls come in under
+    0.5%; long hauls and export run 1.5-2% without optimised handling. Trade
+    press rather than a measured study, so confidence=industry. Carried
+    because it is the only quantified transit figure found for eggs, and the
+    contrast with wings is instructive: frozen IQF wings are robust enough
+    that no citable transit figure exists at all, while eggs are fragile
+    enough that the industry measures breakage closely - it is what the
+    invoice argument is about.
+
+[36]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -539,7 +574,7 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[35]
+[37]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet

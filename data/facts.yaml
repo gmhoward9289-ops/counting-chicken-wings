@@ -519,3 +519,42 @@ facts:
     source: ams-shell-egg-grades
     placement: learning
     surprise: 4
+
+  - slug: egg-cholesterol-is-the-outlier
+    headline: An egg carries more cholesterol than anything else here
+    body: >-
+      372 mg per 100 g, or about 186 mg in one large egg - the highest figure
+      anywhere in this dataset by a wide margin. It is also the number whose
+      dietary meaning changed most in living memory: the 2015 Dietary
+      Guidelines dropped the explicit 300 mg-a-day cap that had stood for
+      decades. Worth knowing what an egg contains. What that means for your
+      diet is a clinical question, and this project has no standing to answer
+      it.
+    source: usda-fdc-egg-raw
+    placement: learning
+    surprise: 4
+
+  - slug: an-egg-is-leaner-than-a-wing
+    headline: An egg carries wing-like protein with a third less fat
+    body: >-
+      Per 100 g an egg has 12.56 g of protein against a raw wing's 17.5 g, but
+      only 9.51 g of fat against 12.8 g. The wing loses on that trade because
+      of what it is: mostly skin, bone and small muscles, so its
+      skin-to-meat ratio is high before anyone has breaded or fried it.
+    source: usda-fdc-egg-raw
+    placement: learning
+    surprise: 3
+
+  - slug: bird-flu-hit-the-layers-instead
+    headline: Bird flu took 11 million layers out while broilers barely moved
+    body: >-
+      The companion to the broiler figure, and the two together are the whole
+      story. US layers averaged 365 million in 2025, down 3% from 376 million,
+      and eggs per layer slipped from 290 to 288 - which compounds into a 4%
+      production drop, from 109 to 105 billion eggs. Broilers over the same
+      period lost roughly 0.05% of throughput. Same virus, same country, same
+      species of bird: one flock devastated, the other essentially untouched,
+      because a broiler lives 47 days and a layer lives years.
+    source: nass-chickens-eggs-2025
+    placement: both
+    surprise: 5

@@ -1,0 +1,41 @@
+# Egg nutrition. Merged with nutrition.yaml at build time.
+#
+# Only a raw row, and the absence of a cooked one is deliberate rather than a
+# gap. A wing has exactly one dominant preparation -- breaded and deep fried,
+# which is why the wing rows pair raw against fried_breaded and the comparison
+# is informative. An egg has no such default: boiled, poached, scrambled,
+# fried, and baked into things diverge wildly, and scrambling in butter
+# changes the numbers because of the butter, not the egg.
+#
+# Adding one arbitrary cooked row would imply a canonical preparation that
+# does not exist. Better to give the honest baseline and say why.
+
+nutrition:
+  - product: table_egg
+    preparation: raw
+    label: Egg, whole, raw, fresh
+    kcal: 143
+    protein_g: 12.56
+    fat_g: 9.51
+    cholesterol_mg: 372
+    fdc_id: '171287'
+    # A US large egg is ~50 g of edible contents. The shell is not food, so
+    # edible mass is what the per-piece figures should scale from -- the same
+    # reasoning that put drumette + flat rather than whole-wing mass in the
+    # wing rows.
+    edible_g_per_unit: 50.0
+    source: usda-fdc-egg-raw
+    notes: >-
+      A large egg is about 72 kcal and 6.3 g of protein. Two figures worth
+      noticing.
+
+      First, the protein density: 12.56 g per 100 g is close to a wing's
+      17.5 g, but an egg carries it with a third less fat and no skin.
+
+      Second, cholesterol at 372 mg per 100 g -- roughly 186 mg in one large
+      egg -- is the highest figure anywhere in this dataset by a wide margin.
+      It is also the number whose dietary significance changed most in the
+      last two decades: the 2015 Dietary Guidelines dropped the explicit
+      300 mg/day cap. We record the measured quantity and deliberately do not
+      editorialise about what it means for a diet, which is a clinical
+      question this project has no standing to answer.
