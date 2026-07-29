@@ -1,6 +1,30 @@
 # Every statistic in this project traces to one of these.
 # The build refuses to insert a fact whose source_id is missing.
 
+- slug: nass-census-agriculture-2022
+  title: Census of Agriculture 2022, broiler data by state
+  publisher: USDA National Agricultural Statistics Service (QuickStats)
+  url: https://quickstats.nass.usda.gov/
+  published_on: '2024-02-13'
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    The census breaks the suppression ceiling. NASS's annual SURVEY
+    programme withholds states with too few operations - the same 22-state
+    cap applies in the QuickStats API as in the PDFs, which was confirmed
+    directly by querying it. The CENSUS is a separate five-yearly
+    enumeration with different disclosure handling, and for broilers at
+    state level it publishes ALL 50 STATES with nothing withheld.
+
+    California is the clearest illustration: 313.7 million broilers sold in
+    2022, eighth largest in the country, and absent from every year of both
+    annual publications.
+
+    Caveat carried deliberately: these are SALES in a census year, not
+    slaughter or production, and they do not move until the 2027 census.
+    They answer "which states raise broilers and at what scale" - never mix
+    them into an annual time series.
+
 - slug: nass-production-value-2025
   title: Poultry - Production and Value 2025 Summary
   publisher: USDA National Agricultural Statistics Service

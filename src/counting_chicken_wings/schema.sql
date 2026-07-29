@@ -284,6 +284,28 @@ CREATE INDEX idx_regional_production_region
     ON regional_production_year (region, year);
 
 
+-- Broiler presence and scale for every state, from the Census of
+-- Agriculture. Separate from both survey tables because it is a different
+-- programme on a different cadence measuring a different thing.
+--
+-- Its reason for existing is coverage: the annual survey suppresses states
+-- with too few operations and caps out at 22, while the census publishes all
+-- 50 with nothing withheld. Anything that needs "does this state raise
+-- broilers at all" should read here; anything that needs a yearly series
+-- should not.
+CREATE TABLE regional_census_stat (
+    id              INTEGER PRIMARY KEY,
+    species_id      INTEGER NOT NULL REFERENCES species(id),
+    region          TEXT    NOT NULL,
+    census_year     INTEGER NOT NULL,
+    sales_head      INTEGER,
+    operations      INTEGER,
+    inventory       INTEGER,
+    source_id       INTEGER NOT NULL REFERENCES source(id),
+    UNIQUE (species_id, region, census_year)
+);
+
+
 -- Grow-out / husbandry performance by year.
 CREATE TABLE husbandry_stat_year (
     id                  INTEGER PRIMARY KEY,

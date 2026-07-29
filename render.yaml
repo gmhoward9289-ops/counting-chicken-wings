@@ -27,7 +27,11 @@ services:
     # be unreachable from outside the container.
     startCommand: uvicorn counting_chicken_wings.api:app --host 0.0.0.0 --port $PORT
 
-    healthCheckPath: /api/meta
+    # /healthz touches no database and builds no payload. /api/meta was the
+    # previous choice and works, but it opens SQLite and serialises the whole
+    # loss chain, mixing cascade and producer list just to prove the process
+    # is alive.
+    healthCheckPath: /healthz
 
     envVars:
       - key: PYTHON_VERSION

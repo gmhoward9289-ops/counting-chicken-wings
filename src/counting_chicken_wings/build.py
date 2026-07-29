@@ -350,6 +350,31 @@ class Builder:
                 source_id=sid,
             )
 
+    def census_states(self):
+        """All-50-state broiler presence from the Census of Agriculture.
+
+        Loaded separately from the survey series because it is a different
+        programme: five-yearly, sales rather than slaughter, and crucially
+        unsuppressed. It exists so the map can show every state instead of
+        the 22 the annual survey permits.
+        """
+        t = load("census_states.yaml")
+        sp = self.species[t["species"]]
+        sid = self.src(t["source"], "census state stats")
+        year = t["census_year"]
+
+        for r in t.get("regions", []):
+            self.ins(
+                "regional_census_stat",
+                species_id=sp,
+                region=r["region"],
+                census_year=year,
+                sales_head=r.get("sales_head"),
+                operations=r.get("operations"),
+                inventory=r.get("inventory"),
+                source_id=sid,
+            )
+
     def facts(self):
         t = load("facts.yaml")
         dom = self.domain.get("poultry")
@@ -439,6 +464,7 @@ class Builder:
         self.mixing()
         self.stats()
         self.production_value()
+        self.census_states()
         self.quality()
         self.nutrition()
         self.resources()
