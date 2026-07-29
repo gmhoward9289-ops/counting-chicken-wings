@@ -73,6 +73,35 @@ CREATE TABLE domain (
     active          INTEGER NOT NULL DEFAULT 1
 );
 
+-- ---------------------------------------------------------------------------
+-- Countries
+-- ---------------------------------------------------------------------------
+
+-- Exists because "region" was a bare TEXT column with no notion of country,
+-- so loading Israel beside Alabama would silently corrupt any total that
+-- sums regions. Added when the project took on a second country rather than
+-- retrofitted after the first bad total.
+--
+-- Population lives here because per-capita consumption is the whole point of
+-- a cross-country comparison, and a per-capita figure computed against the
+-- wrong year's population is wrong in a way nobody notices.
+CREATE TABLE country (
+    id                  INTEGER PRIMARY KEY,
+    iso3                TEXT    NOT NULL UNIQUE,   -- 'USA', 'ISR'
+    name                TEXT    NOT NULL,
+    -- Reporting conventions differ by country and are the likeliest source
+    -- of a silently wrong comparison: the US reports pounds, most of the
+    -- world reports kilograms. Recorded so a loader can normalise
+    -- deliberately rather than a query assuming.
+    native_mass_unit    TEXT    NOT NULL DEFAULT 'lb',
+    native_currency     TEXT,
+    population          INTEGER,
+    population_year     INTEGER,
+    source_id           INTEGER REFERENCES source(id),
+    notes               TEXT
+);
+
+
 -- The "X" in "how many X". An individual organism: a broiler, a turkey,
 -- a dairy cow, an almond tree, a honeybee.
 CREATE TABLE species (
@@ -224,6 +253,7 @@ CREATE TABLE facility (
 CREATE TABLE slaughter_stat_year (
     id                      INTEGER PRIMARY KEY,
     species_id              INTEGER NOT NULL REFERENCES species(id),
+    country_id               INTEGER NOT NULL REFERENCES country(id),
     year                    INTEGER NOT NULL,
     head_slaughtered        INTEGER,
     live_weight_lb          INTEGER,
@@ -240,6 +270,7 @@ CREATE TABLE slaughter_stat_year (
 CREATE TABLE regional_size_stat (
     id                  INTEGER PRIMARY KEY,
     species_id          INTEGER NOT NULL REFERENCES species(id),
+    country_id           INTEGER NOT NULL REFERENCES country(id),
     region              TEXT    NOT NULL,          -- state code or name
     year                INTEGER NOT NULL,
     month               INTEGER,                   -- NULL = annual
@@ -268,6 +299,7 @@ CREATE TABLE regional_size_stat (
 CREATE TABLE regional_production_year (
     id                      INTEGER PRIMARY KEY,
     species_id              INTEGER NOT NULL REFERENCES species(id),
+    country_id               INTEGER NOT NULL REFERENCES country(id),
     region                  TEXT    NOT NULL,
     year                    INTEGER NOT NULL,
     head_thousands          INTEGER,
@@ -296,6 +328,7 @@ CREATE INDEX idx_regional_production_region
 CREATE TABLE regional_census_stat (
     id              INTEGER PRIMARY KEY,
     species_id      INTEGER NOT NULL REFERENCES species(id),
+    country_id       INTEGER NOT NULL REFERENCES country(id),
     region          TEXT    NOT NULL,
     census_year     INTEGER NOT NULL,
     sales_head      INTEGER,
@@ -310,6 +343,7 @@ CREATE TABLE regional_census_stat (
 CREATE TABLE husbandry_stat_year (
     id                  INTEGER PRIMARY KEY,
     species_id          INTEGER NOT NULL REFERENCES species(id),
+    country_id           INTEGER NOT NULL REFERENCES country(id),
     year                INTEGER NOT NULL,
     cycle_days          REAL,                      -- market age
     end_size            REAL,                      -- market weight

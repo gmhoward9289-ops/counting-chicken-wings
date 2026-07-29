@@ -49,6 +49,7 @@ class Builder:
         self.producer: dict[str, int] = {}
         self.loss_stage: dict[str, int] = {}
         self.mixing_stage: dict[str, int] = {}
+        self.country: dict[str, int] = {}
         self.counts: dict[str, int] = {}
 
     # -- helpers ----------------------------------------------------------
@@ -97,6 +98,39 @@ class Builder:
                 "(derived_source_id, parent_source_id) VALUES (?,?)",
                 (child, self.src(parent, "source_derivation")),
             )
+
+    def countries(self):
+        """Country dimension.
+
+        Loaded before any observation table, because every country-scoped
+        statistic now carries country_id and the build should fail loudly if
+        a country is missing rather than defaulting to the US.
+        """
+        t = load("countries.yaml")
+        for c in t["countries"]:
+            self.country[c["iso3"]] = self.ins(
+                "country",
+                iso3=c["iso3"], name=c["name"],
+                native_mass_unit=c.get("native_mass_unit", "lb"),
+                native_currency=c.get("native_currency"),
+                population=c.get("population"),
+                population_year=c.get("population_year"),
+                source_id=self.src(c.get("source"), f"country {c['iso3']}"),
+                notes=c.get("notes"),
+            )
+        # The existing corpus is US-only. Resolved once here so the
+        # observation loaders stay free of country plumbing until a
+        # second country actually has data.
+        self.default_country = self.ctry("USA", "default country")
+
+    def ctry(self, iso3: str | None, ctx: str) -> int:
+        """Resolve a country, defaulting to the US for the existing corpus."""
+        code = iso3 or "USA"
+        if code not in self.country:
+            raise BuildError(
+                f"{ctx}: unknown country '{code}'. Add it to countries.yaml."
+            )
+        return self.country[code]
 
     def taxonomy(self):
         t = load("taxonomy.yaml")
@@ -264,6 +298,7 @@ class Builder:
         for y in sl["years"]:
             self.ins(
                 "slaughter_stat_year",
+                country_id=self.default_country,
                 species_id=sp, year=y["year"],
                 head_slaughtered=y.get("head_slaughtered"),
                 live_weight_lb=y.get("live_weight_lb"),
@@ -280,6 +315,7 @@ class Builder:
         for y in hb["years"]:
             self.ins(
                 "husbandry_stat_year",
+                country_id=self.default_country,
                 species_id=sp, year=y["year"],
                 cycle_days=y.get("cycle_days"), end_size=y.get("end_size"),
                 size_unit=hb.get("size_unit"),
@@ -302,6 +338,7 @@ class Builder:
                     continue
                 self.ins(
                     "regional_size_stat",
+                    country_id=self.default_country,
                     species_id=sp, region=r["region"], year=year, month=None,
                     avg_size=r[key], size_unit=unit,
                     volume=int(r[ckey]) if r.get(ckey) else None,
@@ -317,6 +354,7 @@ class Builder:
                     continue
                 self.ins(
                     "regional_size_stat",
+                    country_id=self.default_country,
                     species_id=sp, region=r["region"], year=2025, month=i,
                     avg_size=v, size_unit=unit, source_id=sid,
                 )
@@ -340,6 +378,7 @@ class Builder:
         for r in rows:
             self.ins(
                 "regional_production_year",
+                country_id=self.default_country,
                 species_id=sp,
                 region=r["region"],
                 year=r["year"],
@@ -366,6 +405,7 @@ class Builder:
         for r in t.get("regions", []):
             self.ins(
                 "regional_census_stat",
+                country_id=self.default_country,
                 species_id=sp,
                 region=r["region"],
                 census_year=year,
@@ -458,6 +498,7 @@ class Builder:
 
     def run(self):
         self.sources()
+        self.countries()
         self.taxonomy()
         self.producers()
         self.loss_chain()

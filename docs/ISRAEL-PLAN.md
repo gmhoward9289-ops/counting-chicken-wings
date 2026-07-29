@@ -102,24 +102,56 @@ lead, not a fact, until it comes from CBS or FAOSTAT.
 
 ---
 
-## Schema work required
+## Framing decision — COMPARISON (settled)
 
-Small, and mostly already done — but not zero.
+George chose **comparison framing**: Israel shown alongside the US, not
+standalone. "A dozen wings in Tel Aviv vs a dozen in Buffalo."
 
-- `regional_size_stat`, `regional_production_year`, and `regional_census_stat`
-  all key on `region TEXT` with no notion of country. Loading Israel as a
-  region alongside "Alabama" would be wrong and would silently corrupt every
-  national total that sums regions.
-- **Decide before loading any data:** add a `country` column (defaulting to
-  `US` for existing rows) or a `country` dimension table. A column is
-  probably right — it is one migration, it keeps queries simple, and there is
-  no country-level metadata worth normalising yet.
+Consequences, and they are the reason the schema work below got done first:
+
+- Every figure is now a *pair*, so unit mismatches become wrong answers
+  rather than cosmetic. The US reports pounds, Israel kilograms — a
+  comparison that forgets is off by 2.2× and still looks plausible.
+- The thinner-data objection is real and should be **pre-empted on the
+  page**, not defended when asked. A visible "US: 50 states, 31 sources /
+  Israel: national only, N sources" is more credible than a comparison that
+  implies parity it does not have.
+- Per-capita is the strongest comparison axis, because it *inverts*: the US
+  produces ~37× more chicken, Israel eats more of it per person. That
+  inversion needs population for both countries, which is why `population`
+  is now a column.
+
+## Schema work — DONE
+
+Completed 2026-07-29, ahead of any Israeli data, so that adding figures is
+data rather than a migration.
+
+- New `country` table: `iso3`, `name`, `native_mass_unit`, `native_currency`,
+  `population`, `population_year`. USA and an ISR stub are seeded.
+- `country_id NOT NULL` added to all five country-scoped observation tables:
+  `slaughter_stat_year`, `husbandry_stat_year`, `regional_size_stat`,
+  `regional_production_year`, `regional_census_stat`.
+- `population` is deliberately **NULL** for both countries. It is a statistic,
+  it is the denominator of every per-capita claim, and it needs a citation
+  like everything else. Filling it is a research task, not a schema task.
+- Guarded by `tests/test_country.py` (7 tests), which discovers country-scoped
+  tables from the schema rather than a hand-kept list, and asserts that a
+  national total still agrees with a country-filtered one — the exact query
+  that silently breaks the day Israeli rows land.
+
+Still open:
+
 - `species`/`product` need no change: Israeli broilers are the same species
   and a wing is still a wing.
 - The loss chain **does** need a way to vary by country, since the shechita
-  stages above have no US equivalent. `loss_factor` already carries an
-  optional `region` column — check whether that is sufficient or whether
-  stages themselves need country scoping.
+  stages have no US equivalent. `loss_factor` already carries an optional
+  `region` column — decide whether that suffices or whether `loss_stage`
+  itself needs country scoping. Do this when the kosher research lands, not
+  before; the shape of the answer should follow the data.
+- `slaughter_stat_year` bakes units into its column names
+  (`live_weight_lb`, `certified_rtc_lb`, `avg_live_weight_lb`). Fine while
+  the loader converts on the way in, but revisit if Israeli reporting does
+  not map cleanly onto those fields.
 
 ---
 
@@ -146,10 +178,10 @@ Small, and mostly already done — but not zero.
 
 ---
 
-## Open question for George
+## Next question, when the research lands
 
-Do you want the demo to show **Israel alongside the US** (comparison framing,
-"a dozen wings in Tel Aviv vs a dozen in Buffalo"), or **Israel standalone**
-with the US hidden? Comparison is more impressive and roughly the same work,
-but it invites "why is your Israeli data thinner than your American data",
-which it will be.
+How thin is too thin? If Israel ends up with national figures only and no
+subnational breakdown, the state choropleth has no Israeli counterpart and
+the comparison is lopsided in a visible way. Options are a national-level
+comparison that simply omits the map, or districts if CBS publishes them.
+Worth deciding once we know what CBS actually has, not before.

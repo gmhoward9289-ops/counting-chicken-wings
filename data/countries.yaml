@@ -1,0 +1,40 @@
+# Countries.
+#
+# A dimension rather than a statistic, so a country row itself needs no
+# citation. Population DOES need one - it is a statistic, and it is the
+# denominator for every per-capita comparison - so it stays NULL until
+# sourced rather than being filled with a plausible-looking number.
+#
+# native_mass_unit is recorded because it is the likeliest cause of a
+# silently wrong comparison. The US reports pounds; most of the world
+# reports kilograms. A loader must normalise deliberately; no query should
+# ever assume.
+
+countries:
+  - iso3: USA
+    name: United States
+    native_mass_unit: lb
+    native_currency: USD
+    notes: >-
+      Every figure in the project was US-only until Israel was added. The
+      existing tables now carry country_id explicitly rather than leaving it
+      implied, so a cross-country total cannot silently double-count.
+
+  # Stub. Added when comparison framing was chosen, so the schema and the
+  # loaders are exercised by a second country before any Israeli data
+  # arrives. Population and all statistics are pending research - see
+  # docs/ISRAEL-PLAN.md.
+  - iso3: ISR
+    name: Israel
+    native_mass_unit: kg
+    native_currency: ILS
+    notes: >-
+      Prioritised ahead of the rest of international work because the
+      platform is being demoed in Israel. No Israeli statistics are loaded
+      yet; this row exists so that adding them is data, not a migration.
+
+      Two things to settle before any figure lands. First, Israel reports in
+      kilograms and shekels, so every mass and value needs deliberate
+      conversion at load. Second, the headline claim that Israel leads the
+      world in per-capita chicken consumption is contested - one dataset puts
+      Kuwait ahead for 2023 - and must be resolved rather than asserted.
