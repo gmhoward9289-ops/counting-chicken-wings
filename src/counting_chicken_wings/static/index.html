@@ -113,6 +113,31 @@
   .verdict .v-val { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
   .verdict .v-key { font-size: 12px; color: var(--faint);
                     text-transform: uppercase; letter-spacing: .06em; }
+  /* Fact card deck */
+  .btn { background: #0d0b0a; color: var(--ink); border: 1px solid var(--line);
+         border-radius: 7px; padding: 9px 14px; font-size: 14px;
+         cursor: pointer; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .card-wrap { display: flex; align-items: stretch; gap: 12px; }
+  .nav-arrow {
+    background: none; border: 1px solid var(--line); border-radius: 8px;
+    color: var(--dim); font-size: 26px; line-height: 1; width: 46px;
+    flex: 0 0 46px; cursor: pointer;
+  }
+  .nav-arrow:hover { color: var(--accent); border-color: var(--accent); }
+  .nav-arrow:disabled { opacity: .3; cursor: default; }
+  .nav-arrow:disabled:hover { color: var(--dim); border-color: var(--line); }
+  .card { flex: 1; min-height: 230px; padding: 8px 6px; outline: none; }
+  .card h2 { margin: 6px 0 12px; font-size: 26px; letter-spacing: -0.4px;
+             line-height: 1.25; }
+  .card p { margin: 0; color: var(--dim); font-size: 16px; line-height: 1.65; }
+  .card-stars { color: var(--accent); letter-spacing: 3px; font-size: 13px; }
+  .card .cite { margin-top: 16px; }
+  .dots { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line);
+         border: 0; padding: 0; cursor: pointer; }
+  .dot.on { background: var(--accent); }
+
   .v-better { color: var(--measured); }
   .v-worse  { color: #fb7185; }
   .v-same   { color: var(--dim); }
@@ -444,7 +469,39 @@
 
 <!-- ------------------------------------------------ facts -->
 <section class="view" id="v-facts">
-  <div class="panel"><div id="factlist"></div></div>
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label>Minimum surprise</label>
+        <select id="f-surprise">
+          <option value="1">Everything</option>
+          <option value="3">3+ — worth knowing</option>
+          <option value="4" selected>4+ — counterintuitive</option>
+          <option value="5">5 only — genuinely surprising</option>
+        </select>
+      </div>
+      <button class="btn" id="f-random">Random fact</button>
+      <span class="note" id="f-count"></span>
+    </div>
+  </div>
+
+  <div class="panel card-wrap">
+    <button class="nav-arrow" id="f-prev" aria-label="Previous fact">‹</button>
+    <div class="card" id="f-card" tabindex="0">
+      <div class="card-stars" id="f-stars"></div>
+      <h2 id="f-headline">—</h2>
+      <p id="f-body"></p>
+      <div class="cite" id="f-cite"></div>
+    </div>
+    <button class="nav-arrow" id="f-next" aria-label="Next fact">›</button>
+  </div>
+
+  <div class="panel">
+    <div class="dots" id="f-dots"></div>
+    <p class="note" style="text-align:center;margin-top:10px">
+      Arrow keys or swipe to move between cards.
+    </p>
+  </div>
 </section>
 
 <!-- ------------------------------------------------ sources -->
@@ -952,13 +1009,95 @@ async function initImpact() {
 }
 
 // ---- facts + sources
+// ---- fact card deck
+let FACTS = [], DECK = [], POS = 0;
+
+function renderCard() {
+  if (!DECK.length) {
+    $('#f-headline').textContent = 'No facts at that surprise level';
+    $('#f-body').textContent = '';
+    $('#f-cite').textContent = '';
+    $('#f-stars').textContent = '';
+    $('#f-dots').innerHTML = '';
+    $('#f-count').textContent = '';
+    return;
+  }
+  POS = (POS + DECK.length) % DECK.length;
+  const f = DECK[POS];
+
+  $('#f-stars').textContent = '★'.repeat(f.surprise) +
+                              '☆'.repeat(5 - f.surprise);
+  $('#f-headline').textContent = f.headline;
+  $('#f-body').textContent = f.body;
+  $('#f-cite').innerHTML = `${f.source_title} — ${f.publisher}` +
+    (f.url ? ` · <a href="${f.url}" target="_blank" rel="noopener">source</a>`
+           : '');
+  $('#f-count').textContent = `${POS + 1} of ${DECK.length}`;
+
+  // Deck wraps, so the arrows are never disabled -- but keep the handles in
+  // sync in case that changes.
+  $('#f-prev').disabled = DECK.length < 2;
+  $('#f-next').disabled = DECK.length < 2;
+
+  $('#f-dots').innerHTML = DECK.map((_, i) =>
+    `<button class="dot${i === POS ? ' on' : ''}" data-i="${i}"
+      aria-label="Fact ${i + 1}"></button>`).join('');
+  $('#f-dots').querySelectorAll('.dot').forEach(d => {
+    d.onclick = () => { POS = +d.dataset.i; renderCard(); };
+  });
+}
+
+function filterDeck() {
+  const min = +$('#f-surprise').value;
+  DECK = FACTS.filter(f => f.surprise >= min);
+  POS = 0;
+  renderCard();
+}
+
 async function initFacts() {
-  const d = await api('/api/facts?placement=learning&limit=30');
-  $('#factlist').innerHTML = d.facts.map(f =>
-    `<div class="fact"><h4>${f.headline}</h4><p>${f.body}</p>
-     <div class="cite">${f.source_title} — ${f.publisher}
-     ${f.url ? `· <a href="${f.url}" target="_blank" rel="noopener">source</a>` : ''}
-     </div></div>`).join('');
+  // limit high enough to take everything; the deck filters client-side so
+  // changing the surprise floor does not re-fetch.
+  const d = await api('/api/facts?placement=learning&limit=500');
+  FACTS = d.facts;
+
+  $('#f-prev').onclick = () => { POS--; renderCard(); };
+  $('#f-next').onclick = () => { POS++; renderCard(); };
+  $('#f-surprise').onchange = filterDeck;
+  $('#f-random').onclick = () => {
+    if (DECK.length < 2) return;
+    let n = POS;
+    while (n === POS) n = Math.floor(Math.random() * DECK.length);
+    POS = n;
+    renderCard();
+  };
+
+  // Arrow keys, scoped to the facts view so they do not hijack the page
+  // while someone is on the calculator.
+  document.addEventListener('keydown', ev => {
+    if (!$('#v-facts').classList.contains('on')) return;
+    if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT') return;
+    if (ev.key === 'ArrowLeft') { POS--; renderCard(); }
+    if (ev.key === 'ArrowRight') { POS++; renderCard(); }
+  });
+
+  // Swipe. Horizontal intent only, so vertical scrolling still works.
+  let x0 = null, y0 = null;
+  const card = $('#f-card');
+  card.addEventListener('touchstart', e => {
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  card.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    const dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+      POS += dx < 0 ? 1 : -1;
+      renderCard();
+    }
+    x0 = y0 = null;
+  }, { passive: true });
+
+  filterDeck();
 }
 async function initSources() {
   const d = await api('/api/sources');
