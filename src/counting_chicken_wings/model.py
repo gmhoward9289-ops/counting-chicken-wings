@@ -45,6 +45,81 @@ def floor_individuals(units: float, units_per_individual: float) -> float:
 # Mixing cascade
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Recurring yield -- production over time
+# ---------------------------------------------------------------------------
+
+@dataclass
+class RecurringYield:
+    """A rate of production, plus the window the question asks about.
+
+    Wings are timeless: a chicken has two, and the question needs no clock.
+    Eggs are not. "288 eggs per hen" is only a fact once you say per year,
+    and the answer to "how many hens for a dozen eggs" then depends entirely
+    on how long you are willing to wait.
+
+    `max_units_per_day` is the physiological ceiling and it is what makes the
+    floor hard. A hen's ovulation cycle runs a little over 24 hours, so she
+    lays at most about one egg a day, which means twelve eggs gathered in one
+    day came from twelve different hens -- no supply chain arrangement can
+    reduce that.
+    """
+    units_per_period: float          # 288 eggs
+    period_days: float               # per 365 days
+    window_days: float               # the question's window
+    max_units_per_day: float | None = None
+
+    def __post_init__(self):
+        if self.period_days <= 0:
+            raise ValueError("period_days must be positive")
+        if self.window_days <= 0:
+            raise ValueError("window_days must be positive")
+        if self.units_per_period <= 0:
+            raise ValueError("units_per_period must be positive")
+
+    @property
+    def rate_per_day(self) -> float:
+        return self.units_per_period / self.period_days
+
+    @property
+    def units_per_individual(self) -> float:
+        """Expected units one individual yields inside the window."""
+        expected = self.rate_per_day * self.window_days
+        if self.max_units_per_day is None:
+            return expected
+        # An individual cannot beat its own physiology, even if a long-run
+        # average would suggest otherwise.
+        return min(expected, self.max_units_per_day * self.window_days)
+
+    @property
+    def cap_per_individual(self) -> float | None:
+        """Most units one individual could yield in the window, at best."""
+        if self.max_units_per_day is None:
+            return None
+        return self.max_units_per_day * self.window_days
+
+
+def recurring_floor(units: float, ry: RecurringYield) -> tuple[float, float]:
+    """Return (hard_floor, expected_individuals) for a recurring product.
+
+    Two genuinely different numbers, and conflating them is the whole trap:
+
+      hard_floor            fewest individuals physically capable of it,
+                            from the per-day ceiling. Cannot be beaten.
+      expected_individuals  how many you actually need at the real
+                            production rate, which is always more, because
+                            hens do not lay every single day.
+
+    For a dozen eggs at 288 eggs/hen/year with a 1/day ceiling:
+      window 1 day   -> hard 12,  expected 15.2
+      window 15 days -> hard 0.8, expected 1.01
+    """
+    expected = units / ry.units_per_individual
+    cap = ry.cap_per_individual
+    hard = units / cap if cap else expected
+    return hard, expected
+
+
 def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     """C(total-removed, drawn) / C(total, drawn), computed without big ints.
 

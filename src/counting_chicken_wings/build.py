@@ -133,7 +133,27 @@ class Builder:
         return self.country[code]
 
     def taxonomy(self):
-        t = load("taxonomy.yaml")
+        # Merged across every data/taxonomy*.yaml, so a new product line is a
+        # new FILE rather than an edit threaded into an existing one. Keeps
+        # each subject's data and its commentary together, and keeps daily
+        # additions from colliding in one growing file.
+        #
+        # Sections are concatenated in filename order, with the base
+        # taxonomy.yaml first so domains and species it defines exist before
+        # a later file references them.
+        merged: dict[str, list] = {}
+        paths = sorted(
+            DATA.glob("taxonomy*.yaml"),
+            key=lambda p: (p.name != "taxonomy.yaml", p.name),
+        )
+        if not paths:
+            raise BuildError("no taxonomy*.yaml found in data/")
+        for p in paths:
+            part = load(p.name) or {}
+            for key, rows in part.items():
+                if rows:
+                    merged.setdefault(key, []).extend(rows)
+        t = merged
 
         for d in t["domains"]:
             self.domain[d["slug"]] = self.ins(
@@ -163,6 +183,8 @@ class Builder:
                 units_per_individual_mode=p["units_per_individual_mode"],
                 units_per_individual_hi=p["units_per_individual_hi"],
                 unit_name=p["unit_name"],
+                yield_period_days=p.get("yield_period_days"),
+                max_units_per_day=p.get("max_units_per_day"),
                 is_anatomical_constant=p.get("is_anatomical_constant", 0),
                 source_part=p.get("source_part"),
                 named_part=p.get("named_part"),

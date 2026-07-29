@@ -1,0 +1,170 @@
+# Eggs. Merged with taxonomy.yaml at build time.
+#
+# Eggs are the first RECURRING product in the project, and they break an
+# assumption the wing model was built on. A chicken has two wings today,
+# tomorrow, and always -- the figure needs no clock. "288 eggs per hen" is
+# not a fact until you say per what.
+#
+# THE TIME WINDOW IS THE ANSWER
+# -----------------------------
+# A hen's ovulation cycle runs a little over 24 hours, so she lays at most
+# about one egg a day. That single physiological ceiling does all the work:
+#
+#   a dozen eggs gathered in ONE DAY   -> at least 12 hens, necessarily,
+#                                         because no hen laid two of them
+#   a dozen eggs gathered over 15 DAYS -> one hen can do the whole thing
+#
+# So the honest answer to "how many chickens for a dozen eggs" is anywhere
+# from 1 to 12, and which end you land on is a question about patience, not
+# about biology or supply chains.
+#
+# This inverts the wing story in a way worth stating plainly. With wings the
+# floor sits at 6 and mixing pushes the real answer up toward 12. With
+# same-day eggs the floor RISES TO MEET the ceiling at exactly 12, and there
+# is no room left for the supply chain to move anything.
+
+species:
+  - slug: layer_hen
+    domain: poultry
+    common_name: Laying hen
+    scientific_name: Gallus gallus domesticus
+    individual_noun: hen
+    individual_plural: hens
+    stat_category: Layers
+    active: 1
+    # Same species as a broiler biologically, and a completely different
+    # animal commercially. Layers are bred for eggs (Hy-Line, Lohmann, ISA
+    # Brown), live 1.5-2 years rather than 47 days, and are far lighter.
+    # Kept as its own species row because every statistic about them comes
+    # from a different USDA publication and none of the broiler figures
+    # transfer.
+
+products:
+  - slug: table_egg
+    species: layer_hen
+    label: Egg
+    label_plural: Eggs
+    yield_mode: recurring
+    # Eggs per hen per YEAR. yield_period_days below is what makes this
+    # number mean anything.
+    #
+    # 288 is the US 2025 average production per layer on hand. The band is
+    # the observed spread across states, and that spread is mostly a readout
+    # of table-egg versus hatching-egg mix rather than of husbandry quality:
+    # Alabama's 224 reflects broiler-breeder flocks, Montana's 327 reflects
+    # table-egg layers.
+    units_per_individual_lo: 224
+    units_per_individual_mode: 288
+    units_per_individual_hi: 327
+    yield_period_days: 365
+    # The hard constraint, and the direct analogue of "a chicken has two
+    # wings". Double ovulation happens but is rare and usually yields a
+    # double-yolk or a shell-less egg, so one a day is the working ceiling.
+    max_units_per_day: 1.0
+    unit_name: egg
+    source_part: egg
+    named_part: egg
+    named_part_content: 1.0
+    # Deliberately 0. 288 eggs a year is an average that moves with breed,
+    # age, light, feed, and moulting -- nothing like the fixed 2 of a wing.
+    # The hardness lives in max_units_per_day instead, which is the honest
+    # place for it.
+    is_anatomical_constant: 0
+    source: nass-chickens-eggs-2025
+    notes: >-
+      US 2025: 365 million layers averaging 288 eggs each for 105 billion
+      eggs, of which 90.1 billion were table eggs and 15.2 billion hatching.
+
+      Two independent checks agree, which is why this figure is trusted more
+      than most in the project. Average layers times eggs per layer
+      reproduces reported total production for every one of the 31 states
+      with 2025 figures. And 288 over 365 days gives 0.789 eggs per hen per
+      day, matching the 78.7-79.9 eggs per 100 layers per day that the
+      monthly releases report from a separate survey.
+
+      Note the annual period runs December 1 to November 30, not a calendar
+      year, so it must never be aligned with the slaughter series.
+
+programs:
+  - slug: conventional_cage
+    species: layer_hen
+    label: Conventional cage
+    size_lo: 50000
+    size_mode: 250000
+    size_hi: 2000000
+    size_unit: hens per house
+    typical_market: Commodity shell eggs, breaking stock
+    source: nass-chickens-eggs-monthly-2026
+    notes: >-
+      The pooling question answers itself at this scale. A house holding
+      hundreds of thousands of hens on collection belts means a same-day
+      dozen is twelve different hens with no meaningful uncertainty.
+
+  - slug: cage_free
+    species: layer_hen
+    label: Cage-free
+    size_lo: 10000
+    size_mode: 100000
+    size_hi: 500000
+    size_unit: hens per house
+    typical_market: Retail premium shell eggs
+    source: nass-chickens-eggs-monthly-2026
+    notes: >-
+      Still industrial scale. Cage-free describes how hens are housed, not
+      how many, and it changes the welfare story without changing the
+      arithmetic: a dozen is still twelve hens.
+
+  - slug: free_range
+    species: layer_hen
+    label: Free range
+    size_lo: 5000
+    size_mode: 40000
+    size_hi: 200000
+    size_unit: hens per house
+    typical_market: Retail premium shell eggs
+    source: nass-chickens-eggs-monthly-2026
+
+  - slug: pasture_raised
+    species: layer_hen
+    label: Pasture-raised
+    size_lo: 500
+    size_mode: 5000
+    size_hi: 30000
+    size_unit: hens per flock
+    typical_market: Direct sale, farmers market, premium retail
+    source: nass-chickens-eggs-monthly-2026
+    notes: >-
+      Small enough that flock size finally starts to matter, though a
+      same-day dozen is still twelve hens. Only the gathering window can
+      bring that number down.
+
+  - slug: backyard_flock
+    species: layer_hen
+    label: Backyard flock
+    size_lo: 3
+    size_mode: 6
+    size_hi: 25
+    size_unit: hens per flock
+    typical_market: Household consumption
+    source: nass-chickens-eggs-monthly-2026
+    notes: >-
+      The only setting where the floor is genuinely reachable. Six hens
+      filling a carton over two weeks really is about six hens, and one
+      determined hen over fifteen days really is one - the honest answer to
+      "how many chickens made this dozen eggs" is then simply "her".
+
+  - slug: broiler_breeder
+    species: layer_hen
+    label: Broiler-breeder
+    size_lo: 5000
+    size_mode: 50000
+    size_hi: 200000
+    size_unit: hens per flock
+    typical_market: Hatching eggs, not for eating
+    source: nass-chickens-eggs-monthly-2026
+    notes: >-
+      Lays hatching eggs that become broiler chicks, and explains the
+      state-level spread in eggs per layer: 60.7 million of the 377 million
+      US layers are broiler-type hatching birds, and they lay far fewer eggs
+      than table-egg strains. A state's headline figure is largely a readout
+      of its mix.

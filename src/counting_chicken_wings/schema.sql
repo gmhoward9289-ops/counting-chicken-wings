@@ -128,14 +128,37 @@ CREATE TABLE product (
     label_plural        TEXT    NOT NULL,
 
     yield_mode          TEXT    NOT NULL CHECK (yield_mode IN
-                            ('countable','continuous')),
+                            ('countable','continuous','recurring')),
 
     -- countable  : discrete parts per individual (2 wings per chicken).
     -- continuous : quantity per individual in unit_name (gallons per cow).
+    -- recurring  : produced repeatedly over time (eggs, milk, honey).
+    --              units_per_individual is then a RATE, meaningless without
+    --              yield_period_days below.
     -- lo/hi carry natural biological variation.
     units_per_individual_lo   REAL NOT NULL,
     units_per_individual_mode REAL NOT NULL,
     units_per_individual_hi   REAL NOT NULL,
+
+    -- The window units_per_individual is measured over. NULL for countable
+    -- and continuous products, where the figure is timeless: a chicken has
+    -- two wings today, tomorrow, and always.
+    --
+    -- Required for 'recurring', because "288 eggs per hen" is not a fact
+    -- until you say per what. 365 here means the rate is annual.
+    yield_period_days   REAL,
+
+    -- Hard physiological ceiling on units per individual per day. This is
+    -- what makes a recurring product's floor a real floor rather than an
+    -- average, and it is the direct analogue of "a chicken has two wings".
+    --
+    -- A hen's ovulation cycle runs slightly over 24 hours, so she lays at
+    -- most about one egg a day. Consequence: twelve eggs collected on a
+    -- single day came from twelve DIFFERENT hens, necessarily. Unlike wings,
+    -- where mixing pushes the answer up from the floor, here the floor and
+    -- the ceiling meet and there is no room for the supply chain to move it.
+    max_units_per_day   REAL    CHECK (max_units_per_day IS NULL
+                                       OR max_units_per_day > 0),
 
     unit_name           TEXT    NOT NULL,          -- 'wing', 'gallon', 'lb'
 
@@ -163,7 +186,21 @@ CREATE TABLE product (
 
     CHECK (units_per_individual_lo <= units_per_individual_mode
        AND units_per_individual_mode <= units_per_individual_hi),
-    CHECK (units_per_individual_lo > 0)
+    CHECK (units_per_individual_lo > 0),
+
+    -- A recurring rate without its period is the exact bug this mode exists
+    -- to prevent, so the schema refuses it outright rather than letting a
+    -- silent default decide what "288 eggs per hen" means.
+    --
+    -- The IS NOT NULL is load-bearing, not belt-and-braces. Written as just
+    -- `yield_period_days > 0`, a NULL period makes the comparison NULL, the
+    -- whole expression NULL, and SQLite passes any CHECK that is not
+    -- explicitly FALSE -- so the constraint silently allowed exactly what it
+    -- was added to forbid. Caught by testing the rejection rather than
+    -- assuming it.
+    CHECK (yield_mode != 'recurring'
+           OR (yield_period_days IS NOT NULL AND yield_period_days > 0)),
+    CHECK (yield_mode = 'recurring' OR max_units_per_day IS NULL)
 );
 
 -- Sub-parts of a countable product: drumette / flat / tip of a wing.

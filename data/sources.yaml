@@ -435,3 +435,71 @@
     (transport DOA, grading downgrade, cook loss). Values are deliberately
     wide and every one is listed in docs/RESEARCH.md open items. Anything
     citing this source should be treated as unverified.
+
+- slug: nass-chickens-eggs-2025
+  title: Chickens and Eggs 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
+  published_on: '2026-02-17'
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    The anchor for everything egg. Annual estimates cover December 1 of the
+    previous year through November 30, which is NOT a calendar year - do not
+    align it with the slaughter summary's calendar-year series.
+
+    US 2025: layers averaged 365 million, annual production per layer on hand
+    288 eggs, total production 105 billion eggs (90.1 billion table, 15.2
+    billion hatching).
+
+    Internally consistent to a degree worth noting: average layers times eggs
+    per layer reproduces reported total production for all 31 states with
+    2025 figures, zero mismatches beyond 1%. And 288 eggs/year divided by 365
+    days gives 0.789 eggs/hen/day, which independently matches the 78.7-79.9
+    eggs per 100 layers per day reported in the monthly releases. Two
+    unrelated tables agreeing is the strongest validation in the project.
+
+    Coverage is BETTER than broilers: 34 states named across 2024-2025
+    against 23 for slaughter. Maryland, South Dakota, and Virginia are
+    suppressed for 2025 but present for 2024.
+
+- slug: nass-chickens-eggs-monthly-2026
+  title: Chickens and Eggs, monthly releases 2026
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Surveys/Guide_to_NASS_Surveys/Chickens_and_Eggs/index.php
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Monthly rate of lay and layer inventory. Rate of lay per day ran 79.1
+    (Jan 1), 78.9 (Feb 1), 79.9 (May 1), and 78.7 (Jun 1) eggs per 100 layers
+    in 2026 - remarkably steady. June 1 2026 layer inventory 377 million
+    total: 312 million table-egg, 60.7 million broiler-type hatching, 4.70
+    million egg-type hatching.
+
+    The table-egg versus hatching split matters for us: they are different
+    birds with very different lay rates, and a state's headline eggs-per-layer
+    figure is largely a readout of which mix it runs.
+
+- slug: ams-shell-egg-grades
+  title: United States Standards, Grades, and Weight Classes for Shell Eggs
+  publisher: USDA Agricultural Marketing Service
+  url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Defines the defect categories and, importantly for us, the TOLERANCES -
+    which are ceilings the pack must stay under, not measured occurrence
+    rates. Consumer Grade AA at origin permits at most 5% checks (7% for
+    jumbo) and at most 0.50% leakers, dirties, and loss combined, with loss
+    itself capped at 0.30%. Grade A permits at most 7% checks (9% jumbo) and
+    1% combined.
+
+    Anything stored from this source is therefore an UPPER BOUND on the true
+    rate and is flagged confidence=industry, never measured. A pack running
+    at the tolerance would be barely passing.
+
+    Terminology: a cracked shell is a "check". Dirty or cracked eggs are
+    "restricted" and may be diverted to an official egg products plant - a
+    "breaker plant" - for liquid egg. They are not destroyed, but they do
+    leave the shell-egg stream, which is what makes them a loss for the
+    question "how many hens for a dozen eggs in a carton".
