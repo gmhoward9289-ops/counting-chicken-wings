@@ -1,0 +1,60 @@
+# (o>  counting chicken wings -- meat quality defects
+# generated: 2026-07-29
+# these degrade quality without removing product, so they are NOT part of the loss chain
+# --------------------------------------------------------------------------------------
+
+[1]
+  slug: white_striping
+  label: White striping
+  affected_part: breast
+  severity: any
+  prevalence_pct_mode: 96.0
+  weight_association: increases
+  source: myopathy-prevalence-ontario
+
+[2]
+  slug: multiple_myopathy
+  label: More than one myopathy in the same fillet
+  affected_part: breast
+  severity: any
+  prevalence_pct_mode: 85.1
+  weight_association: increases
+  source: myopathy-prevalence-ontario
+
+[3]
+  slug: spaghetti_meat
+  label: Spaghetti meat
+  affected_part: breast
+  severity: any
+  prevalence_pct_mode: 36.3
+  weight_association: increases
+  source: myopathy-prevalence-ontario
+
+[4]
+  slug: woody_breast_severe
+  label: Woody breast (severe)
+  affected_part: breast
+  severity: severe
+  prevalence_pct_mode: 11.8
+  weight_association: increases
+  first_year: 2012
+  first_year_pct: 5.0
+  source: myopathy-prevalence-ontario
+
+[5]
+  slug: wing_handling_damage
+  label: Wing damage from handling
+  affected_part: wing
+  severity: any
+  prevalence_pct_mode: 5.7
+  weight_association: increases
+  source: wing-injuries-loading
+
+[6]
+  slug: wing_myopathy
+  label: Wing myopathy
+  affected_part: wing
+  severity: any
+  prevalence_pct_mode: 0.0
+  weight_association: none
+  source: myopathy-prevalence-ontario

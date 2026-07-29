@@ -1,0 +1,59 @@
+# (o>  counting chicken wings -- resource footprint per bird
+# generated: 2026-07-29
+# PER BIRD. Allocate by mass share before charging to one cut -- wings are ~7.3% of live weight
+# ---------------------------------------------------------------------------------------------
+
+[1]
+  metric: fossil_resources
+  label: Fossil resource use
+  unit: kg oil eq
+  per_individual: 0.61
+  per_kg_liveweight: 0.21
+  reference_lw_lb: 6.37
+  year: 2020
+  pct_change_decade: -22.1
+  source: ncc-broiler-lca-2020
+
+[2]
+  metric: global_warming
+  label: Greenhouse gas
+  unit: kg CO2 eq
+  per_individual: 2.9
+  per_kg_liveweight: 1.0
+  reference_lw_lb: 6.37
+  year: 2020
+  pct_change_decade: -18.1
+  source: ncc-broiler-lca-2020
+
+[3]
+  metric: land_use
+  label: Land use
+  unit: m2a crop eq
+  per_individual: 5.26
+  per_kg_liveweight: 1.85
+  reference_lw_lb: 6.37
+  year: 2020
+  pct_change_decade: -13.0
+  source: ncc-broiler-lca-2020
+
+[4]
+  metric: particulate_matter
+  label: Fine particulate formation
+  unit: g PM2.5 eq
+  per_individual: 5.87
+  per_kg_liveweight: 2.03
+  reference_lw_lb: 6.37
+  year: 2020
+  pct_change_decade: -13.8
+  source: ncc-broiler-lca-2020
+
+[5]
+  metric: water
+  label: Water consumption
+  unit: m3
+  per_individual: 0.73
+  per_kg_liveweight: 0.25
+  reference_lw_lb: 6.37
+  year: 2020
+  pct_change_decade: -13.0
+  source: ncc-broiler-lca-2020

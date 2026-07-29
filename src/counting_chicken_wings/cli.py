@@ -306,6 +306,21 @@ def cmd_chains(args) -> int:
     return 0
 
 
+def cmd_export(args) -> int:
+    from pathlib import Path
+
+    from .export import export
+
+    files = export(Path(args.dir), Path(args.db) if args.db else None)
+    total = sum(f.stat().st_size for f in files)
+    print(f"\n  wrote {len(files)} files to {args.dir} "
+          f"({total / 1024:.1f} KB)\n")
+    for f in sorted(files):
+        print(f"    {f.name:<24} {f.stat().st_size:>7,} bytes")
+    print()
+    return 0
+
+
 def cmd_gui(args) -> int:
     try:
         import uvicorn
@@ -367,6 +382,10 @@ def build_parser() -> argparse.ArgumentParser:
         .set_defaults(func=cmd_states)
     add("sources", help="every citation") \
         .set_defaults(func=cmd_sources)
+    e = add("export", help="write the dataset as .txt and .csv")
+    e.add_argument("--dir", default="data/exports")
+    e.set_defaults(func=cmd_export)
+
     add("chains", help="available supply chains") \
         .set_defaults(func=cmd_chains)
 

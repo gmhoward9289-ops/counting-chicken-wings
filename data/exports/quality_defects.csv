@@ -1,0 +1,7 @@
+slug,label,affected_part,severity,prevalence_pct_mode,weight_association,first_year,first_year_pct,source
+white_striping,White striping,breast,any,96.0,increases,,,myopathy-prevalence-ontario
+multiple_myopathy,More than one myopathy in the same fillet,breast,any,85.1,increases,,,myopathy-prevalence-ontario
+spaghetti_meat,Spaghetti meat,breast,any,36.3,increases,,,myopathy-prevalence-ontario
+woody_breast_severe,Woody breast (severe),breast,severe,11.8,increases,2012,5.0,myopathy-prevalence-ontario
+wing_handling_damage,Wing damage from handling,wing,any,5.7,increases,,,wing-injuries-loading
+wing_myopathy,Wing myopathy,wing,any,0.0,none,,,myopathy-prevalence-ontario

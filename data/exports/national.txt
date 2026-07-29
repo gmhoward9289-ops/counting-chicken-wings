@@ -1,0 +1,22 @@
+# (o>  counting chicken wings -- national slaughter totals
+# generated: 2026-07-29
+# dressing_yield is derived, not reported: RTC / live weight
+# ----------------------------------------------------------
+
+[1]
+  year: 2025
+  head_slaughtered: 9579797000
+  live_weight_lb: 63443212000
+  certified_rtc_lb: 48006482000
+  avg_live_weight_lb: 6.62
+  postmortem_condemn_pct: 0.45
+  dressing_yield: 0.75668
+
+[2]
+  year: 2024
+  head_slaughtered: 9460743000
+  live_weight_lb: 62139063000
+  certified_rtc_lb: 46995202000
+  avg_live_weight_lb: 6.57
+  postmortem_condemn_pct: 0.46
+  dressing_yield: 0.75629

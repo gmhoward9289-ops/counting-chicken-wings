@@ -1,0 +1,15 @@
+sequence,slug,label,phase,applies_to,optional,default_enabled,product,survive_lo,survive_mode,survive_hi,confidence,source
+10,farm_mortality,Grow-out mortality,grow_out,individual,1,0,all,0.935,0.9407,0.95,industry,ncc-broiler-performance
+20,transport_doa,Transport dead-on-arrival,transport,individual,0,1,all,0.99,0.996,0.999,estimate,project-estimate-unsourced
+30,postmortem_condemnation,Post-mortem condemnation,slaughter,individual,0,1,all,0.9954,0.9955,0.9955,measured,nass-poultry-slaughter-2025
+40,wing_damage,Wing damage and downgrade,harvest_and_cutup,product,0,1,whole_wing,0.9,0.943,0.98,study,wing-injuries-loading
+50,grading_downgrade,Grading and trim loss,grading,product,0,1,whole_wing,0.95,0.98,0.995,estimate,project-estimate-unsourced
+60,further_processing,Further processing and marinade pickup,further_processing,mass,0,1,whole_wing,0.98,1.0,1.12,estimate,project-estimate-unsourced
+70,distribution_shrink,Distribution shrink (mass),distribution,mass,0,1,whole_wing,0.97,0.99,1.0,estimate,project-estimate-unsourced
+71,transit_rejection,In-transit loss and load rejection,distribution,product,0,1,boneless_wing,0.98,0.995,0.999,estimate,project-estimate-unsourced
+71,transit_rejection,In-transit loss and load rejection,distribution,product,0,1,whole_wing,0.985,0.99,0.998,estimate,cold-chain-transport-trade
+72,retail_shrink,Supermarket shrink,retail,product,1,0,whole_wing,0.958,0.96,0.963,measured,ers-supermarket-loss
+75,kitchen_loss,Restaurant pre-consumer loss,kitchen,product,0,1,boneless_wing,0.9,0.958,0.97,industry,refed-foodservice
+75,kitchen_loss,Restaurant pre-consumer loss,kitchen,product,0,1,whole_wing,0.9,0.958,0.97,industry,refed-foodservice
+80,cook_loss,Cook loss,kitchen,mass,0,1,whole_wing,0.7,0.78,0.85,estimate,project-estimate-unsourced
+90,plate_waste,Post-consumer plate waste,kitchen,product,1,0,whole_wing,0.7,0.85,0.95,estimate,refed-foodservice

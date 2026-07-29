@@ -1,0 +1,6 @@
+metric,label,unit,per_individual,per_kg_liveweight,reference_lw_lb,year,pct_change_decade,source
+fossil_resources,Fossil resource use,kg oil eq,0.61,0.21,6.37,2020,-22.1,ncc-broiler-lca-2020
+global_warming,Greenhouse gas,kg CO2 eq,2.9,1.0,6.37,2020,-18.1,ncc-broiler-lca-2020
+land_use,Land use,m2a crop eq,5.26,1.85,6.37,2020,-13.0,ncc-broiler-lca-2020
+particulate_matter,Fine particulate formation,g PM2.5 eq,5.87,2.03,6.37,2020,-13.8,ncc-broiler-lca-2020
+water,Water consumption,m3,0.73,0.25,6.37,2020,-13.0,ncc-broiler-lca-2020

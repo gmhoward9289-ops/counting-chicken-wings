@@ -1,0 +1,266 @@
+# (o>  counting chicken wings -- average live weight by state
+# generated: 2026-07-29
+# USDA NASS. Only states NASS publishes individually appear
+# -----------------------------------------------------------
+
+[1]
+  region: North Carolina
+  year: 2025
+  avg_live_weight_lb: 8.4
+  certified_klb: 6151573
+
+[2]
+  region: Oklahoma
+  year: 2025
+  avg_live_weight_lb: 8.1
+  certified_klb: 615764
+
+[3]
+  region: Delaware
+  year: 2025
+  avg_live_weight_lb: 7.7
+  certified_klb: 2335596
+
+[4]
+  region: Arkansas
+  year: 2025
+  avg_live_weight_lb: 7.4
+  certified_klb: 5890538
+
+[5]
+  region: South Carolina
+  year: 2025
+  avg_live_weight_lb: 7.3
+
+[6]
+  region: Louisiana
+  year: 2025
+  avg_live_weight_lb: 6.9
+  certified_klb: 919175
+
+[7]
+  region: Texas
+  year: 2025
+  avg_live_weight_lb: 6.9
+
+[8]
+  region: Kentucky
+  year: 2025
+  avg_live_weight_lb: 6.8
+  certified_klb: 1541446
+
+[9]
+  region: Mississippi
+  year: 2025
+  avg_live_weight_lb: 6.7
+  certified_klb: 3677978
+
+[10]
+  region: United States
+  year: 2025
+  avg_live_weight_lb: 6.62
+
+[11]
+  region: Vermont
+  year: 2025
+  avg_live_weight_lb: 6.6
+
+[12]
+  region: Maryland
+  year: 2025
+  avg_live_weight_lb: 6.5
+  certified_klb: 705227
+
+[13]
+  region: Illinois
+  year: 2025
+  avg_live_weight_lb: 6.4
+  certified_klb: 3289
+
+[14]
+  region: Virginia
+  year: 2025
+  avg_live_weight_lb: 6.3
+
+[15]
+  region: Georgia
+  year: 2025
+  avg_live_weight_lb: 6.2
+  certified_klb: 6092890
+
+[16]
+  region: Tennessee
+  year: 2025
+  avg_live_weight_lb: 6.2
+
+[17]
+  region: Pennsylvania
+  year: 2025
+  avg_live_weight_lb: 5.8
+
+[18]
+  region: Alabama
+  year: 2025
+  avg_live_weight_lb: 5.6
+  certified_klb: 5138485
+
+[19]
+  region: Missouri
+  year: 2025
+  avg_live_weight_lb: 5.5
+  certified_klb: 1314619
+
+[20]
+  region: Iowa
+  year: 2025
+  avg_live_weight_lb: 5.4
+  certified_klb: 36572
+
+[21]
+  region: New Jersey
+  year: 2025
+  avg_live_weight_lb: 5.4
+  certified_klb: 11819
+
+[22]
+  region: New York
+  year: 2025
+  avg_live_weight_lb: 5.1
+  certified_klb: 123920
+
+[23]
+  region: Ohio
+  year: 2025
+  avg_live_weight_lb: 4.6
+  certified_klb: 458286
+
+[24]
+  region: North Carolina
+  year: 2024
+  avg_live_weight_lb: 8.4
+  certified_klb: 6101103
+
+[25]
+  region: Delaware
+  year: 2024
+  avg_live_weight_lb: 7.8
+  certified_klb: 2285084
+
+[26]
+  region: Oklahoma
+  year: 2024
+  avg_live_weight_lb: 7.8
+  certified_klb: 571541
+
+[27]
+  region: South Carolina
+  year: 2024
+  avg_live_weight_lb: 7.4
+
+[28]
+  region: Arkansas
+  year: 2024
+  avg_live_weight_lb: 7.3
+  certified_klb: 5654710
+
+[29]
+  region: Texas
+  year: 2024
+  avg_live_weight_lb: 6.9
+
+[30]
+  region: Louisiana
+  year: 2024
+  avg_live_weight_lb: 6.8
+  certified_klb: 914643
+
+[31]
+  region: Kentucky
+  year: 2024
+  avg_live_weight_lb: 6.7
+  certified_klb: 1503493
+
+[32]
+  region: Mississippi
+  year: 2024
+  avg_live_weight_lb: 6.7
+  certified_klb: 3563378
+
+[33]
+  region: Vermont
+  year: 2024
+  avg_live_weight_lb: 6.6
+
+[34]
+  region: United States
+  year: 2024
+  avg_live_weight_lb: 6.57
+
+[35]
+  region: Illinois
+  year: 2024
+  avg_live_weight_lb: 6.4
+  certified_klb: 3751
+
+[36]
+  region: Maryland
+  year: 2024
+  avg_live_weight_lb: 6.4
+  certified_klb: 692195
+
+[37]
+  region: Virginia
+  year: 2024
+  avg_live_weight_lb: 6.4
+
+[38]
+  region: Tennessee
+  year: 2024
+  avg_live_weight_lb: 6.1
+
+[39]
+  region: Georgia
+  year: 2024
+  avg_live_weight_lb: 6.0
+  certified_klb: 5896900
+
+[40]
+  region: Pennsylvania
+  year: 2024
+  avg_live_weight_lb: 5.8
+
+[41]
+  region: Iowa
+  year: 2024
+  avg_live_weight_lb: 5.7
+  certified_klb: 80268
+
+[42]
+  region: Alabama
+  year: 2024
+  avg_live_weight_lb: 5.5
+  certified_klb: 5010622
+
+[43]
+  region: Missouri
+  year: 2024
+  avg_live_weight_lb: 5.4
+  certified_klb: 1266680
+
+[44]
+  region: New Jersey
+  year: 2024
+  avg_live_weight_lb: 5.4
+  certified_klb: 11793
+
+[45]
+  region: New York
+  year: 2024
+  avg_live_weight_lb: 5.0
+  certified_klb: 108405
+
+[46]
+  region: Ohio
+  year: 2024
+  avg_live_weight_lb: 4.6
+  certified_klb: 436622

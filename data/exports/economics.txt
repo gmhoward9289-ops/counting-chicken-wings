@@ -1,0 +1,52 @@
+# (o>  counting chicken wings -- economic measures
+# generated: 2026-07-29
+# ------------------------------------------------
+
+[1]
+  slug: contract_farms
+  label: Contract family farms
+  value_mode: 25000.0
+  unit: farms
+  basis: national
+  confidence: industry
+  source: ncc-key-facts
+
+[2]
+  slug: direct_jobs
+  label: Direct industry employment
+  value_mode: 355000.0
+  unit: workers
+  basis: national
+  confidence: industry
+  source: ncc-key-facts
+
+[3]
+  slug: grower_net_annual
+  label: Grower net income per house
+  value_lo: 6000.0
+  value_mode: 9000.0
+  value_hi: 12000.0
+  unit: USD per year
+  basis: per_year
+  confidence: industry
+  source: poultrysite-contract-economics
+
+[4]
+  slug: grower_pay_per_lb
+  label: Contract grower pay
+  value_lo: 0.038
+  value_mode: 0.042
+  value_hi: 0.046
+  unit: USD per lb live weight
+  basis: per_lb_liveweight
+  confidence: measured
+  source: ers-broiler-grower-fees
+
+[5]
+  slug: slaughter_plants
+  label: Slaughter and evisceration plants
+  value_mode: 180.0
+  unit: plants
+  basis: national
+  confidence: industry
+  source: ncc-key-facts

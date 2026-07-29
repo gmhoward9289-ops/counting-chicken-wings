@@ -1,0 +1,30 @@
+# (o>  counting chicken wings -- producers
+# generated: 2026-07-29
+# ----------------------------------------
+
+[1]
+  slug: tyson
+  name: Tyson Foods
+  headquarters: Springdale, Arkansas
+  market_share_pct: 21.3
+  throughput_per_week: 45000000
+  as_of_year: 2024
+  source: wattpoultry-top-producers
+
+[2]
+  slug: pilgrims
+  name: Pilgrim's Pride
+  headquarters: Greeley, Colorado
+  market_share_pct: 15.8
+  as_of_year: 2024
+  source: wattpoultry-top-producers
+
+[3]
+  slug: wayne_sanderson
+  name: Wayne-Sanderson Farms
+  headquarters: Oakwood, Georgia
+  market_share_pct: 14.4
+  throughput_per_week: 20600000
+  facility_count: 23
+  as_of_year: 2024
+  source: wattpoultry-top-producers

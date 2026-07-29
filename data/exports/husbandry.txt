@@ -1,0 +1,74 @@
+# (o>  counting chicken wings -- grow-out performance by year
+# generated: 2026-07-29
+# National Chicken Council series
+# -----------------------------------------------------------
+
+[1]
+  year: 2024
+  market_age_days: 47.4
+  market_weight_lb: 6.57
+  feed_conversion: 1.69
+  mortality_pct: 5.93
+
+[2]
+  year: 2023
+  market_age_days: 47.0
+  market_weight_lb: 6.54
+  feed_conversion: 1.75
+  mortality_pct: 5.7
+
+[3]
+  year: 2022
+  market_age_days: 47.0
+  market_weight_lb: 6.56
+  feed_conversion: 1.77
+  mortality_pct: 5.3
+
+[4]
+  year: 2021
+  market_age_days: 47.0
+  market_weight_lb: 6.46
+  feed_conversion: 1.79
+  mortality_pct: 5.3
+
+[5]
+  year: 2020
+  market_age_days: 47.0
+  market_weight_lb: 6.41
+  feed_conversion: 1.79
+  mortality_pct: 5.0
+
+[6]
+  year: 2019
+  market_age_days: 47.0
+  market_weight_lb: 6.32
+  feed_conversion: 1.8
+  mortality_pct: 5.0
+
+[7]
+  year: 2018
+  market_age_days: 47.0
+  market_weight_lb: 6.26
+  feed_conversion: 1.82
+  mortality_pct: 5.0
+
+[8]
+  year: 2017
+  market_age_days: 47.0
+  market_weight_lb: 6.2
+  feed_conversion: 1.83
+  mortality_pct: 4.5
+
+[9]
+  year: 2016
+  market_age_days: 47.0
+  market_weight_lb: 6.16
+  feed_conversion: 1.86
+  mortality_pct: 4.5
+
+[10]
+  year: 2015
+  market_age_days: 48.0
+  market_weight_lb: 6.12
+  feed_conversion: 1.89
+  mortality_pct: 4.8

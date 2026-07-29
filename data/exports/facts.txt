@@ -1,0 +1,563 @@
+# (o>  counting chicken wings -- chicken facts
+# generated: 2026-07-29
+# surprise is 1-5; higher means more counterintuitive
+# ---------------------------------------------------
+
+[1]
+  slug: bird-flu-is-an-egg-story
+  headline: Bird flu barely touches chicken wings
+  body:
+    168.62 million birds have been lost to avian influenza since 2022, and the
+    headlines are relentless - but roughly 75% of those were egg-laying hens
+    and 11% turkeys. Broilers were about 8%, which works out near 0.05% of the
+    9.58 billion broilers slaughtered each year. Broilers live only 47 days,
+    sit on smaller farms, and get restocked fast, so their cumulative exposure
+    is low. Bird flu moves the price of eggs. It does not meaningfully move
+    the price or supply of wings.
+  surprise: 5
+  placement: both
+  source: The Highly Pathogenic Avian Influenza (HPAI) Outbreak in Poultry, 2022-Present
+  publisher: Congressional Research Service (R48518)
+  url: https://www.congress.gov/crs-product/R48518
+
+[2]
+  slug: boneless-takes-a-third-of-a-chicken
+  headline: A dozen boneless wings takes about a third of a chicken
+  body:
+    A 6.62 lb broiler carries roughly 691 g of boneless breast, and a
+    commercial boneless wing is about 20 g of raw breast meat - so one bird
+    makes around 34 of them. Twelve pieces is therefore about 0.35 of a
+    chicken. A dozen bone-in wings needs six whole chickens. Same menu
+    section, same price bracket, and roughly a seventeenfold difference in how
+    many birds it took.
+  surprise: 5
+  placement: both
+  source: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
+  publisher: Tyson Foodservice
+  url:
+    
+    https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
+
+[3]
+  slug: boneless-wings-contain-no-wing
+  headline: A boneless wing contains no wing meat
+  body:
+    It is breast meat, cut into chunks and breaded. Tyson's own foodservice
+    catalogue files the product under "boneless wings & chunks" and describes
+    it as whole muscle chicken breast - the industry is not hiding this, the
+    name just does not mean what it says. The honest count of wings in a dozen
+    boneless wings is zero.
+  surprise: 5
+  placement: both
+  source: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
+  publisher: Tyson Foodservice
+  url:
+    
+    https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
+
+[4]
+  slug: breading-adds-carbs-not-density
+  headline: Breading a wing lowers its calories per gram
+  body:
+    A breaded fried wing measures about 180 kcal per 100 g against 191 for raw
+    - which reads backwards until you notice why. Breading adds carbohydrate
+    and absorbed water, so the piece gets heavier faster than it gets more
+    caloric. The wing on your plate has more total calories; it is simply less
+    calorie-dense per gram. Chicken itself contains no carbohydrate at all, so
+    every gram of carb in a fried wing is breading.
+  surprise: 5
+  placement: learning
+  source: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
+  publisher: USDA FoodData Central
+  url: https://fdc.nal.usda.gov/food-details/170360/nutrients
+
+[5]
+  slug: bruising-happens-at-the-end
+  headline: 90% of bruising happens in the last 12 to 24 hours
+  body:
+    Not during the seven weeks of grow-out - during catching, loading,
+    transport, and shackling. By body region, bruises land on the breast 42%
+    of the time, wings 33%, legs 25%. Almost all the damage in a 47-day life
+    happens on the final day.
+  surprise: 5
+  placement: learning
+  source:
+    The Influence of Welfare Training on Bird Welfare and Carcass Quality in
+    Two Commercial Poultry Primary Processing Plants
+  publisher: Animals (PMC)
+  url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6719098/
+
+[6]
+  slug: chilling-changes-weight-not-count
+  headline: How a plant chills its birds swings wing weight by 10%
+  body:
+    Air chilling makes a carcass LOSE about 2.5-2.8% of its weight. Immersion
+    chilling makes it GAIN 4% and sometimes over 9%. That gap is larger than
+    any loss in this entire model - and it cannot change the answer by a
+    fraction, because chilling changes what a wing weighs, not how many wings
+    a chicken has. Buy wings by the pound and it matters enormously. Order a
+    dozen and it does not matter at all.
+  surprise: 5
+  placement: both
+  source:
+    Moisture retention by water- and air-chilled broilers, and effect of
+    immersion or dry air chilling on carcass moisture retention
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S105661711931205X
+
+[7]
+  slug: farmer-gets-twelve-cents
+  headline: The farmer got about twelve cents for your dozen wings
+  body:
+    Contract growers are paid 3.8 to 4.6 cents per pound of live weight. Six
+    birds at 6.62 lb is 39.7 lb, so raising them earned the grower roughly
+    $1.67 - and charging only the wings' share of that bird, about 12 cents.
+    Growers are paid on a relative "tournament" basis against other farms
+    delivering the same week, so two people doing identical work can be paid
+    differently.
+  surprise: 5
+  placement: both
+  source: Fees paid to growers for raising broiler chickens varied widely in 2020
+  publisher: USDA Economic Research Service
+  url:
+    
+    http://www.ers.usda.gov/data-products/charts-of-note/chart-detail?chartId=104642
+
+[8]
+  slug: grading-splits-wings
+  headline: Size grading deliberately separates a bird's two wings
+  body:
+    Wings are weighed individually and sorted into jumbo, large, and medium.
+    Two wings off the same bird rarely weigh exactly the same, so whenever
+    they straddle a grade boundary they are routed into different boxes. The
+    supply chain is not merely shuffling wings - at this step it is actively
+    pulling pairs apart.
+  surprise: 5
+  placement: both
+  source: Mixing pool sizes reasoned from process equipment scale
+  publisher: counting-chicken-wings
+
+[9]
+  slug: menu-wing-ambiguity
+  headline: A restaurant "dozen wings" usually is not twelve wings
+  body:
+    It is normally twelve PIECES - drumettes and flats. Each whole wing splits
+    into a drumette, a flat, and a tip, and the tip is diverted to stock or
+    rendering. So twelve pieces is six whole wings, which is three chickens'
+    worth of anatomy. This single ambiguity changes the answer more than every
+    processing loss combined.
+  surprise: 5
+  placement: both
+  source:
+    A method of production of boneless chicken wings (drumettes and winglets)
+    by separation of periosteum from bone without cutting skin and muscles
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
+
+[10]
+  slug: nearly-every-breast-is-striped
+  headline: 96% of chicken breasts now show white striping
+  body:
+    White striping appears in essentially every commercial fillet. Severe
+    woody breast runs about 12%, up from roughly 5% in 2012, and spaghetti
+    meat 36%. More than 85% of fillets show more than one of these at once.
+    Crucially the risk rises with live weight - so the big-bird deboning
+    flocks that boneless product comes from are the worst affected. The real
+    wing has no equivalent problem: wings are small working muscles and simply
+    do not develop these myopathies.
+  surprise: 5
+  placement: learning
+  source:
+    Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
+    white striping) and associated risk factors in broiler chickens
+  publisher: PLOS ONE
+  url: https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0267019
+
+[11]
+  slug: ohio-vs-north-carolina
+  headline: An Ohio chicken weighs half what a North Carolina chicken does
+  body:
+    Ohio averaged 4.6 lb live weight in 2025; North Carolina averaged 8.4 lb.
+    Same country, same year, same species - but they are different businesses.
+    Ohio runs small birds for fast food and tray pack; North Carolina runs big
+    birds for deboning. A pound of wings from each state represents a very
+    different number of chickens.
+  surprise: 5
+  placement: both
+  source: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+
+[12]
+  slug: wing-tips-are-an-export-business
+  headline: Wing tips and chicken paws are a $648 million export market
+  body:
+    What Americans discard, China buys. Wing tips and paws are sold there for
+    soups, stews, and snacking, and together they make up roughly a $648
+    million annual US export market. Paws fetch $0.80 to $1.00 a pound
+    exported against $0.05 to $0.10 a pound as domestic animal feed - close to
+    ten times the value for the identical product.
+  surprise: 5
+  placement: learning
+  source: Chinese appetite for chicken paws proves a boon for U.S. producers
+  publisher: USA Poultry & Egg Export Council
+  url:
+    
+    https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
+
+[13]
+  slug: avian-flu-scale
+  headline: Bird flu has cost 168 million birds since 2022
+  body:
+    APHIS has confirmed highly pathogenic avian influenza in 1,689 commercial
+    and backyard flocks between 2022 and April 2025, affecting 168.62 million
+    birds. Almost all of that is layers and turkeys rather than broilers - a
+    broiler reaches market in 47 days, which is a small window to be caught
+    in, while a laying hen sits in one barn for well over a year. It is the
+    main reason egg prices move and chicken wing prices mostly do not.
+  surprise: 4
+  placement: learning
+  source:
+    Confirmations of Highly Pathogenic Avian Influenza in Commercial and
+    Backyard Flocks
+  publisher: USDA Animal and Plant Health Inspection Service
+  url:
+    
+    https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks
+
+[14]
+  slug: boneless-portion-is-not-anatomy
+  headline: How many boneless wings a chicken makes is a business decision
+  body:
+    A chicken has exactly two wings and no processor can change that. But the
+    number of boneless wings per bird depends purely on how large the chunks
+    are cut - somewhere between 25 and 43 pieces per bird for plausible
+    portion sizes. For bone-in wings the floor is anatomy. For boneless it is
+    a portioning choice, which is why this project stores the two with
+    different confidence.
+  surprise: 4
+  placement: learning
+  source: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
+  publisher: Tyson Foodservice
+  url:
+    
+    https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
+
+[15]
+  slug: chicken-footprint-falling
+  headline: Chicken's footprint per bird has fallen every year
+  body:
+    Between 2010 and 2020 the industry cut greenhouse gas per kg of live
+    weight by 18%, fossil resource use by 22%, and land and water use by 13%
+    each. Most of that came from feed efficiency: production rose 21% while
+    feed consumption rose only 11%. The same efficiency drive that makes birds
+    heavier and cheaper also made them lighter on the planet per pound.
+  surprise: 4
+  placement: learning
+  source: Broiler Production System Life Cycle Assessment: 2020 Update
+  publisher: National Chicken Council / University of Arkansas
+  url:
+    
+    https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
+
+[16]
+  slug: chunks-are-breast-too
+  headline: The "chunks" are not wing either
+  body:
+    Tyson files boneless wings under "boneless wings & chunks", which invites
+    the question of whether chunks are a different cut. They are not. The
+    ingredient statement reads "boneless, skinless chicken breast chunks with
+    rib meat" - and rib meat is the portion left attached to the breast when
+    it is deboned, part of the front quarter. It is not wing. Neither product
+    contains any wing meat at all.
+  surprise: 4
+  placement: both
+  source: Boneless wings and chunks product line, ingredient statements
+  publisher: Tyson Foodservice
+  url:
+    
+    https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
+
+[17]
+  slug: condemnation-is-tiny
+  headline: FSIS condemns less than half a percent
+  body:
+    Post-mortem condemnation ran 0.45% in 2025 and 0.46% in 2024 - remarkably
+    stable. People expect this to be the big loss in the system. It is one of
+    the smallest.
+  surprise: 4
+  placement: learning
+  source: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+
+[18]
+  slug: feed-behind-a-dozen-wings
+  headline: A dozen wings represents about five pounds of feed
+  body:
+    At a feed conversion of 1.69 and a 6.57 lb market weight, one broiler eats
+    about 11 lb of feed. The six birds behind a dozen wings ate roughly 67 lb
+    between them - but the wings are only about 7% of the bird, so their
+    honest share is close to 4.9 lb of corn and soy. The rest of that feed
+    became somebody else's breast fillet.
+  surprise: 4
+  placement: learning
+  source: U.S. Broiler Performance
+  publisher: National Chicken Council
+  url:
+    
+    https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
+
+[19]
+  slug: flat-beats-drumette
+  headline: The flat has a better meat yield than the drumette
+  body:
+    The drumette is heavier - 39.9 g against 30.7 g bone-in - but the flat
+    yields 80.1% boneless meat against the drumette's 74.9%. Bigger does not
+    mean meatier.
+  surprise: 4
+  placement: learning
+  source:
+    A method of production of boneless chicken wings (drumettes and winglets)
+    by separation of periosteum from bone without cutting skin and muscles
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
+
+[20]
+  slug: footprint-must-be-allocated
+  headline: A dozen wings is not six chickens' worth of carbon
+  body:
+    One broiler carries about 2.90 kg of CO2 equivalent across its whole life.
+    It is tempting to multiply that by six - but wings are only about 7% of
+    the bird, and the breast, thighs and drums went to other plates. Allocated
+    by mass, a dozen wings carries closer to 1.3 kg CO2 equivalent. Charging
+    the whole bird to the wings would overstate it roughly fourteenfold.
+  surprise: 4
+  placement: learning
+  source: Broiler Production System Life Cycle Assessment: 2020 Update
+  publisher: National Chicken Council / University of Arkansas
+  url:
+    
+    https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
+
+[21]
+  slug: line-speed-and-broken-wings
+  headline: Some plants run 175 birds a minute, others 140
+  body:
+    Plants under the New Poultry Inspection System may run 175 birds per
+    minute; everyone else is capped at 140. That matters for wings
+    specifically, because the damage that breaks them happens at shackling,
+    and comment records tie faster lines to birds being hung improperly.
+    Regulators counter that fast plants meet food safety standards - which is
+    true, and a different question. Salmonella performance tells you nothing
+    about how many wings got broken.
+  surprise: 4
+  placement: learning
+  source:
+    Maximum Line Speed Rates for Young Chicken and Turkey Establishments
+    Operating Under the New Poultry Inspection System
+  publisher: USDA Food Safety and Inspection Service / Federal Register
+  url:
+    
+    https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
+
+[22]
+  slug: mortality-rising
+  headline: Broiler mortality has been getting worse since 2013
+  body:
+    It hit a historic low of 3.7% in 2013 and has climbed to 5.93% by 2024,
+    even as feed conversion kept improving from 1.75 to 1.69. Birds are more
+    efficient than they have ever been and also dying more often.
+  surprise: 4
+  placement: learning
+  source: U.S. Broiler Performance
+  publisher: National Chicken Council
+  url:
+    
+    https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
+
+[23]
+  slug: wing-tips-are-a-third-segment
+  headline: Every wing has a third segment you never see
+  body:
+    A whole wing is a drumette, a flat, and a tip. The tip is mostly skin,
+    bone, and cartilage with almost no meat, so it is cut off and diverted
+    before the wings ever reach a restaurant. When a menu says twelve wings,
+    twelve tips went somewhere else.
+  surprise: 4
+  placement: both
+  source:
+    A method of production of boneless chicken wings (drumettes and winglets)
+    by separation of periosteum from bone without cutting skin and muscles
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
+
+[24]
+  slug: wing-tips-domestic-fate
+  headline: At home, wing tips become stock, pet food, or fertilizer
+  body:
+    Tips that do not get exported are ground into pet food, rendered into
+    chemicals and fertilizer, or simmered into commercial stock. Rendering the
+    whole volume would return less than a tenth of what the export market
+    pays, which is why a trade dispute over chicken feet is a real and
+    expensive thing.
+  surprise: 4
+  placement: learning
+  source: Chinese appetite for chicken paws proves a boon for U.S. producers
+  publisher: USA Poultry & Egg Export Council
+  url:
+    
+    https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
+
+[25]
+  slug: wings-is-a-regulated-word
+  headline: "Wings" is a regulated word, and boneless wings comply with it
+  body:
+    USDA standards say a product labelled wings must be the entire wing, all
+    muscle and skin intact, with only the tip removable - and that where bone
+    has been removed the name must say so. "Boneless wing" satisfies that rule
+    by disclosing the missing bone. The label is not a loophole; it is doing
+    exactly what the regulation asks, which is why the name survives despite
+    containing no wing.
+  surprise: 4
+  placement: learning
+  source: Food Standards and Labeling Policy Book
+  publisher: USDA Food Safety and Inspection Service
+  url:
+    
+    https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
+
+[26]
+  slug: wings-most-damaged-part
+  headline: Wings are the most damaged part of the chicken, by far
+  body:
+    Median wing injuries run 5.7% per load. Legs, breast, and shoulders are
+    each under 1%. Wings stick out, they get caught, and they break during
+    catching, loading, and shackling. This is the single largest loss in the
+    model and the main reason it takes more than six chickens.
+  surprise: 4
+  placement: both
+  source:
+    Rearing and handling injuries in broiler chickens and risk factors for
+    wing injuries during loading
+  publisher: Canadian Journal of Animal Science
+  url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
+
+[27]
+  slug: cook-loss-irrelevant
+  headline: Cooking changes the weight, never the count
+  body:
+    Frying costs a wing roughly 20% of its mass, which matters a great deal
+    for food cost and not at all here. Twelve wings go into the fryer, twelve
+    wings come out. Cook loss has zero effect on how many chickens it took.
+  surprise: 3
+  placement: learning
+  source: Placeholder pending research
+  publisher: counting-chicken-wings
+
+[28]
+  slug: dressing-yield
+  headline: About three quarters of a live chicken becomes sellable meat
+  body:
+    63.44 billion lb went in live; 48.01 billion lb came out ready-to-cook.
+    That is a dressing yield of 75.67% - and it is not an estimate. It falls
+    straight out of two totals USDA measures directly.
+  surprise: 3
+  placement: learning
+  source: National dressing yield derived from NASS totals
+  publisher: counting-chicken-wings
+
+[29]
+  slug: kitchen-waste-corroborated
+  headline: Restaurant kitchens waste 4-13% of what they buy
+  body:
+    EPA figures put food waste at 4% to 13% of food costs in commercial
+    kitchens, with spoilage alone running 1-5% in prepare-ahead operations and
+    1-6% in cook-to-order. That independently brackets the ~4.2% of purchases
+    the foodservice data says goes unused - two different bodies measuring
+    different things and landing in the same place. It is why restaurant loss
+    is one of the better-evidenced numbers in this model despite sounding like
+    the softest.
+  surprise: 3
+  placement: learning
+  source: Food waste reduction in commercial kitchens (Winnow, EPA materials)
+  publisher: US Environmental Protection Agency
+  url:
+    
+    https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
+
+[30]
+  slug: nineteen-billion-wings
+  headline: The US produced 19.16 billion whole wings in 2025
+  body:
+    9,579,797,000 broilers were slaughtered, and each had two wings. That is
+    about 56 whole wings for every person in the country, every year.
+  surprise: 3
+  placement: learning
+  source: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+
+[31]
+  slug: top-four-concentration
+  headline: Four companies produce well over half the chicken in America
+  body:
+    Tyson at 21.3%, Pilgrim's Pride at 15.8%, and Wayne-Sanderson at 14.4%
+    lead a top four holding roughly 58% of national output across about 180
+    plants. A wing picked at random has better than even odds of coming from
+    one of four companies.
+  surprise: 3
+  placement: learning
+  source: Top 10 US chicken producers grow in new directions
+  publisher: WATTPoultry / WATTAgNet
+  url:
+    
+    https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
+
+[32]
+  slug: transit-loss-is-unmeasured
+  headline: Nobody publishes how many wings are lost in transit
+  body:
+    Loads do get rejected at the receiving dock over temperature excursions,
+    and cases do get crushed. But the peer-reviewed modelling of cold-chain
+    food loss covers ten supply chain stages and declines to break transport
+    out as one of them, stating outright that the underlying loss rates remain
+    uncertain. So this model carries a deliberately low, deliberately wide
+    estimate and labels it as such. Frozen wings also tolerate transit far
+    better than the fresh product most of that literature studies, so
+    borrowing a fresh-meat figure would overstate it.
+  surprise: 3
+  placement: learning
+  source:
+    The impact of refrigeration on food losses and associated greenhouse gas
+    emissions throughout the supply chain
+  publisher: Environmental Research Letters (IOP)
+  url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
+
+[33]
+  slug: wings-are-mostly-fat-calories
+  headline: About 60% of a wing's calories come from fat
+  body:
+    A raw whole wing with skin runs 191 kcal and 17.5 g of protein per 100 g.
+    Wings carry a high skin-to-meat ratio because they are mostly skin, bone,
+    and small muscles - that is inherent to the cut, before anyone has breaded
+    or fried it.
+  surprise: 3
+  placement: both
+  source: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
+  publisher: USDA FoodData Central
+  url: https://fdc.nal.usda.gov/food-details/172390/nutrients
+
+[34]
+  slug: two-wings-hard-floor
+  headline: A chicken has exactly two wings
+  body:
+    This is the only hard constant in the whole model. Every other number here
+    is an estimate layered on top of it. Twelve wings cannot come from fewer
+    than six chickens - not on the best day, not at any plant, not anywhere.
+    That is why the answer is "6 or more" rather than "about 6".
+  surprise: 2
+  placement: both
+  source: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
+  publisher: Poultry Science
+  url: https://www.sciencedirect.com/science/article/pii/S003257911946625X/pdf

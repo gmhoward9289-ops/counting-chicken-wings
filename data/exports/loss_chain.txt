@@ -1,0 +1,214 @@
+# (o>  counting chicken wings -- loss chain
+# generated: 2026-07-29
+# survive_* are SURVIVING fractions, not loss fractions. applies_to='mass' stages cannot change a unit count
+# ----------------------------------------------------------------------------------------------------------
+
+[1]
+  sequence: 10
+  slug: farm_mortality
+  label: Grow-out mortality
+  phase: grow_out
+  applies_to: individual
+  optional: 1
+  default_enabled: 0
+  product: all
+  survive_lo: 0.935
+  survive_mode: 0.9407
+  survive_hi: 0.95
+  confidence: industry
+  source: ncc-broiler-performance
+
+[2]
+  sequence: 20
+  slug: transport_doa
+  label: Transport dead-on-arrival
+  phase: transport
+  applies_to: individual
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.99
+  survive_mode: 0.996
+  survive_hi: 0.999
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[3]
+  sequence: 30
+  slug: postmortem_condemnation
+  label: Post-mortem condemnation
+  phase: slaughter
+  applies_to: individual
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.9954
+  survive_mode: 0.9955
+  survive_hi: 0.9955
+  confidence: measured
+  source: nass-poultry-slaughter-2025
+
+[4]
+  sequence: 40
+  slug: wing_damage
+  label: Wing damage and downgrade
+  phase: harvest_and_cutup
+  applies_to: product
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.9
+  survive_mode: 0.943
+  survive_hi: 0.98
+  confidence: study
+  source: wing-injuries-loading
+
+[5]
+  sequence: 50
+  slug: grading_downgrade
+  label: Grading and trim loss
+  phase: grading
+  applies_to: product
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.95
+  survive_mode: 0.98
+  survive_hi: 0.995
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[6]
+  sequence: 60
+  slug: further_processing
+  label: Further processing and marinade pickup
+  phase: further_processing
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.98
+  survive_mode: 1.0
+  survive_hi: 1.12
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[7]
+  sequence: 70
+  slug: distribution_shrink
+  label: Distribution shrink (mass)
+  phase: distribution
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.97
+  survive_mode: 0.99
+  survive_hi: 1.0
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[8]
+  sequence: 71
+  slug: transit_rejection
+  label: In-transit loss and load rejection
+  phase: distribution
+  applies_to: product
+  optional: 0
+  default_enabled: 1
+  product: boneless_wing
+  survive_lo: 0.98
+  survive_mode: 0.995
+  survive_hi: 0.999
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[9]
+  sequence: 71
+  slug: transit_rejection
+  label: In-transit loss and load rejection
+  phase: distribution
+  applies_to: product
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.985
+  survive_mode: 0.99
+  survive_hi: 0.998
+  confidence: estimate
+  source: cold-chain-transport-trade
+
+[10]
+  sequence: 72
+  slug: retail_shrink
+  label: Supermarket shrink
+  phase: retail
+  applies_to: product
+  optional: 1
+  default_enabled: 0
+  product: whole_wing
+  survive_lo: 0.958
+  survive_mode: 0.96
+  survive_hi: 0.963
+  confidence: measured
+  source: ers-supermarket-loss
+
+[11]
+  sequence: 75
+  slug: kitchen_loss
+  label: Restaurant pre-consumer loss
+  phase: kitchen
+  applies_to: product
+  optional: 0
+  default_enabled: 1
+  product: boneless_wing
+  survive_lo: 0.9
+  survive_mode: 0.958
+  survive_hi: 0.97
+  confidence: industry
+  source: refed-foodservice
+
+[12]
+  sequence: 75
+  slug: kitchen_loss
+  label: Restaurant pre-consumer loss
+  phase: kitchen
+  applies_to: product
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.9
+  survive_mode: 0.958
+  survive_hi: 0.97
+  confidence: industry
+  source: refed-foodservice
+
+[13]
+  sequence: 80
+  slug: cook_loss
+  label: Cook loss
+  phase: kitchen
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: whole_wing
+  survive_lo: 0.7
+  survive_mode: 0.78
+  survive_hi: 0.85
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[14]
+  sequence: 90
+  slug: plate_waste
+  label: Post-consumer plate waste
+  phase: kitchen
+  applies_to: product
+  optional: 1
+  default_enabled: 0
+  product: whole_wing
+  survive_lo: 0.7
+  survive_mode: 0.85
+  survive_hi: 0.95
+  confidence: estimate
+  source: refed-foodservice

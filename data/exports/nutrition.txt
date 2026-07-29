@@ -1,0 +1,27 @@
+# (o>  counting chicken wings -- nutrition per 100g
+# generated: 2026-07-29
+# USDA FoodData Central. Per 100 g edible portion
+# -------------------------------------------------
+
+[1]
+  product: whole_wing
+  preparation: fried_breaded
+  label: Fried chicken wing, meat, skin and breading
+  kcal: 180.0
+  protein_g: 12.2
+  fat_g: 11.8
+  carbohydrate_g: 6.3
+  edible_g_per_unit: 70.6
+  fdc_id: 170360
+  source: usda-fdc-wing-fried
+
+[2]
+  product: whole_wing
+  preparation: raw
+  label: Whole wing, meat and skin, raw
+  kcal: 191.0
+  protein_g: 17.5
+  fat_g: 12.8
+  edible_g_per_unit: 70.6
+  fdc_id: 172390
+  source: usda-fdc-wing-raw

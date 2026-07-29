@@ -1,0 +1,4 @@
+slug,name,headquarters,market_share_pct,throughput_per_week,facility_count,as_of_year,source
+tyson,Tyson Foods,"Springdale, Arkansas",21.3,45000000,,2024,wattpoultry-top-producers
+pilgrims,Pilgrim's Pride,"Greeley, Colorado",15.8,,,2024,wattpoultry-top-producers
+wayne_sanderson,Wayne-Sanderson Farms,"Oakwood, Georgia",14.4,20600000,23,2024,wattpoultry-top-producers

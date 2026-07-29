@@ -1,0 +1,465 @@
+# (o>  counting chicken wings -- citations
+# generated: 2026-07-29
+# every statistic in this dataset cites one of these
+# --------------------------------------------------
+
+[1]
+  slug: derived-dressing-yield
+  title: National dressing yield derived from NASS totals
+  publisher: counting-chicken-wings
+  source_type: derived
+  retrieved_on: 2026-07-28
+  notes:
+    Ready-to-cook pounds divided by live weight pounds, both reported by NASS
+    for the same population and period. 48,006,482 / 63,443,212 = 0.75667 for
+    2025. Not an estimate - it falls directly out of two measured totals.
+
+[2]
+  slug: project-estimate-mixing
+  title: Mixing pool sizes reasoned from process equipment scale
+  publisher: counting-chicken-wings
+  source_type: estimate
+  retrieved_on: 2026-07-28
+  notes:
+    Pool sizes for the mixing cascade are OUR ESTIMATES, reasoned from line
+    speeds, chiller residence times, and standard container sizes. They are
+    not measured. Flagged confidence=estimate throughout and shown as such in
+    the UI. The qualitative conclusion is robust to these values: the
+    distinct-individual curve flattens above roughly 1,000 individuals, so any
+    plausible commodity-scale pool lands within a hair of the ceiling.
+
+[3]
+  slug: project-estimate-unsourced
+  title: Placeholder pending research
+  publisher: counting-chicken-wings
+  source_type: estimate
+  retrieved_on: 2026-07-28
+  notes:
+    Explicit placeholder for stages we know exist but have not yet sourced
+    (transport DOA, grading downgrade, cook loss). Values are deliberately
+    wide and every one is listed in docs/RESEARCH.md open items. Anything
+    citing this source should be treated as unverified.
+
+[4]
+  slug: aphis-hpai-detections
+  title:
+    Confirmations of Highly Pathogenic Avian Influenza in Commercial and
+    Backyard Flocks
+  publisher: USDA Animal and Plant Health Inspection Service
+  source_type: government
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks
+  notes:
+    1,689 confirmed flocks and 168.62 million birds affected between 2022 and
+    April 2025.
+
+[5]
+  slug: crs-hpai-outbreak
+  title: The Highly Pathogenic Avian Influenza (HPAI) Outbreak in Poultry, 2022-Present
+  publisher: Congressional Research Service (R48518)
+  source_type: government
+  retrieved_on: 2026-07-28
+  url: https://www.congress.gov/crs-product/R48518
+  notes:
+    Splits losses by sector: table-egg layers roughly 75%, turkeys 11%,
+    BROILERS only about 8%. Broiler farms hold fewer birds, are restocked
+    faster, and the birds live ~47 days so cumulative exposure is far lower.
+    This is the key finding for our purposes - HPAI is overwhelmingly an egg
+    story, not a wing story.
+
+[6]
+  slug: epa-foodservice-waste
+  title: Food waste reduction in commercial kitchens (Winnow, EPA materials)
+  publisher: US Environmental Protection Agency
+  source_type: government
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
+  notes:
+    Food waste typically runs 4% to 13% of food costs in commercial kitchens.
+    Spoilage specifically ranges 1-5% in prepare-ahead operations and 1-6% in
+    cook-to-order operations. Corroborates the ReFED band.
+
+[7]
+  slug: ers-broiler-grower-fees
+  title: Fees paid to growers for raising broiler chickens varied widely in 2020
+  publisher: USDA Economic Research Service
+  source_type: government
+  retrieved_on: 2026-07-28
+  url:
+    
+    http://www.ers.usda.gov/data-products/charts-of-note/chart-detail?chartId=104642
+  notes:
+    Grower pay clusters at 3.8 to 4.6 cents per pound of live weight, set by a
+    relative "tournament" system in which each farm's rate depends on its
+    performance against others delivering in the same period.
+
+[8]
+  slug: ers-supermarket-loss
+  title:
+    Supermarket Loss Estimates for Fresh Fruit, Vegetables, Meat, Poultry, and
+    Seafood and Their Use in the ERS Loss-Adjusted Food Availability Data
+  publisher: USDA Economic Research Service (EIB-44)
+  source_type: government
+  retrieved_on: 2026-07-28
+  url: https://www.ers.usda.gov/publications/44309
+  notes:
+    Retail-level shrink. ERS previously assumed a flat 7% retail loss for
+    every meat, poultry, and seafood category; this study replaced that with
+    measured supermarket estimates, cutting loss-adjusted fresh meat, poultry,
+    and seafood availability by 7.3% for 2012.
+
+[9]
+  slug: fsis-line-speed-rule
+  title:
+    Maximum Line Speed Rates for Young Chicken and Turkey Establishments
+    Operating Under the New Poultry Inspection System
+  publisher: USDA Food Safety and Inspection Service / Federal Register
+  source_type: government
+  published_on: 2026-02-19
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
+  notes:
+    Plants under the New Poultry Inspection System may run 175 birds per
+    minute; everyone else is capped at 140. 47 plants held waivers as of 2018.
+    FSIS proposed formalising 175 bpm in February 2026. Directly relevant to
+    wing damage: comment records attribute improperly hung shackles,
+    insufficient bleeding, and scalding of live birds to faster lines -
+    shackling being the exact mechanism behind broken wings. FSIS counters
+    that waiver plants meet or exceed food safety standards. Note that food
+    safety and carcass DAMAGE are different questions; the FSIS defence
+    addresses the former, not the latter.
+
+[10]
+  slug: fsis-poultry-labeling-standards
+  title: Food Standards and Labeling Policy Book
+  publisher: USDA Food Safety and Inspection Service
+  source_type: government
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
+  notes:
+    "Wings" is a REGULATED term. A product labelled wings must be the entire
+    wing with all muscle and skin intact, except that the tip may be removed.
+    Where bone has been removed the name must say so. Also defines the
+    solid-muscle / chunked-and-formed / ground-and-formed distinction that
+    separates a whole-muscle boneless wing from a reformed nugget.
+
+[11]
+  slug: nass-poultry-slaughter-2025
+  title: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  source_type: government
+  published_on: 2026-02-01
+  retrieved_on: 2026-07-28
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+  notes:
+    Definitive US slaughter statistics. NASS reports the broiler population
+    under the category "Young Chickens", defined in the report as
+    "commercially grown broilers-fryers and other young immature birds such as
+    roasters and capons". Highest-confidence source in the project.
+
+[12]
+  slug: nass-production-value-2025
+  title: Poultry - Production and Value 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  source_type: government
+  published_on: 2026-04-30
+  retrieved_on: 2026-07-29
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/plva0426.pdf
+  notes:
+    Broilers PRODUCED by state - head, live weight, and value - over December
+    1 to November 30. A different publication and a different population from
+    the Poultry Slaughter summary, which counts young chickens SLAUGHTERED per
+    calendar year and also includes roasters and capons. 2025: 9.40 billion
+    produced against 9.58 billion slaughtered. The two must never be summed or
+    treated as one series. Carried for two reasons. First, it independently
+    CONFIRMS our state live weights: production pounds divided by head
+    reproduces the slaughter report's state average for all 14 states the 2025
+    table names, exactly, from a separate survey. Second, it RECOVERS STATES -
+    NASS suppresses different states in different years and publications, and
+    Florida is individually reported here for 2024 while appearing in no year
+    of the slaughter summary.
+
+[13]
+  slug: usda-fdc-wing-fried
+  title: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
+  publisher: USDA FoodData Central
+  source_type: government
+  retrieved_on: 2026-07-28
+  url: https://fdc.nal.usda.gov/food-details/170360/nutrients
+  notes:
+    Breaded and fried. Roughly 59% of calories from fat against 27% from
+    protein - the breading and frying oil, not the bird, drive the change.
+
+[14]
+  slug: usda-fdc-wing-raw
+  title: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
+  publisher: USDA FoodData Central
+  source_type: government
+  retrieved_on: 2026-07-28
+  url: https://fdc.nal.usda.gov/food-details/172390/nutrients
+  notes:
+    Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure for
+    an unbreaded, uncooked whole wing with skin.
+
+[15]
+  slug: tyson-foodservice-boneless
+  title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
+  publisher: Tyson Foodservice
+  source_type: industry_spec
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
+  notes:
+    Manufacturer piece weights for commercial boneless wings: 0.76 oz and 0.79
+    oz per finished breaded piece. A 3.78 oz portion is about six pieces. Note
+    the product category name Tyson itself uses - "boneless wings & chunks" -
+    and the descriptor "whole muscle chicken breast". These are breast chunks,
+    and the manufacturer does not pretend otherwise.
+
+[16]
+  slug: tyson-foodservice-chunks
+  title: Boneless wings and chunks product line, ingredient statements
+  publisher: Tyson Foodservice
+  source_type: industry_spec
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
+  notes:
+    Ingredient statements across the line read "boneless, skinless chicken
+    BREAST chunks with rib meat". Rib meat is the portion left attached to the
+    breast during deboning - part of the front quarter, NOT the wing. So
+    "chunks" contain no wing meat either, and the phrase "with rib meat" is a
+    breast-yield allowance rather than a different cut sneaking in.
+
+[17]
+  slug: boneless-wing-method
+  title:
+    A method of production of boneless chicken wings (drumettes and winglets)
+    by separation of periosteum from bone without cutting skin and muscles
+  publisher: Poultry Science
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
+  notes:
+    Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
+    winglet 30.7 g at 80.1% boneless yield.
+
+[18]
+  slug: chilling-method-yield
+  title:
+    Moisture retention by water- and air-chilled broilers, and effect of
+    immersion or dry air chilling on carcass moisture retention
+  publisher: Poultry Science
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://www.sciencedirect.com/science/article/pii/S105661711931205X
+  notes:
+    Air chilling LOSES 2.5-2.84% of prechill weight; immersion chilling GAINS
+    4.14% in one study and 9.3% in another, with a range of 3.4-14.7%. Overall
+    carcass yield: immersion +6.5%, combination inline air +1.98%, air chill
+    -1.10%. This is a MASS effect only. Chilling method changes what a wing
+    weighs by up to a tenth; it cannot change how many wings a chicken has. It
+    therefore belongs in the mass stages and can never move a count answer -
+    but it matters a great deal to anyone buying wings by the pound.
+
+[19]
+  slug: cold-chain-refrigeration-losses
+  title:
+    The impact of refrigeration on food losses and associated greenhouse gas
+    emissions throughout the supply chain
+  publisher: Environmental Research Letters (IOP)
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
+  notes:
+    Models food loss across 10 supply chain stages and finds improved
+    refrigeration cuts losses 26-63% for meat, milk, and produce. IMPORTANTLY
+    it does NOT break out a transport-stage loss rate, and the authors state
+    that underlying food loss rate data "remain uncertain". Cited here as
+    evidence that a clean transit figure does not exist, not as a source for
+    one. For meat the paper finds post-harvest handling and storage, not
+    transport, is where refrigeration matters most.
+
+[20]
+  slug: myopathy-prevalence-ontario
+  title:
+    Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
+    white striping) and associated risk factors in broiler chickens
+  publisher: PLOS ONE
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0267019
+  notes:
+    White striping 96.0%, spaghetti meat 36.3%, severe woody breast 11.8%.
+    85.1% of fillets showed more than one myopathy. Risk rises with live
+    weight, so big-bird deboning flocks - precisely the birds boneless product
+    comes from - are the worst affected. Woody breast incidence rose from
+    about 5% in 2012 to 29% by 2015.
+
+[21]
+  slug: ncc-broiler-lca-2020
+  title: Broiler Production System Life Cycle Assessment: 2020 Update
+  publisher: National Chicken Council / University of Arkansas
+  source_type: peer_reviewed
+  published_on: 2021-09-01
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
+  notes:
+    Full ReCiPe lifecycle assessment built on Agri-Stats national data.
+    Reference flow is one broiler at 6.37 lb live weight. Per average bird in
+    2020: 2.90 kg CO2 eq, 5.26 m2a crop eq land, 0.73 m3 water, 0.61 kg oil eq
+    fossil resources, 5.87 g PM2.5 eq. Per kg live weight: 1.00, 1.85, 0.25,
+    0.21, 2.03 respectively. Improvements 2010-2020: global warming -18.1%,
+    land -13.0%, water -13.0%, fossil -22.1%, PM -13.8%. Also gives 1.053 baby
+    chicks per broiler produced to cover mortality, which independently
+    corroborates our farm_mortality stage.
+
+[22]
+  slug: welfare-training-carcass-quality
+  title:
+    The Influence of Welfare Training on Bird Welfare and Carcass Quality in
+    Two Commercial Poultry Primary Processing Plants
+  publisher: Animals (PMC)
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6719098/
+  notes:
+    90% of bruising occurs in the 12-24 hours before processing. Bruise
+    distribution by region: breast 42%, wings 33%, legs 25%.
+
+[23]
+  slug: wing-injuries-loading
+  title:
+    Rearing and handling injuries in broiler chickens and risk factors for
+    wing injuries during loading
+  publisher: Canadian Journal of Animal Science
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
+  notes:
+    Median wing injuries per load 5.7%, against under 1% per load for legs,
+    breast, and shoulders. Wings are by a wide margin the most damaged part of
+    the bird. Load-to-load variance is high, so this is stored with a wide
+    lo/hi band.
+
+[24]
+  slug: wing-yield-eight-strains
+  title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
+  publisher: Poultry Science
+  source_type: peer_reviewed
+  retrieved_on: 2026-07-28
+  url: https://www.sciencedirect.com/science/article/pii/S003257911946625X/pdf
+  notes:
+    Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
+    (6.7-7.3%), measured across eight commercial broiler strains.
+
+[25]
+  slug: ncc-broiler-performance
+  title: U.S. Broiler Performance
+  publisher: National Chicken Council
+  source_type: trade_body
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
+  notes:
+    Year-by-year series of market age, market weight, feed conversion, and
+    grow-out mortality going back to 1925. Trade body rather than government,
+    so figures are tagged confidence=industry.
+
+[26]
+  slug: ncc-key-facts
+  title: Broiler Chicken Industry Key Facts
+  publisher: National Chicken Council
+  source_type: trade_body
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
+  notes: Industry structure - plant counts, company counts, contract farms.
+
+[27]
+  slug: refed-foodservice
+  title: Foodservice methodology, Insights Engine Food Waste Monitor
+  publisher: ReFED
+  source_type: trade_body
+  retrieved_on: 2026-07-28
+  url: https://docs.refed.org/methodologies/food_waste_monitor/foodservice.html
+  notes:
+    Restaurants and foodservice generated 12.5 million tons of surplus food in
+    2024. Pre-consumer waste - spoilage, over-ordering, overproduction - runs
+    4% to 10% of food purchased. Separately, roughly 4.2% of food purchases go
+    unutilised in commercial kitchens on average across Leanpath's client
+    base. Post-consumer plate waste is about 70% of total foodservice waste
+    but is deliberately EXCLUDED from this model: those wings reached the
+    plate, which is where our question stops.
+
+[28]
+  slug: usapeec-paws-export
+  title: Chinese appetite for chicken paws proves a boon for U.S. producers
+  publisher: USA Poultry & Egg Export Council
+  source_type: trade_body
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
+  notes:
+    Chicken paws and wing tips together form roughly a $648 million annual US
+    export market, sold into China for soups, stews, and snacking. Rendering
+    the same volume domestically would return less than a tenth of that. Paws
+    fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
+    feed - close to a tenfold difference.
+
+[29]
+  slug: cold-chain-transport-trade
+  title: Overcoming challenges in refrigerated transport
+  publisher: The National Provisioner
+  source_type: trade_press
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.provisioneronline.com/articles/116667-overcoming-challenges-in-refrigerated-transport
+  notes:
+    Qualitative. Identifies the loss mechanisms for meat in transit -
+    temperature excursion triggering load rejection at the receiving dock,
+    physical damage, and mishandling - and notes temperature abuse during
+    LOADING causes more rejected shipments than transit failures. No
+    quantified rejection rate is given, in this or any source found.
+
+[30]
+  slug: poultrysite-contract-economics
+  title: Contract Broiler Production: Questions and Answers
+  publisher: The Poultry Site
+  source_type: trade_press
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.thepoultrysite.com/articles/contract-broiler-production-questions-and-answers
+  notes:
+    A 20,000 sq ft house grosses roughly $34,000-$40,000 a year at average
+    performance against $28,000-$30,000 of fixed and cash costs, leaving
+    $6,000-$12,000 to the grower's land, labour, and management during the
+    15-year mortgage period.
+
+[31]
+  slug: wattpoultry-top-producers
+  title: Top 10 US chicken producers grow in new directions
+  publisher: WATTPoultry / WATTAgNet
+  source_type: trade_press
+  retrieved_on: 2026-07-28
+  url:
+    
+    https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
+  notes: Producer market shares and processing volumes.

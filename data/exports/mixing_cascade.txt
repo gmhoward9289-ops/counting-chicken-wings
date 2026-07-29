@@ -1,0 +1,133 @@
+# (o>  counting chicken wings -- mixing cascade
+# generated: 2026-07-29
+# pool sizes are in INDIVIDUALS. mixing_kind='separating' actively splits one bird's units into different streams
+# ---------------------------------------------------------------------------------------------------------------
+
+[1]
+  sequence: 10
+  slug: separation
+  label: Cut-up line (wing separation)
+  mixing_kind: random
+  pool_lo: 500
+  pool_mode: 5000
+  pool_hi: 20000
+  confidence: estimate
+  description:
+    The first and most important mixing point. Wings are cut from the carcass
+    and drop onto a shared conveyor. A bird's left and right wing part company
+    here and, in a commodity plant, never meet again.
+  source: project-estimate-mixing
+
+[2]
+  sequence: 20
+  slug: wing_chiller
+  label: Wing chiller
+  mixing_kind: random
+  pool_lo: 2000
+  pool_mode: 20000
+  pool_hi: 60000
+  confidence: estimate
+  description:
+    Bulk immersion or air chilling. Thousands of wings tumble together in a
+    single vessel with a residence time measured in tens of minutes.
+  source: project-estimate-mixing
+
+[3]
+  sequence: 30
+  slug: size_grading
+  label: Size grading (jumbo / large / medium)
+  mixing_kind: separating
+  pool_lo: 2000
+  pool_mode: 20000
+  pool_hi: 60000
+  confidence: estimate
+  description:
+    Wings are weighed individually and routed to grade streams. This is ACTIVE
+    SEPARATION, not shuffling: a bird's two wings go to different boxes
+    whenever they fall on opposite sides of a grade boundary. The single
+    strongest driver pushing the answer toward 12.
+  source: project-estimate-mixing
+
+[4]
+  sequence: 40
+  slug: combo_bin
+  label: Combo bin
+  mixing_kind: random
+  pool_lo: 4000
+  pool_mode: 8700
+  pool_hi: 15000
+  confidence: estimate
+  description:
+    Bulk container, commonly around 2,000 lb. At roughly 0.23 lb per whole
+    wing that is about 8,700 wings in one bin.
+  source: project-estimate-mixing
+
+[5]
+  sequence: 50
+  slug: iqf_freezer
+  label: IQF freezer tunnel
+  mixing_kind: random
+  pool_lo: 10000
+  pool_mode: 50000
+  pool_hi: 200000
+  confidence: estimate
+  description:
+    Individually quick frozen on a continuous belt. Continuous flow means no
+    lot boundaries are preserved through this step.
+  source: project-estimate-mixing
+
+[6]
+  sequence: 60
+  slug: case_pack
+  label: Case pack
+  mixing_kind: none
+  pool_lo: 150
+  pool_mode: 175
+  pool_hi: 200
+  confidence: estimate
+  description:
+    Boxed, commonly 40 lb - roughly 175 wings. Packing does not mix; it draws
+    from an already-mixed stream. By this point essentially every wing in the
+    case is from a different bird.
+  source: project-estimate-mixing
+
+[7]
+  sequence: 70
+  slug: distributor
+  label: Distributor warehouse
+  mixing_kind: random
+  pool_lo: 20000
+  pool_mode: 100000
+  pool_hi: 500000
+  confidence: estimate
+  description: Pallets assembled from many lots, plants, and sometimes producers.
+  source: project-estimate-mixing
+
+[8]
+  sequence: 80
+  slug: restaurant_freezer
+  label: Restaurant freezer bin
+  mixing_kind: random
+  pool_lo: 300
+  pool_mode: 2000
+  pool_hi: 10000
+  confidence: estimate
+  description:
+    The bin is topped up from multiple cases across multiple deliveries. Old
+    and new stock commingle - the practical reason a single order can span
+    weeks of production.
+  source: project-estimate-mixing
+
+[9]
+  sequence: 90
+  slug: fryer_basket
+  label: Fryer basket
+  mixing_kind: none
+  pool_lo: 300
+  pool_mode: 2000
+  pool_hi: 10000
+  confidence: estimate
+  description:
+    The draw itself. Twelve wings are scooped from the bin - the point at
+    which the question finally gets answered.
+  source: project-estimate-mixing
