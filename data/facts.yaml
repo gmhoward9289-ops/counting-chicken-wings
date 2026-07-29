@@ -376,3 +376,47 @@ facts:
     source: usapeec-paws-export
     placement: learning
     surprise: 4
+
+  - slug: avian-flu-scale
+    headline: Bird flu has cost 168 million birds since 2022
+    body: >-
+      APHIS has confirmed highly pathogenic avian influenza in 1,689
+      commercial and backyard flocks between 2022 and April 2025, affecting
+      168.62 million birds. Almost all of that is layers and turkeys rather
+      than broilers - a broiler reaches market in 47 days, which is a small
+      window to be caught in, while a laying hen sits in one barn for well
+      over a year. It is the main reason egg prices move and chicken wing
+      prices mostly do not.
+    source: aphis-hpai-detections
+    placement: learning
+    surprise: 4
+
+  - slug: transit-loss-is-unmeasured
+    headline: Nobody publishes how many wings are lost in transit
+    body: >-
+      Loads do get rejected at the receiving dock over temperature
+      excursions, and cases do get crushed. But the peer-reviewed modelling
+      of cold-chain food loss covers ten supply chain stages and declines to
+      break transport out as one of them, stating outright that the
+      underlying loss rates remain uncertain. So this model carries a
+      deliberately low, deliberately wide estimate and labels it as such.
+      Frozen wings also tolerate transit far better than the fresh product
+      most of that literature studies, so borrowing a fresh-meat figure
+      would overstate it.
+    source: cold-chain-refrigeration-losses
+    placement: learning
+    surprise: 3
+
+  - slug: kitchen-waste-corroborated
+    headline: Restaurant kitchens waste 4-13% of what they buy
+    body: >-
+      EPA figures put food waste at 4% to 13% of food costs in commercial
+      kitchens, with spoilage alone running 1-5% in prepare-ahead operations
+      and 1-6% in cook-to-order. That independently brackets the ~4.2% of
+      purchases the foodservice data says goes unused - two different bodies
+      measuring different things and landing in the same place. It is why
+      restaurant loss is one of the better-evidenced numbers in this model
+      despite sounding like the softest.
+    source: epa-foodservice-waste
+    placement: learning
+    surprise: 3

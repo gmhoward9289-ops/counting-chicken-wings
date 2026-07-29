@@ -34,17 +34,39 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done ·
 The biggest single lever on the project's credibility. Everything here is
 data, not code.
 
-- [!] **Remaining US states.** NASS reports broilers slaughtered in **40
+- [~] **Remaining US states.** NASS reports broilers slaughtered in **40
   states** but publishes only **22** individually — the rest are suppressed
   under disclosure rules precisely because too few companies operate there.
-  *This is a hard ceiling on the primary source.* Routes worth trying, in
-  order of promise:
-  1. NASS QuickStats API — may expose series the PDF summary aggregates away
-  2. FSIS Meat, Poultry and Egg Inspection Directory — gives which states
+
+  **The ceiling is softer than it first looked.** Suppression is decided per
+  publication and per year, so the union across sources is larger than any
+  one of them. Adding the NASS *Poultry - Production and Value* summary took
+  coverage to **23 states**: Florida is named there for 2024 and appears in
+  no year of the slaughter summary. Louisiana and Florida are both named in
+  2024 and suppressed in 2025, which is the pattern in miniature.
+
+  That publication also **independently confirms** the state live weights we
+  already had — production pounds over head reproduces the slaughter
+  average for all 14 states the 2025 table names. Locked in as
+  `tests/test_cross_validation.py`.
+
+  Remaining routes, in order of promise:
+  1. **NASS QuickStats API** — needs a free key from quickstats.nass.usda.gov
+     (George has to register; it takes a minute). Suppression is a legal
+     disclosure rule rather than a formatting choice, so it will likely
+     apply there too — but it may expose series the PDF aggregates away,
+     and it is cheap to test once there is a key.
+  2. **Back years of both publications.** Each additional year is another
+     roll of the suppression dice. Cheapest remaining win by far, and the
+     parser already handles multi-year tables.
+  3. FSIS Meat, Poultry and Egg Inspection Directory — gives which states
      have plants, and plant counts, even where volume is suppressed
-  3. State departments of agriculture for the larger missing states
+  4. State departments of agriculture for the larger missing states
+
   Accept that some states may only ever have presence, not volume, and
-  render them differently on the map rather than leaving them blank.
+  render them differently on the map rather than leaving them blank. The
+  Production and Value footnotes **name** the suppressed states, so "known
+  producer, volume withheld" is renderable today.
 
 - [ ] **US regions.** Roll states into regions (Southeast, Delmarva, Mid-South,
   Midwest, Northeast, West). Regions are also the honest way to show
@@ -220,6 +242,61 @@ Where the project earns repeat visits rather than one look.
 
 ---
 
+## M4.5 — Eggs
+
+> *"How many chickens to make this dozen eggs! Commercial, small farm, free
+> range etc, this is deep!"* — from the note, missing on first capture.
+
+He is right that it is deep, and it is the most interesting thing on this
+roadmap, because **eggs break an assumption the model currently makes.**
+
+- [ ] **The floor becomes 1, not 12.** A hen lays repeatedly. One hen can
+  produce an entire dozen, so the hard floor for a dozen eggs is **one
+  chicken** — where a dozen wings can never come from fewer than six. Same
+  question, same 1-to-n band structure, completely different floor. That
+  contrast is a better teaching device than anything currently on the facts page.
+
+- [!] **`units_per_individual` stops being a constant and becomes a RATE.**
+  *This is a schema gap, not just new data.* Two wings per chicken is
+  timeless. "About 300 eggs per hen" is 300 eggs **per year** — meaningless
+  without a time window. The schema has `yield_mode` of `countable` or
+  `continuous` and no notion of production over time at all. Options:
+  1. Add `yield_mode: 'recurring'` plus a period field. Most honest.
+  2. Store eggs-per-hen-per-year and let the question always be
+     "per laying cycle". Cheaper, hides the assumption.
+  Recommend option 1 — the whole project's credibility rests on not hiding
+  assumptions, and this one is load-bearing.
+
+- [ ] **Layers are not broilers.** A different bird, a different industry, and
+  largely different sources. Laying strains (Hy-Line, Lohmann, ISA Brown) are
+  bred for eggs, not meat. Needs a new `species` row and its own production
+  programs — this is exactly the generalisation the schema was built for, so
+  it is a fair test of whether that work paid off.
+
+- [ ] **Production system is the headline variable, and it is already named in
+  the note.** Commercial cage / cage-free / free range / pasture-raised /
+  backyard. Unlike wings, where the interesting variable is *mixing*, for eggs
+  the interesting variable is *flock size*:
+  - Commercial house: 100,000+ hens, eggs onto belts, graded by weight, packed
+    by machine. A dozen eggs is plausibly **12 different hens** — the same
+    near-ceiling result as commodity wings, by the same mechanism.
+  - Backyard flock of six: a dozen eggs gathered over a week comes from
+    **about six hens**, and you could name them.
+  So the 1-to-12 band maps onto production system almost perfectly.
+
+- [ ] **Data availability is good.** NASS publishes **Chickens and Eggs**
+  monthly — layer inventory, eggs produced, rate of lay, by state. That is a
+  better cadence than the annual slaughter summary we currently lean on, and
+  the messy-table parser from M4 should handle it. USDA AMS covers shell egg
+  grading and the marketing claims behind cage-free and free range.
+
+- [ ] **Egg-specific loss chain.** Cracks and checks at grading, wash loss,
+  candling rejects, and retail breakage. Genuinely different from anything in
+  the wing chain, and it needs the channel-aware loss stages from M1.5 to be
+  in place first.
+
+---
+
 ## M5 — After 1.0
 
 - [ ] **Turkey.** *Stated from the outset as the second species, and it was
@@ -309,9 +386,21 @@ Where the project earns repeat visits rather than one look.
 5. **M1 data** — the long pole. Start with regions and producers, which are
    unblocked; treat the suppressed states as bounded rather than open.
 6. **M4 cut 1.0.**
-7. **M5 turkey**, then international once 1.0 is stable.
+7. **M4.5 eggs** — see the argument below for why this outranks turkey.
+8. **M5 turkey**, then international once 1.0 is stable.
 
-The one judgement call worth revisiting: **fresh vs frozen (M1.5)** is the only
-item on the list that moves the *distinct* number, which is the project's
-headline answer. Everything else refines birds-required. If the distinct figure
-is the point, that item deserves to be earlier than its milestone suggests.
+Two judgement calls worth revisiting:
+
+**Fresh vs frozen (M1.5)** is the only item on the list that moves the
+*distinct* number, which is the project's headline answer. Everything else
+refines birds-required. If the distinct figure is the point, that item deserves
+to be earlier than its milestone suggests.
+
+**Eggs should probably come before turkey**, despite turkey being named first.
+Eggs are the same species, so no new husbandry research is needed; NASS
+publishes egg data *monthly* rather than annually; and the floor-of-1 versus
+floor-of-6 contrast is the single best teaching device available to the project.
+Turkey mostly re-runs the wing analysis on a bigger bird, whereas eggs force a
+real schema improvement — production as a rate over time — that the project
+needs anyway before it can ever touch milk or honey. Eggs are the harder and
+more valuable piece of work.
