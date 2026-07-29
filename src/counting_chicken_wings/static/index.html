@@ -22,6 +22,16 @@
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
 
   header { padding: 48px 0 28px; }
+  /* ASCII logo sits beside the wordmark, not above it, so the header stays
+     one band tall. aria-hidden because a screen reader spelling out
+     backslashes is noise, and the h1 already carries the name. */
+  .brand { display: flex; align-items: center; gap: 18px; }
+  #logo {
+    margin: 0; color: var(--accent); font-size: 11px; line-height: 1.15;
+    white-space: pre; font-family: ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+  }
+  @media (max-width: 560px) { #logo { display: none; } }
   h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.5px; }
   .sub { color: var(--dim); margin: 0; }
 
@@ -117,9 +127,14 @@
 <div class="wrap">
 
 <header>
-  <h1>Counting Chicken Wings</h1>
-  <p class="sub">How many chickens does it take to make a dozen wings?
-     Always six or more. Usually close to twelve.</p>
+  <div class="brand">
+    <pre id="logo" aria-hidden="true"></pre>
+    <div>
+      <h1>Counting Chicken Wings</h1>
+      <p class="sub">How many chickens does it take to make a dozen wings?
+         Always six or more. Usually close to twelve.</p>
+    </div>
+  </div>
 </header>
 
 <nav>
@@ -731,6 +746,11 @@ async function load(v) {
 
 // ---- boot
 READY = (async () => {
+  // Logo is decorative, so a failure here must never block the page.
+  api('/api/brand')
+    .then(b => { $('#logo').textContent = b.chicken; })
+    .catch(() => {});
+
   META = await api('/api/meta');
   $('#chain').innerHTML = META.chains.map(c =>
     `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`

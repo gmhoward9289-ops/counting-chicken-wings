@@ -42,6 +42,24 @@ def _source_payload(row) -> dict:
     }
 
 
+@app.get("/api/brand")
+def brand():
+    """ASCII identity, served rather than duplicated in the HTML.
+
+    The CLI banner and the web header render the same art from the same
+    module, so the two surfaces cannot drift apart.
+    """
+    from .brand import CHICKEN, TAGLINE, TITLE, WING, art
+    return {
+        "title": TITLE,
+        "tagline": TAGLINE,
+        "chicken": art("chicken"),
+        "wing": art("wing"),
+        "chicken_raw": CHICKEN,
+        "wing_raw": WING,
+    }
+
+
 @app.get("/api/calculate")
 def calculate(
     count: float = Query(12, gt=0, le=100000),

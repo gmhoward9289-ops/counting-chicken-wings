@@ -20,6 +20,7 @@ import argparse
 import sys
 
 from . import db as dbm
+from .brand import banner
 from .model import run
 
 BOLD, DIM, RESET = "\033[1m", "\033[2m", "\033[0m"
@@ -389,6 +390,16 @@ def main(argv: list[str] | None = None) -> int:
             pass
 
     parser = build_parser()
+
+    # Bare `wings` shows the identity and the help. The banner deliberately
+    # does NOT appear above a count answer: the whole point of the CLI is a
+    # two-line answer, and six lines of bird on top of it buries the headline.
+    if not argv:
+        print(banner(colour=sys.stdout.isatty()))
+        print()
+        parser.print_help()
+        return 1
+
     args = parser.parse_args(argv)
     if not getattr(args, "func", None):
         parser.print_help()
