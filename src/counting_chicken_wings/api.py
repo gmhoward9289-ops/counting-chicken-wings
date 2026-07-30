@@ -206,7 +206,17 @@ def calculate(
             },
             "answer": {
                 "floor": res.floor,
-                "ceiling": units,
+                # From the Result, NOT from `units`. For a countable product
+                # the two are identical, which is why `units` looked correct
+                # for as long as every product was countable. For a CONTINUOUS
+                # product the unit count is not a headcount -- one gram is not
+                # one flower -- and this endpoint was returning ceiling=1
+                # beside floor=150 for a gram of saffron. The same
+                # contradiction was fixed in the CLI and, until now, only in
+                # the CLI: the field was added to Result precisely so the two
+                # surfaces could not disagree, and then one of them was not
+                # wired up.
+                "ceiling": res.distinct_ceiling,
                 "required": res.required,
                 "required_lo": res.required_lo,
                 "required_hi": res.required_hi,
@@ -214,6 +224,8 @@ def calculate(
                 "iterations": res.iterations,
                 "container_units": res.container_units,
                 "paired_individuals": res.paired_individuals,
+                # NOTE: `ceiling` above comes from the Result, not from
+                # `units`. See the comment there.
                 # Recurring products only; null for wings. hard_floor is the
                 # physiological minimum and `floor` is what you actually need
                 # at the real production rate -- for same-day eggs, 12 and
@@ -358,7 +370,7 @@ def scientific(
             },
             "answer": {
                 "floor": res.floor,
-                "ceiling": units,
+                "ceiling": res.distinct_ceiling,   # see /api/calculate
                 "required": res.required,
                 "required_lo": res.required_lo,
                 "required_hi": res.required_hi,

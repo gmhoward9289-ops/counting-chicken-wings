@@ -349,3 +349,48 @@ def test_unknown_country_is_a_404_not_an_empty_answer(client):
 
 def test_country_codes_are_case_insensitive(client):
     assert client.get("/api/output/isr").status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# The ceiling the API reports
+# ---------------------------------------------------------------------------
+
+def test_api_ceiling_is_not_the_unit_count_for_a_continuous_product(client):
+    """`ceiling` used to be the request's unit count, which is correct only
+    while every product is countable. A gram of saffron is not one flower, so
+    the endpoint returned ceiling=1 beside floor=150 -- the contradiction the
+    CLI had already been fixed for. The field exists on Result so both surfaces
+    read the same number; this test is here because one of them did not."""
+    a = get(client, "/api/calculate", count=1, product="saffron_gram")["answer"]
+    assert a["floor"] == pytest.approx(150, rel=1e-6)
+    assert a["ceiling"] == pytest.approx(150, rel=1e-6)
+    assert a["distinct"] >= a["floor"] - 1e-6
+
+
+@pytest.mark.parametrize("product,count,expected", [
+    ("whole_wing", 12, 12),        # a wing belongs to exactly one bird
+    ("saffron_stigma", 12, 12),    # so does a stigma
+    ("table_egg", 12, 12),         # and an egg to one hen
+])
+def test_api_ceiling_is_still_the_unit_count_for_discrete_products(
+        client, product, count, expected):
+    """The fix must not reach the products that were already right."""
+    a = get(client, "/api/calculate", count=count, product=product)["answer"]
+    assert a["ceiling"] == pytest.approx(expected)
+
+
+def test_cli_and_api_agree_on_the_ceiling():
+    """They read the same field. Asserted rather than assumed, since the whole
+    point of putting it on Result was that they could not drift."""
+    from counting_chicken_wings import db as dbm
+    from counting_chicken_wings.model import run
+
+    conn = dbm.connect()
+    prod = dbm.get_product(conn, "saffron_gram")
+    res = run(1, prod["units_per_individual_mode"], [],
+              dbm.load_mixing_stages(conn, "commodity_spice"),
+              aggregate_units=True)
+    with TestClient(app) as c:
+        a = c.get("/api/calculate",
+                  params={"count": 1, "product": "saffron_gram"}).json()["answer"]
+    assert a["ceiling"] == pytest.approx(res.distinct_ceiling)
