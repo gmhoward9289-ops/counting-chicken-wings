@@ -1,0 +1,80 @@
+# Israeli broiler figures from CBS's QUARTERLY agriculture series.
+#
+# A separate file from output_israel.yaml because it is a separate
+# publication. That file is generated from Statistical Abstract chapter 21 by
+# tools/parse_cbs_israel.py and says not to hand-edit it; the quarterly is a
+# different document with a different table, so it gets its own file and the
+# existing output_*.yaml glob picks it up with no code change.
+#
+# WHY THIS FILE EXISTS AT ALL
+#
+# output_israel.yaml states the problem plainly: "Israel has no
+# head-slaughtered figure here, so the project cannot answer 'how many Israeli
+# chickens' from Israeli data alone." That is true of the Statistical Abstract.
+# It is not true of the quarterly series, which publishes chick PLACEMENTS.
+#
+# CBS publishes no poultry head slaughtered anywhere -- checked in both
+# places. The quarterly does carry a "Slaughtering in slaughterhouses" block
+# reported in heads, but its 2024 total of 529,550 is exactly cattle 164,559
+# plus sheep and goats 229,195 plus pigs 135,796, so poultry is excluded by
+# construction rather than merely unlabelled.
+#
+# PLACEMENTS ARE NOT SLAUGHTER. A chick placed is a bird entering the system;
+# some fraction never reaches market. The difference is farm mortality. This
+# is loaded as its own measure for exactly that reason -- for the project's
+# first question, "how many birds' worth of wing did this consume", placements
+# are arguably the better denominator because they already include the
+# mortality a slaughter figure leaves out. But they answer a different
+# question from slaughter and the two must not be substituted.
+#
+# Column mapping, since it is easy to get wrong: annual figures are in columns
+# Q (2024) and R (2023) of the source spreadsheet. The header's "P = 2011"
+# looks like a CBS typo or a merged-cell artifact; do not read column P as a
+# year without checking it.
+
+species: broiler
+country: ISR
+
+# MERGE NOTE, 2026-07-30. Written against an older loader where `national:`
+# was a dict keyed by measure with one shared source. Master's loader now takes
+# a LIST of blocks, each carrying its own unit, source and confidence -- a
+# change made when Israel's head count arrived from a trade-press interview
+# rather than from CBS, so one file could no longer carry one grade. Converted
+# to that shape. The figures, the units and the reasoning above are unchanged.
+national:
+  # Heavy breeds. Light breeds are layers (7,371.236 thousand in 2024) and
+  # turkeys are listed separately (8,976.298), so heavy breeds is cleanly the
+  # broiler line.
+  #
+  # Left in thousands, exactly as CBS reports it, rather than expanded to head.
+  # output_israel.yaml sets the rule -- "nothing here is converted: every row
+  # carries its own unit, and the reader of the row converts deliberately or
+  # not at all" -- and thousand_head is already the unit the inventory rows
+  # use. Expanding would have been a conversion, which is the thing that rule
+  # forbids, however harmless a factor of 1,000 looks.
+  #
+  # CONFIDENCE: measured. The national statistical agency publishing its own
+  # enumeration -- the grade the trade-press head count in
+  # output_israel_industry.yaml explicitly could not reach. That contrast is
+  # the point of loading it: Israel's bird count stops resting on one named
+  # official's interview and gains a government series beside it.
+  - measure: chicks_placed
+    unit: thousand_head
+    confidence: measured
+    source: cbs-quarterly-agriculture-2025q2
+    notes: >-
+      Chicks placed, heavy breeds, from the CBS quarterly agriculture series.
+      CBS marks 2024 provisional and that flag is carried through rather than
+      dropped.
+
+      Reads consistently against the figures already held, which makes it a
+      cross-check rather than a fourth opinion: 244,000 thousand placed in 2021
+      (Ofot, industry), 262,849 in 2023 and 275,428 in 2024 here, against a
+      trade-press 260,000 thousand head SLAUGHTERED for 2025. Placements
+      running above slaughter is what farm mortality predicts, so the series
+      and the interview corroborate rather than contradict.
+
+      Do NOT substitute this for head_slaughtered. See the header.
+    years:
+      - {year: 2024, value: 275427.900, provisional: 1}
+      - {year: 2023, value: 262848.753, provisional: 0}
