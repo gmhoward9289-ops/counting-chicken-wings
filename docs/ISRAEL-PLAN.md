@@ -210,7 +210,17 @@ Still open:
 - Do not reuse US loss factors for Israel without saying so. Different
   stunning, different inspection, different chain. If a US figure is being
   borrowed as a placeholder it must be graded `estimate` and labelled.
-- Do not translate the UI. Out of scope for a demo unless asked.
+- ~~Do not translate the UI. Out of scope for a demo unless asked.~~
+  **Superseded 2026-07-29 — he asked.** The Chicken Scratch note wants EN / FR /
+  HE localization, so translation is now a planned milestone (M7 in
+  `docs/ROADMAP.md`) rather than out of scope. It is still **not a
+  prerequisite for this demo**: ship the Israel data in English first, because
+  the figures are what the demo is about and Hebrew brings RTL layout work with
+  it. Two things this document should hand to that milestone — Israeli reporting
+  is in kilograms where ours is in pounds (a comparison that forgets is off by
+  2.2× and still looks plausible), and the Israeli Poultry Board is
+  *מועצת הלול* with no English publication to cite instead, so source titles
+  are already mixed-language before any UI work starts.
 
 ---
 
