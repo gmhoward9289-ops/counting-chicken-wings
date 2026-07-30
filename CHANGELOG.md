@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `WINGS_DB` environment variable overrides where the SQLite database is built
+  and read. Previously the path derived from `__file__`, which is correct only
+  under an editable install, and the API — unlike the CLI with `--db` — had no
+  way to point at a different database at all. No published number moves.
+
 ## v1.8.0 — 2026-07-30
 
 A rollup: thirteen commits, six of them merged without a release. Every active
