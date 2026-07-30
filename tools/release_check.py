@@ -24,14 +24,24 @@ WHAT IT COMPARES, and why these three
      This is the case the old rule got wrong and inflated 1.0.0 to 1.7.0 in
      two days.
 
-  3. THE PUBLISHED ANSWER -- `wings count 12`, run against BOTH corpora. If
-     floor, required or distinct moved, someone's existing citation is now
-     wrong, and that is the whole reason data is versioned here at all. MINOR
-     required regardless of how small the diff was.
+  3. THE PUBLISHED ANSWER -- `wings count 12` for EVERY active product, run
+     against both corpora. If floor, required or distinct moved for any of
+     them, someone's existing citation is now wrong, and that is the whole
+     reason data is versioned here at all. MINOR required regardless of how
+     small the diff was.
 
-The third is the one worth having. It is the rule's own criterion, and it
-catches things the other two cannot: the saffron ceiling bug changed a
-published answer through a pure code change and shipped under no bump at all.
+The third is the one worth having, because it is the rule's own criterion
+rather than a proxy for it: it fires on a code change as readily as a data
+one, which neither of the others can do.
+
+WHAT IT DOES NOT COVER, because this was twice over-claimed before it was
+measured. It runs the CLI, so an API-only regression is invisible to it. The
+saffron ceiling bug is the worked example and it fails on both counts: the
+faulty ceiling was served by /api/calculate while the CLI printed the right
+number, AND saffron was a brand-new product with no previous answer to differ
+from. That bug is caught by tests/test_api.py, not by this. Cite it as the
+motivation for watching published answers, never as something this would have
+caught.
 
 HOW THE OLD CORPUS IS BUILT
 
@@ -132,32 +142,64 @@ def snapshot(db: Path) -> dict:
         conn.close()
 
 
-def headline(tree: Path, db: Path) -> str | None:
-    """`wings count 12` at this ref, as a comparable string.
+def products_in(db: Path) -> list[str]:
+    conn = sqlite3.connect(db)
+    try:
+        return sorted(r[0] for r in conn.execute(
+            "SELECT slug FROM product WHERE EXISTS ("
+            "  SELECT 1 FROM species s WHERE s.id = product.species_id"
+            "    AND s.active = 1)"))
+    except sqlite3.Error:
+        return []
+    finally:
+        conn.close()
 
-    Returns None if it cannot be run -- an older tag whose CLI took different
-    arguments is not a failure, it just means this signal is unavailable and
-    the check falls back to structure and volume.
+
+def headline(tree: Path, db: Path) -> dict[str, str]:
+    """Every active product's answer at this ref, keyed by slug.
+
+    ONE PRODUCT WAS NOT ENOUGH. The first version ran only `wings count 12`,
+    so a regression confined to eggs, boneless wings or either saffron product
+    would not have registered at all -- on a project whose entire direction is
+    adding subjects, watching one of them is watching the shrinking majority
+    of nothing.
+
+    Asking every active product means a corpus that gains products gains
+    coverage automatically, with no list to maintain.
+
+    Missing keys are not failures: a product that does not exist at the base
+    ref is already reported by the new-kind check, and an older CLI that
+    rejects these flags simply yields nothing for that product.
     """
     env = dict(os.environ, PYTHONPATH=str(tree / "src"))
-    try:
-        out = subprocess.run(
-            [sys.executable, "-m", "counting_chicken_wings.cli",
-             *HEADLINE, "--db", str(db), "--quiet", "--no-facts",
-             "--no-colour"],
-            cwd=tree, env=env, check=True,
-            capture_output=True, text=True, timeout=120,
-        ).stdout
-    except Exception:                               # noqa: BLE001
-        return None
-    # Keep only the numbers. Prose gets reworded constantly and a reworded
-    # sentence is not a changed answer.
-    nums = re.findall(r"\d+\.?\d*", out)
-    return " ".join(nums) if nums else None
+    out: dict[str, str] = {}
+    for slug in products_in(db):
+        try:
+            text = subprocess.run(
+                [sys.executable, "-m", "counting_chicken_wings.cli",
+                 *HEADLINE, "--product", slug, "--db", str(db),
+                 "--quiet", "--no-facts", "--no-colour"],
+                cwd=tree, env=env, check=True,
+                capture_output=True, text=True, timeout=120,
+            ).stdout
+        except Exception:                           # noqa: BLE001
+            continue
+        # Keep only the numbers. Prose gets reworded constantly, and a
+        # reworded sentence is not a changed answer.
+        nums = re.findall(r"\d+\.?\d*", text)
+        if nums:
+            out[slug] = " ".join(nums)
+    return out
+
+
+def answers_moved(base: dict[str, str], head: dict[str, str]) -> list[str]:
+    """Products whose answer differs, compared only where both sides have one."""
+    return sorted(s for s in set(base) & set(head) if base[s] != head[s])
 
 
 def required_bump(base: dict, head: dict,
-                  base_answer: str | None, head_answer: str | None) -> tuple[str, list[str]]:
+                  base_answers: dict[str, str],
+                  head_answers: dict[str, str]) -> tuple[str, list[str]]:
     """The smallest bump this diff justifies, with the reasons."""
     reasons: list[str] = []
 
@@ -170,10 +212,10 @@ def required_bump(base: dict, head: dict,
         if added:
             reasons.append(f"new {t}(s): {', '.join(added)}")
 
-    if base_answer and head_answer and base_answer != head_answer:
+    for slug in answers_moved(base_answers, head_answers):
         reasons.append(
-            f"the published answer moved: `wings {' '.join(HEADLINE)}` "
-            f"gave [{base_answer}], now gives [{head_answer}]")
+            f"the published answer moved for {slug}: "
+            f"[{base_answers[slug]}] -> [{head_answers[slug]}]")
 
     # Removal is checked BEFORE volume, and the order is load-bearing. Written
     # the other way round, a release that dropped a table AND changed rows
@@ -242,10 +284,12 @@ def main(argv: list[str] | None = None) -> int:
         got = actual_bump(version_of(base_ref), version_of())
         ok = RANK[got] >= RANK[need]
 
+        moved = answers_moved(base_ans, head_ans)
         if a.json:
             print(json.dumps({
                 "base": base_ref, "required": need, "actual": got,
-                "ok": ok, "reasons": reasons,
+                "ok": ok, "reasons": reasons, "answers_moved": moved,
+                "products_compared": sorted(set(base_ans) & set(head_ans)),
                 "base_version": version_of(base_ref),
                 "head_version": version_of(),
             }, indent=1))
@@ -253,17 +297,39 @@ def main(argv: list[str] | None = None) -> int:
             print(f"release-check: {base_ref} -> working tree\n")
             print(f"  tables      {len(base_snap['tables'])} -> "
                   f"{len(head_snap['tables'])}")
-            if base_ans and head_ans:
-                same = "unchanged" if base_ans == head_ans else "CHANGED"
-                print(f"  wings {' '.join(HEADLINE):<6} {head_ans}  ({same})")
+            shared = sorted(set(base_ans) & set(head_ans))
+            if shared:
+                print(f"  answers     {len(shared)} product(s) compared, "
+                      f"{len(moved) or 'none'} moved")
             else:
-                print("  wings        not comparable at this base "
+                print("  answers     not comparable at this base "
                       "(CLI differs); structure and volume only")
             print()
             for r in reasons:
                 print(f"  - {r}")
             print(f"\n  => {need.upper()} required. "
                   f"{version_of(base_ref)} -> {version_of()} is {got.upper()}.")
+
+        # The published answer moving is worth surfacing on its own, whatever
+        # the bump verdict is. A PR that moves it is not doing anything wrong
+        # -- a better loss factor SHOULD move the number, that is the job --
+        # but it must not move silently, because every citation someone has
+        # already made against the old value is now stale.
+        #
+        # Warning rather than failure, deliberately. Failing would train people
+        # to route around the check; a visible annotation makes a human decide
+        # whether the changelog owes the world an old -> new line. (The bump
+        # verdict below may still fail on its own -- these are separate.)
+        if moved:
+            detail = "; ".join(
+                f"{s}: [{base_ans[s]}] -> [{head_ans[s]}]" for s in moved)
+            note = (f"published answer moved between {base_ref} and this tree "
+                    f"for {len(moved)} product(s) -- {detail}. If intended, "
+                    f"the changelog owes an old -> new line.")
+            if os.environ.get("GITHUB_ACTIONS"):
+                print(f"::warning::{note}")
+            else:
+                print(f"\nNOTE: {note}")
 
         if ok:
             print("\nOK" if not a.json else "")

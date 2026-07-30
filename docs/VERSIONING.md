@@ -96,12 +96,26 @@ justifies. Three signals:
 | new table, or new `domain` / `species` / `product` row | MINOR |
 | a table or kind **removed** | MINOR — retraction breaks an existing citation |
 | row counts of existing tables changed, nothing else | PATCH |
-| **`wings count 12` returns different numbers** | MINOR, whatever else did or did not change |
+| **`wings count 12` returns different numbers for any product** | MINOR, whatever else did or did not change |
 
 The last one is the reason this exists. It is the rule's own criterion rather
-than a proxy for it, and it catches what the other two cannot: the saffron
-ceiling bug moved a published answer through a pure *code* change, with the
-schema and every row count untouched, and shipped under no bump at all.
+than a proxy for it, and unlike the other two it fires on a *code* change as
+readily as a data one — with the schema and every row count untouched. It also
+prints a warning naming each product whose answer moved, so the changelog can
+be given its old → new line.
+
+It asks **every active product**, not just wings. The first version asked only
+`whole_wing`, which on a project whose direction is adding subjects meant
+watching a shrinking fraction of the corpus.
+
+**What it does not cover**, stated because it was over-claimed twice before
+being measured: it runs the CLI, so an **API-only regression is invisible to
+it**. The saffron ceiling bug is the worked example and it fails on both
+counts — the wrong ceiling was served by `/api/calculate` while the CLI printed
+the right number, and saffron was a brand-new product with no previous answer
+to differ from. That one is caught by `tests/test_api.py`. Treat this check as
+the motivation for watching published answers, not as a net that would have
+caught it.
 
 **Over-bumping passes, under-bumping fails.** Shipping a bigger number than
 required is a judgement call; shipping a smaller one silently breaks the
