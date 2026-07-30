@@ -1,5 +1,81 @@
 # Changelog
 
+## v1.4.0 — 2026-07-29
+
+Israel gets the sources CBS is not, and the reader gets to choose how much to
+believe.
+
+### Both readings of Israel, and neither is hidden
+
+CBS answers scale and nothing else, so with government data alone Israel cannot
+answer "how many chickens" at all. A named industry official — Moti Elkabetz,
+secretary of the Poultry Breeders Association, in the Times of Israel — puts
+throughput at **260 million broilers a year**. That figure is loaded at
+`industry` grade, and the government-only picture stays reachable rather than
+being overwritten:
+
+```
+GET /api/output/ISR                          260 million birds, industry grade
+GET /api/output/ISR?min_confidence=measured  no bird count, and it says which
+                                             row it dropped and why
+```
+
+`output_stat_year` gained a `confidence` column to make that possible. The table
+stopped being government-only the day this row arrived, and "government figures
+only" is now a WHERE clause instead of a promise in a comment. `/api/countries`
+reports `head_slaughtered_grade` and `head_slaughtered_measured` alongside the
+boolean, so a caller cannot render "we have a bird count" without also knowing
+who counted.
+
+### The cross-check that makes it believable
+
+600,072 tonnes (CBS, measured) over 260 million birds (industry) is **2.31 kg a
+bird** — what a 40-day broiler weighs. Two sources that were not derived from
+each other, agreeing.
+
+It is a view, `v_output_derived_weight`, never a stored row, so it cannot drift
+from its parents. Its confidence is the **weaker** parent's, never the better
+one, and it reports `year_gap` because the years genuinely do not line up: CBS
+has no 2025 output figure and the interview named no year. A same-year pairing
+would have been tidier and would have required pretending otherwise.
+
+### A hole in the government data, now explained
+
+CBS output for 2023 is **553,068 tonnes — below its own 2020 figure** and 8%
+below 2024. Poultry World reports 16 million head lost to Newcastle disease
+outbreaks in Q4 2023, wartime closures in the north and south, and a labour
+shortage that pushed slaughterhouses to a six-day week. The standing flock
+agrees: 34,121 thousand at end-2023 against 38,239 thousand at end-2020.
+
+The dip was already in the corpus. The explanation came from a trade
+publication. Neither meant much alone, and a test asserts the fact's prose still
+matches the rows it describes.
+
+### Six Israeli facts, including the demo hook
+
+- **Chicken wings are on the Yom Ha'atzmaut grill**, alongside pargiyot, with
+  falafel and shawarma barely featuring. The project's exact product is part of
+  an Israeli national holiday.
+- **"Pargiyot" means "baby chickens"** and no longer does — the same name drift
+  that makes "a dozen wings" ambiguous.
+- An Israeli chicken goes from **NIS 6.5/kg at the farm to ~NIS 20/kg at
+  retail**.
+- **Nobody officially counts Israel's chickens**, and the fact says so.
+- **Kosher bedikah has no FSIS analogue** — and no published rejection rate, so
+  it is described and deliberately not quantified.
+
+### What is deliberately still absent
+
+No per-capita figure. Three reachable sources give three "world's highest"
+numbers — 58.2, 64.9 and 70.83 kg — a 20% spread that is almost certainly
+definition drift, so `population` stays NULL and a test fails if any of those
+numbers appears in a fact. `batch-05-israel-hebrew.md` is written to resolve it
+from a primary series, and says not to ship one otherwise.
+
+Also recorded as reachable-but-unused: the Ministry of Agriculture (403 to every
+fetcher, an Akamai filter rather than a missing page) and the plant market shares
+in Poultry World, which are third-hand.
+
 ## v1.3.0 — 2026-07-29
 
 Israel becomes the second country with data, and the README stops claiming the

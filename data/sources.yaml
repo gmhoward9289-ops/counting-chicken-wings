@@ -729,3 +729,120 @@
     "Outside regional councils" appears once per district in the source. The
     bare label is not unique, so each is qualified with its district - the
     figure means nothing without knowing which district it is outside of.
+
+# ---------------------------------------------------------------------------
+# Israel, part two: the sources CBS is not.
+#
+# These exist because chapter 21 answers scale and nothing else. The head
+# count, the industry structure, the reason 2023 dipped, and every cultural
+# fact come from press and industry bodies, and they are graded accordingly.
+# Read the confidence on each row, not the publisher's reputation.
+# ---------------------------------------------------------------------------
+
+- slug: toi-poultry-imports-2025
+  title: >-
+    Poultry producers warn first-ever imports of chickens will destroy local
+    farms
+  publisher: The Times of Israel
+  url: https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
+  published_on: '2025-09-07'
+  retrieved_on: '2026-07-29'
+  source_type: trade_press
+  notes: >-
+    By Sue Surkes. The most useful Israeli poultry source found outside CBS,
+    and the only one carrying the figure CBS does not publish: roughly 260
+    million broilers raised a year.
+
+    Attribution matters here and is the reason this is usable at all. The
+    figures are attributed to a NAMED industry official - Moti Elkabetz,
+    secretary of the Poultry Breeders Association - rather than to
+    "sources" or "industry estimates". That makes it an industry figure with
+    a person behind it, not an anonymous claim.
+
+    Also carries: NIS 10 billion annual turnover, about 600 large chicken
+    farms, 20 kosher poultry slaughterhouses, some 6,000 dependent jobs, a
+    40-day grow-out, about 30% of product sold frozen, NIS 6.5/kg paid to
+    the farmer against about NIS 20/kg at retail.
+
+    The 58.2 kg per-capita figure it quotes is sourced to Euromeatnews,
+    whose article now 404s, so that number is NOT loaded from here. A live
+    article citing a dead one does not resurrect the citation.
+
+- slug: poultryworld-israel-war-2024
+  title: Israel poultry industry hit by war and labour shortage
+  publisher: Poultry World (Misset)
+  url: https://www.poultryworld.net/the-industrymarkets/market-trends-analysis-the-industrymarkets-2/israel-poultry-industry-hit-by-war-and-labour-shortage/
+  published_on: '2024-03-04'
+  retrieved_on: '2026-07-29'
+  source_type: trade_press
+  notes: >-
+    By Vladislav Vorotnikov. Explains a hole that is already visible in our
+    CBS series: 16 million head of poultry lost across Newcastle disease
+    outbreaks in Q4 2023, on top of poultry houses shut in the north and
+    south and a labour shortage after foreign workers left. CBS output for
+    2023 is 553,068 tonnes - below 2020 - and this is why.
+
+    NOTE ON REACHABILITY: this URL returns 403 to some automated fetchers and
+    200 to an ordinary browser user-agent. It is alive; a 403 here is a bot
+    filter, not a dead link. Do not retire it on one failed fetch.
+
+    Two figures in it are THIRD-HAND and are deliberately not loaded as data:
+    Of HaGalil at about 15% of Israeli chicken slaughter and Of Oz at about
+    5%. Poultry World is citing TheMarker, which is citing unnamed industry
+    sources. Worth knowing that both named plants sit in places our own
+    district data covers - Kiryat Shmona in the north, Sha'ar HaNegev in the
+    south, the latter marketing 9,813 tonnes of broilers in 2024 - so the
+    claim is checkable in principle against a Hebrew original.
+
+- slug: jc-israeli-mangal
+  title: Going up in smoke, Sabra style
+  publisher: The Jewish Chronicle
+  url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
+  retrieved_on: '2026-07-29'
+  source_type: trade_press
+  notes: >-
+    Held for one specific thing: it names what actually goes on the mangal for
+    Yom Ha'atzmaut, and chicken wings are on that list alongside pargiyot -
+    deboned chicken thighs, cubed and skewered - with the meal built around
+    small cuts and many salads rather than large joints.
+
+    That makes this project's exact product part of an Israeli national
+    holiday, which is a better demo hook than any production statistic. It
+    also observes that falafel, shawarma and schnitzel - the dishes outsiders
+    name first - play very little role in the day.
+
+    Undated on the page, so published_on is NULL rather than guessed.
+
+- slug: jfs-independence-day-grilling
+  title: The Grilling Tradition of Israel's Independence Day
+  publisher: Jewish Food Society
+  url: https://www.jewishfoodsociety.org/stories/the-grilling-tradition-of-israels-independence-day
+  retrieved_on: '2026-07-29'
+  source_type: trade_press
+  notes: >-
+    Independent corroboration that Yom Ha'atzmaut grilling is near-universal
+    rather than a niche custom - the mangal treated as as essential to the day
+    as the president's speech - and that the tradition, while imported, has
+    become distinctly Israeli. Two sources agreeing is why the cultural fact
+    is loaded at all.
+
+- slug: ou-kosher-shechita
+  title: 'Shechita: All About Kosher Ritual Slaughter'
+  publisher: Orthodox Union (OU Kosher)
+  url: https://oukosher.org/blog/consumer-kosher/shechita/
+  retrieved_on: '2026-07-29'
+  source_type: trade_body
+  notes: >-
+    A kosher certification agency describing its own procedure, which makes it
+    authoritative on WHAT HAPPENS and silent on HOW OFTEN.
+
+    For poultry, post-slaughter bedikah inspects the lungs, intestines and
+    tendon junctions, and a mashgiach pulls any bird with a blemish off the
+    line for a rav to rule on. That is a loss stage with no US analogue -
+    FSIS has no equivalent check - and it should push the birds-required
+    number up.
+
+    NO REJECTION RATE IS PUBLISHED, here or anywhere reachable. So the stage
+    can be described honestly and cannot yet be quantified: any figure we put
+    on it would be an 'estimate' of our own making, which is the grade the
+    project is trying to reduce. Recorded as a known gap rather than filled.

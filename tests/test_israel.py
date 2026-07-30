@@ -98,13 +98,19 @@ def test_inventory_is_end_of_year_not_throughput(conn):
     assert row["value"] == pytest.approx(37_895)
     assert row["unit"] == "thousand_head"
 
-    measures = {
-        r[0] for r in conn.execute(
-            "SELECT DISTINCT measure FROM output_stat_year WHERE country_id=?",
-            (isr(conn),),
-        )
-    }
-    assert "head_slaughtered" not in measures
+    # Israel now has BOTH an inventory and a throughput figure in the same unit,
+    # which is exactly the situation where they get conflated. They must stay
+    # separate measures with separate values: a flock of 37.9 million turning
+    # over five to seven times a year is 260 million birds, and reporting
+    # either number as the other is wrong by that multiple.
+    rows = dict(conn.execute(
+        """SELECT measure, value FROM output_stat_year
+           WHERE country_id=? AND unit='thousand_head' AND region IS NULL
+             AND measure IN ('inventory_eoy','head_slaughtered')
+             AND year IN (2024, 2025)""", (isr(conn),)
+    ).fetchall())
+    assert set(rows) == {"inventory_eoy", "head_slaughtered"}
+    assert rows["head_slaughtered"] > rows["inventory_eoy"] * 4
 
 
 def test_long_series_reaches_1960(conn):
@@ -120,12 +126,13 @@ def test_long_series_reaches_1960(conn):
 
 # -- what Israel cannot answer ----------------------------------------------
 
-def test_israel_has_no_head_slaughtered_anywhere(conn):
-    """The missing denominator, asserted so nothing quietly fills it.
+def test_israel_has_no_government_grade_head_count(conn):
+    """No Israeli row may sit in the NASS-shaped table.
 
-    If a future loader derives head from tonnage using a US bird weight, this
-    fails -- which is the point. Deriving it is allowed only with an Israeli
-    weight and a citation, and then this test should be updated deliberately.
+    Israel does now have a head figure -- 260 million birds a year from a named
+    industry official -- but it lives in output_stat_year at 'industry' grade.
+    slaughter_stat_year is where enumerated government counts live, and putting
+    an interview figure there would give it a US federal survey's standing.
     """
     assert conn.execute(
         """SELECT COUNT(*) FROM slaughter_stat_year
@@ -253,7 +260,8 @@ def test_national_and_regional_rows_cannot_be_confused(conn):
         """SELECT COUNT(*) FROM output_stat_year
            WHERE country_id=? AND region IS NULL""", (isr(conn),)
     ).fetchone()[0]
-    assert national == 20        # 5 output + 5 value + 10 inventory years
+    # 5 output + 5 value + 10 inventory + 1 industry head count
+    assert national == 21
 
 
 def test_us_tables_did_not_gain_israeli_rows(conn):
@@ -320,3 +328,148 @@ def test_parse_districts_marks_suppression_and_hierarchy():
     assert "JUDEA AND SAMARIA AREA" in by        # footnote marker stripped
     assert any(r["region"].startswith("Outside regional councils (")
                for r in rows)
+
+
+# -- both options: government-only vs including industry ---------------------
+#
+# The project's rule is that a human promotes a grade, so the corpus holds the
+# industry head count AND the means to exclude it. These tests assert that both
+# readings stay available, because a single default would decide for the reader.
+
+def test_head_count_exists_but_only_at_industry_grade(conn):
+    row = conn.execute(
+        """SELECT value, unit, confidence, year FROM output_stat_year
+           WHERE country_id=? AND measure='head_slaughtered'""",
+        (isr(conn),),
+    ).fetchone()
+    assert row["value"] == pytest.approx(260_000)      # thousand head
+    assert row["unit"] == "thousand_head"
+    # Not 'measured': nobody enumerated it. The US figure is enumerated and
+    # this contrast is the honest thing to show rather than hide.
+    assert row["confidence"] == "industry"
+
+
+def test_government_only_view_has_no_israeli_head_count(conn):
+    """min_confidence=measured must still leave Israel unable to count birds."""
+    n = conn.execute(
+        """SELECT COUNT(*) FROM output_stat_year
+           WHERE country_id=? AND measure='head_slaughtered'
+             AND confidence IN ('measured','derived')""",
+        (isr(conn),),
+    ).fetchone()[0]
+    assert n == 0
+
+
+def test_cbs_rows_are_all_measured(conn):
+    """Adding an industry row must not have relabelled the government ones."""
+    grades = {
+        r[0] for r in conn.execute(
+            """SELECT DISTINCT o.confidence FROM output_stat_year o
+               JOIN source s ON s.id = o.source_id
+               WHERE o.country_id=? AND s.slug LIKE 'cbs-%'""",
+            (isr(conn),))
+    }
+    assert grades == {"measured"}
+
+
+def test_derived_weight_agrees_with_a_forty_day_broiler(conn):
+    """The cross-check that makes the industry figure believable.
+
+    600,072 tonnes over 260 million birds is ~2.3 kg a bird, which is what a
+    40-day broiler weighs. Two sources that were not derived from each other.
+    """
+    row = conn.execute(
+        "SELECT * FROM v_output_derived_weight WHERE iso3='ISR'"
+    ).fetchone()
+    assert row is not None
+    assert 2.0 < row["kg_per_head"] < 2.7
+    # Weaker parent wins: an industry-derived figure is not 'derived' grade.
+    assert row["confidence"] == "industry"
+    # And the years genuinely do not line up, which the view reports rather
+    # than papering over -- CBS has no 2025 output figure.
+    assert row["year_gap"] == 1
+
+
+def test_derived_weight_is_a_view_not_a_stored_row(conn):
+    """Stored, it could drift from the two figures it comes from."""
+    kinds = {
+        r[0] for r in conn.execute(
+            "SELECT type FROM sqlite_master WHERE name='v_output_derived_weight'"
+        )
+    }
+    assert kinds == {"view"}
+    assert conn.execute(
+        """SELECT COUNT(*) FROM output_stat_year
+           WHERE measure LIKE '%weight%'"""
+    ).fetchone()[0] == 0
+
+
+def test_the_industry_file_is_separate_from_the_generated_one():
+    """Curated and machine-generated data never share a file.
+
+    data/output_israel.yaml is rewritten by tools/parse_cbs_israel.py; a
+    hand-added row in it would be destroyed by the next run, silently.
+    """
+    from pathlib import Path
+    data = Path(__file__).resolve().parents[1] / "data"
+    generated = (data / "output_israel.yaml").read_text()
+    curated = (data / "output_israel_industry.yaml").read_text()
+    assert "do not" in generated.lower() and "parse_cbs_israel" in generated
+    assert "head_slaughtered" not in generated
+    assert "head_slaughtered" in curated
+    assert "cbs-" not in curated.split("national:")[1]
+
+
+# -- the culture and analysis facts ------------------------------------------
+
+@pytest.mark.parametrize("slug", [
+    "israel-wings-on-the-mangal",
+    "israel-pargiyot-baby-chickens",
+    "israel-2023-newcastle-dip",
+    "israel-farmer-vs-retail-price",
+    "israel-head-count-is-not-measured",
+    "israel-kosher-inspection-no-us-analogue",
+])
+def test_israel_facts_are_loaded_and_cited(conn, slug):
+    row = conn.execute(
+        """SELECT f.headline, s.slug AS src FROM fact f
+           JOIN source s ON s.id = f.source_id WHERE f.slug=?""", (slug,)
+    ).fetchone()
+    assert row is not None, f"{slug} missing"
+    assert row["src"], f"{slug} has no citation"
+
+
+def test_the_newcastle_fact_quotes_figures_that_are_actually_loaded(conn):
+    """A fact that contradicts the corpus is worse than no fact.
+
+    The 2023 dip fact cites CBS tonnages in its prose, so those tonnages must
+    match the rows we hold -- otherwise the deck and the database disagree and
+    a reader who checks finds us wrong.
+    """
+    body = conn.execute(
+        "SELECT body FROM fact WHERE slug='israel-2023-newcastle-dip'"
+    ).fetchone()[0]
+    for year, tonnes in ((2023, 553_068), (2020, 578_164), (2024, 600_072)):
+        stored = conn.execute(
+            """SELECT value FROM output_stat_year
+               WHERE country_id=? AND measure='meat_output' AND year=?""",
+            (isr(conn), year),
+        ).fetchone()[0]
+        assert stored == pytest.approx(tonnes)
+        assert f"{tonnes:,}" in body, f"{tonnes:,} not quoted in the fact"
+
+    # And the dip is real: 2023 below 2020 is the thing being explained.
+    assert 553_068 < 578_164
+
+
+def test_no_per_capita_figure_leaked_into_the_corpus(conn):
+    """Three sources give three "world's highest" figures 20% apart.
+
+    Until that is resolved from a primary series, no per-capita number ships --
+    in a fact, a note, or a statistic.
+    """
+    for value in ("58.2", "70.83", "64.9"):
+        hits = conn.execute(
+            "SELECT COUNT(*) FROM fact WHERE body LIKE ?", (f"%{value}%",)
+        ).fetchone()[0]
+        assert hits == 0, f"per-capita figure {value} appears in a fact"

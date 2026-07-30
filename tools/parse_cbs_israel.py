@@ -321,9 +321,10 @@ def render(output, value, inventory, district_year, districts) -> str:
         "# fattening for the meat industry\", which is our broiler species -",
         "# so no mapping decision was needed.",
         "national:",
-        "  source: cbs-st21-11-output-2025",
-        "  meat_output:",
+        "  - measure: meat_output",
         "    unit: tonnes",
+        "    confidence: measured",
+        "    source: cbs-st21-11-output-2025",
         "    years:",
     ]
     for o in output:
@@ -331,8 +332,10 @@ def render(output, value, inventory, district_year, districts) -> str:
         lines.append(f"      - {{year: {o['year']}, value: {o['tonnes']:.0f}, "
                      f"provisional: {int(o['provisional'])}}}{star}")
     lines += [
-        "  output_value:",
+        "  - measure: output_value",
         "    unit: ILS_million",
+        "    confidence: measured",
+        "    source: cbs-st21-11-output-2025",
         "    years:",
     ]
     for v in value:
@@ -350,14 +353,15 @@ def render(output, value, inventory, district_year, districts) -> str:
         "# carried as a caveat on the US census sales figures, and it is why",
         "# the trade-press lead of ~260 million broilers a year in",
         "# ISRAEL-PLAN.md is neither confirmed nor refuted by this table.",
-        "inventory:",
-        "  source: cbs-st21-08-livestock-2025",
-        "  unit: thousand_head",
-        "  years:",
+        "  - measure: inventory_eoy",
+        "    unit: thousand_head",
+        "    confidence: measured",
+        "    source: cbs-st21-08-livestock-2025",
+        "    years:",
     ]
     for i in inventory:
         star = "  # provisional" if i["provisional"] else ""
-        lines.append(f"    - {{year: {i['year']}, value: "
+        lines.append(f"      - {{year: {i['year']}, value: "
                      f"{i['thousand_head']:.0f}, "
                      f"provisional: {int(i['provisional'])}}}{star}")
     lines += [

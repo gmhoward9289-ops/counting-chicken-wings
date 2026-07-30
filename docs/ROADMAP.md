@@ -23,22 +23,21 @@ edit of this file.
 
 | | |
 |---|---|
-| Released | **v1.2.0**, 2026-07-29 — three releases in one day, see [CHANGELOG](../CHANGELOG.md) |
+| Released | **v1.4.0**, 2026-07-29 — five releases in one day, see [CHANGELOG](../CHANGELOG.md) |
 | Deployed | https://counting-chicken-wings.onrender.com/ — auto-deploys `master`, so the site is normally *ahead* of the latest tag. Ask `GET /api/version` |
 | Cold start | ~21s after ~15 min idle. `/healthz` exists for an external keep-warm cron; the only real fixes are `plan: starter` ($7/mo) or Fly.io |
 | Render CPU | **11–13× slower than the laptop.** Not architecture — the app boots in 0.28s. Scientific mode's Monte Carlo default dropped to 2,000 iterations because of it |
-| Tests | 277 collected |
-| Facts | 46, surprise-ranked, served as a card deck |
-| Sources | 40, of which 1 is cited by nothing (deliberately — see M6) |
+| Tests | 338 collected |
+| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of v1.4.0: 48 sources, 52 facts |
 | Loss factors | **21**, of which **11 are unsourced estimates (52%)** and **8 affect the count**. Worse than the 8-of-14 this file used to claim — the ratio got worse as eggs and saffron were added, which is what a new domain with no federal survey behind it does |
 | Mixing stages | 21 |
 | States with data | 23 broiler (22 slaughter + Florida from production); 34 egg (union across two years) |
 | Species | broiler, layer hen, saffron crocus. Turkey seeded `active: 0` |
 | Products | whole wing, boneless wing, table egg, saffron stigma, saffron gram |
-| Countries | schema holds a country dimension; USA populated, ISR stubbed with no data |
+| Countries | USA and **Israel**, both with data. Israel: CBS output, value, a flock series to 1960, 47 districts, plus an `industry`-grade head count. `min_confidence=measured` gives the government-only reading |
 | GUI views | 7 tabs including scientific mode |
 | Exports | `wings export` → .txt/.csv into `data/exports/` |
-| Research pipeline | COOPER work-orders under `docs/research/` — batch 01 saffron run, 02 vanilla and 03 wagyu drafted |
+| Research pipeline | COOPER work-orders under `docs/research/` — batch 01 saffron run; 02 vanilla, 03 wagyu, 04 honey and 05 Israel-Hebrew drafted. Source library at `docs/research/library/` |
 
 ---
 
@@ -636,12 +635,15 @@ schema improvement; turkey re-runs the wing analysis on a bigger bird).
 7. **M6 vanilla, then M5 turkey.** Vanilla is now cheaper than turkey: the
    `continuous` machinery will already exist, whereas turkey needs its own
    husbandry sourcing and must not inherit chicken loss factors.
-8. **Israel's remaining half.** Data landed 2026-07-29 (v1.3.0): output,
-   inventory and 47 districts, all cited. What is left is not a loading job —
-   it is the **head-slaughtered figure CBS does not publish**, and the Israeli
-   Poultry Board or the Ministry of Agriculture is the only remaining route.
-   Until it exists, Israel answers scale and not count, and the comparison panel
-   should say so rather than switching the calculator's country.
+8. **Israel's remaining half is now a UI job, not a data job.** v1.3.0 loaded
+   CBS output, inventory and 47 districts; v1.4.0 added the head count at
+   `industry` grade, the derived 2.31 kg bird, and six facts including the
+   mangal hook. Both readings are queryable — `min_confidence=measured` for the
+   government-only picture, the default for the industry one. What is left:
+   render the two side by side, and take `batch-05-israel-hebrew.md` to COOPER
+   for a *government* head count, a bedikah rejection rate, and a per-capita
+   series. Do not ship a per-capita figure until that lands; five sources give
+   five numbers 20% apart.
 9. **M7 translation and RTL**, then the Discord bot.
 
 Three judgement calls worth revisiting:

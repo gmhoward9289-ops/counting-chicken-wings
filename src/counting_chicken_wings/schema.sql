@@ -417,10 +417,19 @@ CREATE TABLE output_stat_year (
                         'meat_output',      -- output of meat, per the source
                         'output_value',     -- value of that output
                         'inventory_eoy',    -- standing flock, end of year
-                        'marketed'          -- quantity marketed, not produced
+                        'marketed',         -- quantity marketed, not produced
+                        'head_slaughtered'  -- throughput. NOT inventory
                     )),
     value           REAL,
     unit            TEXT    NOT NULL,          -- 'tonnes','ILS_million','thousand_head'
+    -- Added when the table stopped being government-only. Israel's head count
+    -- comes from a named industry official via the press, not from CBS, and a
+    -- reader must be able to ask for the government-only picture and get it --
+    -- so the grade is a column and "government figures only" is a WHERE
+    -- clause rather than a promise in a comment. Same vocabulary as
+    -- loss_factor.confidence, deliberately: one grade scale for the project.
+    confidence      TEXT    NOT NULL DEFAULT 'measured' CHECK (confidence IN
+                        ('measured','derived','study','industry','estimate')),
     -- The source's own asterisk. CBS marks 2024 provisional, and a figure
     -- that may be revised should not be quoted as final.
     provisional     INTEGER NOT NULL DEFAULT 0,
@@ -440,6 +449,70 @@ CREATE UNIQUE INDEX idx_output_stat_identity
     ON output_stat_year (
         species_id, country_id, COALESCE(region, ''), year, measure
     );
+
+
+-- Average weight per bird, derived rather than stored, so it cannot drift
+-- from the two figures it comes from -- the same reasoning as
+-- v_dressing_yield.
+--
+-- This is the cross-check that makes Israel's industry head count believable.
+-- CBS measured 600,072 tonnes of broiler output for 2024 and never published a
+-- bird count; a named industry official put the flock's throughput at 260
+-- million birds a year and never mentioned tonnage. Divide one by the other
+-- and you get ~2.3 kg a bird, which is what a 40-day broiler weighs. Two
+-- sources that were not derived from each other, agreeing.
+--
+-- confidence is the WEAKER of the two parents, never the better one. A figure
+-- computed from an industry estimate is an industry-grade figure no matter how
+-- well-measured its other half is.
+--
+-- THE YEARS DO NOT LINE UP, and the view says so rather than hiding it. CBS
+-- publishes output for 2024, 2023, 2020, 2010 and 2000; the head figure is a
+-- 2025 industry statement with no year of its own. So each head figure is
+-- paired with the NEAREST output year and `year_gap` is returned alongside.
+-- A same-year pairing would have been cleaner and would have required
+-- pretending the interview was about a CBS reporting year.
+CREATE VIEW v_output_derived_weight AS
+SELECT
+    c.iso3,
+    sp.slug                                     AS species,
+    o.year                                      AS head_year,
+    t.year                                      AS output_year,
+    ABS(t.year - o.year)                        AS year_gap,
+    t.value                                     AS output_tonnes,
+    o.value                                     AS head_thousands,
+    (t.value * 1000.0) / (o.value * 1000.0)     AS kg_per_head,
+    CASE WHEN t.confidence = 'measured' AND o.confidence = 'measured'
+              AND t.year = o.year
+         THEN 'derived' ELSE
+        CASE WHEN (CASE t.confidence WHEN 'measured' THEN 1 WHEN 'derived'
+                    THEN 2 WHEN 'study' THEN 3 WHEN 'industry' THEN 4
+                    ELSE 5 END)
+                 >= (CASE o.confidence WHEN 'measured' THEN 1 WHEN 'derived'
+                      THEN 2 WHEN 'study' THEN 3 WHEN 'industry' THEN 4
+                      ELSE 5 END)
+             THEN t.confidence ELSE o.confidence END
+    END                                         AS confidence,
+    t.source_id                                 AS output_source_id,
+    o.source_id                                 AS head_source_id
+FROM output_stat_year o
+JOIN output_stat_year t
+  ON t.country_id = o.country_id
+ AND t.species_id = o.species_id
+ AND t.measure    = 'meat_output'
+ AND t.region IS NULL
+ -- Nearest output year to this head figure, ties broken toward the later one.
+ AND ABS(t.year - o.year) = (
+        SELECT MIN(ABS(t2.year - o.year)) FROM output_stat_year t2
+        WHERE t2.country_id = o.country_id AND t2.species_id = o.species_id
+          AND t2.measure = 'meat_output' AND t2.region IS NULL
+     )
+JOIN country c  ON c.id  = o.country_id
+JOIN species sp ON sp.id = o.species_id
+WHERE o.measure = 'head_slaughtered'
+  AND o.region IS NULL
+  AND o.value > 0
+  AND t.value > 0;
 
 
 -- Grow-out / husbandry performance by year.

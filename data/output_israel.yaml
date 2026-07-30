@@ -31,17 +31,20 @@ country: ISR
 # fattening for the meat industry", which is our broiler species -
 # so no mapping decision was needed.
 national:
-  source: cbs-st21-11-output-2025
-  meat_output:
+  - measure: meat_output
     unit: tonnes
+    confidence: measured
+    source: cbs-st21-11-output-2025
     years:
       - {year: 2024, value: 600072, provisional: 1}  # provisional
       - {year: 2023, value: 553068, provisional: 0}
       - {year: 2020, value: 578164, provisional: 0}
       - {year: 2010, value: 450000, provisional: 0}
       - {year: 2000, value: 270000, provisional: 0}
-  output_value:
+  - measure: output_value
     unit: ILS_million
+    confidence: measured
+    source: cbs-st21-11-output-2025
     years:
       - {year: 2024, value: 5367.618, provisional: 1}  # provisional
       - {year: 2023, value: 5303.816, provisional: 0}
@@ -57,20 +60,21 @@ national:
 # carried as a caveat on the US census sales figures, and it is why
 # the trade-press lead of ~260 million broilers a year in
 # ISRAEL-PLAN.md is neither confirmed nor refuted by this table.
-inventory:
-  source: cbs-st21-08-livestock-2025
-  unit: thousand_head
-  years:
-    - {year: 2024, value: 37895, provisional: 1}  # provisional
-    - {year: 2023, value: 34121, provisional: 0}
-    - {year: 2020, value: 38239, provisional: 0}
-    - {year: 2015, value: 34680, provisional: 0}
-    - {year: 2010, value: 33594, provisional: 0}
-    - {year: 2000, value: 20462, provisional: 0}
-    - {year: 1990, value: 14300, provisional: 0}
-    - {year: 1980, value: 15300, provisional: 0}
-    - {year: 1970, value: 15600, provisional: 0}
-    - {year: 1960, value: 15900, provisional: 0}
+  - measure: inventory_eoy
+    unit: thousand_head
+    confidence: measured
+    source: cbs-st21-08-livestock-2025
+    years:
+      - {year: 2024, value: 37895, provisional: 1}  # provisional
+      - {year: 2023, value: 34121, provisional: 0}
+      - {year: 2020, value: 38239, provisional: 0}
+      - {year: 2015, value: 34680, provisional: 0}
+      - {year: 2010, value: 33594, provisional: 0}
+      - {year: 2000, value: 20462, provisional: 0}
+      - {year: 1990, value: 14300, provisional: 0}
+      - {year: 1980, value: 15300, provisional: 0}
+      - {year: 1970, value: 15600, provisional: 0}
+      - {year: 1960, value: 15900, provisional: 0}
 
 # Table 21.4. Marketing of animals and animal products by district
 # and regional council, 2024, broilers in tonnes.

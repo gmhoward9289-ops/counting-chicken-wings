@@ -311,9 +311,18 @@ def test_countries_report_coverage_not_just_names(client):
     assert {"USA", "ISR"} <= set(by)
 
     assert by["USA"]["answers"]["head_slaughtered"] is True
-    # The whole point of the Israeli data pass: CBS publishes no head figure,
-    # so the count question cannot be answered from Israeli sources.
-    assert by["ISR"]["answers"]["head_slaughtered"] is False
+    assert by["USA"]["answers"]["head_slaughtered_grade"] == "measured"
+
+    # Israel answers the count question, but only on industry evidence: CBS
+    # publishes no head figure, so the 260 million comes from a named trade
+    # official via the press. Both facts have to be visible at once, which is
+    # why the grade travels with the boolean.
+    assert by["ISR"]["answers"]["head_slaughtered"] is True
+    assert by["ISR"]["answers"]["head_slaughtered_grade"] == "industry"
+    # ...and the government-only reading still cannot count birds.
+    assert by["ISR"]["answers"]["head_slaughtered_measured"] is False
+    assert by["USA"]["answers"]["head_slaughtered_measured"] is True
+
     assert by["ISR"]["answers"]["subnational"] is True
     assert by["ISR"]["native_mass_unit"] == "kg"
 
@@ -349,3 +358,94 @@ def test_unknown_country_is_a_404_not_an_empty_answer(client):
 
 def test_country_codes_are_case_insensitive(client):
     assert client.get("/api/output/isr").status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# The ceiling the API reports
+# ---------------------------------------------------------------------------
+
+def test_api_ceiling_is_not_the_unit_count_for_a_continuous_product(client):
+    """`ceiling` used to be the request's unit count, which is correct only
+    while every product is countable. A gram of saffron is not one flower, so
+    the endpoint returned ceiling=1 beside floor=150 -- the contradiction the
+    CLI had already been fixed for. The field exists on Result so both surfaces
+    read the same number; this test is here because one of them did not."""
+    a = get(client, "/api/calculate", count=1, product="saffron_gram")["answer"]
+    assert a["floor"] == pytest.approx(150, rel=1e-6)
+    assert a["ceiling"] == pytest.approx(150, rel=1e-6)
+    assert a["distinct"] >= a["floor"] - 1e-6
+
+
+@pytest.mark.parametrize("product,count,expected", [
+    ("whole_wing", 12, 12),        # a wing belongs to exactly one bird
+    ("saffron_stigma", 12, 12),    # so does a stigma
+    ("table_egg", 12, 12),         # and an egg to one hen
+])
+def test_api_ceiling_is_still_the_unit_count_for_discrete_products(
+        client, product, count, expected):
+    """The fix must not reach the products that were already right."""
+    a = get(client, "/api/calculate", count=count, product=product)["answer"]
+    assert a["ceiling"] == pytest.approx(expected)
+
+
+def test_cli_and_api_agree_on_the_ceiling():
+    """They read the same field. Asserted rather than assumed, since the whole
+    point of putting it on Result was that they could not drift."""
+    from counting_chicken_wings import db as dbm
+    from counting_chicken_wings.model import run
+
+    conn = dbm.connect()
+    prod = dbm.get_product(conn, "saffron_gram")
+    res = run(1, prod["units_per_individual_mode"], [],
+              dbm.load_mixing_stages(conn, "commodity_spice"),
+              aggregate_units=True)
+    with TestClient(app) as c:
+        a = c.get("/api/calculate",
+                  params={"count": 1, "product": "saffron_gram"}).json()["answer"]
+    assert a["ceiling"] == pytest.approx(res.distinct_ceiling)
+
+
+def test_min_confidence_offers_the_government_only_reading(client):
+    """Both pictures of Israel must be reachable, not one chosen for the reader.
+
+    Without the filter, Israel answers "how many chickens" on a trade-press
+    figure. With min_confidence=measured, it answers scale and admits it cannot
+    count birds -- and says which row it dropped to get there.
+    """
+    everything = get(client, "/api/output/ISR")
+    gov = get(client, "/api/output/ISR", min_confidence="measured")
+
+    head = [r for r in everything["national"]
+            if r["measure"] == "head_slaughtered"]
+    assert head and head[0]["confidence"] == "industry"
+    assert not [r for r in gov["national"] if r["measure"] == "head_slaughtered"]
+
+    # A filtered answer that does not say what it filtered is just a different
+    # number, so the dropped row is named.
+    assert [e["measure"] for e in gov["excluded"]] == ["head_slaughtered"]
+    assert gov["excluded"][0]["source"] == "toi-poultry-imports-2025"
+    assert everything["excluded"] == []
+
+
+def test_derived_weight_is_the_cross_check_and_drops_with_its_parent(client):
+    """~2.3 kg a bird is what makes the industry figure believable.
+
+    It is derived from an industry figure, so it is industry-grade and must
+    disappear from a government-only view along with its parent.
+    """
+    everything = get(client, "/api/output/ISR")
+    w = everything["derived_weight"]
+    assert len(w) == 1
+    assert 2.0 < w[0]["kg_per_head"] < 2.7
+    assert w[0]["confidence"] == "industry"
+    # The years do not line up and the payload says so rather than implying a
+    # same-year measurement.
+    assert w[0]["year_gap"] == 1
+
+    gov = get(client, "/api/output/ISR", min_confidence="measured")
+    assert gov["derived_weight"] == []
+
+
+def test_unknown_confidence_level_is_rejected(client):
+    assert client.get("/api/output/ISR",
+                      params={"min_confidence": "vibes"}).status_code == 422
