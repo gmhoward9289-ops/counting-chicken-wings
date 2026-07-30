@@ -26,7 +26,10 @@ try {
     --line: #D9D3C6; --rule: #B9B2A2;
     --ink: #1E1B16; --dim: #5C574C; --faint: #8A8478;
     --stamp: #4B3A8F; --stamp-soft: #7A68BE;
-    --measured: #1F7A46; --derived: #1F7A46; --study: #1D5FBF;
+    /* 'derived' grades share the measured ink deliberately -- both are
+       figures we can stand behind -- so there is no --derived variable to
+       fall out of sync with it. */
+    --measured: #1F7A46; --study: #1D5FBF;
     --industry: #0E7490; --estimate: #A05A0B; --bad: #C2413B;
     --field: #ffffff; --hatch: rgba(160,90,11,.14);
     --amber: #C58A2E; --amber2: #d97706; --amber-bright: #E0A93E;
@@ -934,11 +937,20 @@ async function calc() {
   // the expected requirement, which for same-day eggs is 15.21 against a
   // ceiling of 12 -- above the top of its own scale, which made the band
   // meaningless and the label wrong.
-  const bandFloor = a.hard_floor != null ? a.hard_floor : a.floor;
+  //
+  // The scale counts INDIVIDUALS, so its floor is a whole one. hard_floor is
+  // continuous and for a dozen eggs gathered over a year it is 0.033 -- a
+  // third of a hen's daily output, which is a true statement about laying
+  // rate and a false one about how many hens are on your plate. The prose
+  // below already rounds it up for exactly this reason; the band printing
+  // "floor 0.03 hens" directly above that prose contradicted it.
+  const bandFloor = a.hard_floor != null
+    ? Math.max(1, Math.ceil(a.hard_floor - 1e-9)) : a.floor;
   const span = a.ceiling - bandFloor;
   const pct = span > 0 ? ((a.distinct - bandFloor) / span) * 100 : 100;
   $('#bandfill').style.width = Math.max(1, Math.min(100, pct)) + '%';
-  $('#band-lo').textContent = 'floor ' + (+bandFloor.toFixed(2)) + ' ' + plural;
+  $('#band-lo').textContent = 'floor ' + (+bandFloor.toFixed(2)) + ' '
+    + (bandFloor === 1 ? d.question.individual_noun : plural);
   $('#band-hi').textContent = span <= 1e-9
     // Floor and ceiling coincide: there is no band left for the supply chain
     // to move anything within, and saying so is the whole point of eggs.
@@ -985,13 +997,15 @@ async function calc() {
     </div>`;
   }).join('');
 
-  $('#mixnotes').innerHTML = d.mixing_notes.length
+  // The closing paragraph is the chain's own floor_note, never text written
+  // here. Hardcoded, it was wing prose -- an egg query was told about a
+  // cut-up line and "the instant the wings leave the bird". The CLI has read
+  // this field since it was added; this page had kept its own stale copy.
+  $('#mixnotes').innerHTML = (d.mixing_notes.length || d.floor_note)
     ? `<div class="step count"><h4>Why not exactly the floor?</h4>
        ${d.mixing_notes.map(n => `<p>• ${n}</p>`).join('')}
-       <p style="margin-top:8px">Mixing starts the instant the wings leave
-       the bird. On the cut-up line a chicken's two wings drop onto the same
-       conveyor and part company, then size grading actively splits any pair
-       that survived.</p></div>` : '';
+       ${d.floor_note
+         ? `<p style="margin-top:8px">${d.floor_note}</p>` : ''}</div>` : '';
 
   const f = await api('/api/facts?placement=result&limit=1');
   if (mine !== calcSeq) return;

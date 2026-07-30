@@ -253,6 +253,12 @@ def calculate(
                 for s in res.trace
             ],
             "mixing_notes": res.mixing_notes,
+            # Why the answer is not exactly the floor, in this chain's own
+            # words. The CLI has read this since floor_note was introduced;
+            # the web page went on printing a hardcoded wing paragraph, so
+            # asking about eggs got "the instant the wings leave the bird"
+            # and a description of a cut-up line. Same bug, second copy.
+            "floor_note": dbm.chain_floor_note(conn, chain),
             "sources": sources,
         }
     finally:
