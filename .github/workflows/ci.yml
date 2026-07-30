@@ -63,6 +63,33 @@ jobs:
   # itself: that the tag someone typed matches what pyproject.toml declares.
   # Without this, `git tag v1.1.0` on a 1.0.0 tree publishes a release whose
   # own metadata contradicts its name, and nothing complains.
+  # Does the bump match what actually changed? docs/VERSIONING.md versions by
+  # CAPABILITY rather than volume, and that rule was unenforced -- the job
+  # below checks only that a tag matches pyproject.toml, which says nothing
+  # about whether MINOR was the right number to move.
+  #
+  # Advisory on pushes and pull requests, so day-to-day work is never blocked
+  # by it; the failure is what you read before tagging. `fetch-depth: 0` and
+  # `fetch-tags` are required because it builds the corpus at the previous tag
+  # and diffs against this tree.
+  release-check:
+    if: "!startsWith(github.ref, 'refs/tags/v')"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,gui]"
+      - name: Bump must match what changed
+        run: python tools/release_check.py --explain
+
   version-consistency:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -86,6 +113,20 @@ jobs:
             exit 1
           fi
           echo "versions agree"
+
+      # Enforcing here, advisory everywhere else. At tag time the comparison
+      # has to be against the PREVIOUS tag: release_check defaults to the
+      # latest tag, which at this point is the one being cut, and a tag
+      # compared with itself has no diff and would always pass.
+      - name: Bump must match what changed
+        run: |
+          prev="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          if [ -z "$prev" ]; then
+            echo "no previous tag; nothing to compare against"
+            exit 0
+          fi
+          echo "comparing against $prev"
+          python tools/release_check.py --base "$prev"
 
       - name: Changelog must mention this version
         run: |

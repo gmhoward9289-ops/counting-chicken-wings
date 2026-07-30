@@ -81,6 +81,52 @@ This applies from the next release onward.
 reason: under this rule a PATCH can move thousands of rows, so the version
 alone cannot tell you whether the corpus grew. The counts can.
 
+### The rule is checked, not remembered
+
+```bash
+python tools/release_check.py              # this tree against the latest tag
+python tools/release_check.py --base v1.6.0
+```
+
+It builds the corpus at both refs and reports the smallest bump the diff
+justifies. Three signals:
+
+| signal | verdict |
+|---|---|
+| new table, or new `domain` / `species` / `product` row | MINOR |
+| a table or kind **removed** | MINOR — retraction breaks an existing citation |
+| row counts of existing tables changed, nothing else | PATCH |
+| **`wings count 12` returns different numbers** | MINOR, whatever else did or did not change |
+
+The last one is the reason this exists. It is the rule's own criterion rather
+than a proxy for it, and it catches what the other two cannot: the saffron
+ceiling bug moved a published answer through a pure *code* change, with the
+schema and every row count untouched, and shipped under no bump at all.
+
+**Over-bumping passes, under-bumping fails.** Shipping a bigger number than
+required is a judgement call; shipping a smaller one silently breaks the
+promise that the number means something.
+
+The base tag is materialised with `git archive` into a temp directory rather
+than checked out, so the check never touches the working tree — which matters
+here, because more than one session is usually live in it.
+
+CI runs it **advisory on pushes and PRs** and **enforcing on tags**, where it
+compares against the previous tag rather than the one being cut.
+
+#### What it cannot see, stated plainly
+
+It diffs the **corpus and the published answer**. A new view, endpoint or CLI
+flag is MINOR under the rule and invisible to it, because nothing about the
+data changed. Run it against v1.6.0 and it reports "PATCH required" for a
+release that added `seasonality.py`, a view and an endpoint — and v1.7.0 was
+correctly MINOR.
+
+That under-detection is deliberately the safe direction. The check only fails
+on **under**-bumping, so a human who bumps MINOR for new capability passes
+regardless. It is a floor on the required bump, never a ceiling, and "PATCH
+required" means *at least* patch — not *only* patch.
+
 `GET /api/version` returns row counts alongside the version for exactly this
 reason: data ships in the same push as code, so a version number alone cannot
 tell you whether the corpus moved.
