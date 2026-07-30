@@ -472,6 +472,126 @@ def states(year: int = 2025):
         conn.close()
 
 
+@app.get("/api/countries")
+def countries():
+    """What each country can actually answer, not just which countries exist.
+
+    Deliberately shaped as coverage rather than as a list of names. A selector
+    built from names alone invites the comparison this project must not make:
+    the US has enumerated head slaughtered, 50 states and a sourced loss
+    chain, and Israel has tonnage, districts and no head figure at all. A
+    caller that can see `answers` cannot accidentally imply parity, and one
+    that only saw ISO codes would have to guess.
+    """
+    conn = dbm.connect()
+    try:
+        rows = conn.execute(
+            """SELECT c.iso3, c.name, c.native_mass_unit, c.native_currency,
+                      c.population, c.population_year,
+                      (SELECT COUNT(*) FROM slaughter_stat_year s
+                        WHERE s.country_id = c.id
+                          AND s.head_slaughtered IS NOT NULL) AS head_years,
+                      -- The view, not the shared table: regional_size_stat
+                      -- holds broiler and layer rows together, and reading it
+                      -- raw is what the egg work forbade for that reason.
+                      (SELECT COUNT(DISTINCT region) FROM v_broiler_size_stat r
+                        WHERE r.country_id = c.id) AS size_regions,
+                      (SELECT COUNT(DISTINCT region) FROM output_stat_year o
+                        WHERE o.country_id = c.id
+                          AND o.region IS NOT NULL) AS output_regions,
+                      (SELECT COUNT(*) FROM output_stat_year o
+                        WHERE o.country_id = c.id
+                          AND o.region IS NULL) AS national_rows
+               FROM country c ORDER BY c.iso3"""
+        ).fetchall()
+
+        out = []
+        for r in rows:
+            subnational = max(r["size_regions"], r["output_regions"])
+            out.append({
+                "iso3": r["iso3"],
+                "name": r["name"],
+                "native_mass_unit": r["native_mass_unit"],
+                "native_currency": r["native_currency"],
+                # NULL until sourced. Per-capita is the comparison an audience
+                # asks for first and it is the one figure here with no
+                # citation, so the API says absent rather than guessing.
+                "population": r["population"],
+                "population_year": r["population_year"],
+                "answers": {
+                    # The count question needs birds, not tonnes.
+                    "head_slaughtered": r["head_years"] > 0,
+                    "subnational": subnational > 0,
+                    "national_output": r["national_rows"] > 0,
+                    "per_capita": r["population"] is not None,
+                },
+                "subnational_regions": subnational,
+                "has_data": bool(
+                    r["head_years"] or subnational or r["national_rows"]
+                ),
+            })
+        return {"countries": out}
+    finally:
+        conn.close()
+
+
+@app.get("/api/output/{iso3}")
+def output(iso3: str, species: str = "broiler"):
+    """Output, value and inventory for one country, in its own units.
+
+    Units are returned per row and nothing is converted. Israel reports
+    kilograms and shekels against the project's pounds and dollars, and a
+    comparison that forgets is wrong by 2.2x while still looking plausible --
+    so the conversion is the caller's explicit decision, never a default.
+    """
+    conn = dbm.connect()
+    try:
+        country = conn.execute(
+            "SELECT id, iso3, name, native_mass_unit, native_currency "
+            "FROM country WHERE iso3 = ? COLLATE NOCASE", (iso3,)
+        ).fetchone()
+        if country is None:
+            raise HTTPException(404, f"unknown country {iso3!r}")
+
+        rows = conn.execute(
+            """SELECT o.region, o.year, o.measure, o.value, o.unit,
+                      o.provisional, o.suppressed, o.notes,
+                      s.slug AS source_slug
+               FROM output_stat_year o
+               JOIN source s ON s.id = o.source_id
+               JOIN species sp ON sp.id = o.species_id
+               WHERE o.country_id = ? AND sp.slug = ?
+               ORDER BY o.measure, o.year DESC, o.value DESC""",
+            (country["id"], species),
+        ).fetchall()
+        if not rows:
+            raise HTTPException(
+                404, f"no output data for {country['iso3']} / {species}"
+            )
+
+        national = [dict(r) for r in rows if r["region"] is None]
+        regional = [dict(r) for r in rows if r["region"] is not None]
+
+        return {
+            "country": {
+                "iso3": country["iso3"],
+                "name": country["name"],
+                "native_mass_unit": country["native_mass_unit"],
+                "native_currency": country["native_currency"],
+            },
+            "species": species,
+            "national": national,
+            "regional": regional,
+            # Stated rather than left for the caller to notice. A suppressed
+            # row is presence without volume and must not be read as zero.
+            "suppressed_regions": sum(
+                1 for r in regional if r["suppressed"]
+            ),
+        }
+    finally:
+        conn.close()
+
+
 @app.get("/api/state-trend/{region}")
 def state_trend(region: str, year: int = 2025):
     """Month-over-month average live weight for one state."""

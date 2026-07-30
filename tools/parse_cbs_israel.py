@@ -157,7 +157,7 @@ def num(raw: str) -> float:
     return round(float(raw), 3)
 
 
-def parse_output(data: bytes) -> tuple[list[dict], list[dict]]:
+def parse_output(sheet: list[dict[str, str]]) -> tuple[list[dict], list[dict]]:
     """st21_11: broiler output quantity (tonnes) and value (NIS million).
 
     The sheet is two blocks side by side under one header: value in columns
@@ -165,7 +165,6 @@ def parse_output(data: bytes) -> tuple[list[dict], list[dict]]:
     the block a column belongs to is what distinguishes them -- taken from
     order, since the block headers are merged cells.
     """
-    sheet = rows(data)
     years = year_columns(sheet)
     cols = sorted(years)
     half = len(cols) // 2
@@ -186,7 +185,7 @@ def parse_output(data: bytes) -> tuple[list[dict], list[dict]]:
     return output, value
 
 
-def parse_inventory(data: bytes) -> list[dict]:
+def parse_inventory(sheet: list[dict[str, str]]) -> list[dict]:
     """st21_08: broilers in thousands, END OF YEAR.
 
     The trap on this table, and the reason it is a separate measure: 37.9
@@ -194,7 +193,6 @@ def parse_inventory(data: bytes) -> list[dict]:
     Broilers turn over several times a year, so reading it as slaughter would
     understate the answer by a factor of five or so.
     """
-    sheet = rows(data)
     years = year_columns(sheet)
     row = find_row(sheet, "Broilers")
     return [
@@ -204,14 +202,13 @@ def parse_inventory(data: bytes) -> list[dict]:
     ]
 
 
-def parse_districts(data: bytes) -> tuple[int, list[dict]]:
+def parse_districts(sheet: list[dict[str, str]]) -> tuple[int, list[dict]]:
     """st21_04: broilers marketed by district and regional council, tonnes.
 
     Marketed, not produced -- a different measurement, and the reason the
     district total does not reconcile with st21_11's output. That gap travels
     with the data as a note rather than being quietly absorbed.
     """
-    sheet = rows(data)
     year = None
     for cells in sheet:
         a = (cells.get("A") or "").strip()
@@ -222,6 +219,7 @@ def parse_districts(data: bytes) -> tuple[int, list[dict]]:
         raise SystemExit("no year found in st21_04")
 
     out = []
+    parent = None
     for cells in sheet:
         name = (cells.get("A") or "").rstrip()
         raw = (cells.get("C") or "").strip()
@@ -231,21 +229,44 @@ def parse_districts(data: bytes) -> tuple[int, list[dict]]:
             continue
         if re.fullmatch(r"(19|20)\d{2}", name.strip()):
             continue
-        # Indentation is the hierarchy: unindented rows are districts or the
-        # grand total, indented rows are regional councils inside them.
-        indented = name.startswith(" ")
-        label = name.strip()
+
+        # Trailing footnote markers belong in prose, not in an identity.
+        # "JUDEA AND SAMARIA AREA(3)" would put a footnote number into a
+        # region name that a join or a map label then has to carry forever.
+        label = re.sub(r"\(\d+\)$", "", name.strip()).strip()
+        # Indentation is the hierarchy: unindented rows are districts,
+        # indented rows are regional councils inside the district above.
+        # The grand total is indented too, so it is identified by name.
+        if label == "GRAND TOTAL":
+            level = "total"
+        elif name.startswith(" "):
+            level = "council"
+        else:
+            level = "district"
+            parent = label
+
+        # "Outside regional councils" appears once per district, so the bare
+        # label is not unique and three rows would collide on the identity
+        # index. Qualify it with its district -- the figure is meaningless
+        # without knowing which district it is outside of anyway.
+        if level == "council" and label == "Outside regional councils":
+            district = (parent or "").title().replace(" And ", " and ")
+            label = f"{label} ({district})"
+
+        row = {"region": label, "level": level}
+        if level == "district":
+            row["parent"] = None
+        elif level == "council":
+            row["parent"] = parent
+
         if raw in SUPPRESSED:
-            out.append({"region": label, "level": "council" if indented
-                        else "district", "suppressed": True})
+            row["suppressed"] = True
         else:
             try:
-                tonnes = num(raw)
+                row["tonnes"] = num(raw)
             except ValueError:
                 continue
-            out.append({"region": label,
-                        "level": "council" if indented else "district",
-                        "tonnes": tonnes})
+        out.append(row)
     return year, out
 
 
@@ -254,7 +275,7 @@ def yaml_quote(s: str) -> str:
 
 
 def render(output, value, inventory, district_year, districts) -> str:
-    total = next((d for d in districts if d["region"] == "GRAND TOTAL"), None)
+    total = next((d for d in districts if d["level"] == "total"), None)
     councils = [d for d in districts
                 if d["level"] == "council" and "tonnes" in d]
     suppressed = [d for d in districts if d.get("suppressed")]
@@ -367,12 +388,15 @@ def render(output, value, inventory, district_year, districts) -> str:
         "  regions:",
     ]
     for d in districts:
+        parent = d.get("parent")
+        pfx = f", parent: {yaml_quote(parent)}" if parent else ""
         if d.get("suppressed"):
             lines.append(f"    - {{region: {yaml_quote(d['region'])}, "
-                         f"level: {d['level']}, suppressed: 1}}")
+                         f"level: {d['level']}{pfx}, suppressed: 1}}")
         else:
             lines.append(f"    - {{region: {yaml_quote(d['region'])}, "
-                         f"level: {d['level']}, value: {d['tonnes']:.2f}}}")
+                         f"level: {d['level']}{pfx}, "
+                         f"value: {d['tonnes']:.2f}}}")
     lines += [
         "",
         f"# {len(councils)} councils with volume, {len(suppressed)} suppressed.",
@@ -383,9 +407,9 @@ def render(output, value, inventory, district_year, districts) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
-    output, value = parse_output(fetch("st21_11"))
-    inventory = parse_inventory(fetch("st21_08"))
-    district_year, districts = parse_districts(fetch("st21_04"))
+    output, value = parse_output(rows(fetch("st21_11")))
+    inventory = parse_inventory(rows(fetch("st21_08")))
+    district_year, districts = parse_districts(rows(fetch("st21_04")))
     text = render(output, value, inventory, district_year, districts)
 
     if "--check" in argv:

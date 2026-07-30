@@ -44,6 +44,7 @@ TABLE_LABELS = {
     "regional_production_year": "regional production stats",
     "regional_census_stat": "census state stats",
     "husbandry_stat_year": "husbandry stats",
+    "output_stat_year": "output/inventory stats",
     "quality_defect": "quality defects",
     "nutrition": "nutrition rows",
     "resource_footprint": "resource footprint",

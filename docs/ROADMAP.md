@@ -428,7 +428,12 @@ thing in the milestone.
   Pro is added; the config to apply is settled (require PR, require Code Owner
   review, 1 approval, admins exempt so solo work is not deadlocked).
 
-- [!] **International: country selector, top 50 max.** Only countries with
+- [~] **International: country selector, top 50 max.** Israel is the first
+  foreign country with data (v1.3.0) and it already reshapes this item: the
+  selector cannot be a plain dropdown, because a country may have production
+  without a head count, and switching the calculator's country would then either
+  hide the answer or compute it from US assumptions. `/api/countries` returns
+  what each country can answer for exactly this reason. Only countries with
   readily available data, per the note. Realistic tiers: FAOSTAT gives
   production for nearly every country; slaughter *and* processing loss detail
   exists for maybe a dozen (EU via Eurostat, Brazil via ABPA, UK via DEFRA).
@@ -631,7 +636,12 @@ schema improvement; turkey re-runs the wing analysis on a bigger bird).
 7. **M6 vanilla, then M5 turkey.** Vanilla is now cheaper than turkey: the
    `continuous` machinery will already exist, whereas turkey needs its own
    husbandry sourcing and must not inherit chicken loss factors.
-8. **Israel (`docs/ISRAEL-PLAN.md`), when a CBS series ID is in hand.**
+8. **Israel's remaining half.** Data landed 2026-07-29 (v1.3.0): output,
+   inventory and 47 districts, all cited. What is left is not a loading job —
+   it is the **head-slaughtered figure CBS does not publish**, and the Israeli
+   Poultry Board or the Ministry of Agriculture is the only remaining route.
+   Until it exists, Israel answers scale and not count, and the comparison panel
+   should say so rather than switching the calculator's country.
 9. **M7 translation and RTL**, then the Discord bot.
 
 Three judgement calls worth revisiting:

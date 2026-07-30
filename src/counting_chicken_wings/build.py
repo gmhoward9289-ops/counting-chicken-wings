@@ -521,6 +521,75 @@ class Builder:
                 source_id=sid,
             )
 
+    def output_stats(self):
+        """Output, value and inventory as a country publishes them.
+
+        Every data/output_*.yaml is loaded, so a second country is a new file
+        rather than an edit here. Nothing is converted at load: each row keeps
+        the unit its publisher used, because the alternative is deciding on a
+        reader's behalf that CBS's "agricultural output" means the same thing
+        as NASS's certified ready-to-cook pounds. It may not, and the
+        publication does not say.
+
+        Israel is why this exists. See the header of data/output_israel.yaml.
+        """
+        files = sorted(DATA.glob("output_*.yaml"))
+        for path in files:
+            t = load(path.name)
+            sp = self.species[t["species"]]
+            cid = self.ctry(t.get("country"), f"{path.name} country")
+
+            nat = t.get("national", {})
+            nat_source = nat.get("source")
+            for measure in ("meat_output", "output_value"):
+                block = nat.get(measure)
+                if not block:
+                    continue
+                for r in block["years"]:
+                    self.ins(
+                        "output_stat_year",
+                        species_id=sp, country_id=cid, region=None,
+                        year=r["year"], measure=measure,
+                        value=r.get("value"), unit=block["unit"],
+                        provisional=r.get("provisional", 0),
+                        suppressed=0,
+                        source_id=self.src(nat_source, f"{path.name} {measure}"),
+                    )
+
+            inv = t.get("inventory")
+            if inv:
+                for r in inv["years"]:
+                    self.ins(
+                        "output_stat_year",
+                        species_id=sp, country_id=cid, region=None,
+                        year=r["year"], measure="inventory_eoy",
+                        value=r.get("value"), unit=inv["unit"],
+                        provisional=r.get("provisional", 0), suppressed=0,
+                        source_id=self.src(inv["source"],
+                                           f"{path.name} inventory"),
+                    )
+
+            d = t.get("districts")
+            if d:
+                sid = self.src(d["source"], f"{path.name} districts")
+                for r in d["regions"]:
+                    supp = int(bool(r.get("suppressed")))
+                    self.ins(
+                        "output_stat_year",
+                        species_id=sp, country_id=cid, region=r["region"],
+                        year=d["year"],
+                        # Marketed, not produced. Different measurement from
+                        # the national output figure, which is why the two do
+                        # not reconcile and why they are not the same measure.
+                        measure="marketed",
+                        value=None if supp else r.get("value"),
+                        unit=d["unit"], provisional=0, suppressed=supp,
+                        source_id=sid,
+                        notes=(f"{r['level']}"
+                               + (f" in {r['parent']}" if r.get("parent")
+                                  else "")),
+                    )
+
     def facts(self):
         t = load("facts.yaml")
         dom = self.domain.get("poultry")
@@ -613,6 +682,7 @@ class Builder:
         self.egg_states()
         self.production_value()
         self.census_states()
+        self.output_stats()
         self.quality()
         self.nutrition()
         self.resources()

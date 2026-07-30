@@ -294,3 +294,58 @@ def test_iteration_cap_is_enforced(client):
     """An unbounded iteration count is a free denial-of-service."""
     assert client.get("/api/scientific",
                       params={"iterations": 10_000_000}).status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# The country dimension
+# ---------------------------------------------------------------------------
+
+def test_countries_report_coverage_not_just_names(client):
+    """A selector built from names alone would imply parity that is not there.
+
+    The US has enumerated head slaughtered and a sourced loss chain; Israel has
+    tonnage and districts. `answers` is what lets a caller say so.
+    """
+    data = get(client, "/api/countries")
+    by = {c["iso3"]: c for c in data["countries"]}
+    assert {"USA", "ISR"} <= set(by)
+
+    assert by["USA"]["answers"]["head_slaughtered"] is True
+    # The whole point of the Israeli data pass: CBS publishes no head figure,
+    # so the count question cannot be answered from Israeli sources.
+    assert by["ISR"]["answers"]["head_slaughtered"] is False
+    assert by["ISR"]["answers"]["subnational"] is True
+    assert by["ISR"]["native_mass_unit"] == "kg"
+
+    # Per-capita is the comparison an audience asks for first, and it is the
+    # one figure with no reachable citation. Absent, not guessed.
+    assert all(c["answers"]["per_capita"] is False for c in data["countries"])
+
+
+def test_output_endpoint_returns_native_units_unconverted(client):
+    data = get(client, "/api/output/ISR")
+    units = {r["unit"] for r in data["national"]}
+    assert units == {"tonnes", "ILS_million", "thousand_head"}
+    assert data["country"]["native_currency"] == "ILS"
+    assert every_row_cited(data["national"] + data["regional"])
+
+
+def every_row_cited(rows):
+    return all(r["source_slug"] for r in rows)
+
+
+def test_suppressed_regions_are_flagged_rather_than_zeroed(client):
+    """A withheld figure read as zero is a wrong answer that looks like data."""
+    data = get(client, "/api/output/ISR")
+    assert data["suppressed_regions"] > 0
+    for r in data["regional"]:
+        if r["suppressed"]:
+            assert r["value"] is None
+
+
+def test_unknown_country_is_a_404_not_an_empty_answer(client):
+    assert client.get("/api/output/XXX").status_code == 404
+
+
+def test_country_codes_are_case_insensitive(client):
+    assert client.get("/api/output/isr").status_code == 200

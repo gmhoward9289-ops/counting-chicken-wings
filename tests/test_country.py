@@ -72,30 +72,91 @@ def test_every_country_id_resolves(db):
         assert orphans == 0, f"{t} has {orphans} rows with a dangling country"
 
 
-def test_the_existing_corpus_is_all_american(db):
-    """Every figure loaded so far is US. If this starts failing, a second
-    country has data and every national aggregate needs re-checking for a
-    missing country filter."""
+# Tables that legitimately hold more than one country, each with the reason.
+# Everything else is US-only, and the test below is the alarm that fires the
+# day that changes -- the whole point being that a second country's rows in a
+# table nobody re-checked is how a national aggregate silently double-counts.
+MULTI_COUNTRY = {
+    "output_stat_year": (
+        "Israel's CBS figures, 2026-07-29. Exists precisely because Israeli "
+        "reporting does not fit the US-shaped tables: tonnes not pounds, "
+        "shekels not dollars, and no head-slaughtered series at all."
+    ),
+}
+
+
+def test_us_shaped_tables_stay_us_only(db):
+    """The four NASS-shaped tables must not gain a second country by accident.
+
+    Their column names bake in American reporting -- live_weight_lb,
+    certified_rtc_lb, value_kusd -- so a foreign row in them is either
+    converted (and the conversion is a figure needing a citation) or
+    mislabelled. Israeli data goes to output_stat_year instead.
+
+    This replaced a blanket "the whole corpus is American" assertion, which
+    fired as designed when Israel landed. Relaxing it to a per-table allowlist
+    keeps the alarm for the next table rather than deleting it.
+    """
     usa = db.execute("SELECT id FROM country WHERE iso3='USA'").fetchone()[0]
     for t in country_scoped_tables(db):
+        if t in MULTI_COUNTRY:
+            continue
         other = db.execute(
             f"SELECT COUNT(*) FROM {t} WHERE country_id != ?", (usa,)
         ).fetchone()[0]
         assert other == 0, (
-            f"{t} now holds non-US rows -- audit every query that aggregates "
-            f"it for a missing country filter before relaxing this test"
+            f"{t} now holds non-US rows. Audit every query that aggregates it "
+            f"for a missing country filter, then add it to MULTI_COUNTRY with "
+            f"the reason -- do not just delete this assertion."
         )
 
 
-def test_israel_is_stubbed_with_no_data(db):
-    """Israel exists as a dimension row before any statistic arrives, so the
-    schema and loaders are exercised by a second country first."""
+def test_views_are_the_hazard_when_a_second_country_lands(db):
+    """v_broiler_size_stat and v_layer_egg_stat do not filter by country.
+
+    Nothing reads them for a country other than the US today, because Israel's
+    rows live in output_stat_year. If Israeli figures ever reach
+    regional_size_stat, every consumer of these views starts silently mixing
+    countries -- so this asserts the precondition that keeps them safe rather
+    than trusting that someone will remember.
+    """
+    usa = db.execute("SELECT id FROM country WHERE iso3='USA'").fetchone()[0]
+    for view in ("v_broiler_size_stat", "v_layer_egg_stat"):
+        other = db.execute(
+            f"SELECT COUNT(*) FROM {view} WHERE country_id != ?", (usa,)
+        ).fetchone()[0]
+        assert other == 0, (
+            f"{view} now spans countries and does not filter by one. Add a "
+            f"country predicate to the view or to every caller."
+        )
+
+
+def test_israel_has_data_but_not_the_denominator(db):
+    """Israel is no longer a stub, and what it still cannot answer is asserted.
+
+    CBS publishes broiler output in tonnes, a value in shekels, and an
+    end-of-year flock -- but no head slaughtered, which is the denominator the
+    count question needs. Population is likewise still NULL: the per-capita
+    headline's only citation now 404s.
+    """
     isr = db.execute("SELECT * FROM country WHERE iso3='ISR'").fetchone()
-    assert isr is not None, "Israel stub missing"
+    assert isr is not None, "Israel row missing"
     assert isr["native_mass_unit"] == "kg"
     assert isr["population"] is None, (
         "population is a statistic and needs a citation before it is set"
     )
+
+    loaded = db.execute(
+        "SELECT COUNT(*) FROM output_stat_year WHERE country_id=?",
+        (isr["id"],),
+    ).fetchone()[0]
+    assert loaded > 0, "Israeli CBS figures are no longer pending"
+
+    assert db.execute(
+        """SELECT COUNT(*) FROM slaughter_stat_year
+           WHERE country_id=? AND head_slaughtered IS NOT NULL""",
+        (isr["id"],),
+    ).fetchone()[0] == 0
 
 
 def test_reporting_units_are_recorded_not_assumed(db):

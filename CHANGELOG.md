@@ -1,5 +1,74 @@
 # Changelog
 
+## v1.3.0 — 2026-07-29
+
+Israel becomes the second country with data, and the README stops claiming the
+corpus is better sourced than it is.
+
+### Israeli broiler figures, and the one they do not include
+
+Three tables from the CBS Statistical Abstract 2025, chapter 21, cited and
+audited like everything else:
+
+- **Output** — 600,072 tonnes of broiler output for 2024 (CBS-provisional),
+  with a series back to 2000, and value in NIS millions.
+- **Inventory** — 37,895 thousand broilers at end of 2024, a series back to
+  1960. This is a **standing flock, not annual throughput**; broilers turn over
+  several times a year, so reading it as slaughter understates the answer
+  several times over. Stored as `measure='inventory_eoy'` so the distinction is
+  in the data rather than only in a comment.
+- **Districts** — broiler marketing for 47 districts and regional councils,
+  8 of them suppressed by CBS and loaded as presence without volume.
+
+**Head slaughtered per year does not exist in any of them**, and it is the
+denominator the count question needs. So Israel can answer scale and cannot
+answer "how many chickens" from Israeli sources. Deriving it would need an
+Israeli average bird weight, which CBS also does not publish; borrowing the US
+6.62 lb would make an American assumption look like an Israeli measurement.
+A test asserts no Israeli head figure exists, so nothing can quietly fill it.
+
+Per-capita consumption is still unclaimable: the article behind the "Israel is
+the world's highest per-capita chicken consumer" headline now returns 404, so
+`country.population` stays NULL and `/api/countries` reports
+`per_capita: false` rather than rendering a claim with no reachable source.
+
+### New table, because the US-shaped ones would have lied
+
+`output_stat_year` stores the measure and the unit as data instead of implying
+them in column names. The alternatives were mapping CBS tonnage onto
+`certified_rtc_lb` — asserting that "agricultural output" means ready-to-cook
+weight, which the publication never says — or converting shekels with an
+exchange rate we would have to source. Israeli rows keep tonnes, shekels and
+thousands of head; a test fails if a pound or a dollar ever appears on one.
+
+### A cross-check that fails, on purpose
+
+District marketing sums to 571,500 tonnes against 600,072 tonnes of output, a
+gap of **4.76%**. Marketing excludes self-consumption and private sale by CBS's
+own footnote, so the gap is probably real — but a reader who adds up the
+districts will find it, and finding it unannounced reads as our error. Both the
+gap and its explanation are asserted by tests.
+
+### New endpoints
+
+- `GET /api/countries` — what each country can actually answer, not just its
+  name. A selector built from names alone would imply a parity that does not
+  exist between enumerated US head counts and Israeli tonnage.
+- `GET /api/output/{iso3}` — output, value and inventory in native units, with
+  suppressed regions flagged rather than zeroed.
+
+### README figures are generated
+
+"Honesty about the data" had drifted three times while hand-maintained, most
+recently claiming **7 of 12** loss factors were unsourced estimates when the
+true figure was **11 of 21** — an error in the direction that overstates the data's
+quality. `audit --stats` now emits that block, `tools/update_readme.py` writes
+it, and CI fails if a data change skipped the regeneration. The test count is no
+longer quoted: it is not a fact about the data and it moved on every commit.
+
+The Scope section was three subjects out of date and now documents all three
+yield modes — countable, recurring, continuous.
+
 ## v1.2.0 — 2026-07-29
 
 Eggs get their own supply chain. **This is a correctness fix**: v1.1.0 shipped

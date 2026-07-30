@@ -381,6 +381,67 @@ CREATE TABLE regional_census_stat (
 );
 
 
+-- Output, value and inventory as a country actually publishes them.
+--
+-- Exists because Israel does not fit the tables above, and forcing it in
+-- would have produced a wrong answer that looked right. Every US table here
+-- bakes American reporting into its column names -- live_weight_lb,
+-- certified_rtc_lb, value_kusd -- and assumes head slaughtered is available,
+-- because for NASS it always is. Israel's CBS publishes neither: chapter 21
+-- reports broiler output in tonnes and NIS, and an end-of-year flock count,
+-- and no table anywhere carries head slaughtered per year.
+--
+-- Two mappings were available and both are wrong:
+--
+--   slaughter_stat_year.certified_rtc_lb  -- would assert that CBS's
+--       "agricultural output" is ready-to-cook weight. It may be live
+--       weight; the publication does not say, and guessing decides an
+--       answer for the reader.
+--   regional_production_year.value_kusd   -- would need an exchange rate,
+--       which is a figure, which needs a citation we do not have.
+--
+-- So the measure and the unit are stored as data instead of implied by a
+-- column name. A query must read `unit` to interpret `value`, which is the
+-- point: no cross-country arithmetic can happen by accident.
+--
+-- region NULL means the national figure. Non-NULL is subnational, and Israel
+-- does have subnational poultry data -- districts and regional councils --
+-- so a choropleth has a genuine counterpart rather than a blank panel.
+CREATE TABLE output_stat_year (
+    id              INTEGER PRIMARY KEY,
+    species_id      INTEGER NOT NULL REFERENCES species(id),
+    country_id      INTEGER NOT NULL REFERENCES country(id),
+    region          TEXT,                      -- NULL = national total
+    year            INTEGER NOT NULL,
+    measure         TEXT    NOT NULL CHECK (measure IN (
+                        'meat_output',      -- output of meat, per the source
+                        'output_value',     -- value of that output
+                        'inventory_eoy',    -- standing flock, end of year
+                        'marketed'          -- quantity marketed, not produced
+                    )),
+    value           REAL,
+    unit            TEXT    NOT NULL,          -- 'tonnes','ILS_million','thousand_head'
+    -- The source's own asterisk. CBS marks 2024 provisional, and a figure
+    -- that may be revised should not be quoted as final.
+    provisional     INTEGER NOT NULL DEFAULT 0,
+    -- Withheld by the publisher: CBS uses "-" and ". ." exactly as NASS
+    -- does. A suppressed row is presence without volume, which the map
+    -- already knows how to render -- so it is a row with no value, never a
+    -- zero and never a missing row.
+    suppressed      INTEGER NOT NULL DEFAULT 0,
+    source_id       INTEGER NOT NULL REFERENCES source(id),
+    notes           TEXT,
+    CHECK (suppressed = 1 OR value IS NOT NULL)
+);
+
+-- COALESCE because region is nullable and SQLite treats NULLs as distinct in
+-- a UNIQUE constraint, which would let the national row load twice.
+CREATE UNIQUE INDEX idx_output_stat_identity
+    ON output_stat_year (
+        species_id, country_id, COALESCE(region, ''), year, measure
+    );
+
+
 -- Grow-out / husbandry performance by year.
 CREATE TABLE husbandry_stat_year (
     id                  INTEGER PRIMARY KEY,

@@ -621,3 +621,111 @@
     teaspoon of threads is about a third of a gram. Not loaded: converting it
     would require assuming the mass of a teaspoon of saffron, and that
     assumption would be ours rather than the source's.
+
+# ---------------------------------------------------------------------------
+# Israel. The Central Bureau of Statistics Statistical Abstract, chapter 21.
+#
+# CBS is Israel's national statistical agency, so these are 'government' in
+# the same tier as NASS -- but read the coverage note on each before treating
+# them as equivalent. NASS enumerates head slaughtered; CBS publishes tonnage
+# and a standing flock and never publishes head slaughtered at all. The tier
+# describes who measured, not what they measured.
+#
+# The route to these files is recorded in
+# docs/research/library/poultry-israel.yaml and is not guessable: the files
+# are on the HEBREW web, agriculture is chapter 21, and the English path
+# returns a 200 soft-404 of exactly 2,056 bytes so a wrong guess looks like a
+# working URL.
+# ---------------------------------------------------------------------------
+
+- slug: cbs-st21-11-output-2025
+  title: >-
+    Table 21.11, Agricultural output by industry and product - Statistical
+    Abstract of Israel 2025
+  publisher: Israel Central Bureau of Statistics
+  url: https://www.cbs.gov.il/he/publications/DocLib/2025/21.ShnatonAgriculture/st21_11.xlsx
+  published_on: '2025-08-14'
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Broiler output in 1,000 tonnes and value in NIS million for 2024*, 2023,
+    2020, 2010 and 2000. CBS's own asterisk marks 2024 provisional, and that
+    marker is carried into the data rather than dropped.
+
+    Footnote 5 defines broilers as "Chickens intended for fattening for the
+    meat industry", which matches our broiler species, so loading it needed no
+    mapping decision.
+
+    What it does NOT carry, and the reason Israel cannot yet answer the count
+    question from Israeli data: no head slaughtered, and no average bird
+    weight anywhere in the table. "Agricultural output" is also not defined as
+    live or dressed weight, which is why the figure is stored as
+    measure='meat_output' in tonnes rather than mapped onto a US column that
+    would assert one or the other.
+
+    Table eggs appear in the same table at 2,661.49 under a column headed
+    "1,000 tonnes, unless otherwise stated". That cannot be tonnes for a
+    country of ten million people, so it is one of the "otherwise stated"
+    rows and is almost certainly millions of eggs. Not loaded: almost
+    certainly is not a citation.
+
+- slug: cbs-st21-08-livestock-2025
+  title: >-
+    Table 21.8, Livestock - Statistical Abstract of Israel 2025
+  publisher: Israel Central Bureau of Statistics
+  url: https://www.cbs.gov.il/he/publications/DocLib/2025/21.ShnatonAgriculture/st21_08.xlsx
+  published_on: '2025-08-14'
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Broilers in thousands, END OF YEAR, ten columns back to 1960 - the longest
+    poultry series available for Israel, and the reason 1960-1990 figures are
+    loaded even though nothing uses them yet.
+
+    THE TRAP ON THIS TABLE: 37,895 thousand head for 2024 is a standing flock
+    at a point in time, not annual throughput. Broilers turn over several
+    times a year, so reading it as slaughter understates the answer several
+    times over. Stored as measure='inventory_eoy' so the distinction is in the
+    data and not only in this note. It is the same
+    inventory-versus-throughput caveat already carried on the US census sales
+    figures.
+
+    It also neither confirms nor refutes the trade-press lead of ~260 million
+    broilers a year in docs/ISRAEL-PLAN.md, because a flock of 37.9 million
+    turning over five to seven times a year is consistent with it.
+
+- slug: cbs-st21-04-marketing-2025
+  title: >-
+    Table 21.4, Marketing of animals and animal products by district and
+    regional council - Statistical Abstract of Israel 2025
+  publisher: Israel Central Bureau of Statistics
+  url: https://www.cbs.gov.il/he/publications/DocLib/2025/21.ShnatonAgriculture/st21_04.xlsx
+  published_on: '2025-08-14'
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Broilers MARKETED in tonnes by district and regional council, 2024 only.
+    Settles the open question at the foot of docs/ISRAEL-PLAN.md: Israel does
+    have subnational poultry data, so a comparison against 50 US states need
+    not be visibly lopsided.
+
+    Suppression uses "-" and ". ." exactly as NASS does, so the existing
+    "presence, not volume" rendering applies unchanged. Six councils are
+    suppressed and are loaded as rows with no value - never as zero.
+
+    CROSS-CHECK THAT FAILS, and it travels with either figure: the districts
+    sum to 571,499.95 tonnes against 600,072 tonnes of output in table 21.11,
+    a gap of 4.76%. Marketing excludes self-consumption and private sale by
+    its own footnote 1, so the gap is probably real rather than an error --
+    but a reader who adds up the districts will find it, and finding it
+    unannounced reads as a mistake in our data.
+
+    Footnote 1 also means this is "by source of product", not by place of
+    slaughter. Footnote 3 restricts the Judea and Samaria Area row to
+    "Israeli localities", so that row counts some of the production in that
+    area and not all of it; it is kept with the publisher's label and the
+    publisher's qualification rather than being renamed or dropped.
+
+    "Outside regional councils" appears once per district in the source. The
+    bare label is not unique, so each is qualified with its district - the
+    figure means nothing without knowing which district it is outside of.

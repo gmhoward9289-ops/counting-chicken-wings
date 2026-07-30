@@ -4,10 +4,20 @@
 Israel. The roadmap put international work after v1.0; this supersedes that
 for Israel specifically. Everything else international stays post-1.0.
 
-**Status:** plan only. No Israel data has been added yet. The two figures
-quoted below are from a first search pass and are **not yet verified or
-loaded** — they are here to show what the shape of the answer looks like,
-and one of them already has a conflict that needs resolving.
+**Status, 2026-07-29: data landed, and the denominator did not.** Three CBS
+tables from Statistical Abstract chapter 21 are loaded and cited — broiler
+output in tonnes and shekels 2000–2024, an end-of-year flock series back to
+1960, and broiler marketing for 47 districts and regional councils. Served at
+`GET /api/output/ISR`, with coverage per country at `GET /api/countries`.
+
+**What is still not answerable, and it is Priority 1 below:** CBS publishes no
+head-slaughtered series anywhere in chapter 21. That is the denominator this
+document calls "the denominator for everything", so Israel can currently answer
+*scale* — tonnage, value, districts — and cannot answer *how many chickens*
+from Israeli sources alone. Deriving it needs an Israeli average bird weight,
+which CBS does not publish either; borrowing the US 6.62 lb would turn an
+American assumption into an Israeli fact, which the rules at the foot of this
+document forbid.
 
 This document is written to be handed to a research agent. Each item states
 the exact question, where to look, and what "done" means.
@@ -45,17 +55,32 @@ if the answer is "second".
 Everything here is what the model actually needs to answer the wing question
 for Israel rather than just decorate a slide.
 
-| Field | Why the model needs it | Likely source |
+| Field | Why the model needs it | Status 2026-07-29 |
 |---|---|---|
-| Broilers slaughtered per year (head) | The denominator for everything | Israel CBS; FAOSTAT `Producing Animals/Slaughtered` |
-| Average live weight (kg) | Drives wing size, mirrors our US state data | CBS; Israeli Poultry Board |
-| Total chicken meat production (tonnes) | Cross-check against head × weight | FAOSTAT `Production` |
-| Per-capita consumption (kg) | The headline | OECD-FAO Outlook |
-| Self-sufficiency / import share | Israel is reported as a **net surplus** producer, which is unusual and interesting | CBS trade data; FAS GAIN reports |
+| Broilers slaughtered per year (head) | The denominator for everything | **STILL MISSING.** In none of the three CBS tables. The Israeli Poultry Board (Hebrew) or the Ministry of Agriculture is the remaining route |
+| Average live weight (kg) | Drives wing size, mirrors our US state data | **STILL MISSING.** CBS publishes no per-bird weight. With this *or* head, the other follows from tonnage |
+| Total chicken meat production (tonnes) | Cross-check against head × weight | **LOADED.** 600,072 t for 2024 (provisional), back to 2000. `cbs-st21-11-output-2025` |
+| Standing flock (head) | Not throughput, but the only head figure that exists | **LOADED.** 37,895 thousand at end of 2024, series back to 1960. `cbs-st21-08-livestock-2025` |
+| Output value (NIS) | Scale in the local currency, uncconverted | **LOADED.** NIS 5,367.6m for 2024 |
+| Subnational breakdown | Gives the choropleth an Israeli counterpart | **LOADED.** 47 districts and councils, 8 suppressed. `cbs-st21-04-marketing-2025` |
+| Per-capita consumption (kg) | The headline | **UNSOURCEABLE for now** — see below. Population is deliberately NULL |
+| Self-sufficiency / import share | Israel is reported as a **net surplus** producer, which is unusual and interesting | Not attempted |
 
-An unverified first-pass figure of **~260 million broilers/year** and an
-industry turnover of **NIS 10 billion** appeared in trade press. Treat as a
-lead, not a fact, until it comes from CBS or FAOSTAT.
+The trade-press lead of **~260 million broilers/year** is neither confirmed nor
+refuted by what landed: a flock of 37.9 million turning over five to seven times
+a year is consistent with it, which is precisely why an inventory figure cannot
+substitute for a throughput one.
+
+**Two figures a demo can use honestly today:** 600,072 tonnes of broiler output
+in 2024, and Lakhish as the largest regional council at 72,354 tonnes. Both are
+CBS-measured, dated, and provisional where CBS says provisional.
+
+**One cross-check fails and must travel with either figure.** The districts sum
+to 571,500 tonnes against 600,072 tonnes of output — a gap of 4.76%. Marketing
+excludes self-consumption and private sale by CBS's own footnote, so the gap is
+probably real; but a reader who adds up the districts will find it, and finding
+it unannounced reads as our error. A test asserts the gap is still there and
+that the citation still explains it.
 
 **Sources in order of preference:**
 
@@ -72,7 +97,22 @@ lead, not a fact, until it comes from CBS or FAOSTAT.
 4. **USDA FAS GAIN reports** — US attaché reports on Israeli agriculture,
    in English, often with good structural commentary.
 
-### Access findings — tested 2026-07-29
+### Access findings — first pass, superseded in part
+
+**Read `docs/research/library/poultry-israel.yaml` first.** It is the machine-
+readable version of this section and it is more current: it records the route
+that actually worked, per-file coverage, and what each file explicitly cannot
+answer. The table below is kept because a dead source costs the next attempt the
+same hour it cost this one.
+
+The one correction that matters: the CBS *series* API works but is **the wrong
+database** — 400 series sampled across the id space returned foreign trade,
+industry, prices and population, and no agriculture at all. Agriculture exists
+only in the Statistical Abstract, on the **Hebrew** web, in chapter 21 (not 19),
+and the English path returns a 200 soft-404 of exactly 2,056 bytes so a wrong
+guess looks like a working URL.
+
+
 
 All four were tried in the order above. Recorded because a dead source costs
 the next attempt the same hour it cost this one, and because
@@ -193,14 +233,26 @@ Still open:
 
 ## What "done" looks like for the demo
 
-1. Per-capita consumption claim is verified, dated, and defensible — including
-   if the honest answer is that Israel is no longer first.
-2. Israel broiler head, live weight, and production loaded from CBS or
-   FAOSTAT, cited like everything else, and passing the audit.
-3. A country selector that switches the calculator between US and Israel.
-4. At least one Israel-specific loss stage (kosher inspection) with an honest
-   confidence grade — `estimate` is fine if that is the truth.
-5. Two or three Israel facts in the learning centre, surprise-ranked.
+1. [ ] Per-capita consumption claim is verified, dated, and defensible —
+   including if the honest answer is that Israel is no longer first.
+   **Blocked, not forgotten:** the only citation 404s, so population stays NULL
+   and `/api/countries` reports `per_capita: false` rather than rendering a
+   claim we cannot back.
+2. [~] Israel broiler **production** loaded from CBS, cited, passing the audit.
+   Head and live weight are still missing and are the whole of what is left.
+3. [~] A country selector. The **data and API** are in place —
+   `/api/countries` reports what each country can answer, `/api/output/{iso3}`
+   serves the figures in native units. The **UI** is not built yet, and it
+   should not be built as a plain dropdown: with no Israeli head figure a
+   selector on the calculator would have to either hide the count answer or
+   compute it from US assumptions. Recommend a comparison *panel* — scale,
+   districts, value — rather than switching the calculator's country.
+4. [ ] At least one Israel-specific loss stage (kosher inspection) with an
+   honest confidence grade. Untouched, and still the strongest content here.
+5. [ ] Two or three Israel facts in the learning centre, surprise-ranked. Now
+   cheap: three cited sources are loaded, and "Israel's broiler flock turns over
+   five to seven times a year, so its 37.9-million-bird flock is not 37.9
+   million birds a year" is exactly the kind of fact the deck wants.
 
 ## What to explicitly NOT do
 
@@ -224,10 +276,29 @@ Still open:
 
 ---
 
-## Next question, when the research lands
+## ~~Next question, when the research lands~~ — answered 2026-07-29
 
-How thin is too thin? If Israel ends up with national figures only and no
-subnational breakdown, the state choropleth has no Israeli counterpart and
-the comparison is lopsided in a visible way. Options are a national-level
-comparison that simply omits the map, or districts if CBS publishes them.
-Worth deciding once we know what CBS actually has, not before.
+The question was whether Israel would have national figures only, leaving the
+choropleth without a counterpart and the comparison visibly lopsided.
+
+**It does have subnational data.** CBS table 21.4 breaks broiler marketing down
+to districts and regional councils, and it uses suppression markers — `-` and
+`. .` — with exactly the meaning NASS's withheld cells have, so the existing
+"presence, not volume" rendering applies unchanged rather than needing new
+handling. Eight councils are suppressed and are loaded as rows with no value,
+never as zeros.
+
+Two caveats the map must carry:
+
+- The measure is **marketed, not produced**, and by CBS's footnote it excludes
+  self-consumption and private sale. It is also "by source of product", not by
+  place of slaughter — so a district figure is where the birds came from, not
+  where they were processed.
+- `Outside regional councils` appears once per district in the source, so the
+  bare label is not unique. Each is qualified with its district; the figure
+  means nothing without knowing which district it sits outside of.
+
+The new open question is smaller and sharper: **is a 47-region Israeli map next
+to a 50-state US map an honest comparison when one is districts of marketing and
+the other is states of slaughter?** They are not the same measurement. Label
+each map with its own measure rather than sharing one legend.
