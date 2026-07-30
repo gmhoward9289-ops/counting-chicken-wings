@@ -615,6 +615,18 @@ class Builder:
                 notes=d.get("notes"),
             )
 
+        for a in t.get("axes", []):
+            self.ins(
+                "quality_axis",
+                species_id=self.species[a["species"]],
+                question=a["question"], x_label=a["x_label"],
+                x_unit=a.get("x_unit"), x_kind=a["x_kind"],
+                verdict_yield=a.get("verdict_yield"),
+                verdict_quality=a.get("verdict_quality"),
+                verdict_count=a.get("verdict_count"),
+                summary=(a.get("summary") or "").strip() or None,
+            )
+
     def nutrition(self):
         t = merge_files("nutrition")
         for n in t["nutrition"]:
