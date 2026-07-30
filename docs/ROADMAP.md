@@ -571,15 +571,21 @@ has been updated to point here.
 
 ## Housekeeping
 
-- [ ] **README status section is stale again, and this is the third time.** It
-  says "7 of 12 are unsourced estimates" and "228 tests, 37 sources, 45 facts";
-  actual is **11 of 21**, 261 tests, and 46 facts. The direction of the error is
-  what matters: the README currently claims the data is *more* sourced than it
-  is, on a project whose credibility rests on being honest about exactly that.
+- [x] **README corpus figures are generated, after drifting three times.** It had
+  said "7 of 12 are unsourced estimates" against an actual **11 of 21** — an
+  error in the direction that matters, claiming the data was *better* sourced
+  than it is.
 
-  Stop fixing the numbers by hand. **Generate that section from `audit.py`
-  output** — the audit already prints every figure the README quotes, so this is
-  plumbing, not analysis. Anything else and it is stale again by next release.
+  `audit --stats` now emits the block, `tools/update_readme.py` writes it between
+  markers, `tests/test_readme.py` fails on drift, and CI runs
+  `update_readme.py --check`. Two decisions worth keeping:
+  - **The test count is no longer quoted.** It is not a fact about the data, it
+    changes almost every commit, and it was most of why the section went stale.
+  - **A second test forbids re-quoting the counts outside the block**, because
+    the Status section had come to contradict the section two screens above it.
+
+  While there: the Scope section still said "broiler chickens only" three
+  subjects in, and now documents all three yield modes.
 
 - [ ] **Unreachable data has no route to the user.** `nutrition`,
   `resource_footprint`, and `economic_stat` are built and cited but exposed by
@@ -609,9 +615,7 @@ schema improvement; turkey re-runs the wing analysis on a bigger bird).
    it. A reader who sees a saffron figure rendered exactly like a NASS figure has
    been misled by the presentation, not the data — and that is the one failure
    this project exists to prevent.
-2. **README generated from `audit.py`** (Housekeeping). Half an hour, and it
-   ends a class of error that has now recurred three times on the one claim the
-   project cannot afford to get wrong.
+2. ~~**README generated from `audit.py`**~~ — done 2026-07-29, see Housekeeping.
 3. **M1 seasonality.** Still the cheapest unexploited data in the project, and
    now doubly so — the monthly series is loaded and unused for *both* broiler
    live weights and eggs per layer.

@@ -52,6 +52,13 @@ jobs:
       - name: Every statistic must cite a source
         run: python -m counting_chicken_wings.audit
 
+      # The README quotes how much of the corpus is unsourced, and that claim
+      # drifted three times while hand-maintained -- last overstating the data's
+      # quality, which is the direction that matters. It is generated now, and
+      # this is the check that it was regenerated after a data change.
+      - name: README corpus figures must be current
+        run: python tools/update_readme.py --check
+
   # Guards the one thing a single-source-of-truth version cannot guard by
   # itself: that the tag someone typed matches what pyproject.toml declares.
   # Without this, `git tag v1.1.0` on a 1.0.0 tree publishes a release whose

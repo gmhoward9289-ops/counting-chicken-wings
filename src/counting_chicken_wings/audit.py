@@ -1,6 +1,7 @@
 """Audit the database's citation coverage.
 
     python -m counting_chicken_wings.audit
+    python -m counting_chicken_wings.audit --stats   # the README's own block
 
 Exits non-zero if any statistic lacks a citation. Runs as its own CI job so
 "is every number sourced?" is a visible check rather than a line buried in
@@ -9,6 +10,15 @@ a test log.
 It also prints, without failing, how much of the model currently rests on
 unsourced estimates. That number should go down over time; printing it
 every build is what keeps it honest.
+
+`--stats` exists because that honesty was being undermined by the README.
+Its "Honesty about the data" section is the project's single most important
+claim and it was hand-maintained, so it drifted three times -- most recently
+to "7 of 12 are unsourced estimates" when the true figure was 11 of 21. The
+direction of the error is what makes it serious: the README claimed the corpus
+was *better sourced* than it is. Every figure it quotes is one the audit
+already computes, so the README now generates that block from here and
+`tests/test_readme.py` fails if the two disagree.
 """
 
 from __future__ import annotations
@@ -86,6 +96,108 @@ def cited_tables(conn: sqlite3.Connection) -> list[tuple[str, str, bool]]:
     return out
 
 CONFIDENCE_ORDER = ["measured", "derived", "study", "industry", "estimate"]
+
+# The README delimits its generated block with these. Kept here rather than in
+# the tool that writes them, because the test that checks for drift and the
+# writer both need them and a second copy is a second thing to get wrong.
+STATS_BEGIN = "<!-- BEGIN GENERATED: audit --stats -->"
+STATS_END = "<!-- END GENERATED -->"
+
+
+def corpus_stats(conn: sqlite3.Connection) -> dict:
+    """Every figure the README quotes about the corpus, from the corpus.
+
+    Deliberately excludes the test count. It is not a fact about the data, it
+    changes on almost every commit, and quoting it was most of why the README
+    went stale -- a number nobody can verify from the artifact it describes.
+    """
+    def scalar(sql: str) -> int:
+        return conn.execute(sql).fetchone()[0]
+
+    tables = cited_tables(conn)
+    clauses = " ".join(
+        f"AND NOT EXISTS (SELECT 1 FROM {t} WHERE source_id = s.id)"
+        for t, _, _ in tables
+    )
+
+    confidence = dict(conn.execute(
+        "SELECT confidence, COUNT(*) FROM loss_factor GROUP BY confidence"
+    ).fetchall())
+    factors = sum(confidence.values())
+    estimates = confidence.get("estimate", 0)
+
+    # Count-affecting is the distinction that matters and the one the README
+    # has always drawn: a mass-only factor cannot move the answer however
+    # uncertain it is. Same predicate as the report below -- if these two ever
+    # disagree the README is wrong again, so they share one query shape.
+    count_affecting = scalar("""
+        SELECT COUNT(*) FROM loss_factor lf
+        JOIN loss_stage ls ON ls.id = lf.loss_stage_id
+        WHERE lf.confidence = 'estimate'
+          AND ls.applies_to IN ('individual','product')
+    """)
+
+    return {
+        "sources": scalar("SELECT COUNT(*) FROM source"),
+        "orphan_sources": scalar(
+            f"SELECT COUNT(*) FROM source s WHERE 1=1 {clauses}"
+        ),
+        "facts": scalar("SELECT COUNT(*) FROM fact"),
+        "tables": scalar(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%'"
+        ),
+        "products": scalar("SELECT COUNT(*) FROM product"),
+        "species_active": scalar("SELECT COUNT(*) FROM species WHERE active=1"),
+        "loss_factors": factors,
+        "estimates": estimates,
+        "estimate_pct": round(100 * estimates / factors) if factors else 0,
+        "count_affecting_estimates": count_affecting,
+    }
+
+
+def render_stats(stats: dict) -> str:
+    """The README block, between its markers.
+
+    Prose rather than a table, because this section is an argument and not a
+    dashboard: the point is that *most* of the uncertainty cannot move the
+    answer, which a bare percentage does not say.
+    """
+    s = stats
+    mass_only = s["estimates"] - s["count_affecting_estimates"]
+    lines = [
+        STATS_BEGIN,
+        "",
+        f"Of the {s['loss_factors']} loss factors in the model, "
+        f"**{s['estimates']} are unsourced estimates "
+        f"({s['estimate_pct']}%)**. Only "
+        f"{s['count_affecting_estimates']} of those affect the **count** "
+        f"answer; the other {mass_only} are mass-only and cannot move it. "
+        "That distinction is tracked and reported by the audit rather than "
+        "glossed over.",
+        "",
+        f"Corpus: **{s['sources']} sources**, {s['facts']} facts, "
+        f"{s['products']} products across {s['species_active']} active "
+        f"species, {s['tables']} tables. Every statistic is cited and the "
+        "build fails if one is not.",
+        "",
+        "*Generated by `python -m counting_chicken_wings.audit --stats`. "
+        "Do not hand-edit — `tests/test_readme.py` fails on drift.*",
+        "",
+        STATS_END,
+    ]
+    return "\n".join(lines)
+
+
+def stats_block(db_path: Path = DEFAULT_DB) -> str:
+    """The generated block for a database path, building it if absent."""
+    if not db_path.exists():
+        build(db_path)
+    conn = sqlite3.connect(db_path)
+    try:
+        return render_stats(corpus_stats(conn))
+    finally:
+        conn.close()
 
 
 def audit(db_path: Path) -> int:
@@ -181,6 +293,10 @@ def audit(db_path: Path) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
+    if "--stats" in argv:
+        rest = [a for a in argv if a != "--stats"]
+        print(stats_block(Path(rest[0]) if rest else DEFAULT_DB))
+        return 0
     return audit(Path(argv[0]) if argv else DEFAULT_DB)
 
 
