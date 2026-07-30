@@ -18,6 +18,11 @@ wings gui                            # serve the web UI
 `build` must run before the API or CLI will serve anything. CI runs `build`, `pytest`,
 and `audit` as separate jobs so "is every number cited?" is visible as its own check.
 
+`WINGS_DB=<path>` overrides where `chickens.db` is built and read. It is the API's only
+override (`wings` also has `--db`). Without it the path derives from `__file__`, which
+lands in the repo root **only under an editable install** — which is why the Dockerfile
+and render.yaml both use `pip install -e`.
+
 **CI pins Python 3.12.** Create a 3.12 venv for this project before trusting a local test
 result — a different interpreter is a different result.
 

@@ -292,3 +292,25 @@ def test_state_spread_survives_the_build(db):
     """).fetchall())
     assert rows["Ohio"] == pytest.approx(4.6, abs=0.05)
     assert rows["North Carolina"] == pytest.approx(8.4, abs=0.05)
+
+
+def test_wings_db_env_overrides_default_path(monkeypatch, tmp_path):
+    """$WINGS_DB must win over the __file__-derived default.
+
+    The derived path is correct only under an editable install, and the API
+    has no --db flag, so the environment is its only override. Resolution
+    happens at import, hence the reloads.
+    """
+    import importlib
+
+    from counting_chicken_wings import build as build_mod
+
+    target = tmp_path / "elsewhere" / "wings.db"
+    monkeypatch.setenv("WINGS_DB", str(target))
+    try:
+        importlib.reload(build_mod)
+        assert build_mod.DEFAULT_DB == target
+    finally:
+        monkeypatch.delenv("WINGS_DB")
+        importlib.reload(build_mod)
+    assert build_mod.DEFAULT_DB == build_mod.ROOT / "chickens.db"
