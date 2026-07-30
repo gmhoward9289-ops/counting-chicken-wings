@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "cooper"))
 
-import research_batch as rb            # noqa: E402
-from runner import consensus, sanitize  # noqa: E402
+import research_batch as rb                          # noqa: E402
+from runner import consensus, parse_spec, sanitize    # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -267,3 +267,82 @@ def test_both_silent_yields_nothing():
     merged, agree = consensus(None, None)
     assert merged is None
     assert agree == "0/2"
+
+
+# ---------------------------------------------------------------------------
+# Spec parsing -- regression: five of six items were silently dropped
+# ---------------------------------------------------------------------------
+
+SPEC = """# Batch 42 — test
+
+### Item 1 — first_field
+
+| | |
+|---|---|
+| `unit` | widgets per thing |
+
+**Question:** How many widgets per thing?
+
+**Candidate URLs:**
+
+- https://example.org/a — because
+- https://example.org/b
+
+### Item 2 — second_field
+
+| | |
+|---|---|
+| `unit` | things per box |
+
+**Question:** How many things per box?
+
+**Candidate URLs:** as Item 1.
+
+### Item 3 — third_field
+
+**Question:** A question with no table row for unit.
+
+**Candidate URLs:** as Item 1.
+"""
+
+
+def _spec(tmp_path):
+    p = tmp_path / "batch-42-test.md"
+    p.write_text(SPEC)
+    return parse_spec(p)
+
+
+def test_parse_spec_finds_every_item(tmp_path):
+    """The bug this locks: items saying 'as Item 1' rather than repeating URLs
+    were dropped, so batch-01-saffron parsed as 1 item instead of 6."""
+    assert len(_spec(tmp_path)["items"]) == 3
+
+
+def test_parse_spec_inherits_urls(tmp_path):
+    items = _spec(tmp_path)["items"]
+    assert items[1]["urls"] == items[0]["urls"]
+    assert items[2]["urls"] == items[0]["urls"]
+    assert len(items[0]["urls"]) == 2
+
+
+def test_parse_spec_strips_the_item_number_from_the_field_name(tmp_path):
+    """Was returning '1 — first_field' rather than 'first_field'."""
+    assert [i["field"] for i in _spec(tmp_path)["items"]] == [
+        "first_field", "second_field", "third_field"]
+
+
+def test_parse_spec_trims_trailing_punctuation_from_urls(tmp_path):
+    for u in _spec(tmp_path)["items"][0]["urls"]:
+        assert not u.endswith((".", ",", ")", ";"))
+
+
+def test_parse_spec_tolerates_a_missing_unit(tmp_path):
+    assert _spec(tmp_path)["items"][2]["unit"] == ""
+
+
+def test_parse_spec_yields_nothing_without_urls(tmp_path):
+    """Batches 02 and 03 deliberately have no URLs. Zero items is correct and
+    must fail loudly rather than fetch nothing and look successful."""
+    p = tmp_path / "batch-43-empty.md"
+    p.write_text("### Item 1 — f\n\n**Question:** Q?\n\nNo urls here.\n")
+    assert parse_spec(p)["items"] == []

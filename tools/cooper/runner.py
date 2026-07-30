@@ -145,17 +145,28 @@ def chunks(text: str) -> list[str]:
 # Retrieval -- free, via nomic-embed-text
 # ---------------------------------------------------------------------------
 
+OLLAMA_API = "http://localhost:11434/api/embeddings"
+
+
 def embed(text: str) -> list[float] | None:
+    """Embed via the HTTP API, not the CLI.
+
+    `ollama embed` does not exist in ollama 0.32.5, which is what COOPER runs --
+    verified, after an earlier version of this function called it and would have
+    silently fallen back to keyword matching. The fallback would have looked like
+    "the embedder is unavailable" when in fact it was reachable the whole time,
+    just at a different address. The HTTP API is stable across versions.
+    """
     try:
-        r = subprocess.run(
-            ["ollama", "embed", "-m", EMBEDDER, text[:8000]],
-            capture_output=True, text=True, timeout=120,
+        body = json.dumps({"model": EMBEDDER, "prompt": text[:8000]}).encode()
+        req = urllib.request.Request(
+            OLLAMA_API, data=body,
+            headers={"Content-Type": "application/json"},
         )
-        if r.returncode != 0:
-            return None
-        data = json.loads(r.stdout)
-        vecs = data.get("embeddings") or data.get("embedding")
-        return vecs[0] if vecs and isinstance(vecs[0], list) else vecs
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read())
+        vec = data.get("embedding")
+        return vec if isinstance(vec, list) and vec else None
     except Exception:                               # noqa: BLE001
         return None
 
@@ -264,20 +275,44 @@ def parse_spec(path: Path) -> dict:
     Question and at least one URL; everything else is optional.
     """
     text = path.read_text(encoding="utf-8")
-    items = []
+    items: list[dict] = []
+    inherited: list[str] = []
+
     for block in re.split(r"^### Item\b", text, flags=re.M)[1:]:
+        lines = block.splitlines()
+        header = lines[0] if lines else ""
+
         q = re.search(r"\*\*Question:\*\*\s*(.+)", block)
-        urls = re.findall(r"^\s*[-*]\s*(https?://\S+)", block, flags=re.M)
+        if not q:
+            continue
+
+        # Strip the "1 — " / "1 - " prefix off the heading so the field name is
+        # the field name, not the field name with an item number glued to it.
+        field = re.sub(r"^\s*\d+\s*[—–-]\s*", "", header).strip()
+
         unit = re.search(r"\|\s*`?unit`?\s*\|\s*([^|]+)\|", block, re.I)
-        field = re.search(r"^\s*—\s*(.+)$", block.splitlines()[0]) if block else None
-        if q and urls:
-            items.append({
-                "field": (field.group(1).strip() if field
-                          else block.splitlines()[0].strip(" —")),
-                "question": q.group(1).strip(),
-                "unit": unit.group(1).strip() if unit else "",
-                "urls": [u.rstrip(").,") for u in urls],
-            })
+
+        urls = [u.rstrip(").,;")
+                for u in re.findall(r"^\s*[-*]\s*(https?://\S+)", block,
+                                    flags=re.M)]
+        if urls:
+            inherited = urls
+        else:
+            # Specs written for humans say "Candidate URLs: as Item 1" rather
+            # than repeating three long URLs six times. An earlier version
+            # required URLs per item and silently dropped five of six items in
+            # batch-01 -- caught only because the parser was run before the
+            # batch. Inherit from the previous item that listed any.
+            urls = inherited
+            if not urls:
+                continue
+
+        items.append({
+            "field": field,
+            "question": q.group(1).strip(),
+            "unit": unit.group(1).strip() if unit else "",
+            "urls": urls,
+        })
     return {"items": items}
 
 
