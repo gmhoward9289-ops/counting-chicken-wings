@@ -1,11 +1,10 @@
 # Batch 06 — ground beef
 
-> **DRAFTED, not runnable yet.** Candidate URLs below are **leads from a
-> frontier-model search pass, not yet confirmed 200 with the figure present**.
-> Run a URL scout and replace each lead with a fetched-and-confirmed URL before
-> `send` — COOPER fetches exactly what is listed and never searches, so an
-> unconfirmed URL returns empty for a reason nobody can see (see
-> `README.md` and the batch-02 header).
+> **SCOUTED 2026-07-30.** Candidate URLs below were each fetched and confirmed
+> 200 with the figure present on this date, except **Item 4 (patty mass)**,
+> which still needs a confirmed authoritative source and is marked pending.
+> COOPER fetches exactly what is listed and never searches, so leave the pending
+> item blank rather than plausible.
 
 **Archetype:** `how-many`
 
@@ -14,8 +13,9 @@ different cattle does it represent?
 
 **Expected confidence ceiling:** `industry` — and the mixing/pool figures are
 `estimate`. There is no NASS-equivalent enumeration of animals-per-patty; the
-strongest public figures are trade-press and a corporate disclosure. Read the
-result without borrowing the poultry corpus's credibility.
+strongest public figures are trade press, a corporate disclosure, and an FSIS
+sampling notice. Read the result without borrowing the poultry corpus's
+credibility.
 
 ---
 
@@ -30,9 +30,9 @@ the corpus of the pooling model standing on its own, with the floor (1, a
 home-ground single animal) reachable only by hand, exactly like whole-bird wings.
 
 It also forces an honest confrontation with *how little is actually enumerated*:
-the famous "100+ cattle" number is a corporate statement, not a survey. If the
-subject only added rows it should say so — but it does more, by isolating the
-mixing engine from any anatomical floor.
+the famous "100+ cattle" number is a corporate statement, not a survey. The
+strongest hard evidence of the pool is a contamination traceback (Item 5), where
+a single patty's trimmings were traced to four separate sources.
 
 `is_anatomical_constant: 0` for the patty product, and that is the point.
 
@@ -52,17 +52,19 @@ mixing engine from any anatomical floor.
 **Question:** How many different cattle contribute meat to a single ground-beef
 patty in a commodity supply chain?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- https://www.foodrepublic.com/1459051/burger-actually-isnt-made-from-single-cow/ — cites McDonald's 2014 statement via *Washington Post*
-- https://www.farmprogress.com/cattle-news/how-many-cattle-in-a-ground-beef-patty- — ag trade press; 2017 consumer survey (returned 403 on one pass — find a live mirror)
+- https://www.foodrepublic.com/1459051/burger-actually-isnt-made-from-single-cow/
+  — trade press; attributes to McDonald's (2014) via *Washington Post*.
+  Quote: "meat from more than 100 cows can be used to make one hamburger."
 
-**Done means:** a count with a verbatim quote and the year, plus whether the
-figure describes a *typical* patty or a *maximum* ("can contain"). Name which.
+**Done means:** a count with the verbatim quote and the year, plus whether the
+figure describes a *typical* patty or a *maximum* ("can be used"). Name which.
 
-**Watch for:** **patty vs lot vs "can contain".** "Meat from 100+ cattle can be
-used" is a ceiling on a production lot, routinely misread as a typical patty.
-Keep the distinction the source actually draws.
+**Watch for:** **patty vs lot vs "can be used".** "100+ cows can be used" is a
+ceiling, routinely misread as a typical patty count. Keep the distinction the
+source draws. This is a secondary source quoting a corporate statement — grade
+`industry`, not higher.
 
 ---
 
@@ -72,64 +74,72 @@ Keep the distinction the source actually draws.
 |---|---|
 | `target_table` | `loss_factor` (mixing pool proxy) |
 | `required_fields` | `value_lo/mode/hi`, `unit`, `confidence: estimate` |
-| `unit` | distinct cattle per grinder production lot |
+| `unit` | container/lot structure of ground beef (pool proxy) |
 | `archetype` | `how-many` |
 
-**Question:** How many cattle are represented in a single production lot at a
-commercial grinder?
+**Question:** How is a lot of beef manufacturing trimmings structured, and does
+source material commingle across a lot?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- <USDA FSIS ground-beef / "N60" lot-sampling guidance — find and confirm>
-- <peer-reviewed traceability / recall-lot study — find and confirm>
+- https://www.fsis.usda.gov/policy/fsis-notice/05-23 — FSIS, cloth/N60 sampling
+  of beef manufacturing trimmings. Quote: "IPP are to use 1 cloth for up to 5
+  containers from the same lot of product." Combo bins are held as a
+  "multi-combo lot pending STEC test results."
 
-**Done means:** a lot size (in animals, or in lbs with a trim-per-animal figure
-to convert) with a quote, graded `estimate` and labelled as a pool size, not a
-patty count.
+**Done means:** the lot/combo structure with a verbatim quote, graded
+`estimate` as a **pool proxy** — FSIS defines the container, not an animal count.
+The animals-per-lot number itself stays `estimate` and is explicitly *not* in
+this source.
 
-**Watch for:** lot size given in **pounds**, not animals — needs Item 3 to
-convert, and the conversion must be shown, not assumed.
+**Watch for:** do not read a combo-bin or lot definition as an animal count. It
+bounds the container, not the herd. No agency enumerates animals per lot.
 
 ---
 
-### Item 3 — lean_trim_per_animal
+### Item 3 — beef_per_animal_proxy
 
 | | |
 |---|---|
 | `target_table` | `product` |
 | `required_fields` | `value_lo/mode/hi`, `unit` |
-| `unit` | lbs of grindable lean trim per carcass |
+| `unit` | lbs packaged beef per animal (upper-bound proxy for trim) |
 | `archetype` | `how-many` |
 
-**Question:** How much grindable trim does one beef carcass yield?
+**Question:** How much packaged beef does one animal yield (to bound
+parcels-per-patty)?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- <USDA ERS or land-grant extension beef-cutout / trim-yield table — confirm>
+- https://extension.msstate.edu/publications/how-much-meat-expect-beef-animal-farm-direct-beef
+  — MSU Extension. Quote: "the take-home weight of packaged beef will be
+  approximately 40 percent of the animal's live weight" (~470 lb from a 1,200 lb
+  steer).
 
-**Done means:** a per-carcass trim mass with a quote, used only to bound
-parcels-per-patty — not to claim a count.
+**Done means:** a per-animal packaged-beef figure with the quote, used only to
+bound parcels-per-patty — not to claim a count.
 
-**Watch for:** trim destined for grinding vs total carcass weight; imported
-lean trim blended in changes the animal pool without changing the mass.
+**Watch for:** this is **total packaged beef**, not grinding trim specifically —
+an upper bound, and it must be labelled as a proxy. Imported lean trim blended
+in changes the animal pool without changing mass.
 
 ---
 
-### Item 4 — patty_mass_standard
+### Item 4 — patty_mass_standard  *(URL PENDING — do not send this item yet)*
 
 | | |
 |---|---|
 | `target_table` | `product` |
 | `required_fields` | `value_lo/mode/hi`, `unit` |
-| `unit` | grams per patty (note the foodservice count, e.g. 1:4, 1:10) |
+| `unit` | grams per patty (note foodservice count, e.g. 1:4, 1:10) |
 | `archetype` | `how-many` |
 
 **Question:** What is a standard ground-beef patty weight (retail quarter-pound
 and common foodservice portions)?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
-
-- <foodservice spec / USDA FoodData Central patty entry — confirm>
+**Candidate URLs:** *none confirmed yet.* A quarter-pound (~113 g) is common
+knowledge but needs a citable source. **Scout a USDA FoodData Central patty
+entry or a foodservice spec sheet and confirm 200 before sending this item.**
 
 **Done means:** a mass with the portion convention named.
 
@@ -144,23 +154,25 @@ the animal count (the wings cook-loss lesson, reused).
 |---|---|
 | `target_table` | `quality_defect` (provenance note) |
 | `required_fields` | `value_lo/mode/hi`, `unit`, `notes` |
-| `unit` | source establishments / animals named in a documented traceback |
+| `unit` | source establishments named in a documented traceback |
 | `archetype` | `how-many` |
 
 **Question:** In a documented ground-beef contamination traceback, how many
-source establishments or animals were implicated in a single patty or lot?
+source establishments were the trimmings in a single patty made from?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- <NYT 2009 Stephanie Smith E. coli traceback — confirm a live, fetchable copy>
-- <USDA FSIS recall notice with lot breadth — confirm>
+- https://marlerclark.com/media_relations/e.-coli-path-shows-flaws-in-ground-beef-inspection
+  — reprint of Michael Moss, *NYT* 2009 (Stephanie Smith case). Quote: "The
+  ingredients came from slaughterhouses in Nebraska, Texas and Uruguay, and from
+  a South Dakota company that processes fatty trimmings and treats them with
+  ammonia to kill bacteria." → **four sources for one patty.**
 
-**Done means:** a count of implicated sources with a quote, framed as evidence
-that the pool is real and large — the "does anyone actually know?" element,
-like the honey batch's provenance-audit.
+**Done means:** the count of implicated sources with the quote — the hardest
+evidence that the pool is real and large.
 
-**Watch for:** a recall's breadth (all product from a shift) is not the same as
-one patty's animal count; report which the source measured.
+**Watch for:** this is one documented patty, not a typical count; frame it as an
+existence proof of large pooling, not an average.
 
 ---
 
@@ -168,25 +180,25 @@ one patty's animal count; report which the source measured.
 
 | Figure | Source | Year | Definition used |
 |---|---|---|---|
-| cattle per unit | McDonald's / WaPo | 2014 | "can be used to make one hamburger" (max, corporate) |
-| cattle per unit | trade press / survey | 2017 | consumer-facing typical |
+| cattle per unit | McDonald's / WaPo (via Food Republic) | 2014 | "can be used" (max, corporate) |
+| sources per patty | Moss / NYT (via Marler Clark) | 2009 | one documented patty, 4 sources |
 
-Lay the max-vs-typical gap out; do not pick one.
+Lay the max-vs-documented gap out; do not pick one.
 
 ## What to explicitly NOT do
 
 - Do not treat the "100+ cattle" figure as a **typical** patty count. It is a
   maximum from a corporate statement.
-- Do not reuse the wing combo-bin / IQF pool sizes as beef pool sizes. A beef
-  grinder combo is a different container and a different `k`; grade any borrowed
-  number `estimate` and say it was borrowed.
+- Do not treat the FSIS lot/combo definition as an animal count.
+- Do not reuse the wing combo-bin / IQF pool sizes as beef pool sizes. Grade any
+  borrowed number `estimate` and say it was borrowed.
 - Do not claim `measured`/`derived`. No agency enumerates animals per patty.
 
 ## Acceptance
 
-- [ ] Every row carries a quote verbatim in a returned document
+- [ ] Every sent row carries a quote verbatim in a returned document
 - [ ] No row claims `measured` or `derived`; pool figures are `estimate`
+- [ ] Item 4 is not sent until a patty-mass URL is confirmed 200
 - [ ] New sources in `proposed_sources:`, not `data/sources.yaml`
 - [ ] `build` + `audit` pass on COOPER's self-check
-- [ ] max-vs-typical patty figures flagged as a conflict, not averaged
 - [ ] `ground_beef_patty` carries `is_anatomical_constant: 0`; floor = 1 (hand)
