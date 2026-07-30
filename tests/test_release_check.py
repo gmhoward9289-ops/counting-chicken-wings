@@ -43,7 +43,7 @@ def test_a_new_table_is_minor():
     )
     need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "second"
-    assert "new table" in why[0]
+    assert "output_stat_year" in why[0]  # names the table
 
 
 @pytest.mark.parametrize("table,slug", [
@@ -75,7 +75,7 @@ def test_more_rows_of_an_existing_kind_is_only_patch():
                 counts={**BASE["counts"], "source": 49})
     need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "third"
-    assert "no new kind" in why[0]
+    assert "source" in why[0]  # names the table whose count moved
 
 
 def test_an_identical_corpus_needs_nothing():
