@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### The third digit is a minor, not a patch
+
+Versioning is now **MAJOR.MINOR.MINOR** and no longer claims to be SemVer. The
+thresholds are unchanged from the capability-not-volume rule — second digit for
+a new *kind* of thing, third for more of what we already had — but SemVer's
+third component means "fixes only, no new capability", and ours routinely ships
+thousands of rows of corpus data. Naming it PATCH was a promise the project
+does not keep.
+
+Nothing about the numbers changes shape: three components, `v`-prefixed tags,
+same CI gate, and v1.0.0 through v1.7.0 stand as tagged. `release_check.py`
+still prints `MINOR` / `PATCH` for *second* / *third* — same thresholds, older
+vocabulary, retermed separately.
+
 ### Three new "how many X" subjects, scouted and ready to run
 
 Ground beef, maple syrup, and silk are drafted as research work-orders under
