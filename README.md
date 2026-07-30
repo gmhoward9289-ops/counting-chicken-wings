@@ -211,3 +211,10 @@ Ongoing work, tracked in [docs/ROADMAP.md](docs/ROADMAP.md): replacing the
 estimate-grade loss factors with sourced ones, US regions, more producers and
 breeds, chicken manure, and USDA programs. International data and a Discord
 bot are deliberately post-1.0.
+
+## License
+
+Dual-licensed: the source code is [MIT](LICENSE); the research corpus and
+written documentation under `docs/` and `data/` are
+[CC BY 4.0](LICENSE-DOCS) — reuse them freely with credit. The figures
+themselves are facts from the cited primary sources and carry no copyright.
