@@ -97,11 +97,6 @@ the version alone cannot tell you whether the corpus grew. The counts can.
 
 ### The rule is checked, not remembered
 
-**`release_check.py` still speaks SemVer.** It says `MINOR` where this document
-says *second* and `PATCH` where this document says *third*; the thresholds are
-identical, only the words differ. Retermed in a follow-up — the tool landed
-first and its vocabulary is not worth a rebase against the release queue.
-
 ```bash
 python tools/release_check.py              # this tree against the latest tag
 python tools/release_check.py --base v1.6.0
@@ -112,10 +107,10 @@ justifies. Three signals:
 
 | signal | verdict |
 |---|---|
-| new table, or new `domain` / `species` / `product` row | MINOR |
-| a table or kind **removed** | MINOR — retraction breaks an existing citation |
-| row counts of existing tables changed, nothing else | PATCH |
-| **`wings count 12` returns different numbers for any product** | MINOR, whatever else did or did not change |
+| new table, or new `domain` / `species` / `product` row | **second** |
+| a table or kind **removed** | **second** — retraction breaks an existing citation |
+| row counts of existing tables changed, nothing else | **third** |
+| **`wings count 12` returns different numbers for any product** | **second**, whatever else did or did not change |
 
 The last one is the reason this exists. It is the rule's own criterion rather
 than a proxy for it, and unlike the other two it fires on a *code* change as
@@ -150,15 +145,20 @@ compares against the previous tag rather than the one being cut.
 #### What it cannot see, stated plainly
 
 It diffs the **corpus and the published answer**. A new view, endpoint or CLI
-flag is MINOR under the rule and invisible to it, because nothing about the
-data changed. Run it against v1.6.0 and it reports "PATCH required" for a
-release that added `seasonality.py`, a view and an endpoint — and v1.7.0 was
-correctly MINOR.
+flag takes the **second** digit under the rule and is invisible to it, because
+nothing about the data changed. Run it against v1.6.0 and it reports "THIRD
+required" for a release that added `seasonality.py`, a view and an endpoint —
+and v1.7.0 was correctly a second-digit bump.
 
 That under-detection is deliberately the safe direction. The check only fails
-on **under**-bumping, so a human who bumps MINOR for new capability passes
-regardless. It is a floor on the required bump, never a ceiling, and "PATCH
-required" means *at least* patch — not *only* patch.
+on **under**-bumping, so a human who moves the second digit for new capability
+passes regardless. It is a floor on the required bump, never a ceiling, and
+"THIRD required" means *at least* third — not *only* third.
+
+It also never returns **major**. The MAJOR criterion is the *meaning* of a
+published figure changing rather than its value, and no diff can detect that.
+`major` stays in the ranking purely so that a human who bumps it still
+satisfies the over-bumping rule.
 
 The floor is also why this check and the "pick the number last" rule below do
 not argue: the check tells you the smallest number the diff justifies, and you
