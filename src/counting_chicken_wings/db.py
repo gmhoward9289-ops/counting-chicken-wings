@@ -320,6 +320,53 @@ def product_source_slug(conn, product_slug: str) -> str | None:
     return row["slug"] if row else None
 
 
+# The regional stat table holds broiler pounds and layer eggs-per-year in the
+# same `avg_size` column, so it is read through per-species views only. Naming
+# the view per species rather than filtering on a species column means a
+# species with no view fails loudly instead of returning mixed units.
+SIZE_VIEW_BY_SPECIES = {
+    "broiler": "v_broiler_size_stat",
+    "layer_hen": "v_layer_egg_stat",
+}
+
+
+def monthly_size_series(
+    conn, year: int = 2025, species_slug: str = "broiler",
+) -> dict[str, dict]:
+    """Every region's twelve monthly figures for one year.
+
+    Returns `{region: {"values": [12 entries, January first], "unit": str,
+    "source_slug": str}}`. A month NASS does not publish stays None -- it is
+    not carried forward from its neighbour, because a filled gap is a figure
+    we made up.
+    """
+    view = SIZE_VIEW_BY_SPECIES.get(species_slug)
+    if view is None:
+        raise ValueError(
+            f"no monthly series view for species {species_slug!r}; "
+            f"known: {', '.join(sorted(SIZE_VIEW_BY_SPECIES))}"
+        )
+    rows = conn.execute(
+        f"""SELECT r.region, r.month, r.avg_size, r.size_unit,
+                   s.slug AS source_slug
+            FROM {view} r
+            JOIN source s ON s.id = r.source_id
+            WHERE r.year = ? AND r.month IS NOT NULL
+            ORDER BY r.region, r.month""",
+        (year,),
+    ).fetchall()
+
+    out: dict[str, dict] = {}
+    for r in rows:
+        entry = out.setdefault(r["region"], {
+            "values": [None] * 12,
+            "unit": r["size_unit"],
+            "source_slug": r["source_slug"],
+        })
+        entry["values"][r["month"] - 1] = r["avg_size"]
+    return out
+
+
 def get_facts(conn, placement: str = "both", limit: int = 5):
     where = ("placement IN ('result','both')" if placement == "result"
              else "placement IN ('learning','both')" if placement == "learning"

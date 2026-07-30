@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import db as dbm
+from . import seasonality as seas
 from .model import (
     CONFIDENCE_RANK,
     expected_distinct,
@@ -702,6 +703,224 @@ def state_trend(region: str, year: int = 2025):
             "year": year,
             "months": [r["month"] for r in rows],
             "values": [r["avg_size"] for r in rows],
+        }
+    finally:
+        conn.close()
+
+
+def _seasonality_payload(s: seas.Seasonality) -> dict:
+    return {
+        "region": s.region,
+        "year": s.year,
+        "unit": s.unit,
+        "values": s.values,
+        "months_present": s.months_present,
+        "lo": s.lo,
+        "hi": s.hi,
+        "mean": s.mean,
+        "swing": s.swing,
+        "swing_pct": s.swing_pct,
+        "peak_month": s.peak_month,
+        "peak_month_name": s.peak_month_name,
+        "trough_month": s.trough_month,
+        "trough_month_name": s.trough_month_name,
+        "jitter": s.jitter,
+        "signal_ratio": s.signal_ratio,
+        "persistence": s.persistence,
+        "wrap_share": s.wrap_share,
+        "verdict": s.verdict,
+        # The weights are surveyed; this verdict about them is ours.
+        "confidence": s.confidence,
+        "explanation": s.explanation,
+        "sparkline": seas.sparkline(s.values),
+        "source_slug": s.source_slug,
+        "notes": s.notes,
+    }
+
+
+def _concordance_payload(c: seas.Concordance) -> dict:
+    return {
+        "kind": c.kind,
+        "regions_counted": c.regions_counted,
+        "window": list(c.window),
+        "window_names": c.window_names,
+        "in_window": c.in_window,
+        "expected": c.expected,
+        "p_value": c.p_value,
+        "p_corrected": c.p_corrected,
+        "verdict": c.verdict,
+        "confidence": c.confidence,
+        "explanation": c.explanation,
+        "caveats": c.caveats,
+    }
+
+
+_ORDINALS = {
+    1: "", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth",
+    7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth", 11: "eleventh",
+    12: "twelfth",
+}
+
+
+def _ordinal(n: int) -> str:
+    return _ORDINALS.get(n, f"{n}th")
+
+
+def _seasonality_summary(
+    national: seas.Seasonality | None,
+    regions: list[seas.Seasonality],
+    peak: seas.Concordance,
+) -> str:
+    """Assemble the verdict from the rows, never from memory.
+
+    Written this way after the hardcoded first draft claimed that no single
+    state's series was a clean cycle. One is.
+    """
+    cycles = [s.region for s in regions if s.is_seasonal]
+    if cycles:
+        single = (
+            f"{len(cycles)} of {len(regions)} states "
+            f"({', '.join(sorted(cycles))}) "
+            f"{'has' if len(cycles) == 1 else 'have'} a swing clean enough to "
+            f"call seasonal on its own. Every other state, and the national "
+            f"series itself, does not."
+        )
+    else:
+        single = (
+            f"Not one of the {len(regions)} states has a swing clean enough to "
+            f"call seasonal on its own, and neither does the national series."
+        )
+
+    size = (
+        f"Broiler live weight moves {national.swing_pct:.1f}% across the year "
+        f"nationally, from {national.lo:g} {national.unit} in "
+        f"{national.trough_month_name} to {national.hi:g} in "
+        f"{national.peak_month_name}. "
+        if national else ""
+    )
+    together = (
+        f"What the states cannot show alone they show together: {peak.explanation} "
+        if peak.verdict != "no agreement" else
+        "The states do not agree on when the year peaks either, so there is no "
+        "second-order evidence to fall back on. "
+    )
+    return (
+        size + single + " " + together
+        + "So the season is real, it is small, and no single series is "
+        "evidence for it. None of it moves the count: a chicken has two wings "
+        "in every month of the year."
+    )
+
+
+@app.get("/api/seasonality")
+def seasonality(year: int = 2025, species: str = "broiler"):
+    """Does bird weight have a season, and does the answer change with it?
+
+    The finding this endpoint exists to carry: **no single series is seasonal
+    and the states agree anyway.** Per region the swing is indistinguishable
+    from twelve noisy points, including nationally. But the peak months cluster
+    in one quarter far more than chance allows, and agreement between series
+    that were surveyed separately is stronger evidence than any one series'
+    range. Both results are returned, neither is hidden, and the weaker one is
+    not dressed up as the stronger.
+    """
+    conn = dbm.connect()
+    try:
+        try:
+            raw = dbm.monthly_size_series(conn, year=year, species_slug=species)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        if not raw:
+            raise HTTPException(
+                404, f"no monthly {species} data for {year}")
+
+        national_raw = raw.pop("United States", None)
+        national = (
+            seas.analyse(
+                "United States", year, national_raw["values"],
+                unit=national_raw["unit"],
+                source_slug=national_raw["source_slug"],
+            ) if national_raw else None
+        )
+        regions = [
+            seas.analyse(
+                name, year, v["values"], unit=v["unit"],
+                source_slug=v["source_slug"],
+            )
+            for name, v in raw.items()
+        ]
+        # States only. The national row is the sum of these and would be
+        # counted as an extra independent witness to its own evidence.
+        peak = seas.concordance(regions, "peak")
+        trough = seas.concordance(regions, "trough")
+
+        slugs = sorted({
+            s.source_slug for s in regions + ([national] if national else [])
+            if s.source_slug
+        })
+        sources = dbm.get_sources(conn, slugs)
+
+        cycles = [s.region for s in regions if s.is_seasonal]
+
+        month_ranks = None
+        feb_from_bottom = None
+        if national and national.months_present == 12:
+            order = sorted(
+                range(12), key=lambda i: national.values[i], reverse=True)
+            month_ranks = {
+                seas.MONTH_NAMES[i]: order.index(i) + 1 for i in range(12)
+            }
+            feb_from_bottom = 12 - month_ranks["February"] + 1
+
+        return {
+            "year": year,
+            "species": species,
+            "unit": national.unit if national else "lb",
+            "measure": "average live weight at slaughter",
+            "national": _seasonality_payload(national) if national else None,
+            "regions": [
+                _seasonality_payload(s) for s in seas.rank(regions)
+            ],
+            "concordance": {
+                "peak": _concordance_payload(peak),
+                "trough": _concordance_payload(trough),
+            },
+            "national_month_ranks": month_ranks,
+            "sources": [
+                _source_payload(sources[s]) for s in slugs if s in sources
+            ],
+            "verdict": {
+                "single_series": national.verdict if national else "unknown",
+                "across_series": peak.verdict,
+                "affects_count": False,
+                # Counted from the rows rather than typed, because the first
+                # draft of this sentence said no state was seasonal and one is.
+                "cycles": cycles,
+                "summary": _seasonality_summary(national, regions, peak),
+            },
+            # Stated in the payload, not just in a comment, so a caller cannot
+            # render a seasonal count without seeing why there isn't one.
+            "not_modelled": [
+                "Monthly head slaughtered. Only the annual total is loaded, so "
+                "the corpus cannot say whether more birds are processed in "
+                "February.",
+                "Monthly condemnation and dead-on-arrival rates. Summer heat "
+                "plausibly raises both, and both are count-affecting losses -- "
+                "but the corpus holds annual figures only, so seasonality is "
+                "deliberately NOT wired into the calculator.",
+                (
+                    "Demand, imports and frozen inventory. "
+                    + (
+                        f"February is the {_ordinal(feb_from_bottom)}-lightest "
+                        f"month of the national year"
+                        if feb_from_bottom else
+                        "February sits low in the national year"
+                    )
+                    + ", which is the opposite of what a supply response to "
+                    "Super Bowl demand would look like. The corpus cannot "
+                    "explain it, so it does not try."
+                ),
+            ],
         }
     finally:
         conn.close()

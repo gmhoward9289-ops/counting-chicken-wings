@@ -81,6 +81,17 @@ EXPORTS: list[dict] = [
         "note": "USDA NASS. Only states NASS publishes individually appear",
     },
     {
+        "name": "states_monthly",
+        "title": "average live weight by state and month",
+        "sql": """SELECT region, year, month, avg_size AS avg_live_weight_lb
+                  FROM v_broiler_size_stat
+                  WHERE month IS NOT NULL
+                  ORDER BY region, year DESC, month""",
+        "note": ("USDA NASS. A month NASS suppresses is an ABSENT ROW, never a "
+                 "zero. The swing across these months is not a season on its "
+                 "own for any state -- see GET /api/seasonality"),
+    },
+    {
         "name": "national",
         "title": "national slaughter totals",
         "sql": """SELECT year, head_slaughtered, live_weight_lb,

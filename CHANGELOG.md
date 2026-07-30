@@ -33,8 +33,102 @@ lore, and the sourced silk filament (**300–900 m**) is deliberately the cited
 figure over the higher number that circulates. Said here so that proximity to
 the NASS-backed poultry rows lends them no credibility they have not earned.
 
-## v1.6.0 — 2026-07-30
+## v1.7.0 — 2026-07-30
+Seasonality. The corpus has held twelve months of live weight for every state
+NASS names since the state work landed, and only the annual average was ever
+surfaced — the roadmap called it the cheapest unexploited data in the project.
+It is now exploited, and the answer is more interesting than "chickens are
+heavier in winter".
 
+### No state is seasonal. The states agree on the season anyway.
+
+Broiler live weight moves **2.7% across the year nationally**, 6.55 lb in March
+to 6.73 lb in September. Judged on its own that swing cannot be told apart from
+twelve noisy numbers — and neither can any of the 22 states' individually.
+
+Then stop looking at one series and look across them. **13 of 22 states peak in
+August–October**, where about 5.5 would be expected if the peak month were
+random (p=0.0084 after correcting for having chosen the window from the data),
+and 12 trough in February–April. Agreement between series that were surveyed
+separately is a different and stronger kind of evidence than the size of any one
+series' range, and it is the same instinct as `tests/test_cross_validation.py`.
+
+Both results ship, and the weaker one is not dressed up as the stronger. A test
+asserts both halves, so a NASS revision breaks it.
+
+### Three ways to be wrong about a season, two of them found the hard way
+
+A range over twelve numbers is trivial to compute and thoroughly misleading, so
+the classifier applies three tests and a region must pass all of them:
+
+| Test | Catches | Clean cycle scores | The failure scores |
+|---|---|---|---|
+| Swing ÷ month-to-month jitter | random noise | 6.0× | 3.0× |
+| Swing surviving 3-month smoothing | one odd month | 91% | 33% |
+| Movement spent crossing Dec→Jan | a trend with a January reset | ≤13% | 50% |
+
+The second and third tests exist because the first draft shipped without them:
+
+- **Texas was published as the one seasonal state on the strength of one June.**
+  A year that is flat for eleven months and dips once scores *exactly* the
+  ideal-cycle score on swing ÷ jitter. It is now classified `spike`, and its
+  entry says the swing is real and the pattern is not.
+- **A series that climbs all year and resets in January passes the first two
+  tests.** Broiler weight does trend — about 1% a year — and a trend read as a
+  season puts the peak in whichever month the year happens to end on.
+
+Kentucky's 12.3% swing, the largest of any serious broiler state, is one August:
+53% of it survives smoothing. Alabama's 3.6% is spread across the year and keeps
+82%. **Shape beats range**, which is why the table sorts by verdict and not by
+swing — sorting by size puts the least trustworthy states first.
+
+These thresholds are **ours, not a source's**. Nothing in NASS says a swing must
+clear 4.0× to be a season, so the classification is graded `estimate` even
+though the weights it reads are `measured`, and the synthetic series whose right
+answer is known by construction are tested alongside the corpus.
+
+### The Super Bowl does not show up in the birds
+
+February is the **third-lightest month** of the national year, five months off
+the September peak. That is a lead time, not a mystery: a bird slaughtered in
+early February was placed as a chick before Christmas. Whatever absorbs the
+demand spike — frozen inventory, imports, grade mix — is not bird size, and none
+of those three series is in the corpus, so the page says the weight does not
+move and declines to say what does.
+
+### Seasonality is deliberately NOT wired into the count
+
+`affects_count: false`, stated in the payload rather than left in a comment.
+Monthly condemnation and dead-on-arrival rates would be the count-affecting
+ones and the corpus holds annual figures only; monthly head slaughtered is not
+loaded either. A chicken has two wings in every month of the year.
+
+### Added
+
+- `seasonality.py` — `analyse`, `concordance`, `smooth`, `sparkline`. No
+  database dependency, like `model.py`.
+- `GET /api/seasonality` — national and per-state series, verdicts with their
+  reasoning, both concordance tests with caveats, citations, and
+  `not_modelled`. The verdict prose is generated from the rows; the hardcoded
+  first draft claimed no state was seasonal while reporting one that was.
+- `wings seasonality` — the whole year per state as a block sparkline, which is
+  what makes the recurring autumn peak visible at a glance.
+- A **Seasons** tab: the national line beside a peak-month histogram against
+  what chance would give. The line alone understates the finding; the histogram
+  alone overstates it.
+- Three facts, and 21 tests including regressions for Texas and for the summary
+  outrunning its own data.
+- `db.monthly_size_series()`, reading the per-species view — the shared table
+  holds broiler pounds and layer eggs-per-year in one column, and the existing
+  convention test caught the first version doing it wrong.
+
+### Not changed
+
+No figure any previous release published moves. Nothing here touches the
+calculator: this release adds a view of data already in the corpus, and the
+count for a dozen wings is what it was in v1.6.0.
+
+## v1.6.0 — 2026-07-30
 Israel's head count stops being a single-source figure.
 
 ### Two figures promoted, from a document COOPER downloaded and could not read

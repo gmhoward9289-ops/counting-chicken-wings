@@ -10,7 +10,7 @@ every published number traces to a real source.
 pip install -e ".[dev,gui]"          # gui extras are required — the API tests import the FastAPI app
 python -m counting_chicken_wings.build   # compile the YAML corpus into SQLite
 python -m counting_chicken_wings.audit   # every statistic must cite a source in sources.yaml
-pytest -q                            # 261 tests
+pytest -q                            # 368 tests
 wings 12                             # CLI: a dozen wings
 wings gui                            # serve the web UI
 ```
@@ -39,6 +39,10 @@ a bug, because it bypasses the citation audit.
 
 - `model.py` — the calculation, including scientific mode (variable confidence, tornado,
   distributions)
+- `seasonality.py` — the month-by-month statistics and, more to the point, the
+  three tests that decide whether a swing is a season at all. No database
+  dependency, like `model.py`. Its thresholds are ours rather than a source's,
+  so anything it concludes is graded `estimate`
 - `export.py` — corpus as `.txt` / `.csv` into `data/exports/`
 - `brand.py` — the ASCII chicken, shared by CLI and web so they cannot drift
 - `tools/` — one-off source fetchers (`fetch_census_states.py`,
