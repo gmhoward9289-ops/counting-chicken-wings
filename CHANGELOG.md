@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## v1.8.0 — 2026-07-30
+
+A rollup: thirteen commits, six of them merged without a release. Every active
+product's published answer was compared against v1.7.0 and **none moved** — no
+existing citation goes stale. The second digit moves for new capability: a
+`quality_axis` table, an Israeli head-count measure, and a version-bump
+checker wired into CI.
 
 ### The web UI is a statistical bulletin now, and it comes in slate
 
