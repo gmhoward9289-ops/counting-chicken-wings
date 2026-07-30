@@ -412,6 +412,13 @@ CREATE TABLE output_stat_year (
     species_id      INTEGER NOT NULL REFERENCES species(id),
     country_id      INTEGER NOT NULL REFERENCES country(id),
     region          TEXT,                      -- NULL = national total
+    -- The hierarchy the publisher uses, so a caller can count leaves without
+    -- string-matching prose. Israel's table nests regional councils inside
+    -- districts inside a grand total, and counting all three levels as
+    -- "regions" would claim 55 Israeli regions against 23 US states -- more
+    -- granularity than exists, by double-counting the aggregates.
+    region_level    TEXT CHECK (region_level IN
+                        ('total','district','council')),
     year            INTEGER NOT NULL,
     measure         TEXT    NOT NULL CHECK (measure IN (
                         'meat_output',      -- output of meat, per the source

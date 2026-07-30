@@ -268,13 +268,15 @@ Still open:
 2. [x] Israel broiler **production** loaded from CBS, cited, passing the audit —
    plus a head count and a derived bird weight at `industry` grade. A
    *government* head count is still wanted and is batch-05 items 1-2.
-3. [~] A country selector. The **data and API** are in place —
-   `/api/countries` reports what each country can answer, `/api/output/{iso3}`
-   serves the figures in native units. The **UI** is not built yet, and it
-   should not be built as a plain dropdown: with no Israeli head figure a
-   selector on the calculator would have to either hide the count answer or
-   compute it from US assumptions. Recommend a comparison *panel* — scale,
-   districts, value — rather than switching the calculator's country.
+3. [x] A country selector — built as a **comparison panel, not a dropdown**.
+   The Countries view opens with what each country can actually answer, so a
+   reader sees that the US bird count is `measured` and Israel's is `industry`
+   before seeing either number. Israel then renders twice, on a toggle: with
+   the industry head count, and government-only, where the bird count and the
+   derived weight both read "unknown" and the page names the row it dropped.
+   Switching the *calculator's* country was rejected: with no government head
+   figure it would have had to hide the count answer or compute it from US
+   assumptions.
 4. [!] At least one Israel-specific loss stage (kosher inspection). **Blocked
    on evidence, not on effort.** Two kosher certification agencies describe
    bedikah in detail - for poultry it inspects lungs, intestines and tendon

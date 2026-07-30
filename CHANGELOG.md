@@ -1,5 +1,43 @@
 # Changelog
 
+## v1.5.0 — 2026-07-30
+
+The Israeli data gets a page, and it shows both readings rather than picking one.
+
+### The Countries view
+
+A new tab, and deliberately not a country dropdown on the calculator. It opens
+with **what each country can actually answer** — the US bird count is
+`measured`, Israel's is `industry`, per-capita is unavailable for both — so a
+reader meets the asymmetry before meeting any number.
+
+Israel then renders twice on a toggle:
+
+| | Birds/year | Average bird |
+|---|---|---|
+| Including industry figures | 260M `industry` | 2.31 kg `industry` |
+| Government figures only | unknown | unknown |
+
+In the government-only view the page states what it dropped and why: *"Hidden by
+the government-only view: Birds slaughtered per year (industry,
+toi-poultry-imports-2025). Without it Israel can say how much chicken it
+produces and not how many chickens that took."* A filtered answer that does not
+say what it filtered is just a different number.
+
+The output chart annotates 2023 with "Newcastle disease and the war" — the dip
+is in CBS's own series and the explanation is cited. The district table lists
+councils by tonnage, with CBS-suppressed councils shown as *withheld* rather
+than as zero or as absent rows.
+
+### region_level, so counting regions does not double-count
+
+Israel nests 50 regional councils inside 4 districts inside a grand total.
+Counting every row as a "region" claimed **55 Israeli regions against 23 US
+states** — more granularity than exists. `output_stat_year.region_level` now
+records the publisher's hierarchy as data rather than as a prefix inside a
+prose note, the coverage count reads leaves only (50), and a test pins the
+level counts.
+
 ## v1.4.0 — 2026-07-29
 
 Israel gets the sources CBS is not, and the reader gets to choose how much to

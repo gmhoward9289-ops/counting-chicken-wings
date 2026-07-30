@@ -192,12 +192,12 @@ def test_district_sum_falls_short_of_national_output_by_about_5pct(conn):
     districts = conn.execute(
         """SELECT COALESCE(SUM(value), 0) FROM output_stat_year
            WHERE country_id=? AND measure='marketed'
-             AND notes LIKE 'district%'""", (country,)
+             AND region_level='district'""", (country,)
     ).fetchone()[0]
     total = conn.execute(
         """SELECT value FROM output_stat_year
            WHERE country_id=? AND measure='marketed'
-             AND notes = 'total'""", (country,)
+             AND region_level='total'""", (country,)
     ).fetchone()[0]
     # The districts do reconcile with the source's own grand total.
     assert districts == pytest.approx(total, abs=0.05)
@@ -473,3 +473,26 @@ def test_no_per_capita_figure_leaked_into_the_corpus(conn):
             "SELECT COUNT(*) FROM fact WHERE body LIKE ?", (f"%{value}%",)
         ).fetchone()[0]
         assert hits == 0, f"per-capita figure {value} appears in a fact"
+
+
+def test_region_levels_are_data_not_prose(conn):
+    """A caller must be able to count leaf regions without parsing a string.
+
+    Israel nests 50 regional councils inside 4 districts inside a grand total.
+    Counting all three levels as "regions" would claim 55 Israeli regions
+    against 23 US states -- more granularity than exists, by double-counting
+    the aggregates.
+    """
+    levels = dict(conn.execute(
+        """SELECT region_level, COUNT(*) FROM output_stat_year
+           WHERE country_id=? AND region IS NOT NULL
+           GROUP BY region_level""", (isr(conn),)
+    ).fetchall())
+    assert levels == {"total": 1, "district": 4, "council": 50}
+
+    # National rows carry no level at all -- region IS NULL is what makes them
+    # national, and a second way of saying so could disagree with the first.
+    assert conn.execute(
+        """SELECT COUNT(*) FROM output_stat_year
+           WHERE region IS NULL AND region_level IS NOT NULL"""
+    ).fetchone()[0] == 0

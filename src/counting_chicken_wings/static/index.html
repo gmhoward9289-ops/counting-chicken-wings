@@ -210,6 +210,7 @@
   <button data-v="sci">Scientific</button>
   <button data-v="mix">Mixing simulator</button>
   <button data-v="states">By state</button>
+  <button data-v="countries">Countries</button>
   <button data-v="size">Is fatter better?</button>
   <button data-v="impact">Nutrition &amp; impact</button>
   <button data-v="trends">Trends</button>
@@ -422,6 +423,61 @@
   </div>
   <div class="panel">
     <div id="statetable"></div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ countries -->
+<section class="view" id="v-countries">
+  <div class="panel">
+    <h3>What each country can actually answer</h3>
+    <p class="muted">
+      Not a country list. The United States and Israel do not have comparable
+      data and a selector that implied they did would be the most misleading
+      thing on this page. USDA enumerates birds slaughtered and publishes the
+      count; Israel's Central Bureau of Statistics publishes tonnage, a
+      year-end flock and districts, and no bird count at all.
+    </p>
+    <div id="c-coverage"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Israel, read two ways</h3>
+    <p class="muted">
+      The bird count exists outside CBS — about 260 million broilers a year,
+      from a named industry official. It is the only route to a count answer
+      for Israel, and it is weaker evidence than everything CBS publishes.
+      Rather than choose for you, both readings are here.
+    </p>
+    <div class="row" style="margin-bottom:14px">
+      <label><input type="radio" name="c-grade" value="" checked>
+        Include industry figures</label>
+      <label><input type="radio" name="c-grade" value="measured">
+        Government figures only</label>
+    </div>
+    <div id="c-headline"></div>
+    <p class="note" id="c-excluded"></p>
+  </div>
+
+  <div class="panel">
+    <h3>Broiler output</h3>
+    <p class="muted">
+      Tonnes, as CBS publishes them. Nothing is converted to pounds: the US
+      reports pounds and Israel kilograms, and a comparison that forgets is
+      wrong by 2.2× while still looking plausible.
+    </p>
+    <div id="c-output" style="height:340px"></div>
+    <div id="c-outputtable"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Where the birds are</h3>
+    <p class="muted">
+      Districts and regional councils, 2024. This is <b>marketing</b>, not
+      production — a different measurement from the national output above,
+      which is why the two do not reconcile. Councils CBS suppresses appear
+      with no figure rather than a zero, exactly as suppressed US states do.
+    </p>
+    <div id="c-districts"></div>
   </div>
 </section>
 
@@ -950,6 +1006,152 @@ async function initStates() {
     ).join('') + '</table>';
 }
 
+// ---- countries
+//
+// The one rule this view exists to enforce: never render a number without the
+// grade beside it. Israel's bird count and the US bird count are both "a bird
+// count" and they are not the same kind of thing, so every figure here carries
+// its badge and the government-only reading is one click away.
+const MEASURE_LABEL = {
+  meat_output: 'Meat output',
+  output_value: 'Output value',
+  inventory_eoy: 'Flock, end of year',
+  head_slaughtered: 'Birds slaughtered per year',
+  marketed: 'Marketed',
+};
+
+function fmtOutput(r) {
+  const v = r.value;
+  if (v === null || v === undefined) return '—';
+  if (r.unit === 'ILS_million') return '₪' + v.toLocaleString() + 'M';
+  if (r.unit === 'thousand_head')
+    return (v / 1000).toLocaleString(undefined,
+      { maximumFractionDigits: 1 }) + 'M head';
+  return v.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' t';
+}
+
+async function initCountries() {
+  const d = await api('/api/countries');
+  const yes = b => b ? '<span class="v-better">yes</span>'
+                     : '<span class="v-worse">no</span>';
+
+  $('#c-coverage').innerHTML = `<table><tr><th>Country</th>
+    <th>Birds counted?</th><th>By whom</th><th>Subnational</th>
+    <th class="num">Regions</th><th>Per capita</th><th>Reports in</th></tr>` +
+    d.countries.map(c => `<tr>
+      <td><b>${c.name}</b></td>
+      <td>${yes(c.answers.head_slaughtered)}</td>
+      <td>${c.answers.head_slaughtered_grade
+              ? badge(c.answers.head_slaughtered_grade) : '—'}</td>
+      <td>${yes(c.answers.subnational)}</td>
+      <td class="num">${c.subnational_regions || '—'}</td>
+      <td>${yes(c.answers.per_capita)}</td>
+      <td>${c.native_mass_unit}${c.native_currency
+              ? ' / ' + c.native_currency : ''}</td></tr>`).join('') +
+    `</table><p class="note" style="margin-top:10px">
+     Per capita is "no" for <i>both</i> countries on purpose. It is the
+     comparison an audience asks for first and the one figure here with no
+     reachable citation — five sources claim Israel leads the world with
+     numbers 20% apart, so population is deliberately empty rather than
+     filled with a plausible one.</p>`;
+
+  await drawIsrael('');
+  document.querySelectorAll('input[name="c-grade"]').forEach(r => {
+    r.onchange = () => drawIsrael(r.value);
+  });
+}
+
+async function drawIsrael(minConf) {
+  const q = minConf ? `?min_confidence=${minConf}` : '';
+  const d = await api('/api/output/ISR' + q);
+
+  const head = d.national.find(r => r.measure === 'head_slaughtered');
+  const out24 = d.national.find(
+    r => r.measure === 'meat_output' && r.year === 2024);
+  const flock = d.national.find(
+    r => r.measure === 'inventory_eoy' && r.year === 2024);
+  const w = d.derived_weight[0];
+
+  const card = (val, key, note) =>
+    `<div class="verdict"><div class="v-val">${val}</div>
+     <div class="v-key">${key}</div>
+     ${note ? `<div class="note">${note}</div>` : ''}</div>`;
+
+  $('#c-headline').innerHTML =
+    `<div class="grid2">` +
+    card(head ? fmtOutput(head) : 'unknown',
+         'Birds slaughtered per year',
+         head ? badge(head.confidence) + ' named industry official'
+              : 'CBS publishes no bird count') +
+    card(w ? w.kg_per_head.toFixed(2) + ' kg' : 'unknown',
+         'Average bird',
+         w ? badge(w.confidence) +
+             ` derived, ${w.output_year} output ÷ ${w.head_year} head`
+           : 'needs a bird count') +
+    card(fmtOutput(out24), 'Broiler output, 2024',
+         badge(out24 ? out24.confidence : '') + ' CBS, provisional') +
+    card(fmtOutput(flock), 'Flock at year end',
+         badge(flock ? flock.confidence : '') +
+         ' a standing flock, not throughput') +
+    `</div>`;
+
+  // A filtered answer that does not say what it filtered is just a different
+  // number, so name the dropped row rather than quietly showing less.
+  $('#c-excluded').innerHTML = d.excluded.length
+    ? `Hidden by the government-only view: ` + d.excluded.map(e =>
+        `<b>${MEASURE_LABEL[e.measure] || e.measure}</b> (${e.confidence},
+         ${e.source})`).join(', ') +
+      `. Without it Israel can say how much chicken it produces and not how
+       many chickens that took.`
+    : `Showing every figure, including the industry bird count. Switch above
+       to see what CBS alone can support.`;
+
+  const series = d.national
+    .filter(r => r.measure === 'meat_output')
+    .sort((a, b) => a.year - b.year);
+  Plotly.newPlot('c-output', [{
+    x: series.map(r => r.year), y: series.map(r => r.value),
+    type: 'bar', marker: { color: '#60a5fa' },
+    hovertemplate: '%{x}: %{y:,.0f} t<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    yaxis: Object.assign({}, PLOT.yaxis, { title: 'tonnes' }),
+    annotations: [{
+      x: 2023, y: 553068, text: 'Newcastle disease<br>and the war',
+      showarrow: true, arrowcolor: '#fb7185', font: { size: 11 },
+      ax: 0, ay: -46,
+    }],
+  }), CFG);
+
+  $('#c-outputtable').innerHTML = `<table><tr><th>Measure</th>
+    <th class="num">Year</th><th class="num">Value</th><th>Evidence</th>
+    <th>Source</th></tr>` +
+    d.national.map(r => `<tr>
+      <td>${MEASURE_LABEL[r.measure] || r.measure}</td>
+      <td class="num">${r.year}${r.provisional ? '*' : ''}</td>
+      <td class="num">${fmtOutput(r)}</td>
+      <td>${badge(r.confidence)}</td>
+      <td class="mono">${r.source_slug}</td></tr>`).join('') +
+    `</table><p class="note" style="margin-top:10px">
+     * CBS marks the figure provisional.</p>`;
+
+  const regions = d.regional
+    .filter(r => r.region_level === 'council')
+    .sort((a, b) => (b.value || 0) - (a.value || 0));
+  $('#c-districts').innerHTML = `<table><tr><th>Regional council</th>
+    <th class="num">Broilers marketed</th><th>District</th></tr>` +
+    regions.map(r => `<tr><td>${r.region}</td>
+      <td class="num">${r.suppressed
+        ? '<span class="muted">withheld</span>'
+        : r.value.toLocaleString(undefined,
+            { maximumFractionDigits: 0 }) + ' t'}</td>
+      <td class="muted">${(r.notes || '').replace(/^in /, '')}</td>
+      </tr>`).join('') +
+    `</table><p class="note" style="margin-top:10px">
+     ${d.suppressed_regions} councils are withheld by CBS under its disclosure
+     rules — present, but with no figure. They are never read as zero, which
+     is why the councils sum lower than the district totals above them.</p>`;
+}
+
 // ---- trends
 async function initTrends() {
   const d = await api('/api/trends');
@@ -1249,8 +1451,8 @@ async function load(v) {
   if (loaded[v]) return;
   loaded[v] = true;
   const init = { sci: initSci, mix: initMix, states: initStates,
-                 size: initSize, impact: initImpact,
-                 trends: initTrends, facts: initFacts,
+                 countries: initCountries, size: initSize,
+                 impact: initImpact, trends: initTrends, facts: initFacts,
                  sources: initSources }[v];
   if (!init) return;
   try {

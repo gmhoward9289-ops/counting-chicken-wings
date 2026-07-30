@@ -567,6 +567,7 @@ class Builder:
                     self.ins(
                         "output_stat_year",
                         species_id=sp, country_id=cid, region=r["region"],
+                        region_level=r.get("level"),
                         year=d["year"],
                         # Marketed, not produced. Different measurement from
                         # the national output figure, which is why the two do
@@ -577,9 +578,8 @@ class Builder:
                         confidence=d.get("confidence", "measured"),
                         provisional=0, suppressed=supp,
                         source_id=sid,
-                        notes=(f"{r['level']}"
-                               + (f" in {r['parent']}" if r.get("parent")
-                                  else "")),
+                        notes=(f"in {r['parent']}" if r.get("parent")
+                               else None),
                     )
 
     def facts(self):

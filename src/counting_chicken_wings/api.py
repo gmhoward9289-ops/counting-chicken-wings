@@ -522,9 +522,14 @@ def countries():
                       -- raw is what the egg work forbade for that reason.
                       (SELECT COUNT(DISTINCT region) FROM v_broiler_size_stat r
                         WHERE r.country_id = c.id) AS size_regions,
+                      -- Leaves only. Israel nests councils inside districts
+                      -- inside a grand total, and counting every level would
+                      -- claim 55 Israeli regions against 23 US states.
                       (SELECT COUNT(DISTINCT region) FROM output_stat_year o
                         WHERE o.country_id = c.id
-                          AND o.region IS NOT NULL) AS output_regions,
+                          AND o.region IS NOT NULL
+                          AND COALESCE(o.region_level, 'council')
+                              NOT IN ('total','district')) AS output_regions,
                       (SELECT COUNT(*) FROM output_stat_year o
                         WHERE o.country_id = c.id
                           AND o.region IS NULL) AS national_rows
@@ -614,8 +619,9 @@ def output(
             raise HTTPException(404, f"unknown country {iso3!r}")
 
         rows = conn.execute(
-            """SELECT o.region, o.year, o.measure, o.value, o.unit,
-                      o.confidence, o.provisional, o.suppressed, o.notes,
+            """SELECT o.region, o.region_level, o.year, o.measure, o.value,
+                      o.unit, o.confidence, o.provisional, o.suppressed,
+                      o.notes,
                       s.slug AS source_slug
                FROM output_stat_year o
                JOIN source s ON s.id = o.source_id
