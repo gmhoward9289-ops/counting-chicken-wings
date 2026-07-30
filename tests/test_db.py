@@ -151,8 +151,56 @@ def test_mass_stages_are_flagged_as_not_affecting_count(conn):
 # ---------------------------------------------------------------------------
 
 def test_default_supply_chain_exists_and_is_listed(conn):
-    default = dbm.default_supply_chain(conn)
-    assert default in {c["slug"] for c in dbm.list_supply_chains(conn)}
+    for species in ("broiler", "layer_hen"):
+        default = dbm.default_supply_chain(conn, species)
+        assert default in {c["slug"] for c in dbm.list_supply_chains(conn)}
+
+
+def test_default_supply_chain_is_species_specific(conn):
+    """Eggs and wings must not resolve to the same route.
+
+    They did, which is the bug this argument exists to prevent: eggs took the
+    wing chain and were explained via a cut-up line and a fryer basket.
+    """
+    assert (dbm.default_supply_chain(conn, "broiler")
+            != dbm.default_supply_chain(conn, "layer_hen"))
+
+
+def test_default_supply_chain_refuses_to_guess(conn):
+    """No species, no answer -- and no borrowing another animal's chain."""
+    with pytest.raises(ValueError):
+        dbm.default_supply_chain(conn, "")
+    with pytest.raises(LookupError):
+        dbm.default_supply_chain(conn, "turkey")   # stubbed, has no routes
+
+
+def test_an_egg_query_never_touches_a_wing_stage(conn):
+    """The regression guard for the whole v1.2.0 fix.
+
+    An egg has no cut-up line, no wing chiller, no size grading, no IQF
+    freezer and no fryer basket. If any of those appear in an egg cascade the
+    audit trail is lying, however right the number looks.
+    """
+    wing_only = {"separation", "wing_chiller", "size_grading", "combo_bin",
+                 "iqf_freezer", "case_pack", "distributor",
+                 "restaurant_freezer", "fryer_basket"}
+    chain = dbm.default_supply_chain(conn, "layer_hen")
+    stages = {s.slug for s in dbm.load_mixing_stages(conn, chain)}
+    assert stages, "egg chain has no stages"
+    assert not (stages & wing_only), sorted(stages & wing_only)
+
+
+def test_egg_grading_does_not_separate(conn):
+    """Weighing wings splits a bird's pair. Weighing eggs splits nothing.
+
+    A bird has exactly two wings, so grading by weight routes them to
+    different boxes. Each egg is already a lone contribution -- there is no
+    pair for grading to break -- so marking it 'separating' would invent a
+    mechanism that does not exist.
+    """
+    chain = dbm.default_supply_chain(conn, "layer_hen")
+    for s in dbm.load_mixing_stages(conn, chain):
+        assert s.mixing_kind != "separating", s.slug
 
 
 def test_commodity_chain_loads_the_full_cascade(conn):

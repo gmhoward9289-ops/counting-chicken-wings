@@ -285,7 +285,23 @@ class Builder:
                 )
 
     def mixing(self):
-        t = load("mixing.yaml")
+        # Merged across every data/mixing*.yaml, same reasoning as taxonomy:
+        # a new product's cascade is a new file. mixing.yaml is loaded first
+        # so the base stages exist before anything references them.
+        merged: dict[str, list] = {}
+        paths = sorted(
+            DATA.glob("mixing*.yaml"),
+            key=lambda p: (p.name != "mixing.yaml", p.name),
+        )
+        if not paths:
+            raise BuildError("no mixing*.yaml found in data/")
+        for p in paths:
+            part = load(p.name) or {}
+            for key, rows in part.items():
+                if rows:
+                    merged.setdefault(key, []).extend(rows)
+        t = merged
+
         for st in t["stages"]:
             self.mixing_stage[st["slug"]] = self.ins(
                 "mixing_stage",
@@ -298,12 +314,23 @@ class Builder:
             )
 
         for ch in t.get("supply_chains", []):
+            species = ch.get("species")
+            if species and species not in self.species:
+                raise BuildError(
+                    f"supply_chain {ch['slug']}: unknown species '{species}'"
+                )
             cid = self.ins(
                 "supply_chain",
                 domain_id=self.domain[ch["domain"]],
                 slug=ch["slug"], label=ch["label"],
                 description=ch["description"],
+                # NULL species means "any", which is how the wing chains
+                # behaved before eggs existed. Now that a second species has
+                # its own routes, leaving them unscoped is what let an egg
+                # query pick up the wing cascade.
+                species_id=self.species.get(species) if species else None,
                 is_default=ch.get("is_default", 0),
+                floor_note=ch.get("floor_note"),
             )
             for entry in ch.get("stages", []):
                 if isinstance(entry, str):

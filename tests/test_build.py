@@ -68,11 +68,38 @@ def test_every_supply_chain_resolves_to_real_stages(db):
     assert orphans == 0
 
 
-def test_exactly_one_default_supply_chain(db):
-    n = db.execute(
-        "SELECT COUNT(*) FROM supply_chain WHERE is_default = 1"
-    ).fetchone()[0]
-    assert n == 1
+def test_exactly_one_default_supply_chain_per_species(db):
+    """Defaults are per species now, not global.
+
+    A single global default was the bug: eggs had no chain of their own, so
+    they inherited the wing cascade and the audit trail described a cut-up
+    line to anyone asking about a carton. Every species that has routes must
+    name exactly one default, and no route may be left unscoped.
+    """
+    rows = db.execute("""
+        SELECT COALESCE(s.slug, '(unscoped)') AS species, COUNT(*) AS n
+        FROM supply_chain sc
+        LEFT JOIN species s ON s.id = sc.species_id
+        WHERE sc.is_default = 1
+        GROUP BY species
+    """).fetchall()
+    per_species = {r["species"]: r["n"] for r in rows}
+
+    assert per_species, "no default supply chain anywhere"
+    for species, n in per_species.items():
+        assert n == 1, f"{species} has {n} defaults"
+    assert "(unscoped)" not in per_species, (
+        "an unscoped default lets one species borrow another's route"
+    )
+
+    # Every species with any route at all needs a default, or a lookup for it
+    # raises rather than silently falling through to someone else's chain.
+    with_routes = db.execute("""
+        SELECT DISTINCT s.slug FROM supply_chain sc
+        JOIN species s ON s.id = sc.species_id
+    """).fetchall()
+    for (slug,) in [tuple(r) for r in with_routes]:
+        assert slug in per_species, f"{slug} has routes but no default"
 
 
 # ---------------------------------------------------------------------------

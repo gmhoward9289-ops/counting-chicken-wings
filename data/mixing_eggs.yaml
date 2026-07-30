@@ -1,0 +1,209 @@
+# Egg mixing cascade. Merged with mixing.yaml at build time.
+#
+# Eggs previously had NO stages of their own, so an egg calculation fell
+# through to the wing chain and walked a cut-up line, a wing chiller, size
+# grading, an IQF freezer and a fryer basket. None of those touch an egg.
+#
+# HOW EGG MIXING DIFFERS FROM WINGS
+# ---------------------------------
+# For wings, mixing is the whole story: the floor is 6 and pooling pushes the
+# real answer up toward 12. For a same-day dozen of eggs the answer is pinned
+# at 12 before mixing is considered at all, because a hen lays at most about
+# one egg a day and twelve eggs therefore need twelve hens. Mixing cannot add
+# to that and cannot take from it.
+#
+# So these stages are not doing the arithmetic here -- they are doing the
+# EXPLAINING. They exist so the audit trail describes what actually happened
+# to an egg, and so the gathering-window question ("could this be one hen?")
+# has a truthful answer for each route.
+#
+# Note especially that grading is 'random' for eggs, NOT 'separating'.
+# Weighing wings splits a bird's pair apart because a bird has exactly two.
+# Weighing eggs splits nothing: each egg is already a lone contribution, so
+# there is no pair for grading to break.
+
+stages:
+  - slug: egg_collection
+    domain: poultry
+    label: Nest and belt collection
+    sequence: 110
+    pool_lo: 5000
+    pool_mode: 100000
+    pool_hi: 400000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Hens lay into nest boxes and the eggs roll onto a conveyor shared by the
+      whole house. This is where commingling begins - the direct counterpart
+      of the cut-up line for wings - except that nothing is being separated,
+      only gathered.
+
+  - slug: egg_farm_cooler
+    domain: poultry
+    label: On-farm cooler
+    sequence: 120
+    pool_lo: 5000
+    pool_mode: 150000
+    pool_hi: 600000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Eggs are cooled and held before processing. A day's lay from the whole
+      house sits together, which is what makes a "same-day" carton a
+      meaningful category at all.
+
+  - slug: egg_washing
+    domain: poultry
+    label: Washing
+    sequence: 130
+    pool_lo: 5000
+    pool_mode: 150000
+    pool_hi: 600000
+    mixing_kind: random
+    confidence: estimate
+    source: ams-shell-egg-grades
+    description: >-
+      US eggs are washed, which removes the cuticle and is why they are
+      refrigerated afterwards. Eggs from many hens pass through the same line
+      in continuous flow.
+
+  - slug: egg_candling
+    domain: poultry
+    label: Candling and grading
+    sequence: 140
+    # 'random', deliberately - see the header note. Grading separates a bird's
+    # two wings because a bird has two. An egg has no pair to break.
+    pool_lo: 5000
+    pool_mode: 150000
+    pool_hi: 600000
+    mixing_kind: random
+    confidence: estimate
+    source: ams-shell-egg-grades
+    description: >-
+      Eggs are lit from below to find blood spots, meat spots and cracks, then
+      sorted by weight into size classes. Unlike wing grading this splits
+      nothing apart, because each egg was already a separate contribution from
+      a separate hen.
+
+  - slug: egg_carton_pack
+    domain: poultry
+    label: Carton pack
+    sequence: 150
+    pool_lo: 12
+    pool_mode: 12
+    pool_hi: 30
+    mixing_kind: none
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Twelve eggs are placed in a carton. The draw itself, and the point at
+      which the question gets answered - by now every egg in the carton is
+      from a different hen.
+
+  - slug: egg_distributor
+    domain: poultry
+    label: Distributor
+    sequence: 160
+    pool_lo: 50000
+    pool_mode: 500000
+    pool_hi: 3000000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Cartons are palletised across farms and sometimes across producers.
+      Irrelevant to the count, because the carton was sealed upstream - but it
+      is why the carton in your hand cannot be traced to a house by looking
+      at it.
+
+  - slug: egg_retail_case
+    domain: poultry
+    label: Retail case
+    sequence: 170
+    pool_lo: 50000
+    pool_mode: 500000
+    pool_hi: 3000000
+    mixing_kind: none
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      The shelf. Cartons from several lots sit side by side, and you pick one.
+
+  - slug: egg_home_fridge
+    domain: poultry
+    label: Your fridge
+    sequence: 180
+    pool_lo: 12
+    pool_mode: 12
+    pool_hi: 60
+    mixing_kind: none
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Where the carton finally sits. Included so the chain ends where the
+      question does.
+
+supply_chains:
+  - slug: commercial_carton
+    domain: poultry
+    species: layer_hen
+    label: Commercial carton
+    is_default: 1
+    description: >-
+      The normal path for supermarket eggs. A house of tens or hundreds of
+      thousands of hens, collected daily, washed, graded and cartoned.
+    floor_note: >-
+      A hen lays at most about one egg a day, so a dozen eggs collected on a
+      single day came from twelve different hens - necessarily, not
+      approximately. Unlike wings, where mixing pushes the answer up from the
+      floor, here the floor already sits at the ceiling and there is nothing
+      left for the supply chain to move. Ask for a wider gathering window and
+      the floor falls; ask about a single day and twelve is simply the answer.
+    stages:
+      - egg_collection
+      - egg_farm_cooler
+      - egg_washing
+      - egg_candling
+      - egg_carton_pack
+      - egg_distributor
+      - egg_retail_case
+      - egg_home_fridge
+
+  - slug: farmers_market
+    domain: poultry
+    species: layer_hen
+    label: Farmers market
+    is_default: 0
+    description: >-
+      A small flock, gathered by hand over several days and sold direct. No
+      distributor, no retail case, and often no washing.
+    floor_note: >-
+      Small flocks and a gathering window of days rather than hours are the
+      combination that lets the answer fall below twelve. A hen can contribute
+      more than one egg to the carton if she had more than one day to do it.
+    stages:
+      - slug: egg_collection
+        pool_override: 500
+      - slug: egg_farm_cooler
+        pool_override: 500
+      - slug: egg_carton_pack
+
+  - slug: backyard_eggs
+    domain: poultry
+    species: layer_hen
+    label: Backyard flock
+    is_default: 0
+    description: >-
+      Your own hens, gathered over however long it takes to fill a carton.
+      The only route where the answer can genuinely be one chicken.
+    floor_note: >-
+      This is the one case where the floor is reachable. Six hens filling a
+      carton over two weeks really is about six hens, and one determined hen
+      over fifteen days really is one - the honest answer to "how many
+      chickens made this dozen" is then simply "her". No commodity route can
+      say that.
+    stages:
+      - slug: egg_collection
+        pool_override: 6

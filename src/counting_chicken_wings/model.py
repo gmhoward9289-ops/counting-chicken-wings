@@ -323,7 +323,19 @@ def resolve_pool(
             f"shared a source are split apart."
         )
 
-    distinct = max(container / upi, min(distinct, float(container)))
+    # Clamp to what is physically possible. The lower bound is how many
+    # individuals it takes to supply the container at all, but that cannot
+    # exceed the container size: you can never have more contributors than
+    # units, since every contributor gave at least one.
+    #
+    # The min() matters only for recurring products. With upi >= 1 (wings)
+    # container/upi is always below container. With upi < 1 -- eggs over a
+    # single day, where a hen yields 0.789 of an egg -- container/upi is
+    # 15.2 against a 12-egg carton, and reporting "12 eggs from 15
+    # individuals" is not a coherent sentence. The count was right anyway
+    # because the caller re-clamps, but the audit trail printed the nonsense.
+    lower = min(container / upi, float(container))
+    distinct = max(lower, min(distinct, float(container)))
 
     per = container / distinct
     notes.append(

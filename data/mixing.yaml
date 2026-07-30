@@ -166,12 +166,19 @@ stages:
 supply_chains:
   - slug: commodity_foodservice
     domain: poultry
+    species: broiler
     label: Commodity foodservice
     is_default: 1
     description: >-
       The normal path for wings at a restaurant, bar, or chain. Every mixing
       stage applies. This is what almost everyone eating wings is actually
       getting.
+    floor_note: >-
+      Mixing starts the instant the wings leave the bird. On the cut-up line a
+      chicken's two wings drop onto the same conveyor and part company, then
+      size grading actively splits any pair that survived - two wings off one
+      bird rarely weigh the same. That is why the answer sits just under twelve
+      rather than at the floor of six.
     stages:
       - separation
       - wing_chiller
@@ -185,6 +192,7 @@ supply_chains:
 
   - slug: local_butcher
     domain: poultry
+    species: broiler
     label: Local butcher
     is_default: 0
     description: >-
@@ -192,6 +200,10 @@ supply_chains:
       pooled in a single tray, but there is no grading, no freezer tunnel,
       and no distributor. Small pool, so the answer sits meaningfully below
       the commodity ceiling.
+    floor_note: >-
+      A single tray and no grading step means some pairs survive together, so
+      the answer lands meaningfully below the commodity ceiling - but still
+      well above six, because the wings were pooled before you chose.
     stages:
       - slug: separation
         pool_override: 40
@@ -200,10 +212,15 @@ supply_chains:
 
   - slug: whole_bird_home
     domain: poultry
+    species: broiler
     label: Whole birds at home
     is_default: 0
     description: >-
       You buy six whole chickens and cut the wings off yourself. No mixing
       at any point, so the answer is exactly the floor - the only realistic
       way to get twelve wings from six chickens.
+    floor_note: >-
+      Nothing was ever pooled, so every wing stayed with its bird and the
+      answer is exactly the floor. This is the only realistic way to get twelve
+      wings from six chickens.
     stages: []

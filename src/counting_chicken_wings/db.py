@@ -140,11 +140,52 @@ def load_loss_stages(
     return out
 
 
-def default_supply_chain(conn) -> str:
+def default_supply_chain(conn, species_slug: str) -> str:
+    """The default route for a species.
+
+    `species_slug` is REQUIRED, deliberately. "What is the default supply
+    chain?" is not a meaningful question without saying for what, and the fact
+    that it used to be answerable is precisely how an egg query ended up
+    walking the wing cascade -- a cut-up line, a wing chiller, size grading,
+    a fryer basket -- and narrating all of it as though it had happened.
+
+    There is no cross-species fallback for the same reason. Returning some
+    other animal's route is worse than failing, because it fails silently and
+    the audit trail then reads as confident and detailed fiction.
+    """
+    if not species_slug:
+        raise ValueError(
+            "species_slug is required; a species-less default chain is what "
+            "let eggs inherit the wing cascade"
+        )
+
     row = conn.execute(
-        "SELECT slug FROM supply_chain WHERE is_default = 1 LIMIT 1"
+        """SELECT sc.slug FROM supply_chain sc
+           JOIN species s ON s.id = sc.species_id
+           WHERE s.slug = ? AND sc.is_default = 1
+           LIMIT 1""",
+        (species_slug,),
     ).fetchone()
-    return row["slug"] if row else "commodity_foodservice"
+    if row:
+        return row["slug"]
+
+    raise LookupError(
+        f"no default supply chain for species '{species_slug}'; mark one "
+        f"is_default in a data/mixing*.yaml rather than borrowing another "
+        f"species' route"
+    )
+
+
+def chain_floor_note(conn, chain_slug: str) -> str | None:
+    """Prose explaining why the answer is not exactly the floor.
+
+    Stored per chain because it used to be hardcoded wing text in both the CLI
+    and the HTML, which meant anyone asking about eggs was told about deboning.
+    """
+    row = conn.execute(
+        "SELECT floor_note FROM supply_chain WHERE slug = ?", (chain_slug,)
+    ).fetchone()
+    return row["floor_note"] if row else None
 
 
 def list_supply_chains(conn) -> list[sqlite3.Row]:

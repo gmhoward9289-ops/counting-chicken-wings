@@ -1,5 +1,64 @@
 # Changelog
 
+## v1.2.0 — 2026-07-29
+
+Eggs get their own supply chain. **This is a correctness fix**: v1.1.0 shipped
+eggs with the right number and the wrong explanation.
+
+### The bug
+
+Eggs had zero mixing stages and zero supply chains, and
+`default_supply_chain()` took no product argument — so an egg query resolved to
+the single global default, which was the **wing** chain, and walked eight
+stages that do not exist for an egg:
+
+```
+cut-up line → wing chiller → size grading → combo bin
+  → IQF freezer → case pack → distributor → fryer basket
+```
+
+The *count* was right (12 hens), because a hen's one-egg-a-day ceiling
+dominates and any large pool yields twelve. But the reasoning panel told anyone
+asking about a carton that "the cut-up line a chicken's two wings drop onto the
+same conveyor and part company, then size grading actively splits any pair."
+
+For a project whose entire claim is that every number is traceable, a confident
+and detailed explanation of the wrong animal is the worst defect available.
+
+### What changed
+
+- **Egg mixing cascade** — nest and belt collection, on-farm cooler, washing,
+  candling and grading, carton pack, distributor, retail case, your fridge.
+- **Three egg routes** — `commercial_carton` (default), `farmers_market`,
+  `backyard_eggs`. Only the backyard route can reach the floor of one hen.
+- **Egg grading is `random`, not `separating`.** Weighing wings splits a bird's
+  pair because a bird has exactly two. Each egg is already a lone contribution,
+  so there is no pair for grading to break; calling it separating would invent
+  a mechanism.
+- **Supply chains are scoped to a species**, and `species_slug` is now
+  **required** on `default_supply_chain()`. A species-less default is not a
+  meaningful thing to ask for, and its being answerable is exactly how this
+  happened. There is deliberately no cross-species fallback — returning
+  another animal's route fails silently, which is worse than failing.
+- **The floor explanation moved into data** as `supply_chain.floor_note`. It
+  was hardcoded wing prose in both `cli.py` and `static/index.html`, so fixing
+  the data alone would not have fixed the output. Per `CLAUDE.md`, a figure or
+  claim hardcoded in a module is a bug.
+
+### Also fixed
+
+`resolve_pool()` clamped the lower bound to `container / upi` without capping
+it at the container size. For wings (`upi ≥ 1`) that is always safe. For eggs
+over a single day (`upi = 0.789`) it reported a 12-egg carton as "representing
+roughly 15 individuals" — more contributors than units, which cannot happen.
+The count was unaffected because the caller re-clamped, but the audit trail
+printed the impossible figure.
+
+### Unchanged
+
+Wings still answer 6 → 11.99997, and still explain themselves via the cut-up
+line. 255 tests pass.
+
 ## v1.1.0 — 2026-07-29
 
 Eggs become a first-class product rather than a proof that the schema

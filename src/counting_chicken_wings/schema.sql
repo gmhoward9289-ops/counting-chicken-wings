@@ -517,8 +517,33 @@ CREATE TABLE supply_chain (
     slug            TEXT    NOT NULL UNIQUE,
     label           TEXT    NOT NULL,
     description     TEXT    NOT NULL,
-    is_default      INTEGER NOT NULL DEFAULT 0
+
+    -- Which species this route applies to. NULL means any.
+    --
+    -- Added because its absence was a live bug. Chain selection had no idea
+    -- what product it was for, so an egg query took the single global default
+    -- -- the WING chain -- and solemnly walked eggs through a cut-up line, a
+    -- wing chiller, size grading and a fryer basket. The count came out right
+    -- by luck, since a hen's one-egg-a-day cap dominates and any large pool
+    -- yields twelve, but the audit trail was fiction. For a project whose
+    -- claim is that every number is traceable, that is the worst kind of bug.
+    species_id      INTEGER REFERENCES species(id),
+
+    -- Default for its species, not globally. Enforced by the index below so
+    -- two defaults for one species is impossible rather than merely unlikely.
+    is_default      INTEGER NOT NULL DEFAULT 0,
+
+    -- Prose for the "why is the answer not exactly the floor" explanation.
+    -- Lives here rather than in the CLI and the HTML, where it was hardcoded
+    -- as wing-specific text and therefore described deboning to anyone asking
+    -- about eggs. Data cannot narrate the wrong species.
+    floor_note      TEXT
 );
+
+-- At most one default per species, and at most one global default.
+CREATE UNIQUE INDEX idx_supply_chain_one_default
+    ON supply_chain (COALESCE(species_id, -1))
+    WHERE is_default = 1;
 
 CREATE TABLE supply_chain_stage (
     supply_chain_id INTEGER NOT NULL REFERENCES supply_chain(id),

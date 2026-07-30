@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import math
 import sys
+import textwrap
 
 from . import __version__
 from . import db as dbm
@@ -110,7 +111,8 @@ def cmd_count(args) -> int:
         units = args.count / sellable
         basis = "segment"
 
-    chain = args.chain or dbm.default_supply_chain(conn)
+    chain = args.chain or dbm.default_supply_chain(
+        conn, product["species_slug"])
     loss = dbm.load_loss_stages(
         conn, product["species_slug"], product["slug"],
         include_optional=args.include_mortality,
@@ -221,7 +223,8 @@ def cmd_count(args) -> int:
             show = False
 
     if show:
-        explain(conn, res, c, plural)
+        explain(conn, res, c, plural,
+                dbm.chain_floor_note(conn, chain))
 
     if not args.no_facts:
         facts = dbm.get_facts(conn, "result", limit=1)
@@ -237,7 +240,8 @@ def cmd_count(args) -> int:
     return 0
 
 
-def explain(conn, res, c, plural: str) -> None:
+def explain(conn, res, c, plural: str,
+            floor_note: str | None = None) -> None:
     slugs = [s.source_slug for s in res.trace if s.source_slug]
     sources = dbm.get_sources(conn, list({s for s in slugs if s}))
 
@@ -264,13 +268,14 @@ def explain(conn, res, c, plural: str) -> None:
         print(f"  {DIM}{'-' * 68}{RESET}")
         for n in res.mixing_notes:
             print(f"    - {n}")
-        print()
-        print(f"    Mixing starts the instant the wings leave the bird. On")
-        print(f"    the cut-up line a bird's two wings drop onto the same")
-        print(f"    conveyor and part company, then size grading actively")
-        print(f"    splits any pair that survived. That is why the answer")
-        print(f"    sits near the ceiling rather than at the floor of "
-              f"{res.floor:g}.")
+        # Comes from the chain's own floor_note. It was hardcoded wing prose
+        # here, which meant an egg question was answered with an explanation
+        # about cut-up lines and deboning -- confident, detailed, and about
+        # the wrong animal.
+        if floor_note:
+            print()
+            for line in textwrap.wrap(floor_note.strip(), width=66):
+                print(f"    {line}")
 
     if res.iterations:
         print()
