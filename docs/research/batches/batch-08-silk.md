@@ -1,20 +1,20 @@
 # Batch 08 — silk
 
-> **DRAFTED, not runnable yet.** Candidate URLs below are **leads, not yet
-> confirmed 200 with the figure present**. Run a URL scout and replace each with
-> a fetched-and-confirmed URL before `send`. Silk figures are unusually
-> blog-heavy — hold the confirm-200 bar high and prefer a sericulture
-> extension/FAO source over craft sites where possible.
+> **SCOUTED 2026-07-30.** Candidate URLs below were fetched and confirmed 200
+> with the figure present on this date. Two cautions carried from the scout:
+> (1) the per-garment counts rest on craft/education sites with **no survey**
+> behind them — grade `industry`/`estimate` and say so; (2) sourced filament
+> length is **300–900 m**, lower than commonly-repeated "1,000–1,600 m" — use the
+> sourced figure and note the spread.
 
 **Archetype:** `how-many`
 
 **Question in one sentence:** If you have one silk tie (or shirt, or dress), how
 many silkworms does it represent?
 
-**Expected confidence ceiling:** `industry`, and lean toward `estimate` for the
-per-garment counts. The cocoons-per-garment figures are widely repeated trade
-lore with **no survey behind them** — that softness must be labelled, not
-laundered.
+**Expected confidence ceiling:** `industry`, leaning `estimate` for per-garment
+counts. The cocoons-per-garment figures are trade lore; that softness must be
+labelled, not laundered.
 
 ---
 
@@ -24,12 +24,11 @@ Honest framing: this **adds rows and a garment-level product** more than it
 advances the model. Its two genuine contributions: a second near-anatomical
 constant (**one cocoon per silkworm**, the analog of two wings), and a product
 granularity the corpus has not tried — measured in **garments** (tie, shirt),
-not pieces or mass. It also carries a small, honest mixing step (reeling
-combines ~5 cocoons into one thread) that is real but does not dominate the
-count, which is a clean contrast with ground beef where mixing is everything.
-And it has a genuinely striking fact-card line: the pupa is killed inside the
-cocoon so the single-filament count stays exact — the count is precise
-*because* the individual's whole lifetime product must be taken unbroken.
+not pieces or mass. It also carries a small, honest mixing step (reeling combines
+~5 cocoons into one thread) that is real but does not dominate the count — a
+clean contrast with ground beef where mixing is everything. And it has a striking
+fact-card line: the pupa is killed inside the cocoon so the single-filament count
+stays exact.
 
 `is_anatomical_constant: 1` for cocoons-per-worm; the per-garment figures are
 NOT constants and must not be graded as if they were.
@@ -49,15 +48,17 @@ NOT constants and must not be graded as if they were.
 
 **Question:** How many cocoons does one silkworm spin?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- <FAO/sericulture or university extension page on Bombyx mori lifecycle — confirm>
+- https://www.newworldencyclopedia.org/entry/Silkworm — describes each larva
+  enclosing itself in "a cocoon of raw silk" (one per worm through the lifecycle).
 
 **Done means:** the figure **1**, lo = mode = hi = 1, `is_anatomical_constant: 1`,
 with a quote. The degenerate constant, like vanilla's one-flower-one-bean.
 
-**Watch for:** *Bombyx mori* only — do not merge with wild/tussah silk, a
-different species with different yields.
+**Watch for:** the source *implies* one cocoon per worm through the lifecycle
+rather than stating "exactly one" — flag it `needs_human` if a stricter phrasing
+is wanted. *Bombyx mori* only; do not merge with wild/tussah silk.
 
 ---
 
@@ -67,42 +68,48 @@ different species with different yields.
 |---|---|
 | `target_table` | `product` |
 | `required_fields` | `value_lo/mode/hi`, `unit` |
-| `unit` | metres of filament per cocoon (name total vs reelable) |
+| `unit` | metres of filament per cocoon |
 | `archetype` | `how-many` |
 
 **Question:** How long is the silk filament from a single cocoon?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- <sericulture reference / journal on filament length — confirm>
+- https://www.newworldencyclopedia.org/entry/Silkworm — Quote: "The cocoon of the
+  domesticated silkworm is made of a single continuous thread of raw silk from
+  300 to 900 meters (1000 to 3000 feet) long."
 
-**Done means:** a length with a quote, stating whether it is **total** filament
-(~1,000–1,600 m) or **usable reelable** (~600–900 m). They differ and are
-routinely conflated.
+**Done means:** a length with the quote. Record the sourced **300–900 m**, not
+the folk "1,000–1,600 m"; note the spread as a conflict if a second source gives
+the higher range.
 
-**Watch for:** total-vs-reelable is this subject's fresh-vs-cured trap.
+**Watch for:** total filament vs usable reelable length — this subject's
+fresh-vs-cured trap. State which the source means (NWE says the whole thread).
 
 ---
 
-### Item 3 — raw_silk_mass_per_cocoon
+### Item 3 — cocoons_per_pound_raw_silk
 
 | | |
 |---|---|
 | `target_table` | `product` |
 | `required_fields` | `value_lo/mode/hi`, `unit` |
-| `unit` | grams raw silk per cocoon |
+| `unit` | cocoons per pound of raw silk (→ per-cocoon mass) |
 | `archetype` | `how-many` |
 
-**Question:** How much raw silk does one cocoon yield?
+**Question:** How many cocoons make one pound of raw silk?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- <sericulture yield table — confirm>
+- https://www.newworldencyclopedia.org/entry/Silkworm — Quote: "About 2,000 to
+  3,000 cocoons are required to make a pound of silk." (→ ~0.15–0.23 g raw silk
+  per cocoon.)
 
-**Done means:** a mass (~0.3–0.4 g) with a quote.
+**Done means:** the cocoons-per-pound figure with the quote; the per-cocoon mass
+is a human `derived` step, not COOPER's to assert.
 
-**Watch for:** whole cocoon shell weight vs reeled raw-silk weight — different
-numbers.
+**Watch for:** cocoons-per-pound of **raw reeled silk** vs of finished fabric —
+different denominators.
 
 ---
 
@@ -117,13 +124,13 @@ numbers.
 
 **Question:** How many cocoons go into one silk necktie?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- https://www.suekayton.com/Silkworms/cloth.htm — education page (gives dress/shirt counts; confirm tie)
-- <a second independent source for the tie figure — required, this is soft lore>
+- https://www.bows-n-ties.com/mens-fashion-tips/how-much-silk-is-needed-to-make-a-necktie/
+  — Quote: "a single tie requires about 120 to 130 cocoons."
 
-**Done means:** a count (~100–140) with a quote AND a second corroborating
-source, or it ships flagged as single-source lore.
+**Done means:** the count (~120–130) with the quote. Single-source trade lore —
+ship flagged `industry`, and note a second source was not found.
 
 **Watch for:** tie vs scarf vs "square" — different garments, different masses.
 
@@ -138,16 +145,16 @@ source, or it ships flagged as single-source lore.
 | `unit` | cocoons per silk shirt/blouse |
 | `archetype` | `how-many` |
 
-**Question:** How many cocoons go into one silk shirt or blouse?
+**Question:** How many cocoons go into one silk shirt?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- https://www.suekayton.com/Silkworms/cloth.htm — "~1,000 cocoons to make a shirt"
+- https://www.suekayton.com/Silkworms/cloth.htm — education page. Quote:
+  "it takes about 1000 cocoons to make a silk shirt" (~1,000 cocoons).
 
-**Done means:** a count (~630–1,000) with a quote.
+**Done means:** the count (~1,000) with the quote.
 
-**Watch for:** the wide spread across sources — keep it as lo/hi, not a false
-point value.
+**Watch for:** the wide spread across sources — keep lo/hi, not a false point.
 
 ---
 
@@ -162,11 +169,12 @@ point value.
 
 **Question:** How many cocoons go into one silk dress?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- https://www.suekayton.com/Silkworms/cloth.htm — "1,700 to 2,000 cocoons to make one silk dress"
+- https://www.suekayton.com/Silkworms/cloth.htm — Quote: "It takes 1700 to 2000
+  cocoons to make one silk dress."
 
-**Done means:** a count (~1,700–2,000) with a quote.
+**Done means:** the count (~1,700–2,000) with the quote.
 
 **Watch for:** dress vs kimono (~9,000) — very different garments; do not blur.
 
@@ -183,12 +191,13 @@ point value.
 
 **Question:** How many cocoons are reeled together to form one silk thread?
 
-**Candidate URLs (unconfirmed leads — scout before send):**
+**Candidate URLs (confirmed 200, 2026-07-30):**
 
-- https://www.suekayton.com/Silkworms/cloth.htm — "winding the silk from five cocoons together"
+- https://www.suekayton.com/Silkworms/cloth.htm — Quote: "a machine unrolls the
+  cocoon, winding the silk from five cocoons together to make one silk thread."
 
-**Done means:** a count (~3–8) with a quote — the one small mixing step, recorded
-as such, shown NOT to dominate the garment count.
+**Done means:** the count (~5) with the quote — the one small mixing step,
+recorded as such, shown NOT to dominate the garment count.
 
 **Watch for:** this is real mixing but minor; do not inflate it into a wing-style
 cascade.
@@ -199,24 +208,24 @@ cascade.
 
 | Figure | Source | Year | Definition used |
 |---|---|---|---|
+| filament length | New World Encyclopedia | — | 300–900 m (vs folk 1,000–1,600) |
 | cocoons/garment | craft/education sites | — | vary widely, no survey |
-| filament length | sericulture refs | — | total vs reelable |
 
 ## What to explicitly NOT do
 
-- Do not grade per-garment counts above `industry`; prefer `estimate` if the
-  only sources are craft blogs. No survey exists.
+- Do not grade per-garment counts above `industry`; prefer `estimate` where the
+  only source is a craft/education page. No survey exists.
 - Do not claim `study` for a sericulture journal figure — the README `study`
   withdrawal applies; a human promotes.
 - Do not merge *Bombyx mori* with wild/tussah/eri silk.
-- Do not conflate total filament length with reelable length.
+- Do not silently upgrade the sourced 300–900 m filament to the folk higher range.
 
 ## Acceptance
 
 - [ ] Every row carries a verbatim quote in a returned document
 - [ ] No row claims `measured`/`derived`/`study`
 - [ ] Per-garment figures graded `industry`/`estimate` with the softness noted
-- [ ] `cocoons_per_worm` = 1 with `is_anatomical_constant: 1`
-- [ ] Filament length names total vs reelable on every figure
+- [ ] `cocoons_per_worm` = 1 with `is_anatomical_constant: 1` (flagged if implied)
+- [ ] Filament length uses the sourced 300–900 m, spread noted
 - [ ] New sources in `proposed_sources:`, not `data/sources.yaml`
 - [ ] `build` + `audit` pass on COOPER's self-check
