@@ -177,6 +177,33 @@
     into a head_slaughtered column, because it is a different measurement and
     the whole project rests on not conflating those.
 
+    HOW TO LOAD IT, settled 2026-07-29 after a collision. A concurrent session
+    built output_stat_year for the Israeli figures, and that design wins: it
+    carries measure + unit + provisional + suppressed, so a tonnage or a head
+    count says what it is instead of being poured into a column named _lb. An
+    earlier attempt here added a head_placed column to slaughter_stat_year and
+    put Israeli rows in it; that was reverted, because it mislabels Israeli
+    reporting as US-shaped and trips that session's own
+    test_us_shaped_tables_stay_us_only.
+
+    So this figure needs exactly three things, none of them a new table:
+
+      1. 'chicks_placed' added to the output_stat_year.measure CHECK list.
+         The four existing values -- meat_output, output_value, inventory_eoy,
+         marketed -- have no room for a placement, which is why it is missing
+         from the corpus rather than by oversight.
+      2. this source, cbs-quarterly-agriculture-2025q2, added to sources.yaml.
+         The three sources already added there are all Statistical Abstract
+         tables; the quarterly series is separate and is the only one with a
+         head count.
+      3. two rows in data/output_israel.yaml: 275,427,900 for 2024 (provisional,
+         CBS's asterisk) and 262,848,753 for 2023, unit 'head'.
+
+    Worth doing because that session's own test docstring says Israel has "no
+    head slaughtered, which is the denominator the count question needs". This
+    is the nearest real count to that denominator, and it is measured rather
+    than derived.
+
     Broiler marketing, tonnes: 571,497 (2024), 553,630 (2023). This
     independently corroborates st21_04, whose districts sum to 571,499.95 --
     agreement to 3 tonnes across two separately published tables. It also
