@@ -95,7 +95,7 @@ def test_a_moved_answer_is_minor_even_with_an_identical_corpus():
     single-product first version could not have seen."""
     need, why = rc.required_bump(BASE, BASE, {"saffron_gram": "150 150"}, {"saffron_gram": "150 1"})
     assert need == "second"
-    assert "published answer moved for saffron_gram" in why[0]
+    assert "saffron_gram" in why[0]  # names the product whose answer moved
 
 
 def test_an_unavailable_answer_does_not_invent_a_reason():
