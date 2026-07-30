@@ -277,9 +277,14 @@ def _ca_context() -> ssl.SSLContext | None:
 
 _SSL_CTX = _ca_context()
 if _SSL_CTX is None:
+    # Deliberately does not name a machine. This module is imported on the Mac
+    # too -- research_batch.py and the tests parse specs with it -- and the Mac
+    # has a working system trust store, so asserting "COOPER does not have one"
+    # was simply wrong half the time it printed.
     print("  WARNING: certifi is not installed, so HTTPS verification falls "
-          "back to a trust store that COOPER does not have. Expect fetch "
-          "failures on PMC and some .edu hosts. Fix: pip install certifi")
+          "back to whatever trust store this interpreter has. On a host with "
+          "none (COOPER reports cafile=None) expect fetch failures on PMC and "
+          "some .edu hosts. Fix: pip install certifi")
 
 
 def fetch_url(url: str, dest: Path) -> Path | None:
