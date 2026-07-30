@@ -89,7 +89,7 @@ def test_fabricated_quote_is_rejected(tmp_path):
     ok, why = rb.quote_in_document(
         "roughly 400 flowers are required to produce one gram", d)
     assert not ok
-    assert "does not appear" in why
+    assert why  # rejected WITH a reason, whatever wording it uses
 
 
 def test_missing_document_is_rejected(tmp_path):
@@ -97,7 +97,7 @@ def test_missing_document_is_rejected(tmp_path):
     rather than pass by default."""
     ok, why = rb.quote_in_document("anything", tmp_path / "absent.txt")
     assert not ok
-    assert "not returned" in why
+    assert "absent.txt" in why  # names the document it could not find
 
 
 def test_empty_quote_is_rejected(tmp_path):
@@ -369,7 +369,7 @@ def test_value_must_appear_in_the_quote():
     sentence says the figure."""
     ok, why = rb.value_in_quote(10, "an annual yield of 8")
     assert not ok
-    assert "does not appear" in why
+    assert "10" in why  # names the value it rejected
 
 
 def test_value_found_as_digits():
@@ -413,7 +413,7 @@ def test_subject_mismatch_is_rejected():
     ok, why = rb.unit_matches_field(
         "flowers_per_gram_dried", "stigmas per pound")
     assert not ok
-    assert "different question" in why
+    assert "flower" in why and "stigma" in why  # names both subjects
 
 
 def test_matching_subject_passes():
@@ -473,7 +473,12 @@ def test_band_with_nothing_quoted_is_rejected():
     row = {"value_lo": 10, "value_mode": 10, "value_hi": 10}
     ok, why = rb.band_in_quote(row, "an annual yield of 8")
     assert not ok
-    assert "derived" in why
+    # Assert on the IDENTIFIER, never the prose. This assertion used to read
+    # `assert "derived" in why`, and #31 broke it by rewording the message to
+    # explain bounds -- a change that made the tool better and the test fail.
+    # A rejection has to name the value it rejected; how it explains itself is
+    # the author's business.
+    assert "10" in why
 
 
 def test_band_with_no_values_passes():
@@ -496,7 +501,7 @@ def test_non_numeric_values_are_rejected(junk):
     a float is not a figure at all."""
     ok, msg = rb.band_in_quote({"value_mode": junk}, "a quote mentioning 32 mg")
     assert not ok
-    assert "not numbers" in msg
+    assert repr(junk) in msg or str(junk) in msg  # names the offending value
 
 
 @pytest.mark.parametrize("good,quote", [

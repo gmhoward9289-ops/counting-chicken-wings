@@ -1,0 +1,124 @@
+# Maple mixing cascade. Merged with mixing.yaml at build time.
+#
+# Pools here are in TREES represented, because the tree is the individual.
+#
+# Maple's cascade is short and starts wide. A wing leaves its bird alone and
+# is progressively mixed with others; sap is ALREADY mixed the moment it is
+# collected, because a tubing network runs a whole stand of trees into one
+# tank before anybody boils anything. There is no stage at which a gallon of
+# sap belongs to one tree, and no way to unmix it afterwards.
+#
+# So the interesting question is not where mixing happens - it happens at
+# step one - but how big the stand is, and whether a packer later blends
+# barrels from many sugarhouses on top of that.
+#
+# CONFIDENCE: all estimate, citing project-estimate-mixing, exactly as for
+# poultry, eggs and saffron. Nobody publishes pool sizes because nobody in
+# the trade measures them. Structurally right, numerically soft, and the
+# audit prints that mix on every build.
+
+stages:
+  - slug: maple_collection_tank
+    domain: forestry
+    label: Collection tank
+    sequence: 10
+    # In TREES. A hobbyist on buckets at the low end; a commercial bush on
+    # vacuum tubing at the high end, where a single tank gathers everything
+    # the network reaches.
+    pool_lo: 5
+    pool_mode: 800
+    pool_hi: 20000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Sap from every tap on the line arrives in one tank. This is the first
+      stage and it does almost all the work: after it, no quantity of sap
+      corresponds to any particular tree.
+
+  - slug: maple_evaporator_batch
+    domain: forestry
+    label: Evaporator batch
+    sequence: 20
+    pool_lo: 5
+    pool_mode: 800
+    pool_hi: 20000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      A continuous-flow evaporator is fed from the tank all day, so a run
+      draws on whatever the stand delivered. It cannot narrow the pool the
+      tank produced; it can only carry it forward.
+
+  - slug: maple_barrel
+    domain: forestry
+    label: Bulk barrel
+    sequence: 30
+    pool_lo: 50
+    pool_mode: 3000
+    pool_hi: 40000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Syrup is drummed for sale, commonly in 40-gallon barrels. One barrel
+      takes many days' boiling, so it spans most of a season's flow from the
+      whole stand.
+
+  - slug: maple_packer_blend
+    domain: forestry
+    label: Packer blend
+    sequence: 40
+    pool_lo: 5000
+    pool_mode: 100000
+    pool_hi: 2000000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      A packer buys barrels from many sugarhouses and blends to a grade and
+      colour before bottling. This is the step that makes a supermarket
+      bottle a regional average rather than one family's woods, and it is
+      where the tree count stops being knowable even in principle.
+
+supply_chains:
+  - slug: commodity_syrup
+    domain: forestry
+    species: sugar_maple
+    label: Commodity syrup
+    is_default: 1
+    description: >-
+      The supermarket route. Tank, evaporator, barrel, and then a packer
+      blending across producers - every stage applies and the pool only ever
+      grows.
+    stages:
+      - maple_collection_tank
+      - maple_evaporator_batch
+      - maple_barrel
+      - maple_packer_blend
+    floor_note: >-
+      A bottle of commodity syrup represents a forest, not a tree. Blending
+      barrels across sugarhouses puts the count into the tens of thousands,
+      and no arrangement of the arithmetic brings it near the floor. The
+      honest answer to "which trees" is that nobody knows and nobody could.
+
+  - slug: sugarhouse_direct
+    domain: forestry
+    species: sugar_maple
+    label: Bought at the sugarhouse
+    is_default: 0
+    description: >-
+      Syrup bought from the producer who made it. The stand's own tank and
+      evaporator still mix every tree together, but no packer blend follows,
+      so the pool is one woods rather than a region.
+    stages:
+      - maple_collection_tank
+      - maple_evaporator_batch
+    floor_note: >-
+      The closest maple gets to the floor, and it is not very close. Even a
+      backyard operation runs its buckets into one tank, so a jar represents
+      every tree tapped that season - about 2 to 9 trees' worth of syrup
+      drawn from however many were tapped. To approach the floor you would
+      have to boil one tree's sap by itself, which nobody does because a
+      single tree yields about a quart.
