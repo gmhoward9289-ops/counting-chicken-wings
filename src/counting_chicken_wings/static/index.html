@@ -169,6 +169,23 @@
          font-variant-numeric: tabular-nums; }
   .note { color: var(--faint); font-size: 13px; }
   .warn { color: var(--estimate); }
+
+  /* Country picker and its capability list. */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button { background: none; border: 1px solid var(--line);
+                  color: var(--dim); padding: 7px 14px; border-radius: 999px;
+                  font: inherit; font-size: 14px; cursor: pointer; }
+  .chips button:hover { color: var(--ink); border-color: var(--faint); }
+  .chips button.on { color: var(--accent); border-color: var(--accent); }
+  /* A country with nothing loaded is still worth showing -- the absence is
+     part of the story -- but it must not look selectable-and-broken. */
+  .chips button:disabled { opacity: .45; cursor: not-allowed; }
+  .can { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0; padding: 0;
+         list-style: none; font-size: 14px; }
+  .can li::before { margin-right: 6px; }
+  .can li.yes::before { content: '\2713'; color: var(--accent); }
+  .can li.no::before { content: '\2717'; color: var(--estimate); }
+  .can li.no { color: var(--dim); }
   h3 { margin: 0 0 4px; font-size: 17px; }
   .muted { color: var(--dim); font-size: 14px; margin: 0 0 18px; }
 
@@ -210,7 +227,7 @@
   <button data-v="sci">Scientific</button>
   <button data-v="mix">Mixing simulator</button>
   <button data-v="states">By state</button>
-  <button data-v="countries">Countries</button>
+  <button data-v="country">By country</button>
   <button data-v="size">Is fatter better?</button>
   <button data-v="impact">Nutrition &amp; impact</button>
   <button data-v="trends">Trends</button>
@@ -426,58 +443,62 @@
   </div>
 </section>
 
-<!-- ------------------------------------------------ countries -->
-<section class="view" id="v-countries">
+<!-- ------------------------------------------------ by country
+
+     Deliberately NOT a filter on the calculator, which is where people look
+     for it first. Nothing in the model is country-scoped -- loss_factor,
+     mixing_stage, supply_chain and product all lack a country_id -- so a
+     country dropdown on the calculator would change nothing while implying
+     that it had.
+
+     Countries here are complementary rather than comparable, and the coverage
+     is not symmetrical: the US enumerates head slaughtered and publishes no
+     national output series, Israel the inverse. So this view leads with what
+     each country can and cannot answer, and it reads every one of those claims
+     FROM THE API rather than stating them here. An earlier draft hardcoded
+     "Israel cannot answer how many chickens", which was true when written and
+     false hours later once an industry-grade figure was sourced. Coverage
+     changes; prose about coverage rots. -->
+
+<section class="view" id="v-country">
   <div class="panel">
-    <h3>What each country can actually answer</h3>
+    <h3>Production by country</h3>
     <p class="muted">
-      Not a country list. The United States and Israel do not have comparable
-      data and a selector that implied they did would be the most misleading
-      thing on this page. USDA enumerates birds slaughtered and publishes the
-      count; Israel's Central Bureau of Statistics publishes tonnage, a
-      year-end flock and districts, and no bird count at all.
+      Different countries publish different things, and the gaps are not
+      symmetrical. Pick one to see what its own statistics can and cannot
+      answer — including, where it applies, that they cannot answer this
+      project's headline question.
     </p>
-    <div id="c-coverage"></div>
+    <div id="c-picker" class="chips"></div>
   </div>
 
   <div class="panel">
-    <h3>Israel, read two ways</h3>
-    <p class="muted">
-      The bird count exists outside CBS — about 260 million broilers a year,
-      from a named industry official. It is the only route to a count answer
-      for Israel, and it is weaker evidence than everything CBS publishes.
-      Rather than choose for you, both readings are here.
-    </p>
-    <div class="row" style="margin-bottom:14px">
+    <div class="row" style="margin-bottom:12px">
       <label><input type="radio" name="c-grade" value="" checked>
-        Include industry figures</label>
+        All evidence</label>
       <label><input type="radio" name="c-grade" value="measured">
         Government figures only</label>
     </div>
-    <div id="c-headline"></div>
+    <div id="c-answers"></div>
     <p class="note" id="c-excluded"></p>
   </div>
 
-  <div class="panel">
-    <h3>Broiler output</h3>
-    <p class="muted">
-      Tonnes, as CBS publishes them. Nothing is converted to pounds: the US
-      reports pounds and Israel kilograms, and a comparison that forgets is
-      wrong by 2.2× while still looking plausible.
-    </p>
-    <div id="c-output" style="height:340px"></div>
-    <div id="c-outputtable"></div>
+  <div class="panel" id="c-national-panel">
+    <h3 id="c-national-title">National series</h3>
+    <p class="muted" id="c-national-note"></p>
+    <div id="c-output" style="height:300px"></div>
+    <div id="c-flock" style="height:300px"></div>
   </div>
 
-  <div class="panel">
-    <h3>Where the birds are</h3>
-    <p class="muted">
-      Districts and regional councils, 2024. This is <b>marketing</b>, not
-      production — a different measurement from the national output above,
-      which is why the two do not reconcile. Councils CBS suppresses appear
-      with no figure rather than a zero, exactly as suppressed US states do.
-    </p>
-    <div id="c-districts"></div>
+  <div class="panel" id="c-regional-panel">
+    <h3 id="c-regional-title">Subnational</h3>
+    <p class="muted" id="c-regional-note"></p>
+    <div id="c-regional"></div>
+  </div>
+
+  <div class="panel" id="c-sources-panel">
+    <h3>Sources for this country</h3>
+    <div id="c-sources"></div>
   </div>
 </section>
 
@@ -1006,150 +1027,288 @@ async function initStates() {
     ).join('') + '</table>';
 }
 
-// ---- countries
+// ---- by country
 //
-// The one rule this view exists to enforce: never render a number without the
-// grade beside it. Israel's bird count and the US bird count are both "a bird
-// count" and they are not the same kind of thing, so every figure here carries
-// its badge and the government-only reading is one click away.
-const MEASURE_LABEL = {
-  meat_output: 'Meat output',
-  output_value: 'Output value',
-  inventory_eoy: 'Flock, end of year',
-  head_slaughtered: 'Birds slaughtered per year',
-  marketed: 'Marketed',
+// The capability labels are keyed off the API's `answers` map rather than
+// written here, so a country can never be shown a question its statistics
+// cannot answer. That is the whole point of the view: Israel publishes tonnage,
+// value and 55 districts, and cannot say how many chickens -- head slaughtered
+// is in none of the CBS tables and no Israeli average bird weight is published
+// either, so there is no denominator. Naming the gap is more honest than
+// filling it with a US figure.
+const CAN_LABEL = {
+  head_slaughtered: 'how many chickens',
+  national_output:  'national output',
+  subnational:      'subnational detail',
+  per_capita:       'per-capita consumption',
 };
 
-function fmtOutput(r) {
-  const v = r.value;
-  if (v === null || v === undefined) return '—';
-  if (r.unit === 'ILS_million') return '₪' + v.toLocaleString() + 'M';
-  if (r.unit === 'thousand_head')
-    return (v / 1000).toLocaleString(undefined,
-      { maximumFractionDigits: 1 }) + 'M head';
-  return v.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' t';
-}
+// Rendered as tonnes/value/head, each on its own chart. Countries are never
+// put on a shared axis: the US answers head slaughtered and not national
+// output, Israel the exact inverse, so a side-by-side would invite a
+// comparison the data cannot support.
+const MEASURE = {
+  meat_output:  { title: 'Broiler meat output', colour: '#d97706' },
+  head_slaughtered: { title: 'Birds slaughtered per year', colour: '#4ade80' },
+  output_value: { title: 'Output value',        colour: '#a3a3a3' },
+  inventory_eoy:{ title: 'Flock, end of year',  colour: '#fde68a' },
+};
 
-async function initCountries() {
-  const d = await api('/api/countries');
-  const yes = b => b ? '<span class="v-better">yes</span>'
-                     : '<span class="v-worse">no</span>';
+let COUNTRIES = null;
 
-  $('#c-coverage').innerHTML = `<table><tr><th>Country</th>
-    <th>Birds counted?</th><th>By whom</th><th>Subnational</th>
-    <th class="num">Regions</th><th>Per capita</th><th>Reports in</th></tr>` +
-    d.countries.map(c => `<tr>
-      <td><b>${c.name}</b></td>
-      <td>${yes(c.answers.head_slaughtered)}</td>
-      <td>${c.answers.head_slaughtered_grade
-              ? badge(c.answers.head_slaughtered_grade) : '—'}</td>
-      <td>${yes(c.answers.subnational)}</td>
-      <td class="num">${c.subnational_regions || '—'}</td>
-      <td>${yes(c.answers.per_capita)}</td>
-      <td>${c.native_mass_unit}${c.native_currency
-              ? ' / ' + c.native_currency : ''}</td></tr>`).join('') +
-    `</table><p class="note" style="margin-top:10px">
-     Per capita is "no" for <i>both</i> countries on purpose. It is the
-     comparison an audience asks for first and the one figure here with no
-     reachable citation — five sources claim Israel leads the world with
-     numbers 20% apart, so population is deliberately empty rather than
-     filled with a plausible one.</p>`;
+// The evidence filter, held here because it survives a country change: a
+// reader who asked for government figures only should not have that quietly
+// undone by clicking a different country.
+let C_GRADE = '';
+let C_ISO = null;
 
-  await drawIsrael('');
+async function initCountry() {
+  COUNTRIES = (await api('/api/countries')).countries;
   document.querySelectorAll('input[name="c-grade"]').forEach(r => {
-    r.onchange = () => drawIsrael(r.value);
+    r.onchange = () => { C_GRADE = r.value; if (C_ISO) showCountry(C_ISO); };
   });
+  const box = $('#c-picker');
+  box.innerHTML = '';
+  COUNTRIES.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.name;
+    b.disabled = !c.has_data;
+    if (!c.has_data) b.title = 'No statistics loaded for this country yet';
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      showCountry(c.iso3);
+    };
+    box.appendChild(b);
+  });
+  // Default to the first country that actually has data, so the view is never
+  // blank on arrival.
+  const first = box.querySelector('button:not([disabled])');
+  if (first) first.click();
+  else $('#c-answers').innerHTML =
+    '<p class="muted">No country has statistics loaded yet.</p>';
 }
 
-async function drawIsrael(minConf) {
-  const q = minConf ? `?min_confidence=${minConf}` : '';
-  const d = await api('/api/output/ISR' + q);
+async function showCountry(iso3) {
+  C_ISO = iso3;
+  const meta = COUNTRIES.find(c => c.iso3 === iso3) || {};
+  const a = meta.answers || {};
 
-  const head = d.national.find(r => r.measure === 'head_slaughtered');
-  const out24 = d.national.find(
-    r => r.measure === 'meat_output' && r.year === 2024);
-  const flock = d.national.find(
-    r => r.measure === 'inventory_eoy' && r.year === 2024);
-  const w = d.derived_weight[0];
+  // /api/output/{iso3} 404s for a country with no output_stat_year rows, and
+  // that is a legitimate state rather than an error: the US enumerates head
+  // slaughtered and 50 states and publishes no national output series at all,
+  // so it answers this question through "By state" instead.
+  //
+  // Letting the throw propagate is what a first pass did, and because the
+  // rejection was swallowed by the click handler the United States button
+  // simply did nothing when pressed -- no error, no change, no clue. Absence
+  // of data has to render as absence, not as a dead control.
+  let d = { national: [], regional: [], suppressed_regions: 0,
+            excluded: [], derived_weight: [] };
+  try {
+    d = await api(`/api/output/${iso3}` +
+                  (C_GRADE ? `?min_confidence=${C_GRADE}` : ''));
+  } catch (err) {
+    if (!String(err.message || '').includes('404')) throw err;
+  }
 
-  const card = (val, key, note) =>
-    `<div class="verdict"><div class="v-val">${val}</div>
-     <div class="v-key">${key}</div>
-     ${note ? `<div class="note">${note}</div>` : ''}</div>`;
+  // ---- what this country can and cannot answer
+  //
+  // Every word here is derived from the API's `answers` map. Nothing is
+  // asserted, deliberately: an earlier draft of this view hardcoded "Israel
+  // cannot answer how many chickens", which was true when it was typed and
+  // false a few hours later once an industry-grade head figure was sourced.
+  // A UI that states a coverage fact in prose will eventually contradict the
+  // corpus it is describing.
+  // The capability map is unfiltered, so under a filter it would contradict the
+  // panel below it -- claiming Israel can answer the count question on a view
+  // that has just dropped the only figure that answers it.
+  const can = k => (C_GRADE === 'measured' && k === 'head_slaughtered')
+    ? a.head_slaughtered_measured : a[k];
 
-  $('#c-headline').innerHTML =
-    `<div class="grid2">` +
-    card(head ? fmtOutput(head) : 'unknown',
-         'Birds slaughtered per year',
-         head ? badge(head.confidence) + ' named industry official'
-              : 'CBS publishes no bird count') +
-    card(w ? w.kg_per_head.toFixed(2) + ' kg' : 'unknown',
-         'Average bird',
-         w ? badge(w.confidence) +
-             ` derived, ${w.output_year} output ÷ ${w.head_year} head`
-           : 'needs a bird count') +
-    card(fmtOutput(out24), 'Broiler output, 2024',
-         badge(out24 ? out24.confidence : '') + ' CBS, provisional') +
-    card(fmtOutput(flock), 'Flock at year end',
-         badge(flock ? flock.confidence : '') +
-         ' a standing flock, not throughput') +
-    `</div>`;
+  const items = Object.keys(CAN_LABEL).map(k => {
+    // The count question is the one where a bare yes/no misleads. "We have a
+    // bird count" means something very different when a federal agency
+    // enumerated it than when a trade association secretary said it in an
+    // interview, so the grade rides along with it.
+    const grade = k === 'head_slaughtered' && can(k) && a.head_slaughtered_grade
+      ? ` <span class="note">(${a.head_slaughtered_grade})</span>` : '';
+    return `<li class="${can(k) ? 'yes' : 'no'}">${CAN_LABEL[k]}${grade}</li>`;
+  }).join('');
+
+  let calcNote = '';
+  if (C_GRADE === 'measured' && a.head_slaughtered
+      && !a.head_slaughtered_measured) {
+    calcNote = `<p class="note warn">On government figures alone ${meta.name}
+      cannot answer this project's headline question. It has a bird count, but
+      not one anybody enumerated — switch back to all evidence to see it, and
+      read it as what it is.</p>`;
+  } else if (!a.head_slaughtered) {
+    calcNote = `<p class="note warn">${meta.name} cannot answer this project's
+      headline question from its own statistics. Head slaughtered per year is
+      not published, and without it or an average bird weight there is no way
+      to turn tonnes into birds. Borrowing another country's figure would dress
+      a foreign assumption up as a local one.</p>`;
+  } else if (!a.head_slaughtered_measured) {
+    calcNote = `<p class="note warn">${meta.name} answers the count question on
+      <strong>${a.head_slaughtered_grade || 'weaker'}</strong> evidence rather
+      than a government enumeration — so it is a real answer, and not the same
+      kind of answer the US figure is. Read it as the order of magnitude it is,
+      not as a census.</p>`;
+  }
+
+  // The count answer itself, and the weight it implies. Under the
+  // government-only filter these disappear along with the figure they rest
+  // on, which is the honest result rather than a gap: without an industry
+  // head count Israel can say how much chicken it produced and not how many
+  // chickens that took.
+  const head = (d.national || []).find(r => r.measure === 'head_slaughtered');
+  const w = (d.derived_weight || [])[0];
+  const cards = (head || w) ? `<div class="grid2" style="margin-top:14px">` +
+    (head ? `<div class="verdict">
+        <div class="v-val">${(head.value / 1000).toLocaleString(undefined,
+          { maximumFractionDigits: 1 })}M</div>
+        <div class="v-key">birds slaughtered per year</div>
+        <div class="note">${badge(head.confidence)} ${head.source_slug}</div>
+      </div>` : '') +
+    (w ? `<div class="verdict">
+        <div class="v-val">${w.kg_per_head.toFixed(2)} kg</div>
+        <div class="v-key">implied average bird</div>
+        <div class="note">${badge(w.confidence)} ${w.output_year} output ÷
+          ${w.head_year} head${w.year_gap
+            ? `, ${w.year_gap} year apart` : ''}</div>
+      </div>` : '') + `</div>` : '';
+
+  $('#c-answers').innerHTML = `
+    <h3>${meta.name} <span class="note">${
+      [meta.native_mass_unit, meta.native_currency].filter(Boolean).join(' · ')
+    }</span></h3>
+    <p class="muted">What this country's own statistics can answer:</p>
+    <ul class="can">${items}</ul>${calcNote}${cards}`;
 
   // A filtered answer that does not say what it filtered is just a different
-  // number, so name the dropped row rather than quietly showing less.
-  $('#c-excluded').innerHTML = d.excluded.length
-    ? `Hidden by the government-only view: ` + d.excluded.map(e =>
-        `<b>${MEASURE_LABEL[e.measure] || e.measure}</b> (${e.confidence},
-         ${e.source})`).join(', ') +
-      `. Without it Israel can say how much chicken it produces and not how
-       many chickens that took.`
-    : `Showing every figure, including the industry bird count. Switch above
-       to see what CBS alone can support.`;
+  // number, so name the dropped rows rather than quietly showing fewer.
+  $('#c-excluded').innerHTML = (d.excluded || []).length
+    ? 'Hidden by this filter: ' + d.excluded.map(e =>
+        `<strong>${(MEASURE[e.measure] || {}).title || e.measure}</strong>
+         (${e.confidence}, <code>${e.source}</code>)`).join(', ') + '.'
+    : (C_GRADE && (d.national || []).length
+        ? `Nothing hidden — every figure ${meta.name} has in this panel is
+           government-measured.`
+        : '');
 
-  const series = d.national
-    .filter(r => r.measure === 'meat_output')
-    .sort((a, b) => a.year - b.year);
-  Plotly.newPlot('c-output', [{
-    x: series.map(r => r.year), y: series.map(r => r.value),
-    type: 'bar', marker: { color: '#60a5fa' },
-    hovertemplate: '%{x}: %{y:,.0f} t<extra></extra>',
-  }], Object.assign({}, PLOT, {
-    yaxis: Object.assign({}, PLOT.yaxis, { title: 'tonnes' }),
-    annotations: [{
-      x: 2023, y: 553068, text: 'Newcastle disease<br>and the war',
-      showarrow: true, arrowcolor: '#fb7185', font: { size: 11 },
-      ax: 0, ay: -46,
-    }],
-  }), CFG);
+  // ---- national series, one chart per measure that exists
+  const nat = d.national || [];
+  const byMeasure = m => nat.filter(r => r.measure === m)
+                            .slice().sort((x, y) => x.year - y.year);
+  const prov = nat.some(r => r.provisional);
 
-  $('#c-outputtable').innerHTML = `<table><tr><th>Measure</th>
-    <th class="num">Year</th><th class="num">Value</th><th>Evidence</th>
-    <th>Source</th></tr>` +
-    d.national.map(r => `<tr>
-      <td>${MEASURE_LABEL[r.measure] || r.measure}</td>
-      <td class="num">${r.year}${r.provisional ? '*' : ''}</td>
-      <td class="num">${fmtOutput(r)}</td>
-      <td>${badge(r.confidence)}</td>
-      <td class="mono">${r.source_slug}</td></tr>`).join('') +
-    `</table><p class="note" style="margin-top:10px">
-     * CBS marks the figure provisional.</p>`;
+  $('#c-national-title').textContent = `${meta.name} — national series`;
+  $('#c-national-note').innerHTML = nat.length
+    ? `${nat.length} figures.` + (prov
+        ? ' Points marked provisional are the publisher\'s own flag, carried' +
+          ' through rather than smoothed away.' : '')
+    : `No national series loaded. ${meta.name} answers this question` +
+      ` elsewhere — see "By state".`;
 
-  const regions = d.regional
-    .filter(r => r.region_level === 'council')
-    .sort((a, b) => (b.value || 0) - (a.value || 0));
-  $('#c-districts').innerHTML = `<table><tr><th>Regional council</th>
-    <th class="num">Broilers marketed</th><th>District</th></tr>` +
-    regions.map(r => `<tr><td>${r.region}</td>
-      <td class="num">${r.suppressed
-        ? '<span class="muted">withheld</span>'
-        : r.value.toLocaleString(undefined,
-            { maximumFractionDigits: 0 }) + ' t'}</td>
-      <td class="muted">${(r.notes || '').replace(/^in /, '')}</td>
-      </tr>`).join('') +
-    `</table><p class="note" style="margin-top:10px">
-     ${d.suppressed_regions} councils are withheld by CBS under its disclosure
-     rules — present, but with no figure. They are never read as zero, which
-     is why the councils sum lower than the district totals above them.</p>`;
+  plotSeries('c-output', ['meat_output', 'output_value'], byMeasure, meta);
+  plotSeries('c-flock', ['inventory_eoy'], byMeasure, meta);
+
+  // ---- subnational
+  const reg = (d.regional || []).filter(r => r.region_level !== 'total');
+  const total = (d.regional || []).find(r => r.region_level === 'total');
+  $('#c-regional-title').textContent = `${meta.name} — subnational`;
+  // "No subnational detail" would be false for the US, which has 23 regions --
+  // they simply live in the size/production tables rather than in this one.
+  // The capability map is the authority on whether the data exists; this panel
+  // only knows whether IT has any, so it must not generalise from that.
+  $('#c-regional-note').innerHTML = reg.length
+    ? `${reg.length} regions.` + (d.suppressed_regions
+        ? ` <span class="warn">${d.suppressed_regions} suppressed by the
+            publisher's disclosure rules</span> — a real constraint, not a gap
+            to fill by estimating.` : '')
+    : (a.subnational
+        ? `${meta.name} has subnational data
+           (${meta.subnational_regions || 0} regions), but as live weight and
+           production rather than as an output series — see “By state”.`
+        : 'No subnational detail loaded.');
+
+  if (reg.length) {
+    // Districts and councils are different levels of the same hierarchy, so
+    // they are labelled rather than mixed into one flat ranking that would
+    // double-count a district against the councils inside it.
+    const rows = reg.slice().sort((x, y) => y.value - x.value);
+    $('#c-regional').innerHTML =
+      `<table><tr><th>Region</th><th>Level</th>
+        <th class="num">Marketed</th><th class="num">Share</th></tr>` +
+      rows.map(r => {
+        const level = r.region_level || 'council';
+        const share = total && total.value
+          ? ((r.value / total.value) * 100).toFixed(1) + '%' : '—';
+        return `<tr><td>${r.region}</td><td class="note">${level}</td>
+          <td class="num">${Math.round(r.value).toLocaleString()} ${r.unit}</td>
+          <td class="num">${r.region_level === 'district' ? share : ''}</td></tr>`;
+      }).join('') +
+      (total ? `<tr><td><strong>${total.region}</strong></td><td></td>` +
+        `<td class="num"><strong>${
+          Math.round(total.value).toLocaleString()} ${total.unit
+        }</strong></td><td></td></tr>` : '') + '</table>';
+  } else {
+    $('#c-regional').innerHTML = '';
+  }
+
+  // ---- sources, because a figure without one does not ship
+  const slugs = [...new Set([...nat, ...(d.regional || [])]
+    .map(r => r.source_slug).filter(Boolean))];
+  $('#c-sources').innerHTML = slugs.length
+    ? `<ul class="can" style="flex-direction:column;gap:6px">` +
+      slugs.map(s => `<li class="yes"><code>${s}</code></li>`).join('') +
+      '</ul>'
+    : '<p class="muted">None — nothing is loaded for this country.</p>';
+  $('#c-sources-panel').hidden = !slugs.length;
+}
+
+// One y-axis per unit. Tonnes and shekels share a chart only because they
+// share a shape; the axis titles carry the unit so neither is read as the
+// other.
+function plotSeries(div, measures, byMeasure, meta) {
+  const traces = measures.map(m => {
+    const rows = byMeasure(m);
+    if (!rows.length) return null;
+    const cfg = MEASURE[m] || { title: m, colour: '#d97706' };
+    return {
+      x: rows.map(r => r.year),
+      y: rows.map(r => r.value),
+      name: `${cfg.title} (${rows[0].unit})`,
+      type: 'scatter', mode: 'lines+markers',
+      line: { color: cfg.colour, width: 2 },
+      // Provisional points get an open marker, so the publisher's own hedge
+      // survives into the chart instead of being flattened.
+      marker: {
+        size: 7,
+        symbol: rows.map(r => r.provisional ? 'circle-open' : 'circle'),
+      },
+      hovertemplate: `%{x}: %{y:,} ${rows[0].unit}<extra></extra>`,
+      yaxis: measures.indexOf(m) === 0 ? 'y' : 'y2',
+    };
+  }).filter(Boolean);
+
+  const el = document.getElementById(div);
+  if (!traces.length) { el.innerHTML = ''; el.style.height = '0'; return; }
+  el.style.height = '300px';
+
+  const layout = Object.assign({}, PLOT, {
+    showlegend: traces.length > 1,
+    legend: { orientation: 'h', y: 1.15 },
+    xaxis: Object.assign({}, PLOT.xaxis, { title: '' }),
+    yaxis: Object.assign({}, PLOT.yaxis, { title: traces[0].name }),
+  });
+  if (traces.length > 1) {
+    layout.yaxis2 = { overlaying: 'y', side: 'right',
+                      gridcolor: 'rgba(0,0,0,0)', title: traces[1].name };
+    layout.margin = Object.assign({}, PLOT.margin, { r: 60 });
+  }
+  Plotly.newPlot(div, traces, layout, CFG);
 }
 
 // ---- trends
@@ -1451,8 +1610,9 @@ async function load(v) {
   if (loaded[v]) return;
   loaded[v] = true;
   const init = { sci: initSci, mix: initMix, states: initStates,
-                 countries: initCountries, size: initSize,
-                 impact: initImpact, trends: initTrends, facts: initFacts,
+                 country: initCountry,
+                 size: initSize, impact: initImpact,
+                 trends: initTrends, facts: initFacts,
                  sources: initSources }[v];
   if (!init) return;
   try {
@@ -1506,9 +1666,6 @@ READY = (async () => {
   api('/api/version').then(renderBuild).catch(() => {});
 
   META = await api('/api/meta');
-  $('#chain').innerHTML = META.chains.map(c =>
-    `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
-  ).join('');
 
   const active = META.products.filter(p => p.active);
   $('#product').innerHTML = active.map(p =>
@@ -1518,13 +1675,36 @@ READY = (async () => {
   // The window control only makes sense for a rate, so it follows the
   // selected product rather than sitting there permanently confusing anyone
   // asking about wings.
+  // The chain list belongs to the SELECTED PRODUCT'S SPECIES, not to the whole
+  // corpus. `is_default` is per-species -- the schema's unique index enforces
+  // exactly that -- so rendering every chain flat and marking each default
+  // `selected` leaves whichever sorts last in charge. Adding saffron made that
+  // "Commodity spice trade", so the wing calculator opened on a saffron route
+  // and was one step from narrating a chicken through a picking tray. Eggs had
+  // the same collision already and won it only by alphabetical luck.
+  const syncChains = () => {
+    const p = active.find(x => x.slug === $('#product').value);
+    const mine = META.chains.filter(c =>
+      !c.species_slug || !p || c.species_slug === p.species_slug);
+    const keep = mine.some(c => c.slug === $('#chain').value)
+      ? $('#chain').value
+      : (mine.find(c => c.is_default) || mine[0] || {}).slug;
+    $('#chain').innerHTML = mine.map(c =>
+      `<option value="${c.slug}"${c.slug === keep ? ' selected' : ''}>${
+        c.label}</option>`).join('');
+  };
+
   const syncWindow = () => {
     const p = active.find(x => x.slug === $('#product').value);
     $('#window-wrap').hidden = !p || p.yield_mode !== 'recurring';
     $('#pieces').closest('label').hidden =
       !p || p.slug !== 'whole_wing';
   };
+  // Chains before the window, so a product change has a valid chain selected
+  // by the time calc() reads it.
+  $('#product').addEventListener('change', syncChains);
   $('#product').addEventListener('change', syncWindow);
+  syncChains();
   syncWindow();
 
   ['count','product','chain','pieces','mort','window-days'].forEach(id => {

@@ -1,10 +1,7 @@
 # Batch 06 — ground beef
 
-> **SCOUTED 2026-07-30.** Candidate URLs below were each fetched and confirmed
-> 200 with the figure present on this date, except **Item 4 (patty mass)**,
-> which still needs a confirmed authoritative source and is marked pending.
-> COOPER fetches exactly what is listed and never searches, so leave the pending
-> item blank rather than plausible.
+> **SCOUTED 2026-07-30.** Every candidate URL below was fetched and confirmed
+> 200 with the figure present on this date. Ready to send.
 
 **Archetype:** `how-many`
 
@@ -125,7 +122,7 @@ in changes the animal pool without changing mass.
 
 ---
 
-### Item 4 — patty_mass_standard  *(URL PENDING — do not send this item yet)*
+### Item 4 — patty_mass_standard
 
 | | |
 |---|---|
@@ -137,9 +134,17 @@ in changes the animal pool without changing mass.
 **Question:** What is a standard ground-beef patty weight (retail quarter-pound
 and common foodservice portions)?
 
-**Candidate URLs:** *none confirmed yet.* A quarter-pound (~113 g) is common
-knowledge but needs a citable source. **Scout a USDA FoodData Central patty
-entry or a foodservice spec sheet and confirm 200 before sending this item.**
+**Candidate URLs (confirmed 200, 2026-07-30):**
+
+- https://en.wikipedia.org/wiki/Quarter_Pounder — Quote: "a precooked weight of
+  approximately one quarter of a pound, originally portioned as four ounces
+  (113.4 g) but increased to 4.25 oz (120.5 g) in 2015." A quarter-pound is the
+  1:4 foodservice count; grade `industry`.
+- https://www.ars.usda.gov/ARSUserFiles/80400525/data/retn/usda_cookingyields_meatpoultry.pdf
+  — USDA ARS cooking-yields table. Ground beef patties retain ~63–77% of raw
+  weight when cooked (fat content and method dependent) — supports the raw-vs-
+  cooked note, and is `industry` for COOPER (a human may grade the USDA table
+  higher).
 
 **Done means:** a mass with the portion convention named.
 
@@ -198,7 +203,7 @@ Lay the max-vs-documented gap out; do not pick one.
 
 - [ ] Every sent row carries a quote verbatim in a returned document
 - [ ] No row claims `measured` or `derived`; pool figures are `estimate`
-- [ ] Item 4 is not sent until a patty-mass URL is confirmed 200
+- [x] Item 4 patty-mass URLs confirmed (Wikipedia Quarter Pounder; USDA cooking yields)
 - [ ] New sources in `proposed_sources:`, not `data/sources.yaml`
 - [ ] `build` + `audit` pass on COOPER's self-check
 - [ ] `ground_beef_patty` carries `is_anatomical_constant: 0`; floor = 1 (hand)

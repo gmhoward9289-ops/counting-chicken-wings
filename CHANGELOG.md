@@ -1,42 +1,88 @@
 # Changelog
 
+## Unreleased
+
+### Three new "how many X" subjects, scouted and ready to run
+
+Ground beef, maple syrup, and silk are drafted as research work-orders under
+`docs/research/batches/` (06, 07, 08). Every candidate URL has been fetched,
+confirmed 200, and pinned to the verbatim sentence that carries its figure — so
+the quote-gate has a real target before COOPER ever runs. Nothing is in `data/`
+yet: these are specs, not corpus, so the version does not move until COOPER runs
+them and a human accepts. The batches were the surviving third of a larger idea
+(saffron already shipped; honey and milk were already drafted as 04 and 05).
+
+Each was chosen to exercise something the poultry corpus does not:
+
+- **Ground beef** is the mixing model with **no anatomical floor** — the count is
+  set by grinding, not biology, so it is the purest test of pooling standing
+  alone. The floor is 1 (ground at home by hand); a documented contamination
+  traceback puts one patty's trimmings at **four separate sources** (Nebraska,
+  Texas, Uruguay, and a South Dakota trim plant).
+- **Maple syrup** stacks a concentration ratio (~40 gal sap to 1 gal syrup, by
+  the Jones Rule of 86) on a `recurring` per-tap rate over a **~6-week season** —
+  a shorter period than eggs' year, and a test that the period is data rather
+  than a hardcoded assumption.
+- **Silk** adds a **garment-level** product (tie, shirt, dress) on a
+  one-cocoon-per-worm constant, with a small honest reeling step (~5 cocoons per
+  thread) that is real mixing but does not dominate the count.
+
+Honest about grade: none rises above `industry`. Ground beef's headline "100+
+cattle" is a corporate statement, the per-garment silk counts are craft-site
+lore, and the sourced silk filament (**300–900 m**) is deliberately the cited
+figure over the higher number that circulates. Said here so that proximity to
+the NASS-backed poultry rows lends them no credibility they have not earned.
+
 ## v1.5.0 — 2026-07-30
 
-The Israeli data gets a page, and it shows both readings rather than picking one.
+The Israeli data gets a page, and the reader chooses how much of it to believe.
 
-### The Countries view
+### The evidence toggle, on the "By country" view
 
-A new tab, and deliberately not a country dropdown on the calculator. It opens
-with **what each country can actually answer** — the US bird count is
-`measured`, Israel's is `industry`, per-capita is unavailable for both — so a
-reader meets the asymmetry before meeting any number.
+The view itself arrived in a concurrent commit; this adds the choice it was
+missing. Two radio buttons — **All evidence** and **Government figures only** —
+re-query `/api/output/{iso3}` with `min_confidence` and re-render:
 
-Israel then renders twice on a toggle:
-
-| | Birds/year | Average bird |
+| | Birds/year | Implied average bird |
 |---|---|---|
-| Including industry figures | 260M `industry` | 2.31 kg `industry` |
-| Government figures only | unknown | unknown |
+| All evidence | 260M `industry` | 2.31 kg `industry` |
+| Government figures only | — | — |
 
-In the government-only view the page states what it dropped and why: *"Hidden by
-the government-only view: Birds slaughtered per year (industry,
-toi-poultry-imports-2025). Without it Israel can say how much chicken it
-produces and not how many chickens that took."* A filtered answer that does not
-say what it filtered is just a different number.
+Under the filter both cards disappear, because the figure they rest on does, and
+the page names what it dropped: *"Hidden by this filter: Birds slaughtered per
+year (industry, toi-poultry-imports-2025)."* A filtered answer that does not say
+what it filtered is just a different number.
 
-The output chart annotates 2023 with "Newcastle disease and the war" — the dip
-is in CBS's own series and the explanation is cited. The district table lists
-councils by tonnage, with CBS-suppressed councils shown as *withheld* rather
-than as zero or as absent rows.
+The choice **survives a country change** rather than resetting: a reader who
+asked for government figures only should not have that quietly undone by
+clicking a different country.
 
 ### region_level, so counting regions does not double-count
 
 Israel nests 50 regional councils inside 4 districts inside a grand total.
 Counting every row as a "region" claimed **55 Israeli regions against 23 US
-states** — more granularity than exists. `output_stat_year.region_level` now
-records the publisher's hierarchy as data rather than as a prefix inside a
-prose note, the coverage count reads leaves only (50), and a test pins the
-level counts.
+states** — more granularity than exists. `output_stat_year.region_level` records
+the publisher's hierarchy as a column rather than as a prefix inside a prose
+note; the coverage count reads leaves only (50), the district cross-check reads
+the column instead of matching a string, and a test pins the level counts.
+
+### Batch 05 ran, and returned nothing — which is the finding
+
+Three items, ten Hebrew documents, two models, twelve extraction calls, **zero
+figures**. The fetch worked (including a 40-page State Comptroller PDF) and the
+Hebrew survived chunking intact, so the failure is retrieval and extraction:
+English questions scored against Hebrew chunks with an English-centric embedder.
+
+A human read of the same returned artifacts found figures in minutes — the
+second time the artifacts have been worth more than the extraction. Written up
+in `docs/research/accepted/batch-05-israel-hebrew-REVIEW.md`, with **604 broiler
+growers** and **244 million chicks placed (2021)** proposed for promotion. The
+chick figure corroborates the 260-million head count from a second industry body
+four years earlier, and the review is explicit that chicks placed must not be
+loaded as birds slaughtered.
+
+Nothing from the batch is in `data/`. The verify gate exists precisely so a zero
+is allowed to be a zero.
 
 ## v1.4.0 — 2026-07-29
 

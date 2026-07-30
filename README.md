@@ -130,9 +130,10 @@ pip install -e ".[gui]"
 wings gui
 ```
 
-Eight views: the calculator with its reasoning panel, scientific mode, a mixing
-simulator, a state choropleth, a countries panel, year-over-year trends,
-chicken facts, and a sources table. Every figure carries a colour-coded confidence badge — green measured, blue study,
+Nine views: the calculator with its reasoning panel, scientific mode, a mixing
+simulator, a state choropleth, a by-country panel, "is fatter better?",
+nutrition and impact, year-over-year trends, chicken facts, and a sources
+table. Every figure carries a colour-coded confidence badge — green measured, blue study,
 cyan industry, amber estimate — so you can see at a glance which numbers are
 solid and which are placeholders.
 
