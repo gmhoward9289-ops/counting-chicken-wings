@@ -191,8 +191,13 @@ def test_verify_accepts_a_clean_batch(tmp_path, monkeypatch):
     doc_dir.mkdir(parents=True)
     (doc_dir / "d.txt").write_text(DOC)
 
+    # Carries lo/hi as a real banded row would. The mode is interpolated
+    # between the quoted bounds, which is legitimate -- the band is what the
+    # quote grounds, not the midpoint. An earlier version of this fixture had a
+    # bare mode of 170 and no bounds, which the band check correctly rejected.
     (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
-        "field": "flowers_per_gram", "value_mode": 170,
+        "field": "flowers_per_gram", "value_lo": 150, "value_mode": 170,
+        "value_hi": 200,
         "confidence": "industry", "document": "inbox/test/d.txt",
         "quote": "Approximately 150 to 200 flowers are required",
         "agreement": "2/2", "verified_by": None,
@@ -346,3 +351,125 @@ def test_parse_spec_yields_nothing_without_urls(tmp_path):
     p = tmp_path / "batch-43-empty.md"
     p.write_text("### Item 1 — f\n\n**Question:** Q?\n\nNo urls here.\n")
     assert parse_spec(p)["items"] == []
+
+
+# ---------------------------------------------------------------------------
+# value_in_quote -- the check that catches what quote verification cannot
+# ---------------------------------------------------------------------------
+
+def test_value_must_appear_in_the_quote():
+    """The real failure this was added for: a run reported yield_per_acre = 10
+    against the quote 'an annual yield of 8'. Verbatim, right document, wrong
+    number. Quote verification proves a sentence exists; only this proves the
+    sentence says the figure."""
+    ok, why = rb.value_in_quote(10, "an annual yield of 8")
+    assert not ok
+    assert "does not appear" in why
+
+
+def test_value_found_as_digits():
+    assert rb.value_in_quote(3, "yields only three stigmas")[0]
+    assert rb.value_in_quote(150, "about 150 flowers per gram")[0]
+
+
+def test_value_found_across_thousands_separators():
+    """Sources write 210,000; a model reports 210000. Same claim."""
+    assert rb.value_in_quote(
+        210000, "it takes 210,000 stigmas to make 1 pound")[0]
+
+
+def test_value_found_as_a_word():
+    """Sources say 'three stigmas' at least as often as '3'."""
+    assert rb.value_in_quote(3, "Each blossom yields only three stigmas")[0]
+    assert rb.value_in_quote(12, "a dozen wings on the plate")[0]
+
+
+def test_derived_value_is_flagged_not_silently_accepted():
+    """'lose 80% of their weight' supports 0.2 retained -- but only by
+    inversion, which is a DERIVATION. Derived figures need the `derived` grade,
+    which COOPER may not assign, so a human has to record it."""
+    ok, _ = rb.value_in_quote(0.2, "the stigmas lose 80% of their weight")
+    assert not ok
+
+
+def test_non_numeric_values_pass_through():
+    assert rb.value_in_quote(None, "anything")[0]
+    assert rb.value_in_quote("n/a", "anything")[0]
+
+
+# ---------------------------------------------------------------------------
+# unit_matches_field -- catches misattribution
+# ---------------------------------------------------------------------------
+
+def test_subject_mismatch_is_rejected():
+    """The row that slipped through: flowers_per_gram_dried answered with a
+    stigmas-per-pound figure. A crocus has three stigmas per flower, so the two
+    differ by exactly the factor being measured."""
+    ok, why = rb.unit_matches_field(
+        "flowers_per_gram_dried", "stigmas per pound")
+    assert not ok
+    assert "different question" in why
+
+
+def test_matching_subject_passes():
+    assert rb.unit_matches_field("stigmas_per_pound", "stigmas per pound")[0]
+    assert rb.unit_matches_field("wings_per_bird", "wings per bird")[0]
+
+
+def test_denominator_difference_is_allowed():
+    """Deliberately permitted: a spec may ask for 'whatever unit the source
+    uses', so ounces instead of grams is a conversion, not a wrong answer.
+    Only the SUBJECT of the count is treated as a contradiction."""
+    assert rb.unit_matches_field(
+        "flowers_per_gram_dried", "flowers per ounce")[0]
+
+
+def test_unit_check_is_silent_when_it_cannot_tell():
+    """No subject term in the field name means no contradiction to find. The
+    check must not invent one."""
+    assert rb.unit_matches_field("drying_mass_yield", "fraction retained")[0]
+    assert rb.unit_matches_field("anything", "")[0]
+
+
+# ---------------------------------------------------------------------------
+# quote_looks_truncated -- a warning, not a failure
+# ---------------------------------------------------------------------------
+
+def test_truncated_quote_is_flagged():
+    trunc, _ = rb.quote_looks_truncated("an annual yield of 8")
+    assert trunc
+
+
+def test_quote_ending_mid_phrase_is_flagged():
+    assert rb.quote_looks_truncated("the stigmas are picked by hand and")[0]
+
+
+def test_complete_sentence_is_not_flagged():
+    assert not rb.quote_looks_truncated(
+        "Each blossom yields only three stigmas, which must be picked by hand."
+    )[0]
+
+
+def test_empty_quote_is_not_flagged_as_truncated():
+    """Empty quotes fail the earlier quote check; this one must not double-report."""
+    assert not rb.quote_looks_truncated("")[0]
+
+
+def test_band_is_grounded_if_any_bound_is_quoted():
+    """A quote reading "150 to 200 flowers" legitimately supports lo=150,
+    hi=200, mode=170 -- the mode is an interpolation within a quoted range,
+    which is normal for a lo/mode/hi corpus. Requiring the mode itself to
+    appear rejected every banded figure and broke a passing test."""
+    row = {"value_lo": 150, "value_mode": 170, "value_hi": 200}
+    assert rb.band_in_quote(row, "Approximately 150 to 200 flowers are required")[0]
+
+
+def test_band_with_nothing_quoted_is_rejected():
+    row = {"value_lo": 10, "value_mode": 10, "value_hi": 10}
+    ok, why = rb.band_in_quote(row, "an annual yield of 8")
+    assert not ok
+    assert "derived" in why
+
+
+def test_band_with_no_values_passes():
+    assert rb.band_in_quote({"field": "x"}, "any text")[0]

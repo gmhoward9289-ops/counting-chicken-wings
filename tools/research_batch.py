@@ -107,6 +107,137 @@ def normalise(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+# Terms that are mutually exclusive within a group. If the field name names one
+# and the returned unit names a DIFFERENT one from the same group, the row is
+# answering a different question than the one asked.
+#
+# Only the SUBJECT group is treated as a failure. Denominator units are
+# deliberately not, because a spec may ask for "whatever unit the source uses" --
+# ounces instead of grams is a conversion, not a wrong answer. Confusing
+# stigmas with flowers is a wrong answer.
+SUBJECT_TERMS = [
+    "flower", "blossom", "stigma", "stamen", "thread", "bean", "pod",
+    "egg", "wing", "bird", "chicken", "hen", "cow", "tree", "piece",
+]
+
+WORD_NUMBERS = {
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+    "twelve": 12, "dozen": 12, "fifteen": 15, "twenty": 20, "hundred": 100,
+    "thousand": 1000, "million": 1_000_000,
+}
+
+
+def band_in_quote(row: dict, quote: str) -> tuple[bool, str]:
+    """A row is grounded if ANY of its lo/mode/hi appears in the quote.
+
+    Not just the mode, and the distinction matters. A quote reading "150 to 200
+    flowers" legitimately supports lo=150, hi=200, mode=170 -- the mode is an
+    interpolation within a quoted range, which is normal and honest for a
+    lo/mode/hi corpus. Demanding the mode itself appear would reject every
+    banded figure, which is how this check first broke a passing test.
+
+    What it still catches is a row where NOTHING in the band is in the text:
+    `yield_per_acre: 10` against "an annual yield of 8", or a 0.2 derived by
+    inverting a quoted "80%".
+    """
+    vals = [row.get(k) for k in ("value_lo", "value_mode", "value_hi")]
+    vals = [v for v in vals if v is not None]
+    if not vals:
+        return True, ""
+    for v in vals:
+        if value_in_quote(v, quote)[0]:
+            return True, ""
+    shown = ", ".join(f"{v:g}" if isinstance(v, (int, float)) else str(v)
+                      for v in vals)
+    return False, (
+        f"none of the reported values ({shown}) appear in the quoted sentence. "
+        f"If the figure was derived from what the quote says -- inverting an "
+        f"'80% loss' into 0.2, say -- that is a `derived` claim and a human has "
+        f"to record it as one"
+    )
+
+
+def value_in_quote(value, quote: str) -> tuple[bool, str]:
+    """The reported figure must actually appear in the sentence quoted.
+
+    The strongest of these checks, and the one that catches the failure quote
+    verification cannot. A row reported `yield_per_acre: 10` against the quote
+    "an annual yield of 8" -- the quote was real, verbatim, and from the right
+    document, but it does not contain 10. Quote verification proves a sentence
+    exists; only this proves the sentence says the number.
+
+    Accepts digits with or without separators, and small numbers written as
+    words, because sources say "three stigmas" as often as "3".
+    """
+    if value is None:
+        return True, ""                     # nothing numeric to check
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return True, ""
+
+    body = normalise(quote)
+    # "210,000" and "210000" and "210 000" are the same claim.
+    stripped = re.sub(r"(?<=\d)[,\s](?=\d)", "", body)
+
+    candidates = {f"{v:g}"}
+    if v == int(v):
+        n = int(v)
+        candidates |= {str(n), f"{n:,}"}
+        for word, num in WORD_NUMBERS.items():
+            if num == n:
+                candidates.add(word)
+    # 0.2 is often written "20%" or "80% loss"; accept the percentage form.
+    if 0 < v < 1:
+        candidates.add(f"{v * 100:g}")
+
+    for c in candidates:
+        if c in stripped or c in body:
+            return True, ""
+    return False, (f"value {value} does not appear in the quoted sentence "
+                   f"(checked digits, separators and word forms)")
+
+
+def unit_matches_field(field: str, unit: str) -> tuple[bool, str]:
+    """Reject a row whose unit contradicts the subject its field names.
+
+    Catches the misattribution that slipped through: `flowers_per_gram_dried`
+    returned `unit: stigmas per pound`. Both the quote and the number were
+    genuine -- they just answered a different question. A crocus has three
+    stigmas per flower, so flowers and stigmas differ by exactly the factor the
+    project is trying to measure.
+    """
+    if not unit:
+        return True, ""
+    f, u = field.lower(), unit.lower()
+    in_field = {t for t in SUBJECT_TERMS if t in f}
+    in_unit = {t for t in SUBJECT_TERMS if t in u}
+    if in_field and in_unit and not (in_field & in_unit):
+        return False, (f"field names {sorted(in_field)} but unit says "
+                       f"{sorted(in_unit)} -- the row answers a different "
+                       f"question than the field asks")
+    return True, ""
+
+
+def quote_looks_truncated(quote: str) -> tuple[bool, str]:
+    """Warn when a quote stops mid-sentence.
+
+    A fragment ending "an annual yield of 8" may have had its figure cut off,
+    which makes it unreviewable even when it matches the document. A warning
+    rather than a failure: plenty of legitimate quotes are clause fragments.
+    """
+    q = quote.strip()
+    if not q:
+        return False, ""
+    if q[-1] in ".!?\"')":
+        return False, ""
+    if re.search(r"[\d]$|\b(and|or|to|of|per|from|with|about|the|a|an)$", q,
+                 re.I):
+        return True, "quote appears to stop mid-sentence"
+    return False, ""
+
+
 def quote_in_document(quote: str, document: Path) -> tuple[bool, str]:
     if not document.exists():
         return False, f"document not returned: {document.name}"
@@ -199,6 +330,28 @@ def verify(batch: str) -> int:
             if not ok:
                 failures.append(f"{label}: {why}")
                 continue
+
+            # The quote is real. Now: does it actually answer the question?
+            # Quote verification proves a sentence exists in the document; these
+            # three prove the sentence says what the row claims it says. All
+            # three were added after a run passed a genuine, verbatim quote that
+            # answered a different question.
+            field = str(row.get("field", ""))
+
+            ok, why = band_in_quote(row, row["quote"])
+            if not ok:
+                failures.append(f"{label}: {why}")
+                continue
+
+            ok, why = unit_matches_field(field, str(row.get("unit") or ""))
+            if not ok:
+                failures.append(f"{label}: {why}")
+                continue
+
+            trunc, why = quote_looks_truncated(row["quote"])
+            if trunc:
+                flagged += 1
+                print(f"  [needs_human] {label}: {why}")
 
             if row.get("verified_by") is not None:
                 failures.append(

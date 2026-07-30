@@ -103,17 +103,41 @@ def sanitize(raw: str) -> str:
     return text.strip()
 
 
+GENERATE_API = "http://localhost:11434/api/generate"
+
+# Measured: qwen2.5-coder:7b defaults to a 4096-token context in ollama, NOT its
+# architectural maximum. That silently truncated 12000-char chunks (~3000-4000
+# tokens plus the prompt template) and took qwen from finding a figure to finding
+# nothing at all -- 0 of 12 calls. Nothing errored; the prompt was just cut.
+#
+# So num_ctx is now set explicitly and generously. Chunk size and context window
+# have to be tuned together; changing one alone is how the second run came back
+# worse than the first.
+NUM_CTX = 8192
+
+
 def ollama(model: str, prompt: str, timeout: int = 300) -> str:
-    """Call a local model. Free, so retries cost only time."""
+    """Call a local model over the HTTP API. Free, so retries cost only time.
+
+    The API rather than `ollama run` for two reasons: it accepts num_ctx (the
+    CLI does not, so context was pinned at the 4096 default and truncating), and
+    it returns a JSON field instead of terminal output, so the ANSI escape codes
+    the CLI emits never appear. gemma's reasoning trace still does, hence
+    sanitize() remains.
+    """
+    body = json.dumps({
+        "model": model, "prompt": prompt, "stream": False,
+        "options": {"num_ctx": NUM_CTX, "temperature": 0},
+    }).encode()
     try:
-        r = subprocess.run(
-            ["ollama", "run", model],
-            input=prompt, capture_output=True, text=True,
-            timeout=timeout, encoding="utf-8", errors="replace",
-        )
-    except subprocess.TimeoutExpired:
+        req = urllib.request.Request(
+            GENERATE_API, data=body,
+            headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+    except Exception:                               # noqa: BLE001
         return ""
-    return sanitize(r.stdout or "")
+    return sanitize(data.get("response") or "")
 
 
 # ---------------------------------------------------------------------------
