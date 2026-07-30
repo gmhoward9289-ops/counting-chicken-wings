@@ -64,6 +64,24 @@ these, the suite says so rather than the claim quietly becoming false.
 The learning-centre fact "Nobody officially counts Israel's chickens" now
 carries both checks; it previously described only the kg-per-bird one.
 
+### Hebrew questions work, and that was the experiment
+
+`batch-05b` re-ran six of the same documents with the questions rewritten in
+Hebrew. English questions had returned **0 figures from 12 calls**; Hebrew
+questions returned **2 from 12**, both with quotes matching the source
+character-for-character, both through `verify` with the audit clean — and they
+were the same two figures the human read had found, which is what makes it a
+reproduction rather than an anecdote.
+
+**The retrieval detail makes the result stronger, not weaker.** The embedder was
+unavailable for that run, so it fell back to keyword overlap: English question
+with real embeddings scored 0, Hebrew question with crude keyword matching
+scored 2. Matching the question's language to the document's is what mattered,
+so **a multilingual embedder is no longer the diagnosis** and should not be
+built on this evidence.
+
+Written up in `docs/research/accepted/batch-05b-israel-hebrew-questions-REVIEW.md`.
+
 ### COOPER could not print Hebrew, and it cost a completed run
 
 `runner.py` now reconfigures stdout and stderr to UTF-8 at startup. COOPER is
