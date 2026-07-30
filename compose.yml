@@ -1,0 +1,49 @@
+# Deployment on swamplink. The server's post-receive hook runs
+# `docker compose up -d --build` from here after every `git push deploy`.
+#
+# PUBLISHES TO LOCALHOST ONLY, and that is a house rule rather than a
+# preference: Caddy is the single public entry point on that box and it
+# terminates TLS for every app. A container on 0.0.0.0 would bypass Caddy,
+# serve plaintext, and need its own hole in the Hetzner firewall.
+#
+#   127.0.0.1:8101  ->  container :8000
+#
+# 8101 because 8100 is api-demo. Ports are recorded in
+# /Users/george/swamplink/CHECKPOINT.md; check it before claiming one.
+#
+# The image build runs the corpus build AND the citation audit (see
+# Dockerfile), and the audit exits non-zero on any uncited statistic. So a
+# data commit that breaks the guarantee fails `up --build` and the previous
+# container keeps serving. That ordering is the whole safety property of this
+# deploy; do not move the audit out of the image build.
+
+services:
+  wings:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8101:8000"
+    environment:
+      # /api/version exists to answer "what am I looking at?", and it answers
+      # `null` unless somebody tells it. The hook exports GIT_COMMIT from the
+      # pushed revision; the default keeps a bare `docker compose up` honest
+      # rather than silently reporting nothing.
+      GIT_COMMIT: "${GIT_COMMIT:-}"
+      SERVICE_NAME: "wings@swamplink"
+      GIT_BRANCH: "master"
+    healthcheck:
+      # /healthz touches no database and builds no payload -- it exists to be
+      # pinged cheaply.
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).status==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # A CPX11 with 2 GB of RAM runs everything on this box. An unbounded
+    # container is one runaway away from taking the others down with it.
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

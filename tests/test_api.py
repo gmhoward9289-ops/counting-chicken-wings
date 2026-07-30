@@ -622,3 +622,42 @@ def test_every_supply_chain_has_a_floor_note(client):
         if not r.json().get("floor_note"):
             missing.append(c["slug"])
     assert not missing, f"supply chains with no floor_note: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# /api/version identifies the deploy, wherever it runs
+# ---------------------------------------------------------------------------
+
+def test_version_reads_a_host_neutral_commit_variable(client, monkeypatch):
+    """It used to read only RENDER_GIT_COMMIT. Moving to a self-hosted box
+    made that nobody's job to set, so the endpoint answered `null` to the one
+    question it exists to answer."""
+    monkeypatch.setenv("GIT_COMMIT", "a" * 40)
+    monkeypatch.delenv("RENDER_GIT_COMMIT", raising=False)
+    d = get(client, "/api/version")
+    assert d["git_commit"] == "a" * 40
+    assert d["git_commit_short"] == "aaaaaaa"
+
+
+def test_version_still_honours_the_render_variable(client, monkeypatch):
+    """The Dockerfile is deliberately provider-agnostic, so Render stays
+    supported rather than being cut off."""
+    monkeypatch.delenv("GIT_COMMIT", raising=False)
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "b" * 40)
+    assert get(client, "/api/version")["git_commit"] == "b" * 40
+
+
+def test_the_host_neutral_variable_wins(client, monkeypatch):
+    monkeypatch.setenv("GIT_COMMIT", "c" * 40)
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "d" * 40)
+    assert get(client, "/api/version")["git_commit"] == "c" * 40
+
+
+def test_no_commit_anywhere_reads_as_unknown_not_as_a_lie(client, monkeypatch):
+    """Absent both, None is the honest answer: nobody told this process what
+    it is, so it is almost certainly local."""
+    monkeypatch.delenv("GIT_COMMIT", raising=False)
+    monkeypatch.delenv("RENDER_GIT_COMMIT", raising=False)
+    d = get(client, "/api/version")
+    assert d["git_commit"] is None
+    assert d["git_commit_short"] is None

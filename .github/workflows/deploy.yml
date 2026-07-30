@@ -1,0 +1,77 @@
+name: Deploy
+
+# Replaces Render's push-to-deploy. Render's free tier spun the service down
+# when idle, costing every first visitor a 12-23s cold start on the HTML
+# document itself -- no client-side loading UI can hide that, because the
+# browser has no page yet. The self-hosted box is always on, so the problem
+# and its /healthz keep-warm workaround both go away.
+#
+# HOW THE DEPLOY WORKS, and why this job is four lines of git.
+#
+# swamplink has a standard pipeline: a bare repo at /srv/git/wings.git with a
+# post-receive hook that checks out to /srv/apps/wings/src and runs
+# `docker compose up -d --build`. Pushing IS deploying. An earlier version of
+# this workflow SSHed in and ran a bespoke script, which worked and was the
+# wrong shape -- it left unmanaged state on a shared box and duplicated a
+# pipeline that already existed.
+#
+# BRANCH NAMES DIFFER ON PURPOSE-ISH. This repo is `master`; the server's hook
+# does `checkout -f main`. Pushing `master:main` bridges that rather than
+# renaming either, and forgetting the mapping is the failure mode here: the
+# push succeeds, the hook finds no `main`, and nothing deploys.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# One deploy at a time. Two pushes racing to `docker compose up` on a 2 GB
+# box is not a race worth having.
+concurrency:
+  group: deploy-swamplink
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The hook checks out what it receives; a shallow clone pushes a
+          # shallow history and the checkout fails.
+          fetch-depth: 0
+
+      - name: Push to the server's bare repo
+        env:
+          SSH_KEY: ${{ secrets.SWAMPLINK_SSH_KEY }}
+          HOST: ${{ secrets.SWAMPLINK_HOST }}
+          KNOWN_HOSTS: ${{ secrets.SWAMPLINK_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$SSH_KEY" ] || [ -z "$HOST" ] || [ -z "$KNOWN_HOSTS" ]; then
+            echo "::error::SWAMPLINK_SSH_KEY, SWAMPLINK_HOST and SWAMPLINK_KNOWN_HOSTS must be set."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          # Pin the host key rather than trusting on first use: a deploy that
+          # accepts any key is a deploy that can be aimed anywhere.
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND='ssh -i ~/.ssh/deploy -o BatchMode=yes'
+          git push --force "${HOST}:/srv/git/wings.git" "HEAD:refs/heads/main"
+
+      - name: Verify what is actually serving
+        run: |
+          for i in $(seq 1 30); do
+            body="$(curl -fsS https://wings.swamplink.com/api/version || true)"
+            if [ -n "$body" ]; then
+              got="$(printf '%s' "$body" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("git_commit") or "")')"
+              if [ "$got" = "$GITHUB_SHA" ]; then
+                echo "serving $GITHUB_SHA"
+                exit 0
+              fi
+              echo "serving ${got:-<unknown>}, waiting for $GITHUB_SHA"
+            fi
+            sleep 5
+          done
+          echo "::error::wings.swamplink.com is not serving $GITHUB_SHA"
+          exit 1
