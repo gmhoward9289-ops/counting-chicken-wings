@@ -1,0 +1,58 @@
+# Maple loss chain. Merged with loss_chain.yaml at build time.
+#
+# READ THIS BEFORE USING THE BOILING STAGE FOR ANYTHING.
+#
+# maple_syrup_gallon already states GALLONS OF SYRUP per tree per season. The
+# boil is priced into that figure. The stage below exists to describe the
+# concentration for mass and volume questions, NOT to be applied on top of a
+# yield that has already survived it - doing so would divide the answer a
+# second time and make a tree look forty times less productive.
+#
+# It is safe to record because it is `applies_to: mass`, and
+# model.affects_count() will not let a mass stage move a count. Identical
+# protection to saffron's drying and to cook loss on a wing.
+
+stages:
+  - slug: maple_boiling
+    domain: forestry
+    label: Boiling (sap to syrup)
+    sequence: 10
+    phase: processing
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Sap is boiled until enough water has left it to reach syrup density.
+      At an average 2 degrees Brix that is about 43 gallons of sap for one
+      gallon of syrup - the single most dramatic concentration in this
+      corpus, and the reason a sugarhouse runs for days.
+    notes: >-
+      Recorded at confidence=industry, NOT derived, for the same reason
+      saffron's drying is: inverting a trade ratio into a surviving fraction
+      is arithmetic on a rule of thumb, and arithmetic does not upgrade a
+      rule of thumb. 'derived' in this project means computed from MEASURED
+      figures, the way dressing yield falls out of two NASS totals.
+
+      THE BAND IS THE SUGAR CONTENT, NOT MEASUREMENT ERROR. This is the
+      unusual thing about maple and it is worth stating plainly. The UVM
+      Jones Rule of 86 says gallons of sap per gallon of syrup is 86 divided
+      by the sap's sugar concentration in degrees Brix. NY State Maple gives
+      that concentration as varying "from 1 percent to as high as 5 percent".
+      So:
+
+        1 Brix -> 86 gal sap per gal syrup -> 0.0116 surviving
+        2 Brix -> 43 gal sap per gal syrup -> 0.0233 surviving  (typical)
+        5 Brix -> 17 gal sap per gal syrup -> 0.0581 surviving
+
+      A five-fold spread, and every value in it is correct - for a different
+      tree, on a different day. The famous "40 gallons of sap" is the 2 Brix
+      case rounded, and storing that constant alone would have hidden the
+      variable that produces it. That is why this subject cites UVM's rule
+      rather than the rounder, more quotable figure COOPER actually returned.
+    factors:
+      - species: sugar_maple
+        survive_lo: 0.0116
+        survive_mode: 0.0233
+        survive_hi: 0.0581
+        confidence: industry
+        source: uvm-jones-rule-86
