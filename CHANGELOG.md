@@ -33,6 +33,45 @@ lore, and the sourced silk filament (**300–900 m**) is deliberately the cited
 figure over the higher number that circulates. Said here so that proximity to
 the NASS-backed poultry rows lends them no credibility they have not earned.
 
+## v1.6.0 — 2026-07-30
+
+Israel's head count stops being a single-source figure.
+
+### Two figures promoted, from a document COOPER downloaded and could not read
+
+The growers' organisation summary for 2021 carries a sector table that the
+batch-05 extraction missed entirely and a human found by reading the returned
+artifact. Both figures are now in the corpus at `industry` grade, from a new
+`trade_body` source:
+
+- **604 broiler growers** (2021), against the Times of Israel's "about 600 large
+  chicken farms" from the Poultry Breeders Association. Two industry bodies, two
+  publications, one number.
+- **244 million chicks placed** (2021), against 260 million birds a year
+  reported for 2025 by the other body — a ~6% gap over four years, which is
+  roughly what growth looks like.
+
+**Chicks placed is NOT birds slaughtered**, and it has its own measure for that
+reason: grow-out mortality sits between the two, and the model already carries a
+factor for it, so merging them would overstate throughput and then double-count
+the mortality downstream. A test asserts the two measures stay distinct.
+
+**The corroboration itself is now tested**, not just asserted in a note: the
+chick and head figures must stay within 25% of each other and the grower count
+within 550–650. If a future edit breaks the agreement that justified promoting
+these, the suite says so rather than the claim quietly becoming false.
+
+The learning-centre fact "Nobody officially counts Israel's chickens" now
+carries both checks; it previously described only the kg-per-bird one.
+
+### COOPER could not print Hebrew, and it cost a completed run
+
+`runner.py` now reconfigures stdout and stderr to UTF-8 at startup. COOPER is
+Windows, its console is cp1252, and any non-Latin character reaching stdout
+killed the run — **after** the work was done, which is the worst possible place.
+The first Hebrew-question batch extracted two figures and then died printing the
+item's name, taking `findings.yaml` with it.
+
 ## v1.5.0 — 2026-07-30
 
 The Israeli data gets a page, and the reader chooses how much of it to believe.

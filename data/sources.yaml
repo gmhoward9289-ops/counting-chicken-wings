@@ -846,3 +846,32 @@
     can be described honestly and cannot yet be quantified: any figure we put
     on it would be an 'estimate' of our own making, which is the grade the
     project is trying to reduce. Recorded as a known gap rather than filled.
+
+- slug: ofot-sector-summary-2021
+  title: 'ענף הלול - סיכום 2021 (Poultry sector summary, 2021)'
+  publisher: ארגון מגדלי עופות בישראל (Israel Poultry Growers Organisation)
+  url: https://ofot.co.il/%D7%A2%D7%A0%D7%A3-%D7%94%D7%9C%D7%95%D7%9C-%D7%A1%D7%99%D7%9B%D7%95%D7%9D-2021/
+  retrieved_on: '2026-07-30'
+  source_type: trade_body
+  notes: >-
+    The growers' organisation, not the statutory Poultry Board - note the
+    domains, ofot.CO.il is the growers and ofot.ORG.il is the council. Undated
+    on the page beyond the year it summarises, so published_on is NULL.
+
+    Carries a sector table for 2021 that no government publication matches:
+    3,630 active growers across family farms and kibbutzim, of which 604 raise
+    broilers producing 515,400 tonnes worth NIS 3,414 million, 2,863 produce
+    2,230 million table eggs, and 78 breeding operations supply 244 million
+    chicks.
+
+    HOW THIS DOCUMENT WAS FOUND is worth recording. COOPER fetched it during
+    batch-05 and both models returned nothing from it; a human reading the
+    same downloaded file found the table in minutes. That is the second time
+    the returned artifacts have been worth more than the extraction, and it is
+    the reason raw documents come back with every batch. See
+    docs/research/accepted/batch-05-israel-hebrew-REVIEW.md.
+
+    Graded 'trade_body' rather than 'government': it is an industry
+    association reporting on its own members. Nobody enumerated these figures
+    the way NASS enumerates US slaughter, and the corpus should not imply
+    otherwise by placing them in the same tier.

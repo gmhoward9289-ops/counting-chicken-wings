@@ -79,7 +79,7 @@ def test_no_israeli_row_is_stored_in_us_units(conn):
             (isr(conn),),
         )
     }
-    assert units == {"tonnes", "ILS_million", "thousand_head"}
+    assert units == {"tonnes", "ILS_million", "thousand_head", "growers"}
     assert not any("lb" in u or "usd" in u.lower() for u in units)
 
 
@@ -260,8 +260,8 @@ def test_national_and_regional_rows_cannot_be_confused(conn):
         """SELECT COUNT(*) FROM output_stat_year
            WHERE country_id=? AND region IS NULL""", (isr(conn),)
     ).fetchone()[0]
-    # 5 output + 5 value + 10 inventory + 1 industry head count
-    assert national == 21
+    # 5 output + 5 value + 10 inventory + 1 head count + 1 chicks + 1 growers
+    assert national == 23
 
 
 def test_us_tables_did_not_gain_israeli_rows(conn):
@@ -496,3 +496,85 @@ def test_region_levels_are_data_not_prose(conn):
         """SELECT COUNT(*) FROM output_stat_year
            WHERE region IS NULL AND region_level IS NOT NULL"""
     ).fetchone()[0] == 0
+
+
+# -- the corroboration, and the trap inside it -------------------------------
+
+def test_chicks_placed_is_not_head_slaughtered(conn):
+    """The two figures must stay separate measures, forever.
+
+    Grow-out mortality sits between a chick placed and a bird slaughtered, and
+    the model already carries a factor for it. Merging these would overstate
+    throughput by exactly that mortality and then double-count it downstream.
+    """
+    rows = dict(conn.execute(
+        """SELECT measure, value FROM output_stat_year
+           WHERE country_id=? AND measure IN ('chicks_placed','head_slaughtered')
+           """, (isr(conn),)
+    ).fetchall())
+    assert set(rows) == {"chicks_placed", "head_slaughtered"}
+    assert rows["chicks_placed"] != rows["head_slaughtered"]
+
+
+def test_the_two_industry_bodies_agree_on_the_order_of_magnitude(conn):
+    """244M chicks (2021) against 260M birds (2025), from different bodies.
+
+    This is the only independent check the Israeli head count has, so the
+    agreement is asserted rather than left as a claim in a note. A gap of more
+    than about a quarter would mean one of them is measuring something else and
+    the corroboration argument collapses.
+    """
+    chicks, head = conn.execute(
+        """SELECT
+             (SELECT value FROM output_stat_year
+               WHERE country_id=? AND measure='chicks_placed'),
+             (SELECT value FROM output_stat_year
+               WHERE country_id=? AND measure='head_slaughtered')""",
+        (isr(conn), isr(conn)),
+    ).fetchone()
+    gap = abs(head - chicks) / head
+    assert gap < 0.25, f"the corroboration no longer holds: {gap:.0%} apart"
+    # Chicks placed should be the LOWER of the two here only because it is four
+    # years earlier; if that ever inverts, check whether mortality got applied
+    # to the wrong one.
+    assert chicks < head
+
+
+def test_grower_counts_from_two_sources_agree(conn):
+    """604 growers, against "about 600 large chicken farms" in the press."""
+    n = conn.execute(
+        """SELECT value FROM output_stat_year
+           WHERE country_id=? AND measure='grower_count'""", (isr(conn),)
+    ).fetchone()[0]
+    assert 550 <= n <= 650
+
+
+def test_neither_promoted_figure_claims_a_government_grade(conn):
+    """A growers' association is not a statistical agency.
+
+    Both figures sit next to CBS rows in the same table, and the grade is the
+    only thing stopping a reader from treating them as equivalent.
+    """
+    grades = {
+        r[0] for r in conn.execute(
+            """SELECT DISTINCT o.confidence FROM output_stat_year o
+               JOIN source s ON s.id = o.source_id
+               WHERE s.slug = 'ofot-sector-summary-2021'""")
+    }
+    assert grades == {"industry"}
+
+    src = conn.execute(
+        "SELECT source_type FROM source WHERE slug='ofot-sector-summary-2021'"
+    ).fetchone()[0]
+    assert src == "trade_body"
+
+
+def test_the_government_only_view_drops_all_three_industry_figures(conn):
+    """min_confidence=measured must leave only what CBS published."""
+    kept = {
+        r[0] for r in conn.execute(
+            """SELECT DISTINCT measure FROM output_stat_year
+               WHERE country_id=? AND confidence IN ('measured','derived')""",
+            (isr(conn),))
+    }
+    assert kept == {"meat_output", "output_value", "inventory_eoy", "marketed"}

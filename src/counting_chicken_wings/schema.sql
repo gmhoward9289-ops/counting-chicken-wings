@@ -425,7 +425,17 @@ CREATE TABLE output_stat_year (
                         'output_value',     -- value of that output
                         'inventory_eoy',    -- standing flock, end of year
                         'marketed',         -- quantity marketed, not produced
-                        'head_slaughtered'  -- throughput. NOT inventory
+                        'head_slaughtered', -- throughput. NOT inventory
+                        -- Chicks supplied by breeding operations. A throughput
+                        -- PROXY and not throughput itself: grow-out mortality
+                        -- sits between a chick placed and a bird slaughtered,
+                        -- and the model already carries a factor for it. Its
+                        -- value is as an independent check on a head count
+                        -- that has only one source.
+                        'chicks_placed',
+                        -- Operations, not animals. Counted here because it is
+                        -- how two industry bodies corroborate each other.
+                        'grower_count'
                     )),
     value           REAL,
     unit            TEXT    NOT NULL,          -- 'tonnes','ILS_million','thousand_head'

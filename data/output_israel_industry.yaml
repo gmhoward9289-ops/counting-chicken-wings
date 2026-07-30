@@ -53,3 +53,42 @@ national:
       with a specific CBS year and call the pair a measurement.
     years:
       - {year: 2025, value: 260000}
+
+  # Promoted 2026-07-30 from the human read of batch-05's returned documents.
+  # Both figures come from the growers' organisation summary for 2021, and
+  # both exist to CHECK the Times of Israel head count rather than to replace
+  # it -- it is a single-source figure and this is its only corroboration.
+  - measure: chicks_placed
+    unit: thousand_head
+    confidence: industry
+    source: ofot-sector-summary-2021
+    notes: >-
+      244 million chicks supplied by 78 breeding operations in 2021, verbatim
+      "שלוחות הרבייה 78 · 244 מיל' אפרוחים".
+
+      NOT birds slaughtered, and the distinction is the whole reason this has
+      its own measure. Grow-out mortality sits between a chick placed and a
+      bird slaughtered, so loading 244 million as head_slaughtered would
+      overstate throughput by exactly that mortality - which the model already
+      carries as a loss factor, and would then be double-counting.
+
+      What it is good for: 244 million in 2021 against 260 million a year
+      reported for 2025 by a different industry body is a ~6% gap over four
+      years, which is roughly what growth looks like. Two organisations that
+      did not copy each other, agreeing on the order of magnitude.
+    years:
+      - {year: 2021, value: 244000}
+
+  - measure: grower_count
+    unit: growers
+    confidence: industry
+    source: ofot-sector-summary-2021
+    notes: >-
+      604 broiler growers in 2021, verbatim "בשר פטמים 604".
+
+      Corroborates the Times of Israel's "about 600 large chicken farms" from
+      the Poultry Breeders Association secretary. Two industry bodies, two
+      publications, one number - which is what makes it worth holding despite
+      neither being a government count.
+    years:
+      - {year: 2021, value: 604}

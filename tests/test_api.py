@@ -334,7 +334,10 @@ def test_countries_report_coverage_not_just_names(client):
 def test_output_endpoint_returns_native_units_unconverted(client):
     data = get(client, "/api/output/ISR")
     units = {r["unit"] for r in data["national"]}
-    assert units == {"tonnes", "ILS_million", "thousand_head"}
+    # 'growers' counts operations rather than mass, and is here because two
+    # industry bodies corroborating each other is worth holding. It is still
+    # not a US unit, which is what this test is actually guarding.
+    assert units == {"tonnes", "ILS_million", "thousand_head", "growers"}
     assert data["country"]["native_currency"] == "ILS"
     assert every_row_cited(data["national"] + data["regional"])
 
@@ -421,9 +424,12 @@ def test_min_confidence_offers_the_government_only_reading(client):
     assert not [r for r in gov["national"] if r["measure"] == "head_slaughtered"]
 
     # A filtered answer that does not say what it filtered is just a different
-    # number, so the dropped row is named.
-    assert [e["measure"] for e in gov["excluded"]] == ["head_slaughtered"]
-    assert gov["excluded"][0]["source"] == "toi-poultry-imports-2025"
+    # number, so every dropped row is named -- the head count and the two
+    # industry figures that corroborate it.
+    dropped = {e["measure"] for e in gov["excluded"]}
+    assert dropped == {"head_slaughtered", "chicks_placed", "grower_count"}
+    assert {e["source"] for e in gov["excluded"]} == {
+        "toi-poultry-imports-2025", "ofot-sector-summary-2021"}
     assert everything["excluded"] == []
 
 

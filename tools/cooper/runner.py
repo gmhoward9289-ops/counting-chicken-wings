@@ -25,6 +25,19 @@ import sys
 import urllib.request
 from pathlib import Path
 
+# COOPER is Windows and its console encoding is cp1252, so ANY non-Latin
+# character reaching stdout kills the run -- after the work is done, which is
+# the worst place for it. The first Hebrew batch extracted two figures and then
+# died printing the item's name, losing findings.yaml with them.
+#
+# reconfigure() rather than PYTHONIOENCODING because this has to hold however
+# the script is invoked: over ssh, from a scheduled task, by hand.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):      # already utf-8, or not a tty
+        pass
+
 try:
     import yaml
 except ImportError:

@@ -39,10 +39,11 @@ compound it.
 Until one of them works, **Hebrew sources are a human-read job, not a COOPER
 job**, and a batch of them should not be sent again as-is.
 
-## What the human pass found — NOT loaded, awaiting promotion
+## What the human pass found — PROMOTED 2026-07-30
 
-These are recorded here rather than in `data/` because deciding a source is
-authoritative and promoting a grade are human calls. George promotes.
+Both figures were accepted into the corpus at `industry` grade, from a new
+source `ofot-sector-summary-2021` graded `trade_body`. The section below is kept
+as written so the reasoning that justified the promotion stays with it.
 
 ### 1. A second, independent industry figure for the head count
 
@@ -101,10 +102,26 @@ responsa collections and slaughterhouse-facing kashrut training material rather
 than consumer-facing certification pages, which explain the rules and never the
 rates.
 
-## Recommendation
+## Outcome
 
-1. Promote **604 growers** and **244 million chicks (2021)** if the framing above
-   is acceptable — the chick figure as its own measure, never as
-   `head_slaughtered`.
-2. Do not re-send a Hebrew batch until the Hebrew-question experiment has run.
-3. Leave the bedikah stage described-but-unquantified.
+1. **Promoted, both, at `industry`.** `chicks_placed` and `grower_count` are
+   their own measures in `output_stat_year`; the chick figure is never
+   `head_slaughtered`, and a test asserts the two stay distinct. Two further
+   tests pin the corroboration itself — the chick and head figures must stay
+   within 25% of each other, and the grower count within 550–650 — so if a
+   future edit breaks the agreement that justified promotion, the suite says so
+   rather than the claim quietly becoming false.
+
+   The learning-centre fact "Nobody officially counts Israel's chickens" was
+   updated to carry the second check, because it previously described only the
+   kg-per-bird one.
+
+2. **The Hebrew-question experiment ran as `batch-05b-israel-hebrew-questions`.**
+   Same documents, questions rewritten in Hebrew, with item 1 targeting a table
+   whose answer is already known — 604 growers and 515,400 tonnes — and item 3
+   as a negative control over four documents that provably contain no
+   percentage.
+
+3. **Bedikah stays described and unquantified.** Nothing found here changes
+   that, and the next attempt should target responsa and slaughterhouse kashrut
+   training material rather than consumer-facing certification pages.
