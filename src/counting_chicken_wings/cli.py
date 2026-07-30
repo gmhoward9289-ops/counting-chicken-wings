@@ -132,6 +132,10 @@ def cmd_count(args) -> int:
         iterations=args.iterations,
         seed=args.seed,
         recurring=recurring,
+        # A gram of saffron is a blend, not one flower's part. See run().
+        aggregate_units=product["yield_mode"] == "continuous",
+        anatomical=bool(product["is_anatomical_constant"]),
+        floor_source=dbm.product_source_slug(conn, product["slug"]),
     )
 
     # ---- the answer ----------------------------------------------------
@@ -156,7 +160,7 @@ def cmd_count(args) -> int:
               f"  It is {product['source_part']} meat.")
         print()
 
-    shown = fmt_distinct(res.distinct_mean, units)
+    shown = fmt_distinct(res.distinct_mean, res.distinct_ceiling)
 
     if res.hard_floor is not None:
         # Recurring products have TWO floors and quoting only one misleads.
@@ -202,7 +206,8 @@ def cmd_count(args) -> int:
               f"{res.rate_per_day:.2f} {unit_word}/{plural[:-1]}/day   "
               f"(supply chain: {chain}){RESET}")
     else:
-        print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling {units:g}   "
+        print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling "
+              f"{res.distinct_ceiling:g}   "
               f"(supply chain: {chain}){RESET}")
 
     if res.required > res.floor + 1e-9:

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from math import comb
+from math import ceil, comb
 
 
 # ---------------------------------------------------------------------------
@@ -396,12 +396,22 @@ def required_individuals(
     units_per_individual: float,
     stages: list[LossStage],
     picks: dict[str, float] | None = None,
+    anatomical: bool = True,
+    floor_source: str | None = None,
 ) -> tuple[float, list[StepTrace]]:
     """Walk the loss chain backwards from delivered units to individuals.
 
     Each surviving fraction divides, because we are running the pipeline in
     reverse: to end up with 12 wings after a stage that loses 5.7%, more
     than 12 had to enter it.
+
+    `anatomical` distinguishes a floor that rests on a hard biological
+    constant from one that rests on a reported average. Two wings per chicken
+    and three stigmas per flower are anatomy, and the trace may fairly call
+    them measured. About 150 flowers per gram of saffron is an extension
+    service's rule of thumb, and labelling it "Anatomical floor / measured"
+    would claim a grade the corpus does not hold for it -- in a project whose
+    whole promise is that grades mean something.
     """
     picks = picks or {}
     trace: list[StepTrace] = []
@@ -412,15 +422,18 @@ def required_individuals(
         sequence=seq,
         kind="floor",
         stage_slug="floor",
-        stage_label="Anatomical floor",
+        stage_label="Anatomical floor" if anatomical else "Yield floor",
         value_used=units_per_individual,
         running_total=floor,
         explanation=(
             f"{units_requested:g} units at {units_per_individual:g} per "
             f"individual is a hard minimum of {floor:g}. No loss anywhere "
             f"in the chain can push this number down."
-        ),
-        confidence="measured",
+        ) + ("" if anatomical else
+             " The ratio is a reported average rather than a biological "
+             "constant, so the floor is only as firm as that figure."),
+        confidence="measured" if anatomical else "industry",
+        source_slug=floor_source,
     ))
 
     running = floor
@@ -487,6 +500,15 @@ class Result:
     required_hi: float = 0.0
     container_units: int = 0
     paired_individuals: float = 0.0
+    # The most individuals that could possibly be represented. For a
+    # countable or recurring product this is the unit count -- twelve wings
+    # came from at most twelve chickens, because a wing belongs to one bird.
+    # For a CONTINUOUS product the unit count says nothing (one gram is not
+    # one flower) and the ceiling is the floor instead: mass is fungible, so
+    # every contributing individual supplies one share and there are exactly
+    # `floor` shares. Reported rather than recomputed by each caller, which
+    # is how "floor 150 ... ceiling 1" got printed.
+    distinct_ceiling: float = 0.0
     trace: list[StepTrace] = field(default_factory=list)
     mixing_notes: list[str] = field(default_factory=list)
     iterations: int = 0
@@ -541,6 +563,9 @@ def run(
     min_confidence: str | None = None,
     keep_samples: bool = False,
     recurring: RecurringYield | None = None,
+    aggregate_units: bool = False,
+    anatomical: bool = True,
+    floor_source: str | None = None,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
 
@@ -559,6 +584,12 @@ def run(
     `min_confidence` drops loss stages whose evidence grade is weaker than
     the given level, which answers "what does the answer look like using
     only figures we could actually source?".
+
+    `aggregate_units` is for CONTINUOUS products, where one unit is a blend
+    of many individuals' output rather than one individual's discrete part.
+    Pass it when yield_mode is 'continuous'. Countable and recurring products
+    must leave it False: a wing came from exactly one chicken and an egg from
+    exactly one hen, so their unit count IS their draw count.
     """
     excluded = [s.slug for s in loss_stages
                 if not meets_confidence(s.confidence, min_confidence)]
@@ -576,15 +607,41 @@ def run(
 
     floor = floor_individuals(units_requested, units_per_individual)
     required, trace = required_individuals(
-        units_requested, units_per_individual, loss_stages
+        units_requested, units_per_individual, loss_stages,
+        anatomical=anatomical, floor_source=floor_source,
     )
 
-    container, distinct_in_container, notes = resolve_pool(
-        mixing_stages, units_requested, units_per_individual
-    )
-    distinct = expected_distinct_general(
-        int(units_requested), container, distinct_in_container
-    )
+    if aggregate_units:
+        # A continuous product's unit is an AGGREGATE, and that breaks the
+        # assumption the pooling formula rests on: that every contributing
+        # individual gave at least one WHOLE unit. A wing belongs to exactly
+        # one chicken, so drawing twelve wings is twelve draws. One gram of
+        # saffron is the combined stigma mass of about 150 flowers, so
+        # "draw one unit" is not one draw -- it is 150 of them, and asking
+        # the formula for one draw returned "a gram came from about 1
+        # flower" while the floor said 150. Two numbers from the same run
+        # contradicting each other.
+        #
+        # Fix: re-express the question in INDIVIDUAL-SHARES, one share per
+        # contributing individual, so units_per_individual becomes 1 and the
+        # formula's assumption holds again. Nothing about the mixing maths
+        # changes; only the unit it is asked in.
+        shares = max(1, ceil(floor))
+        container, distinct_in_container, notes = resolve_pool(
+            mixing_stages, shares, 1.0
+        )
+        distinct = expected_distinct_general(
+            shares, container, distinct_in_container
+        )
+        drawn_label = f"{shares:,} individual-shares"
+    else:
+        container, distinct_in_container, notes = resolve_pool(
+            mixing_stages, units_requested, units_per_individual
+        )
+        distinct = expected_distinct_general(
+            int(units_requested), container, distinct_in_container
+        )
+        drawn_label = f"{units_requested} units"
 
     trace.append(StepTrace(
         sequence=len(trace),
@@ -594,7 +651,7 @@ def run(
         value_used=distinct_in_container,
         running_total=distinct,
         explanation=(
-            f"Drawing {units_requested} units from a container of "
+            f"Drawing {drawn_label} from a container of "
             f"{container:,} gives about {distinct:.2f} distinct individuals."
         ),
         confidence="estimate",
@@ -610,6 +667,8 @@ def run(
         distinct_hi=distinct,
         container_units=container,
         paired_individuals=distinct_in_container,
+        distinct_ceiling=(ceil(floor) if aggregate_units
+                          else float(units_requested)),
         trace=trace,
         mixing_notes=notes,
         confidence_level=confidence_level,

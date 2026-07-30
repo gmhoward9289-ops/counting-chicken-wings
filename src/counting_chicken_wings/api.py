@@ -182,6 +182,9 @@ def calculate(
             mixing_stages=mixing,
             iterations=iterations,
             recurring=recurring,
+            aggregate_units=prod["yield_mode"] == "continuous",
+            anatomical=bool(prod["is_anatomical_constant"]),
+            floor_source=dbm.product_source_slug(conn, prod["slug"]),
         )
 
         slugs = list({s.source_slug for s in res.trace if s.source_slug})
@@ -313,6 +316,9 @@ def scientific(
             iterations=iterations, seed=seed,
             confidence_level=confidence_level,
             min_confidence=min_confidence, keep_samples=True,
+            aggregate_units=prod["yield_mode"] == "continuous",
+            anatomical=bool(prod["is_anatomical_constant"]),
+            floor_source=dbm.product_source_slug(conn, prod["slug"]),
         )
 
         kept = [s for s in loss

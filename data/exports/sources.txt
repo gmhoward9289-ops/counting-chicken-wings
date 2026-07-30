@@ -494,6 +494,31 @@
   notes: Industry structure - plant counts, company counts, contract farms.
 
 [32]
+  slug: psu-extension-saffron
+  title: Saffron: A Tale of Red Gold and How to Produce Your Own
+  publisher: Penn State Extension
+  source_type: trade_body
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://extension.psu.edu/saffron-a-tale-of-red-gold-and-how-to-produce-your-own
+  notes:
+    Held for its per-acre yield figure, which CONFLICTS with HS661 and is
+    stored as a conflict rather than reconciled: Penn State says "one acre of
+    land produces only about 3 pounds", HS661 says "an annual yield of 8-10
+    pounds of dried saffron per acre is obtained in an established planting".
+    Both are plausible and they are probably not measuring the same thing -
+    HS661 explicitly says "in an established planting", and a saffron field
+    takes years to reach that state. Neither figure is loaded as data. The
+    disagreement is recorded because a three-fold spread between two extension
+    services is the most honest thing we know about saffron yields. Also
+    states "It takes about 50 flowers to produce just one teaspoon of dried
+    saffron", which is consistent with 150 flowers per gram only if a teaspoon
+    of threads is about a third of a gram. Not loaded: converting it would
+    require assuming the mass of a teaspoon of saffron, and that assumption
+    would be ours rather than the source's.
+
+[33]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -509,7 +534,46 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[33]
+[34]
+  slug: ucanr-mg-saffron
+  title: Saffron - Garden Help, Herbs
+  publisher: UC Master Gardeners of Santa Clara County, UC ANR
+  source_type: trade_body
+  retrieved_on: 2026-07-29
+  url: https://ucanr.edu/site/uc-master-gardeners-santa-clara-county/saffron
+  notes:
+    Undated, which is why published_on is NULL rather than guessed. The
+    load-bearing source for flowers-per-gram: "Each plant typically produces 2
+    to 4 flowers, and approximately 150 flowers are needed to yield 1 gram of
+    dried spice." It also states three stigmas per flower independently of
+    HS661, which is why that constant is treated as settled. This document was
+    fetched by COOPER and then NOT extracted from - the retrieval stage found
+    it, the extraction stage read only the HS661 PDF. The figure was recovered
+    by a human reading the returned artifact. That is a pipeline finding, not
+    a data one, and it is recorded here because it is the reason the raw
+    documents come back with every batch.
+
+[35]
+  slug: ufifas-hs661-saffron
+  title: Saffron - Crocus sativus L. (HS661)
+  publisher: University of Florida IFAS Extension, Horticultural Sciences
+  source_type: trade_body
+  published_on: 1994-05-01
+  retrieved_on: 2026-07-29
+  url: https://edis.ifas.ufl.edu/publication/MV136
+  notes:
+    James M. Stephens, professor emeritus. Original publication May 1994,
+    revised September 2015, reviewed October 2018 - so the figures are old,
+    and saffron husbandry has not changed much in thirty years or three
+    thousand. Fetched as a PDF reprint by COOPER during batch-01-saffron.
+    Worth recording that the PDF was nearly missed: the pdftotext path failed
+    and only the pypdf fallback recovered it, which is why that fallback
+    exists. Carries two figures used here: three stigmas per blossom, and
+    210,000 stigmas per pound of saffron. The second is hedged in the source's
+    own words ("Supposedly"), and it is stored at confidence=industry for
+    exactly that reason.
+
+[36]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -525,7 +589,7 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[34]
+[37]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -541,7 +605,7 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[35]
+[38]
   slug: eggs-unlimited-breakage
   title: Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers
   publisher: Eggs Unlimited
@@ -559,7 +623,7 @@
     enough that the industry measures breakage closely - it is what the
     invoice argument is about.
 
-[36]
+[39]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -574,7 +638,7 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[37]
+[40]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet

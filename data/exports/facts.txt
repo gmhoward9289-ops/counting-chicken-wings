@@ -419,6 +419,26 @@
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
 [26]
+  slug: egg-grading-is-not-separating
+  headline: Grading splits a chicken's wings apart, but cannot split her eggs
+  body:
+    This is a modelling choice worth stating plainly rather than burying.
+    Wings and eggs are both weighed and sorted, but the step does different
+    work. A bird has exactly two wings, so weighing them routes a pair into
+    different boxes whenever they straddle a grade boundary - the supply chain
+    actively pulls the pair apart. An egg arrives at the grader already alone,
+    because a hen laid one that day and nothing pairs it with another. There
+    is no pair for grading to break. So we model egg grading as ordinary
+    mixing and wing grading as active separation. It is a judgement about
+    mechanism, not a figure from a source, and it is the kind of assumption
+    that should be visible.
+  surprise: 4
+  placement: learning
+  source: United States Standards, Grades, and Weight Classes for Shell Eggs
+  publisher: USDA Agricultural Marketing Service
+  url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
+
+[27]
   slug: feed-behind-a-dozen-wings
   headline: A dozen wings represents about five pounds of feed
   body:
@@ -435,7 +455,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[27]
+[28]
   slug: flat-beats-drumette
   headline: The flat has a better meat yield than the drumette
   body:
@@ -450,7 +470,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[28]
+[29]
   slug: footprint-must-be-allocated
   headline: A dozen wings is not six chickens' worth of carbon
   body:
@@ -467,7 +487,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[29]
+[30]
   slug: line-speed-and-broken-wings
   headline: Some plants run 175 birds a minute, others 140
   body:
@@ -488,7 +508,7 @@
     
     https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
 
-[30]
+[31]
   slug: mortality-rising
   headline: Broiler mortality has been getting worse since 2013
   body:
@@ -503,7 +523,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[31]
+[32]
   slug: twelve-eggs-needs-fifteen-hens
   headline: Getting a dozen eggs in one day actually takes about fifteen hens
   body:
@@ -517,7 +537,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[32]
+[33]
   slug: wing-tips-are-a-third-segment
   headline: Every wing has a third segment you never see
   body:
@@ -533,7 +553,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[33]
+[34]
   slug: wing-tips-domestic-fate
   headline: At home, wing tips become stock, pet food, or fertilizer
   body:
@@ -550,7 +570,7 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[34]
+[35]
   slug: wings-is-a-regulated-word
   headline: "Wings" is a regulated word, and boneless wings comply with it
   body:
@@ -568,7 +588,7 @@
     
     https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
 
-[35]
+[36]
   slug: wings-most-damaged-part
   headline: Wings are the most damaged part of the chicken, by far
   body:
@@ -584,7 +604,7 @@
   publisher: Canadian Journal of Animal Science
   url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
 
-[36]
+[37]
   slug: an-egg-is-leaner-than-a-wing
   headline: An egg carries wing-like protein with a third less fat
   body:
@@ -598,7 +618,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[37]
+[38]
   slug: cook-loss-irrelevant
   headline: Cooking changes the weight, never the count
   body:
@@ -610,7 +630,7 @@
   source: Placeholder pending research
   publisher: counting-chicken-wings
 
-[38]
+[39]
   slug: dressing-yield
   headline: About three quarters of a live chicken becomes sellable meat
   body:
@@ -622,7 +642,7 @@
   source: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings
 
-[39]
+[40]
   slug: egg-data-agrees-with-itself
   headline: The egg numbers check out against themselves, twice
   body:
@@ -638,7 +658,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[40]
+[41]
   slug: kitchen-waste-corroborated
   headline: Restaurant kitchens waste 4-13% of what they buy
   body:
@@ -657,7 +677,7 @@
     
     https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
 
-[41]
+[42]
   slug: nineteen-billion-wings
   headline: The US produced 19.16 billion whole wings in 2025
   body:
@@ -669,7 +689,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[42]
+[43]
   slug: top-four-concentration
   headline: Four companies produce well over half the chicken in America
   body:
@@ -685,7 +705,7 @@
     
     https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
 
-[43]
+[44]
   slug: transit-loss-is-unmeasured
   headline: Nobody publishes how many wings are lost in transit
   body:
@@ -705,7 +725,7 @@
   publisher: Environmental Research Letters (IOP)
   url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
 
-[44]
+[45]
   slug: wings-are-mostly-fat-calories
   headline: About 60% of a wing's calories come from fat
   body:
@@ -719,7 +739,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/172390/nutrients
 
-[45]
+[46]
   slug: two-wings-hard-floor
   headline: A chicken has exactly two wings
   body:

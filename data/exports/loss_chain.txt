@@ -19,6 +19,21 @@
   source: ncc-broiler-performance
 
 [2]
+  sequence: 10
+  slug: saffron_field_loss
+  label: Flowers not picked in time
+  phase: harvest
+  applies_to: individual
+  optional: 1
+  default_enabled: 0
+  product: all
+  survive_lo: 0.85
+  survive_mode: 0.92
+  survive_hi: 0.98
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[3]
   sequence: 15
   slug: layer_mortality
   label: Layer flock mortality
@@ -33,7 +48,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[3]
+[4]
   sequence: 20
   slug: transport_doa
   label: Transport dead-on-arrival
@@ -48,7 +63,22 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[4]
+[5]
+  sequence: 20
+  slug: saffron_drying
+  label: Drying
+  phase: processing
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.2
+  survive_mode: 0.2
+  survive_hi: 0.2
+  confidence: industry
+  source: ufifas-hs661-saffron
+
+[6]
   sequence: 30
   slug: postmortem_condemnation
   label: Post-mortem condemnation
@@ -63,7 +93,7 @@
   confidence: measured
   source: nass-poultry-slaughter-2025
 
-[5]
+[7]
   sequence: 40
   slug: wing_damage
   label: Wing damage and downgrade
@@ -78,7 +108,7 @@
   confidence: study
   source: wing-injuries-loading
 
-[6]
+[8]
   sequence: 45
   slug: egg_checks
   label: Checks (cracked shell, membrane intact)
@@ -93,7 +123,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[7]
+[9]
   sequence: 46
   slug: egg_leakers
   label: Leakers, dirties and loss
@@ -108,7 +138,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[8]
+[10]
   sequence: 50
   slug: grading_downgrade
   label: Grading and trim loss
@@ -123,7 +153,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[9]
+[11]
   sequence: 60
   slug: further_processing
   label: Further processing and marinade pickup
@@ -138,7 +168,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[10]
+[12]
   sequence: 70
   slug: distribution_shrink
   label: Distribution shrink (mass)
@@ -153,7 +183,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[11]
+[13]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -168,7 +198,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[12]
+[14]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -183,7 +213,7 @@
   confidence: estimate
   source: cold-chain-transport-trade
 
-[13]
+[15]
   sequence: 72
   slug: retail_shrink
   label: Supermarket shrink
@@ -198,7 +228,7 @@
   confidence: measured
   source: ers-supermarket-loss
 
-[14]
+[16]
   sequence: 73
   slug: egg_transit_breakage
   label: In-transit breakage
@@ -213,7 +243,7 @@
   confidence: industry
   source: eggs-unlimited-breakage
 
-[15]
+[17]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -228,7 +258,7 @@
   confidence: industry
   source: refed-foodservice
 
-[16]
+[18]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -243,7 +273,7 @@
   confidence: industry
   source: refed-foodservice
 
-[17]
+[19]
   sequence: 76
   slug: egg_kitchen_breakage
   label: Kitchen and consumer breakage
@@ -258,7 +288,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[18]
+[20]
   sequence: 80
   slug: cook_loss
   label: Cook loss
@@ -273,7 +303,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[19]
+[21]
   sequence: 90
   slug: plate_waste
   label: Post-consumer plate waste

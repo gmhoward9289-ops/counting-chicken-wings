@@ -1,0 +1,118 @@
+# The saffron loss chain. Merged with loss_chain.yaml at build time.
+#
+# Short, and short on purpose. Every stage here that is not sourced is turned
+# OFF by default, so the default saffron answer rests entirely on cited
+# figures. That is a deliberately stricter standard than the poultry chain got
+# -- wings carry eight estimate-grade factors, five of which move the count,
+# and that is technical debt we did not want to recreate on day one in a new
+# domain.
+#
+# THE DRYING STAGE IS THE INTERESTING ONE
+# ---------------------------------------
+# HS661: "On drying, either in the sun or by artificial heat, the stigmas lose
+# 80% of their weight." An 80% mass loss sounds enormous and sounds like it
+# must dominate the answer. It changes nothing, and it should not.
+#
+# Two reasons, and they compound:
+#
+#   1. applies_to: mass. Drying makes a stigma lighter, not fractional. The
+#      same three stigmas go in and come out. model.affects_count() enforces
+#      this, so no future editor can accidentally make drying move a count.
+#
+#   2. The 150-flowers-per-gram figure is ALREADY a dried-basis figure. Every
+#      source states saffron yields on a dried basis, because dried threads
+#      are what saffron IS. Applying an 80% loss on top would give 750 flowers
+#      per gram: wrong by five times, and wrong in the direction that makes
+#      the project's headline number more impressive. Exactly the sort of
+#      error that does not get caught by anyone hoping for a big number.
+#
+# So drying is here to EXPLAIN, not to calculate -- the same role the egg
+# mixing stages play. It appears in the audit trail with its citation and its
+# 0.20 factor, annotated as not affecting the count. A reader who wants to
+# know why saffron is expensive gets the 80% figure; the arithmetic does not.
+#
+# WHAT WOULD ACTUALLY MOVE THE SAFFRON ANSWER
+# -------------------------------------------
+# Field loss, and we cannot source it. Saffron blooms in a window of one to
+# three weeks and each flower must be picked the morning it opens -- by
+# afternoon the stigmas have wilted and by the next day they are worthless.
+# So the real question is what fraction of flowers a crew reaches in time, and
+# that is a labour-supply question, not a botany one.
+#
+# It is modelled below, off by default, with an honest estimate band and the
+# unsourced-estimate citation. Turning it on is how you ask "how many flowers
+# had to BLOOM", which is a different and harder question than "how many
+# flowers were picked".
+
+stages:
+  - slug: saffron_field_loss
+    domain: horticulture
+    label: Flowers not picked in time
+    sequence: 10
+    phase: harvest
+    applies_to: individual
+    optional: 1
+    default_enabled: 0
+    description: >-
+      Flowers that bloom but are never harvested, or are harvested too late to
+      be usable. Saffron has a one-to-three-week bloom and each flower is good
+      for a single morning, so the binding constraint is how many pickers can
+      cross how much field before the sun gets high.
+    notes: >-
+      OFF by default, for the same reason broiler grow-out mortality and layer
+      mortality are off: a flower nobody picked did not contribute the spice
+      in your hand. Turn it on to ask "how many flowers had to bloom to yield
+      this", which is the growers' question rather than the cook's.
+
+      UNSOURCED. The 0.85-0.95 band is our reasoning, not anyone's
+      measurement, and it is flagged accordingly. Commercial saffron growing
+      is dominated by smallholders in Iran, which produces something like 90%
+      of world supply, and no agency publishes harvest-efficiency figures for
+      them. This is the single most valuable missing number in the subject: it
+      is the only unsourced stage that would move the count if switched on.
+    factors:
+      - species: saffron_crocus
+        survive_lo: 0.85
+        survive_mode: 0.92
+        survive_hi: 0.98
+        confidence: estimate
+        source: project-estimate-unsourced
+
+  - slug: saffron_drying
+    domain: horticulture
+    label: Drying
+    sequence: 20
+    phase: processing
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Fresh stigmas are dried in sun or with gentle artificial heat, losing
+      about 80% of their weight and gaining the aroma that makes them saffron.
+      Undried stigmas are not saffron; the drying is what creates the spice.
+    notes: >-
+      Recorded at confidence=industry, NOT derived.
+
+      The distinction matters and it is the one grade COOPER's extraction was
+      not allowed to set for itself. Inverting "lose 80% of their weight" into
+      a surviving fraction of 0.20 is arithmetic on a trade rule of thumb, and
+      arithmetic does not upgrade a rule of thumb. 'derived' in this project
+      means computed from MEASURED figures - the way dressing yield comes out
+      of two NASS totals - and HS661 measured nothing. So the value inherits
+      its source's grade.
+
+      This is the stage that proves the applies_to discipline generalises.
+      It was built so that frying a chicken wing could not change how many
+      chickens were involved; it now stops an 80% mass loss on a spice from
+      doing the same thing, in a domain with no animals in it, with no code
+      change.
+    factors:
+      - species: saffron_crocus
+        # SURVIVING fraction of mass: 80% lost leaves 0.20.
+        # No band. The source gives one round number with no spread, and
+        # widening it would be inventing precision we were not given.
+        survive_lo: 0.20
+        survive_mode: 0.20
+        survive_hi: 0.20
+        confidence: industry
+        source: ufifas-hs661-saffron

@@ -1,0 +1,183 @@
+# Saffron. Merged with taxonomy.yaml at build time.
+#
+# The project's second domain and its first non-animal subject. It exists to
+# test whether the wing model describes a SHAPE or just describes chickens.
+# It describes a shape.
+#
+# WHY SAFFRON IS THE RIGHT SECOND SUBJECT
+# ---------------------------------------
+# Crocus sativus has exactly three stigmas per flower. Not on average, not
+# usually -- three, the way a chicken has two wings. That single anatomical
+# constant is what makes a floor a real floor rather than a rounded average,
+# and it is the whole reason this project can say "at least" about anything.
+#
+#   a chicken has 2 wings  -> 12 wings need at least 6 chickens
+#   a flower has 3 stigmas -> 12 stigmas need at least 4 flowers
+#
+# Then the ratio explodes in a way wings never do: about 150 flowers for a
+# single gram of dried spice. Wings are a small-number problem, saffron is a
+# large-number problem, and the same arithmetic covers both.
+#
+# WHAT COUNTS AS THE INDIVIDUAL
+# -----------------------------
+# The FLOWER, deliberately, and it is worth being honest that this is a
+# choice rather than a fact. Biologically the individual is the plant -- a
+# corm, which throws 2 to 4 flowers in a season. "How many crocus plants for
+# a gram of saffron" is a legitimate and different question, and the answer
+# is smaller and slower.
+#
+# The flower wins because it is the unit the harvest actually handles, the
+# unit every source quotes, and the unit that carries the anatomical
+# constant. A corm's 2-to-4 flowers is an average that moves with age, depth,
+# and crowding; a flower's 3 stigmas moves with nothing.
+#
+# So `individual_noun` is 'flower' while `scientific_name` names the plant.
+# Anyone asking about plants should read the note on the species row.
+#
+# TWO PRODUCTS, TWO QUESTIONS
+# ---------------------------
+# Same trick as whole_wing versus boneless_wing: one species, two products,
+# two genuinely different answers.
+#
+#   saffron_stigma -> countable, exactly 3 per flower, floor is arithmetic
+#   saffron_gram   -> continuous, ~150 flowers each, floor is a ratio
+#
+# THE TRAP IN THE GRAM FIGURE, WHICH IS ALREADY HANDLED
+# ----------------------------------------------------
+# Every flowers-per-gram figure in the literature is a DRIED-basis figure.
+# HS661 says stigmas lose 80% of their weight on drying, and it is tempting
+# to apply that as a loss stage on top of the 150 -- which would give 750
+# flowers per gram and be wrong by a factor of five, because the 150 already
+# has drying priced in.
+#
+# The schema catches this without anyone having to remember it. Drying is
+# recorded in loss_chain_saffron.yaml as `applies_to: mass`, and
+# model.affects_count() refuses to let a mass stage move a count. Drying makes
+# a stigma lighter, not fractional -- the same reason frying cannot change how
+# many wings are on a plate. The discipline built for cook loss transferred to
+# a domain it was never designed for, unchanged.
+
+domains:
+  - slug: horticulture
+    label: Horticulture
+    description: >-
+      Plants grown for food and spice. Second domain implemented, and the
+      first with no animal in it.
+    active: 1
+
+species:
+  - slug: saffron_crocus
+    domain: horticulture
+    common_name: Saffron crocus
+    scientific_name: Crocus sativus L.
+    individual_noun: flower
+    individual_plural: flowers
+    # Deliberately NULL. No US agency counts saffron flowers, or saffron at
+    # all -- there is no NASS series, no census line, nothing. The US grows
+    # almost none commercially. That absence is itself data: it is why every
+    # figure in this subject tops out at 'industry' and why the poultry
+    # corpus, resting on enumerated national surveys, is not the normal case
+    # for this project but the lucky one.
+    stat_category: null
+    active: 1
+    notes: >-
+      A sterile triploid that cannot set seed, so every saffron crocus alive
+      is a clone propagated by dividing corms. The commercial crop is
+      genetically almost uniform worldwide.
+
+      On plants versus flowers: UC ANR states "Each plant typically produces
+      2 to 4 flowers". That figure is recorded here rather than modelled,
+      because the project counts flowers. Anyone wanting plants-per-gram
+      should divide, and should know the result is far softer than the
+      flower figure - 2 to 4 is a range that moves with corm age, planting
+      depth, and crowding, and corms need dividing every 4 to 6 years.
+
+products:
+  - slug: saffron_stigma
+    species: saffron_crocus
+    label: Saffron stigma
+    label_plural: Saffron stigmas
+    yield_mode: countable
+    # Exactly three. This is the structural twin of two wings per chicken and
+    # the reason this subject was chosen.
+    units_per_individual_lo: 3
+    units_per_individual_mode: 3
+    units_per_individual_hi: 3
+    unit_name: stigma
+    source_part: stigma
+    named_part: stigma
+    named_part_content: 1.0
+    # The point of the whole exercise. A stigma count has a hard floor because
+    # a flower cannot have four.
+    is_anatomical_constant: 1
+    source: ufifas-hs661-saffron
+    notes: >-
+      Two independent sources state it, which is why it is treated as settled
+      rather than merely reported. HS661: "Each blossom yields only three
+      stigmas, which must be picked by hand." UC ANR, separately: "Pick the
+      stigmas (three per flower) with tweezers."
+
+      Both models COOPER ran agreed on this figure (2/2 consensus) in
+      batch-01-saffron.
+
+      Worth knowing for anyone tempted to identify these plants in the wild:
+      the toxic look-alike Colchicum has six stamens where a true crocus has
+      three. The number three does a lot of work in this genus.
+
+  - slug: saffron_gram
+    species: saffron_crocus
+    label: Gram of dried saffron
+    label_plural: Grams of dried saffron
+    yield_mode: continuous
+    # GRAMS OF DRIED SPICE PER FLOWER -- the reciprocal of flowers per gram,
+    # which is how every source states it. 1/150 = 0.006667.
+    #
+    # The band is narrow because only two figures exist and they agree:
+    #
+    #   lo  0.0064799   = 154.324 flowers/g, implied by HS661's 210,000
+    #                     stigmas per pound: 210000 / 3 stigmas = 70,000
+    #                     flowers per pound, over 453.59237 g/lb
+    #   hi  0.0066666667 =    150 flowers/g, stated outright by UC ANR
+    #
+    # Carried to ten digits on purpose. floor_individuals divides rather than
+    # rounding up, so a truncated 0.006667 makes the floor 149.993 and the
+    # audit trail reads "a hard minimum of 149.993" -- false precision in the
+    # one number the project asks people to trust.
+    #
+    # mode sits at the STATED figure rather than the midpoint, because 150 is
+    # what a source says and 154.3 is what arithmetic implies. Two sources
+    # landing within 3% of each other, by completely different routes and one
+    # of them hedged with "Supposedly", is the strongest cross-check this
+    # subject has.
+    #
+    # hi equals mode on purpose: no source we hold suggests a better yield
+    # than 150 flowers per gram, and inventing headroom to make the band look
+    # symmetrical would be inventing data.
+    units_per_individual_lo: 0.0064799
+    units_per_individual_mode: 0.0066666667
+    units_per_individual_hi: 0.0066666667
+    unit_name: gram
+    source_part: stigma
+    named_part: stigma
+    named_part_content: 1.0
+    # Zero, and the contrast with saffron_stigma above is the lesson. Three
+    # stigmas per flower is anatomy. Grams per flower is agriculture: it moves
+    # with flower size, picking care, drying method, and how much style the
+    # picker leaves attached to the stigma.
+    is_anatomical_constant: 0
+    source: ucanr-mg-saffron
+    notes: >-
+      "Each plant typically produces 2 to 4 flowers, and approximately 150
+      flowers are needed to yield 1 gram of dried spice."
+
+      This figure is a DRIED-basis figure and drying is therefore already
+      priced in. See the header of this file, and loss_chain_saffron.yaml,
+      for why the 80% drying mass loss must not be applied on top of it.
+
+      A RESEARCH LEAD, recorded rather than modelled because nothing here
+      sources it: saffron is among the most adulterated foods in the world -
+      safflower, turmeric, dyed corn silk, and shredded beet fibre all get
+      sold as saffron. That is the exact structural twin of the boneless
+      wing, a product whose name claims a part it does not contain, and this
+      project already has the machinery for it (named_part_content = 0.0).
+      It needs a citable adulteration rate before it can ship.

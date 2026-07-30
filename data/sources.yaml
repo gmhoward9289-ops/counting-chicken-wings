@@ -538,3 +538,86 @@
     "breaker plant" - for liquid egg. They are not destroyed, but they do
     leave the shell-egg stream, which is what makes them a loss for the
     question "how many hens for a dozen eggs in a carton".
+
+# ---------------------------------------------------------------------------
+# Saffron. The project's second domain, and its first non-animal subject.
+#
+# Read the confidence grades here against the poultry sources above, because
+# the contrast is the point. Wings rest on USDA NASS: national, annual,
+# enumerated. Saffron rests on three university extension factsheets, none of
+# which surveys anything. There is no NASS for saffron -- the US grows almost
+# none of it commercially, so no federal agency counts it.
+#
+# These are graded 'trade_body' rather than 'government'. Cooperative
+# Extension is a USDA partnership and every one of these documents carries the
+# USDA cooperating statement, so 'government' is arguable -- but it would put a
+# 1994 gardening factsheet in the same tier as an enumerated national survey,
+# and that tier is doing real work in this project. Extension publishes
+# authoritative practitioner guidance, which is what 'trade_body' means here.
+# ---------------------------------------------------------------------------
+
+- slug: ufifas-hs661-saffron
+  title: Saffron - Crocus sativus L. (HS661)
+  publisher: University of Florida IFAS Extension, Horticultural Sciences
+  url: https://edis.ifas.ufl.edu/publication/MV136
+  published_on: '1994-05-01'
+  retrieved_on: '2026-07-29'
+  source_type: trade_body
+  notes: >-
+    James M. Stephens, professor emeritus. Original publication May 1994,
+    revised September 2015, reviewed October 2018 - so the figures are old,
+    and saffron husbandry has not changed much in thirty years or three
+    thousand.
+
+    Fetched as a PDF reprint by COOPER during batch-01-saffron. Worth
+    recording that the PDF was nearly missed: the pdftotext path failed and
+    only the pypdf fallback recovered it, which is why that fallback exists.
+
+    Carries two figures used here: three stigmas per blossom, and 210,000
+    stigmas per pound of saffron. The second is hedged in the source's own
+    words ("Supposedly"), and it is stored at confidence=industry for exactly
+    that reason.
+
+- slug: ucanr-mg-saffron
+  title: Saffron - Garden Help, Herbs
+  publisher: UC Master Gardeners of Santa Clara County, UC ANR
+  url: https://ucanr.edu/site/uc-master-gardeners-santa-clara-county/saffron
+  retrieved_on: '2026-07-29'
+  source_type: trade_body
+  notes: >-
+    Undated, which is why published_on is NULL rather than guessed.
+
+    The load-bearing source for flowers-per-gram: "Each plant typically
+    produces 2 to 4 flowers, and approximately 150 flowers are needed to
+    yield 1 gram of dried spice." It also states three stigmas per flower
+    independently of HS661, which is why that constant is treated as settled.
+
+    This document was fetched by COOPER and then NOT extracted from - the
+    retrieval stage found it, the extraction stage read only the HS661 PDF.
+    The figure was recovered by a human reading the returned artifact. That
+    is a pipeline finding, not a data one, and it is recorded here because it
+    is the reason the raw documents come back with every batch.
+
+- slug: psu-extension-saffron
+  title: 'Saffron: A Tale of Red Gold and How to Produce Your Own'
+  publisher: Penn State Extension
+  url: https://extension.psu.edu/saffron-a-tale-of-red-gold-and-how-to-produce-your-own
+  retrieved_on: '2026-07-29'
+  source_type: trade_body
+  notes: >-
+    Held for its per-acre yield figure, which CONFLICTS with HS661 and is
+    stored as a conflict rather than reconciled: Penn State says "one acre of
+    land produces only about 3 pounds", HS661 says "an annual yield of 8-10
+    pounds of dried saffron per acre is obtained in an established planting".
+
+    Both are plausible and they are probably not measuring the same thing -
+    HS661 explicitly says "in an established planting", and a saffron field
+    takes years to reach that state. Neither figure is loaded as data. The
+    disagreement is recorded because a three-fold spread between two
+    extension services is the most honest thing we know about saffron yields.
+
+    Also states "It takes about 50 flowers to produce just one teaspoon of
+    dried saffron", which is consistent with 150 flowers per gram only if a
+    teaspoon of threads is about a third of a gram. Not loaded: converting it
+    would require assuming the mass of a teaspoon of saffron, and that
+    assumption would be ours rather than the source's.

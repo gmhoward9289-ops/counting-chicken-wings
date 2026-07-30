@@ -286,6 +286,23 @@ def get_sources(conn, slugs: list[str]) -> dict[str, sqlite3.Row]:
     return {r["slug"]: r for r in rows}
 
 
+def product_source_slug(conn, product_slug: str) -> str | None:
+    """The citation behind a product's units-per-individual figure.
+
+    The floor step of the audit trail had no source attached, which was
+    tolerable while every floor was an anatomical constant that needed none.
+    A saffron gram's floor rests on one extension service's estimate, so the
+    trail has to say whose.
+    """
+    row = conn.execute(
+        """SELECT src.slug FROM product p
+           JOIN source src ON src.id = p.source_id
+           WHERE p.slug = ?""",
+        (product_slug,),
+    ).fetchone()
+    return row["slug"] if row else None
+
+
 def get_facts(conn, placement: str = "both", limit: int = 5):
     where = ("placement IN ('result','both')" if placement == "result"
              else "placement IN ('learning','both')" if placement == "learning"

@@ -7,10 +7,10 @@ Every file has a .csv twin for spreadsheets and a .txt twin for
 reading. Files are kept small and self-describing so any one of
 them is usable on its own.
 
-  facts               45 rows  chicken facts
-  sources             37 rows  citations
-  loss_chain          19 rows  loss chain
-  mixing_cascade       9 rows  mixing cascade
+  facts               46 rows  chicken facts
+  sources             40 rows  citations
+  loss_chain          21 rows  loss chain
+  mixing_cascade      21 rows  mixing cascade
   states              46 rows  average live weight by state
   national             2 rows  national slaughter totals
   husbandry           10 rows  grow-out performance by year

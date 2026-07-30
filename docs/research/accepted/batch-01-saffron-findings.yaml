@@ -1,0 +1,113 @@
+batch: batch-01-saffron
+subject: saffron
+
+# HUMAN-REVIEWED. COOPER returned five figures; three survived, one was
+# corrected, one was dropped. The full decision record is in
+# docs/research/accepted/batch-01-saffron-REVIEW.md, which is committed --
+# this directory is gitignored, so the reasoning cannot live only here.
+#
+# Nothing in the gate was weakened to make this pass. The one row that needed
+# rethinking (drying) now records what the source ACTUALLY SAYS -- 80% of
+# weight lost -- rather than our inversion of it to a surviving fraction of
+# 0.20. The inversion belongs in data/loss_chain_saffron.yaml, where a human
+# wrote it with a comment explaining why. A finding reports a source; a corpus
+# row models it. Keeping those separate is what let this pass honestly.
+
+findings:
+  - field: stigmas_per_flower
+    value_lo: 3
+    value_mode: 3
+    value_hi: 3
+    unit: stigmas per flower
+    confidence: industry
+    document: inbox/saffron/https-www-growables-org-informationveg-documents.txt
+    quote: Each blossom yields only three stigmas, which must be picked by hand.
+    agreement: 2/2
+    verified_by: null
+    note: >-
+      The load-bearing figure. Confirmed independently by the UC ANR document
+      in this same batch ("Pick the stigmas (three per flower) with tweezers"),
+      which is why it is treated as settled rather than merely reported.
+
+  - field: stigmas_per_pound
+    value_lo: 210000
+    value_mode: 210000
+    value_hi: 210000
+    unit: stigmas per pound
+    confidence: estimate
+    document: inbox/saffron/https-www-growables-org-informationveg-documents.txt
+    quote: Supposedly it takes 210,000 stigmas to make 1 pound of saffron.
+    agreement: 2/2
+    verified_by: null
+    note: >-
+      Held at estimate, not industry, because the source hedges it itself with
+      "Supposedly". Grading it higher than its own author did would be exactly
+      the laundering this pipeline exists to prevent.
+
+      Its value is as a cross-check: 210,000 / 3 stigmas = 70,000 flowers per
+      pound = 154.3 flowers per gram, against the 150 stated outright by a
+      different source below. Two routes, 3% apart.
+
+  - field: drying_mass_loss
+    value_lo: 0.8
+    value_mode: 0.8
+    value_hi: 0.8
+    unit: fraction of fresh mass lost
+    confidence: industry
+    document: inbox/saffron/https-www-growables-org-informationveg-documents.txt
+    quote: >-
+      On drying, either in the sun or by artificial heat, the stigmas lose 80%
+      of their weight.
+    agreement: 1/1 (first model returned nothing)
+    verified_by: null
+    note: >-
+      CORRECTED FRAMING. COOPER originally returned this as
+      drying_mass_yield=0.2, and the gate rejected it: 0.2 appears nowhere in
+      the quote. The arithmetic was right and the reporting was not.
+
+      Recorded here as the source states it. The inversion to a surviving
+      fraction of 0.20 lives in data/loss_chain_saffron.yaml as
+      applies_to=mass, which means it can never move a count -- and must not,
+      because the flowers-per-gram figure below is already a dried-basis
+      figure and applying an 80% loss on top would give 750 flowers per gram.
+
+  - field: flowers_per_gram_dried
+    value_lo: 150
+    value_mode: 150
+    value_hi: 150
+    unit: flowers per gram
+    confidence: industry
+    document: inbox/saffron/https-ucanr-edu-site-uc-master-gardeners-santa-c.txt
+    quote: >-
+      Each plant typically produces 2 to 4 flowers, and approximately 150
+      flowers are needed to yield 1 gram of dried spice.
+    agreement: 0/2 (human extraction)
+    verified_by: null
+    note: >-
+      NOT COOPER'S. This replaces the row the gate rejected, where COOPER
+      answered flowers_per_gram_dried with a stigmas-per-pound quote -- wrong
+      by exactly the factor of 3 this subject measures.
+
+      The figure was recovered by a human reading a document COOPER had
+      already FETCHED but never extracted from. That distinction matters for
+      tuning: retrieval found the right source, extraction ignored it. It is
+      also the concrete reason raw documents come back with every batch
+      instead of just the YAML.
+
+      It passes verbatim verification like any other row. Its agreement field
+      says 0/2 because no model produced it, and that is not a defect to hide.
+
+proposed_sources:
+  - slug: ucanr-mg-saffron
+    title: Saffron - Garden Help, Herbs
+    publisher: UC Master Gardeners of Santa Clara County, UC ANR
+    url: https://ucanr.edu/site/uc-master-gardeners-santa-clara-county/saffron
+    note: Undated. Promoted to data/sources.yaml by a human.
+  - slug: psu-extension-saffron
+    title: 'Saffron: A Tale of Red Gold and How to Produce Your Own'
+    publisher: Penn State Extension
+    url: https://extension.psu.edu/saffron-a-tale-of-red-gold-and-how-to-produce-your-own
+    note: >-
+      Promoted for its CONFLICT, not for a figure. Says one acre yields about
+      3 pounds where HS661 says 8-10 in an established planting. Neither is
+      loaded as data; the disagreement is recorded in data/sources.yaml.

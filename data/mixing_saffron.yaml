@@ -1,0 +1,155 @@
+# Saffron mixing cascade. Merged with mixing.yaml at build time.
+#
+# A supply chain is REQUIRED, not optional decoration. db.default_supply_chain
+# has no cross-species fallback by design, so a species with no chain of its
+# own raises rather than quietly inheriting somebody else's - the bug that let
+# eggs walk a cut-up line and a fryer basket and narrate all of it. Saffron
+# without this file would inherit the wing cascade or fail. It fails, loudly,
+# which is correct.
+#
+# MIXING STARTS THE INSTANT THE STIGMAS LEAVE THE FLOWER
+# -----------------------------------------------------
+# The founding observation of this project was that mixing begins the moment
+# the wings are separated from the chicken, not at the restaurant. Saffron is
+# the same claim in a different key, and more extreme: a picker plucks three
+# stigmas into a shared tray and they join thousands of others within seconds.
+# There is no point at which one flower's three stigmas stay together.
+#
+# HOW SAFFRON DIFFERS FROM BOTH WINGS AND EGGS
+# --------------------------------------------
+# Wings: floor 6, ceiling 12, and mixing decides where in that band you land.
+# Same-day eggs: floor and ceiling both 12, so mixing has nothing left to do.
+#
+# Saffron is a third shape. The pool is enormous relative to the draw - a
+# single kilogram lot represents about 150,000 flowers, and one gram draws
+# from it - so repeats are vanishingly unlikely and the answer pins to the
+# ceiling rather than sitting somewhere in the band. The ceiling is high
+# because each flower contributes three stigmas, so where wings had 2x of
+# headroom between floor and ceiling, saffron has 3x.
+#
+# The mechanism is the same as wings. The scale is what changes the character
+# of the answer.
+#
+# CONFIDENCE: all estimate, all citing project-estimate-mixing. Same standing
+# as the poultry and egg cascades, and for the same reason - nobody publishes
+# pool sizes, because pool size is not a thing anyone in the trade measures.
+# The stages are structurally right and numerically soft, and the audit prints
+# that mix on every build.
+
+stages:
+  - slug: saffron_picking_tray
+    domain: horticulture
+    label: Picking tray
+    sequence: 10
+    # In FLOWERS represented. A morning's picking by one person, through a
+    # crew's shared tray at the upper end.
+    pool_lo: 500
+    pool_mode: 5000
+    pool_hi: 20000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Flowers are carried from the field and the three stigmas plucked out by
+      hand into a shared tray. This is saffron's cut-up line: the first and
+      most complete mixing event, and it happens within seconds of separation.
+
+  - slug: saffron_drying_batch
+    domain: horticulture
+    label: Drying batch
+    sequence: 20
+    pool_lo: 2000
+    pool_mode: 30000
+    pool_hi: 200000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      A day's picking is dried together in one batch, sun or low heat. Several
+      pickers' trays combine here, so the pool grows by roughly the size of
+      the crew.
+
+  - slug: saffron_grading
+    domain: horticulture
+    label: Grade separation
+    sequence: 30
+    pool_lo: 5000
+    pool_mode: 50000
+    pool_hi: 400000
+    # SEPARATING, and this is the exact counterpart of size grading for wings.
+    # Saffron is sold by grade - sargol is the pure red tip with the yellow
+    # style cut away, pushal keeps some style attached - so grading physically
+    # divides material that arrived together, and it will divide one flower's
+    # three stigmas whenever they differ in length or colour. A flower has
+    # exactly three, so splitting them is splitting a small set.
+    mixing_kind: separating
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Threads are sorted by grade, with the yellow style cut from the red
+      stigma for the higher grades. Like wing size grading, this does not
+      merely commingle - it actively separates a single flower's stigmas from
+      one another when they are not identical, and they rarely are.
+
+  - slug: saffron_packing
+    domain: horticulture
+    label: Lot packing
+    sequence: 40
+    # A commercial lot is kilograms. One kilogram is about 150,000 flowers,
+    # which is why the retail question has essentially no chance of repeats.
+    pool_lo: 15000
+    pool_mode: 150000
+    pool_hi: 1500000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Graded threads are blended into commercial lots and filled into the
+      small jars and packets sold at retail. A half-gram packet is drawn from
+      a pool measured in kilograms.
+
+supply_chains:
+  - slug: commodity_spice
+    domain: horticulture
+    species: saffron_crocus
+    label: Commodity spice trade
+    is_default: 1
+    description: >-
+      The route almost all saffron takes: hand-picked, batch-dried, graded,
+      blended into lots, and packed into retail jars. Every mixing stage
+      applies and the pool is enormous at every step.
+    stages:
+      - saffron_picking_tray
+      - saffron_drying_batch
+      - saffron_grading
+      - saffron_packing
+    floor_note: >-
+      The answer sits at the ceiling rather than somewhere above the floor, and
+      the reason is scale rather than anything new. A gram of saffron is drawn
+      from a lot representing a hundred thousand flowers or more, so the chance
+      that any two threads in your jar came from the same flower is negligible.
+      Grading makes it more certain still: separating threads by grade splits
+      up whatever arrived together, and a flower only ever had three.
+
+  - slug: garden_saffron
+    domain: horticulture
+    species: saffron_crocus
+    label: Home garden
+    is_default: 0
+    description: >-
+      Your own corms, your own tweezers, your own jar. One picking tray and
+      nothing else - no crew, no grading, no lot blending.
+    floor_note: >-
+      The one route where the answer can approach the floor. A home grower
+      picking a few dozen flowers has a small enough pool that the same
+      flower's stigmas genuinely can end up together in the jar, which is
+      exactly what never happens commercially.
+    stages:
+      # Overridden hard. The shared picking-tray pool is a commercial crew's
+      # tray, thousands of flowers; a home patch is a few dozen corms
+      # throwing 2-4 flowers each over a couple of weeks. Without the
+      # override the garden route returned 11.99 against the commodity
+      # route's 11.99998 -- technically different, and a distinction with no
+      # meaning, which is worse than no route at all.
+      - slug: saffron_picking_tray
+        pool_override: 60

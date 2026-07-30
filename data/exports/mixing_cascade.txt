@@ -19,6 +19,21 @@
   source: project-estimate-mixing
 
 [2]
+  sequence: 10
+  slug: saffron_picking_tray
+  label: Picking tray
+  mixing_kind: random
+  pool_lo: 500
+  pool_mode: 5000
+  pool_hi: 20000
+  confidence: estimate
+  description:
+    Flowers are carried from the field and the three stigmas plucked out by
+    hand into a shared tray. This is saffron's cut-up line: the first and most
+    complete mixing event, and it happens within seconds of separation.
+  source: project-estimate-mixing
+
+[3]
   sequence: 20
   slug: wing_chiller
   label: Wing chiller
@@ -32,7 +47,22 @@
     single vessel with a residence time measured in tens of minutes.
   source: project-estimate-mixing
 
-[3]
+[4]
+  sequence: 20
+  slug: saffron_drying_batch
+  label: Drying batch
+  mixing_kind: random
+  pool_lo: 2000
+  pool_mode: 30000
+  pool_hi: 200000
+  confidence: estimate
+  description:
+    A day's picking is dried together in one batch, sun or low heat. Several
+    pickers' trays combine here, so the pool grows by roughly the size of the
+    crew.
+  source: project-estimate-mixing
+
+[5]
   sequence: 30
   slug: size_grading
   label: Size grading (jumbo / large / medium)
@@ -48,7 +78,23 @@
     strongest driver pushing the answer toward 12.
   source: project-estimate-mixing
 
-[4]
+[6]
+  sequence: 30
+  slug: saffron_grading
+  label: Grade separation
+  mixing_kind: separating
+  pool_lo: 5000
+  pool_mode: 50000
+  pool_hi: 400000
+  confidence: estimate
+  description:
+    Threads are sorted by grade, with the yellow style cut from the red stigma
+    for the higher grades. Like wing size grading, this does not merely
+    commingle - it actively separates a single flower's stigmas from one
+    another when they are not identical, and they rarely are.
+  source: project-estimate-mixing
+
+[7]
   sequence: 40
   slug: combo_bin
   label: Combo bin
@@ -62,7 +108,22 @@
     wing that is about 8,700 wings in one bin.
   source: project-estimate-mixing
 
-[5]
+[8]
+  sequence: 40
+  slug: saffron_packing
+  label: Lot packing
+  mixing_kind: random
+  pool_lo: 15000
+  pool_mode: 150000
+  pool_hi: 1500000
+  confidence: estimate
+  description:
+    Graded threads are blended into commercial lots and filled into the small
+    jars and packets sold at retail. A half-gram packet is drawn from a pool
+    measured in kilograms.
+  source: project-estimate-mixing
+
+[9]
   sequence: 50
   slug: iqf_freezer
   label: IQF freezer tunnel
@@ -76,7 +137,7 @@
     lot boundaries are preserved through this step.
   source: project-estimate-mixing
 
-[6]
+[10]
   sequence: 60
   slug: case_pack
   label: Case pack
@@ -91,7 +152,7 @@
     case is from a different bird.
   source: project-estimate-mixing
 
-[7]
+[11]
   sequence: 70
   slug: distributor
   label: Distributor warehouse
@@ -103,7 +164,7 @@
   description: Pallets assembled from many lots, plants, and sometimes producers.
   source: project-estimate-mixing
 
-[8]
+[12]
   sequence: 80
   slug: restaurant_freezer
   label: Restaurant freezer bin
@@ -118,7 +179,7 @@
     weeks of production.
   source: project-estimate-mixing
 
-[9]
+[13]
   sequence: 90
   slug: fryer_basket
   label: Fryer basket
@@ -130,4 +191,123 @@
   description:
     The draw itself. Twelve wings are scooped from the bin - the point at
     which the question finally gets answered.
+  source: project-estimate-mixing
+
+[14]
+  sequence: 110
+  slug: egg_collection
+  label: Nest and belt collection
+  mixing_kind: random
+  pool_lo: 5000
+  pool_mode: 100000
+  pool_hi: 400000
+  confidence: estimate
+  description:
+    Hens lay into nest boxes and the eggs roll onto a conveyor shared by the
+    whole house. This is where commingling begins - the direct counterpart of
+    the cut-up line for wings - except that nothing is being separated, only
+    gathered.
+  source: project-estimate-mixing
+
+[15]
+  sequence: 120
+  slug: egg_farm_cooler
+  label: On-farm cooler
+  mixing_kind: random
+  pool_lo: 5000
+  pool_mode: 150000
+  pool_hi: 600000
+  confidence: estimate
+  description:
+    Eggs are cooled and held before processing. A day's lay from the whole
+    house sits together, which is what makes a "same-day" carton a meaningful
+    category at all.
+  source: project-estimate-mixing
+
+[16]
+  sequence: 130
+  slug: egg_washing
+  label: Washing
+  mixing_kind: random
+  pool_lo: 5000
+  pool_mode: 150000
+  pool_hi: 600000
+  confidence: estimate
+  description:
+    US eggs are washed, which removes the cuticle and is why they are
+    refrigerated afterwards. Eggs from many hens pass through the same line in
+    continuous flow.
+  source: ams-shell-egg-grades
+
+[17]
+  sequence: 140
+  slug: egg_candling
+  label: Candling and grading
+  mixing_kind: random
+  pool_lo: 5000
+  pool_mode: 150000
+  pool_hi: 600000
+  confidence: estimate
+  description:
+    Eggs are lit from below to find blood spots, meat spots and cracks, then
+    sorted by weight into size classes. Unlike wing grading this splits
+    nothing apart, because each egg was already a separate contribution from a
+    separate hen.
+  source: ams-shell-egg-grades
+
+[18]
+  sequence: 150
+  slug: egg_carton_pack
+  label: Carton pack
+  mixing_kind: none
+  pool_lo: 12
+  pool_mode: 12
+  pool_hi: 30
+  confidence: estimate
+  description:
+    Twelve eggs are placed in a carton. The draw itself, and the point at
+    which the question gets answered - by now every egg in the carton is from
+    a different hen.
+  source: project-estimate-mixing
+
+[19]
+  sequence: 160
+  slug: egg_distributor
+  label: Distributor
+  mixing_kind: random
+  pool_lo: 50000
+  pool_mode: 500000
+  pool_hi: 3000000
+  confidence: estimate
+  description:
+    Cartons are palletised across farms and sometimes across producers.
+    Irrelevant to the count, because the carton was sealed upstream - but it
+    is why the carton in your hand cannot be traced to a house by looking at
+    it.
+  source: project-estimate-mixing
+
+[20]
+  sequence: 170
+  slug: egg_retail_case
+  label: Retail case
+  mixing_kind: none
+  pool_lo: 50000
+  pool_mode: 500000
+  pool_hi: 3000000
+  confidence: estimate
+  description: The shelf. Cartons from several lots sit side by side, and you pick one.
+  source: project-estimate-mixing
+
+[21]
+  sequence: 180
+  slug: egg_home_fridge
+  label: Your fridge
+  mixing_kind: none
+  pool_lo: 12
+  pool_mode: 12
+  pool_hi: 60
+  confidence: estimate
+  description:
+    Where the carton finally sits. Included so the chain ends where the
+    question does.
   source: project-estimate-mixing
