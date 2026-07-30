@@ -299,7 +299,10 @@ CREATE TABLE slaughter_stat_year (
     postmortem_condemn_pct  REAL,
     postmortem_condemn_lb   INTEGER,
     source_id               INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, year)
+    -- country_id belongs in the key. Without it a second country's broiler
+    -- row for a year the US already has is rejected outright, so the table
+    -- could hold exactly one country no matter what country_id said.
+    UNIQUE (species_id, country_id, year)
 );
 
 -- Regional size variation. For broilers this is where production programs
@@ -316,7 +319,9 @@ CREATE TABLE regional_size_stat (
     volume              INTEGER,
     volume_unit         TEXT,
     source_id           INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, region, year, month)
+    -- Region names are not globally unique, so country_id is part of identity
+    -- here, not just an attribute hanging off it.
+    UNIQUE (species_id, country_id, region, year, month)
 );
 
 -- Broilers PRODUCED by region, from the NASS Production and Value summary.
@@ -346,7 +351,7 @@ CREATE TABLE regional_production_year (
     -- itself: a test asserts it matches regional_size_stat.
     derived_live_weight_lb  REAL,
     source_id               INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, region, year)
+    UNIQUE (species_id, country_id, region, year)
 );
 
 CREATE INDEX idx_regional_production_region
@@ -372,7 +377,7 @@ CREATE TABLE regional_census_stat (
     operations      INTEGER,
     inventory       INTEGER,
     source_id       INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, region, census_year)
+    UNIQUE (species_id, country_id, region, census_year)
 );
 
 
@@ -388,7 +393,7 @@ CREATE TABLE husbandry_stat_year (
     feed_conversion     REAL,
     mortality_pct       REAL,
     source_id           INTEGER NOT NULL REFERENCES source(id),
-    UNIQUE (species_id, year)
+    UNIQUE (species_id, country_id, year)
 );
 
 

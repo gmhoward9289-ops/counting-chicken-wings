@@ -129,3 +129,59 @@ def test_national_totals_must_filter_by_country(db):
         "WHERE country_id = ?", (usa,)
     ).fetchone()[0]
     assert unfiltered == filtered
+
+
+# ---------------------------------------------------------------- can it hold
+#
+# Every test above reads. None of them wrote, which is why the corpus could
+# carry country_id on five tables, pass all of them, and still be unable to
+# store a second country: the UNIQUE keys omitted country_id, so an Israeli
+# broiler row for a year the US already had was rejected outright. The
+# dimension existed and the table could hold exactly one country.
+#
+# A read-only assertion cannot see that. Only an insert can.
+
+@pytest.mark.parametrize("table, columns, values", [
+    ("slaughter_stat_year",
+     "(species_id, country_id, year, head_slaughtered, source_id)",
+     (2025, 260_000_000)),
+    ("husbandry_stat_year",
+     "(species_id, country_id, year, mortality_pct, source_id)",
+     (2024, 4.2)),
+])
+def test_a_second_country_can_hold_the_same_species_and_year(
+        db, table, columns, values):
+    """The key must include country_id, not merely the row.
+
+    Written against a throwaway copy so the corpus itself is untouched.
+    """
+    year, measure = values
+    scratch = sqlite3.connect(":memory:")
+    db.backup(scratch)
+
+    broiler = scratch.execute(
+        "SELECT id FROM species WHERE slug='broiler'").fetchone()[0]
+    isr = scratch.execute(
+        "SELECT id FROM country WHERE iso3='ISR'").fetchone()[0]
+    src = scratch.execute("SELECT id FROM source LIMIT 1").fetchone()[0]
+
+    # The US row for this species and year already exists in the corpus.
+    existing = scratch.execute(
+        f"SELECT COUNT(*) FROM {table} WHERE species_id=? AND year=?",
+        (broiler, year)).fetchone()[0]
+    assert existing, (
+        f"fixture assumption broken: no US {table} row for {year}, so this "
+        f"test would pass without proving anything"
+    )
+
+    try:
+        scratch.execute(
+            f"INSERT INTO {table} {columns} VALUES (?,?,?,?,?)",
+            (broiler, isr, year, measure, src))
+    except sqlite3.IntegrityError as e:
+        pytest.fail(
+            f"{table} cannot hold Israel alongside the US for {year}: {e}. "
+            f"country_id is missing from the UNIQUE key."
+        )
+    finally:
+        scratch.close()
