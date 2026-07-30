@@ -167,17 +167,36 @@ def _is_number(value) -> bool:
 
 
 def band_in_quote(row: dict, quote: str) -> tuple[bool, str]:
-    """A row is grounded if ANY of its lo/mode/hi appears in the quote.
+    """lo and hi must each appear in the quote; only mode may interpolate.
 
-    Not just the mode, and the distinction matters. A quote reading "150 to 200
-    flowers" legitimately supports lo=150, hi=200, mode=170 -- the mode is an
-    interpolation within a quoted range, which is normal and honest for a
-    lo/mode/hi corpus. Demanding the mode itself appear would reject every
-    banded figure, which is how this check first broke a passing test.
+    A quote reading "150 to 200 flowers" legitimately supports lo=150, hi=200,
+    mode=170 -- the mode is an interpolation within a quoted range, which is
+    normal and honest for a lo/mode/hi corpus, and demanding the mode itself
+    appear would reject every banded figure. That much was always true.
 
-    What it still catches is a row where NOTHING in the band is in the text:
-    `yield_per_acre: 10` against "an annual yield of 8", or a 0.2 derived by
-    inverting a quoted "80%".
+    What was too loose was accepting a row when ANY one value appeared. A bound
+    is not an interpolation: lo and hi are claims the source made, so they have
+    to be in the source. batch-08-silk returned lo=1000, mode=3000, hi=9000
+    against "from 300 to 900 meters (1000 to 3000 feet) long" -- 9000 appears
+    in no silk document -- and the old rule passed it on the strength of the
+    other two.
+
+    MEASURED BEFORE CHANGING, over every accepted findings file: saffron 4/4
+    and maple 5/5 keep their verdicts, so this costs nothing already banked.
+
+    And it is worth being precise about how narrow it is, because the two other
+    bad rows from the same day are NOT reachable this way and it would be easy
+    to imagine otherwise:
+
+      - silk's shirt row stored 1700/1800/2000 from "It takes 1700 to 2000
+        cocoons to make one silk dress (or about 1,000 cocoons for a silk
+        shirt)". Every number is genuinely in the quote. The error is that they
+        describe the dress.
+      - ground beef stored 100/100/100 from "more than 100 cows can be used",
+        flattening a hedged ceiling into a point value. 100 is in the quote.
+
+    Both are semantic, and no arithmetic on the band reaches either. Those are
+    the `Watch for` prompt's job, not this check's.
     """
     vals = [row.get(k) for k in ("value_lo", "value_mode", "value_hi")]
     vals = [v for v in vals if v is not None]
@@ -209,17 +228,44 @@ def band_in_quote(row: dict, quote: str) -> tuple[bool, str]:
             f"confidence grade in a value field has not answered the question"
         )
 
-    for v in vals:
-        if value_in_quote(v, quote)[0]:
-            return True, ""
-    shown = ", ".join(f"{v:g}" if isinstance(v, (int, float)) else str(v)
-                      for v in vals)
-    return False, (
-        f"none of the reported values ({shown}) appear in the quoted sentence. "
-        f"If the figure was derived from what the quote says -- inverting an "
-        f"'80% loss' into 0.2, say -- that is a `derived` claim and a human has "
-        f"to record it as one"
-    )
+    lo, mode, hi = (row.get("value_lo"), row.get("value_mode"),
+                    row.get("value_hi"))
+
+    # lo and hi are BOUNDS, and a bound is a claim the source made. Only mode
+    # may be interpolated, which is the whole reason the ANY rule existed.
+    #
+    # Under ANY, one fabricated bound rode along beside two real ones and the
+    # gate saw nothing: batch-08-silk returned lo=1000, mode=3000, hi=9000
+    # against "from 300 to 900 meters (1000 to 3000 feet) long", where 9000
+    # appears in no silk document at all.
+    for name, v in (("value_lo", lo), ("value_hi", hi)):
+        if v is not None and not value_in_quote(v, quote)[0]:
+            return False, (
+                f"{name}={v:g} does not appear in the quoted sentence. lo and "
+                f"hi are BOUNDS, and a bound is a claim the source made, so it "
+                f"has to be in the source. Only mode may be interpolated. If "
+                f"this bound came from reasoning on the quote rather than "
+                f"reading it -- inverting an '80% loss' into 0.2, say -- that "
+                f"is a `derived` or `estimate` claim, and a human has to "
+                f"record it as one"
+            )
+
+    if mode is not None and not value_in_quote(mode, quote)[0]:
+        if lo is None or hi is None:
+            return False, (
+                f"value_mode={mode:g} does not appear in the quoted sentence "
+                f"and has no lo/hi band to interpolate within. If it was "
+                f"derived from what the quote says -- inverting an '80% loss' "
+                f"into 0.2, say -- that is a `derived` claim and a human has "
+                f"to record it as one"
+            )
+        if not (float(lo) <= float(mode) <= float(hi)):
+            return False, (
+                f"value_mode={mode:g} does not appear in the quoted sentence "
+                f"and falls outside its own band [{lo:g}, {hi:g}], so it is "
+                f"neither quoted nor an interpolation"
+            )
+    return True, ""
 
 
 def value_in_quote(value, quote: str) -> tuple[bool, str]:
