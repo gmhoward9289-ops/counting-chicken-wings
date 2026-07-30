@@ -580,12 +580,112 @@ def accept(batch: str) -> int:
     return 0
 
 
+def scout(batch: str) -> int:
+    """Check every URL in a spec is reachable AND still carries its quote.
+
+    Run this BEFORE send. It exists because "confirmed 200 with the figure
+    present" turned out to mean nothing when confirmed in the wrong tool, and
+    the two ways that goes wrong are invisible from a browser:
+
+      - batch-08-silk cited bows-n-ties for "120 to 130 cocoons". Real sentence,
+        live page. COOPER's fetch of it contains no 120 and no 130 -- the figure
+        is rendered by JavaScript. Both models correctly returned nothing, and
+        the run read as model weakness rather than a dead source.
+      - batch-06 cited fsis.usda.gov. Every path 403s to this fetcher while a
+        browser sails through.
+
+    So the check has to use the SAME code that will do the real fetch, and it
+    has to look for the figure, not just a 200. A spec's `Quote:` lines are
+    exactly the claim being made, so they are what gets verified.
+
+    Reachability is a property of the fetcher and its user agent, not of the
+    host running it, so this is faithful from either machine -- but running it
+    on COOPER removes the last doubt.
+    """
+    spec = BATCHES / f"{batch}.md"
+    if not spec.exists():
+        raise SystemExit(f"no spec at {spec}")
+
+    sys.path.insert(0, str(ROOT / "tools" / "cooper"))
+    import runner                                    # noqa: PLC0415
+
+    items = runner.parse_spec(spec)["items"]
+    text = spec.read_text(encoding="utf-8")
+    doc_dir = RESEARCH / "inbox" / f"_scout-{batch}"
+    doc_dir.mkdir(parents=True, exist_ok=True)
+
+    # Quotes the spec claims, per item block, so a miss names the item.
+    def flat(s: str) -> str:
+        # Spec quotes are wrapped across markdown lines and the fetched text has
+        # its own line breaks, so whitespace has to go before anything matches.
+        return re.sub(r"\s+", " ", normalise(s)).strip()
+
+    claims: dict[str, list[str]] = {}
+    for block in re.split(r"^### Item\b", text, flags=re.M)[1:]:
+        head = re.sub(r"^\s*\d+\s*[—–-]\s*", "",
+                      block.splitlines()[0]).strip()
+        # Stop at the next '###' heading. A block that is deliberately NOT an
+        # Item -- batch-06 parks its FSIS-blocked figure that way -- otherwise
+        # merges into the item above and its quote gets blamed on the wrong
+        # field. Same trap the URL inheritance sets, one parser along.
+        body = re.split(r"\n#{3}\s", block)[0]
+        claims[head] = re.findall(r'Quote:\s*"([^"]{12,})"', body)
+
+    seen: dict[str, str | None] = {}
+    dead, unquoted, ok = [], [], 0
+
+    for it in items:
+        bodies = []
+        for url in it["urls"]:
+            if url not in seen:
+                try:
+                    p = runner.fetch_once(url, doc_dir)
+                except Exception as e:               # noqa: BLE001
+                    p = None
+                    print(f"  FETCH-ERROR {type(e).__name__} {url}")
+                seen[url] = (p.read_text(encoding="utf-8", errors="replace")
+                             if p and p.exists() else None)
+            if seen[url] is None:
+                dead.append((it["field"], url))
+            else:
+                ok += 1
+                bodies.append((url, flat(seen[url])))
+
+        # A quote lives in ONE of the item's sources, not all of them, so an
+        # item is satisfied if any document carries it. Match on a prefix
+        # rather than the whole sentence: the failure worth catching is a
+        # figure that is absent entirely, and demanding the full sentence just
+        # punishes a spec that trimmed a trailing clause.
+        for q in claims.get(it["field"], []):
+            probe = flat(q)[:50]
+            if bodies and not any(probe in b for _u, b in bodies):
+                unquoted.append((it["field"], probe,
+                                 ", ".join(u for u, _b in bodies)))
+
+    print(f"\nscouted {batch}: {len(seen)} distinct URL(s), "
+          f"{ok} reachable, {len(dead)} dead")
+    for field, url in dead:
+        print(f"  [DEAD]     {field}: {url}")
+    for field, q, url in unquoted:
+        print(f"  [NO-QUOTE] {field}: {q!r}...")
+        print(f"             not in what the fetcher retrieves from {url}")
+
+    if dead or unquoted:
+        print("\nFix the spec before sending. A dead URL wastes a run; a URL "
+              "whose quote is absent invites a confident answer from the "
+              "wrong sentence.")
+        return 1
+    print("\nEvery URL reachable and every claimed quote present. Safe to send.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="research_batch")
-    p.add_argument("action", choices=["send", "fetch", "verify", "accept"])
+    p.add_argument("action",
+                   choices=["scout", "send", "fetch", "verify", "accept"])
     p.add_argument("batch")
     a = p.parse_args(argv if argv is not None else sys.argv[1:])
-    return {"send": send, "fetch": fetch,
+    return {"scout": scout, "send": send, "fetch": fetch,
             "verify": verify, "accept": accept}[a.action](a.batch)
 
 
