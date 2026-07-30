@@ -23,12 +23,12 @@ edit of this file.
 
 | | |
 |---|---|
-| Released | **v1.7.0**, 2026-07-30 — seasonality. Seven releases in two days, and v1.5.0/v1.6.0 the same day were a concurrent session's Israel work; see [CHANGELOG](../CHANGELOG.md) |
+| Released | **v1.8.0**, 2026-07-30 — the rollup: bulletin restyle with dark mode and `quality_axis`, Israel's chick-placement head count, `release_check.py` in CI, three research batches run, dual license; see [CHANGELOG](../CHANGELOG.md) |
 | Deployed | https://counting-chicken-wings.onrender.com/ — auto-deploys `master`, so the site is normally *ahead* of the latest tag. Ask `GET /api/version` |
 | Cold start | ~21s after ~15 min idle. `/healthz` exists for an external keep-warm cron; the only real fixes are `plan: starter` ($7/mo) or Fly.io |
 | Render CPU | **11–13× slower than the laptop.** Not architecture — the app boots in 0.28s. Scientific mode's Monte Carlo default dropped to 2,000 iterations because of it |
-| Tests | 368 collected |
-| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of v1.7.0: 49 sources, 55 facts |
+| Tests | 409 collected |
+| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of v1.8.0: 51 sources, 55 facts |
 | Loss factors | **21**, of which **11 are unsourced estimates (52%)** and **8 affect the count**. Worse than the 8-of-14 this file used to claim — the ratio got worse as eggs and saffron were added, which is what a new domain with no federal survey behind it does |
 | Mixing stages | 21 |
 | States with data | 23 broiler (22 slaughter + Florida from production); 34 egg (union across two years) |
