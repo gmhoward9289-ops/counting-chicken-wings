@@ -498,16 +498,30 @@ RULES, and breaking any of them makes the answer useless:
 
 QUESTION: {question}
 UNIT WANTED: {unit}
-
+{watch}
 TEXT:
 {text}
 
 JSON with keys: found, value_lo, value_mode, value_hi, unit, confidence, quote
 """
 
+# Rendered only when the item actually carries a Watch for, so items without one
+# are byte-identical to the old prompt and stay comparable against past runs.
+WATCH_BLOCK = """
+KNOWN TRAP FOR THIS FIGURE -- read before answering:
+{watch_for}
+If the only number you can find falls into that trap, reply {{"found": false}}
+rather than reporting it. A wrong figure that quotes correctly is worse than
+none, because every automatic check downstream will pass it.
+"""
 
-def extract(question: str, unit: str, text: str, model: str) -> dict | None:
-    raw = ollama(model, PROMPT.format(question=question, unit=unit, text=text))
+
+def extract(question: str, unit: str, text: str, model: str,
+            watch_for: str = "") -> dict | None:
+    watch = WATCH_BLOCK.format(watch_for=watch_for) if watch_for else ""
+    raw = ollama(model,
+                 PROMPT.format(question=question, unit=unit, text=text,
+                               watch=watch))
     if not raw:
         return None
     m = re.search(r"\{.*\}", raw, re.S)
@@ -584,11 +598,30 @@ def parse_spec(path: Path) -> dict:
             if not urls:
                 continue
 
+        # "Watch for" is the spec's warning about the definition trap that this
+        # specific figure falls into, and until now it was parsed by nobody and
+        # read by nobody but us. The model never saw a word of it.
+        #
+        # That is the mechanism behind a pattern already noted in 08a4cf1 --
+        # "the spec predicted this shape and predicting it did not stop it
+        # passing." It could not: the warning was not in the prompt. Two more
+        # instances on 2026-07-30, both foreseen in writing and both landed
+        # anyway: ground beef stored a hedged ceiling ("more than 100 ... can be
+        # used") as a point value under a Watch for that named exactly that, and
+        # silk returned feet under one insisting on metres.
+        #
+        # Stop at the next bold lead-in so "Done means"/"Watch for" ordering
+        # cannot swallow the rest of the block.
+        watch = re.search(r"\*\*Watch for:\*\*\s*(.+?)(?=\n\s*\n\*\*|\n---|\Z)",
+                          block, re.S)
+
         items.append({
             "field": field,
             "question": q.group(1).strip(),
             "unit": unit.group(1).strip() if unit else "",
             "urls": urls,
+            "watch_for": re.sub(r"\s+", " ", watch.group(1)).strip()[:700]
+                         if watch else "",
         })
     return {"items": items}
 
@@ -653,7 +686,8 @@ def run(batch: str) -> int:
               f"{WORKERS} at a time)")
         with cf.ThreadPoolExecutor(max_workers=WORKERS) as pool:
             futs = {
-                pool.submit(extract, it["question"], it["unit"], c, model): i
+                pool.submit(extract, it["question"], it["unit"], c, model,
+                            it.get("watch_for", "")): i
                 for i, (it, _d, c) in enumerate(plan)
             }
             for fut in cf.as_completed(futs):
