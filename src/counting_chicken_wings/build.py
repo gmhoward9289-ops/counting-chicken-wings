@@ -13,6 +13,7 @@ enforced at load time as well as by the schema's NOT NULL constraints.
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -23,7 +24,12 @@ PKG = Path(__file__).parent
 ROOT = PKG.parent.parent
 DATA = ROOT / "data"
 SCHEMA = PKG / "schema.sql"
-DEFAULT_DB = ROOT / "chickens.db"
+# ROOT points at the repo only under an editable install; a plain
+# `pip install` puts this file in site-packages, where there is no data/ and
+# nowhere sane to write. $WINGS_DB is the escape hatch, and the API's only
+# override at all -- the CLI has --db, uvicorn passes nothing through.
+_ENV_DB = os.environ.get("WINGS_DB")
+DEFAULT_DB = Path(_ENV_DB).expanduser() if _ENV_DB else ROOT / "chickens.db"
 
 
 class BuildError(Exception):
@@ -697,6 +703,9 @@ class Builder:
 
 
 def build(db_path: Path = DEFAULT_DB) -> Path:
+    # The default's parent is the repo root, but a $WINGS_DB path may point
+    # into a directory that does not exist yet.
+    db_path.parent.mkdir(parents=True, exist_ok=True)
     if db_path.exists():
         db_path.unlink()
     conn = sqlite3.connect(db_path)
