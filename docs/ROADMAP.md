@@ -347,6 +347,56 @@ roadmap, because **eggs break an assumption the model currently makes.**
 
 ---
 
+## M6 — New commodities: generalising beyond wings
+
+The engine is a general "how many individuals made this?" machine with two axes —
+**countable vs. continuous yield**, and **how much pooling** happens between the individual
+and the plate. These six commodities were chosen to *fill that grid* and prove the
+abstraction is not about chickens. Tracked as epic #3; each has its own issue.
+
+The organising insight, stated back from the wing model: the interesting output is never a
+single number, it is *where in the band you land and which mixing stage put you there*.
+**Ground beef, milk, and honey** stress-test the mixing engine on non-chickens.
+**Saffron and silk** are the counter-examples that make pooling legible — they hold at the
+floor precisely because nothing mixes them. **Maple** is the cheapest way to validate the
+`recurring` (rate-over-time) schema change that eggs and milk force anyway.
+
+**The pivot:** items 3–4 depend on the `recurring` yield mode + period field. Item 2 (maple)
+exists to land that schema change on a small, government-grade dataset *before* the flagships
+lean on it. This is the same load-bearing change flagged in M4.5 for eggs — do it once, here.
+
+Order of work (front-loads fun, de-risks the schema early):
+
+- [ ] **1. Ground beef — how many cattle in a hamburger?** (#4) · reuses `mixing.yaml`
+  almost verbatim, **no schema change**. 100+ cattle per patty; grinding is the ultimate
+  commingler. The demo that sells the "it's not about chickens" thesis.
+- [ ] **2. Maple syrup — how many taps in a bottle?** (#5) · introduces `yield_mode:
+  recurring` + a seasonal period field. 40 gal sap → 1 gal syrup (Rule of 86). Smallest build
+  that proves the schema change.
+- [ ] **3. Milk — how many cows in a gallon?** (#6) · continuous flagship, the rigorous one.
+  ~24,000 lb/cow/yr (NASS); bulk tank → tanker → silo pools hundreds–thousands of cows.
+  Depends on the `recurring` work from #5.
+- [ ] **4. Honey — how many bees in a jar?** (#7) · continuous flagship, the crowd-pleaser.
+  ~1/12 tsp/bee lifetime; ~2M flowers and ~55,000 miles per pound; ~770 bee-lifetimes/lb.
+- [ ] **5. Saffron — how many flowers in a gram?** (#8) · hard floor (3 stigmas/flower),
+  hand-harvested and **mixing-immune** — the counter-example that makes pooling legible.
+- [ ] **6. Silk — how many silkworms in a silk tie?** (#9) · hard floor (1 cocoon/worm),
+  ~110 cocoons/tie. Per-garment figures are `industry`, not a single study — label the
+  softness honestly.
+
+Supersedes the loose "milk and honey" mentions in the README scope note: they now have a
+sequenced home here.
+
+| | Hard anatomical floor | Soft / portioning floor |
+|---|---|---|
+| Countable, fixed | wings (2), saffron (3 stigmas), silk (1 cocoon) | boneless wings |
+| Countable, rate | eggs (1/hen/day) | — |
+| Continuous, rate | milk (gal/cow/day), honey (lb/bee/life), maple (gal/tap/season) | — |
+| Mixing-dominated | wings, ground beef, milk, honey | nuggets, sausage |
+| Mixing-immune (hand-made) | saffron, silk, backyard eggs | — |
+
+---
+
 ## Environment notes
 
 - PyCharm is now available on the machine for working on this project.
