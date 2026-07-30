@@ -449,3 +449,48 @@ def test_derived_weight_is_the_cross_check_and_drops_with_its_parent(client):
 def test_unknown_confidence_level_is_rejected(client):
     assert client.get("/api/output/ISR",
                       params={"min_confidence": "vibes"}).status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Supply chains carry their species
+# ---------------------------------------------------------------------------
+
+def test_meta_chains_carry_their_species(client):
+    """`is_default` is per-species by design, so three species means three rows
+    flagged default. A caller that renders them flat and marks every default
+    `selected` gets whichever sorts last -- which is how the wing calculator
+    ended up opening on "Commodity spice trade" once saffron landed. Filtering
+    is only possible if the species travels with the chain."""
+    chains = get(client, "/api/meta")["chains"]
+    assert chains
+    for c in chains:
+        assert "species_slug" in c
+
+    defaults = [c for c in chains if c["is_default"]]
+    # One default per species, not one globally.
+    assert len(defaults) == len({c["species_slug"] for c in defaults})
+    assert len(defaults) > 1, "the collision only exists with several species"
+
+
+def test_every_product_has_at_least_one_chain_of_its_own_species(client):
+    """default_supply_chain raises rather than falling back across species, so
+    a product whose species has no chain is a 500 waiting to happen."""
+    meta = get(client, "/api/meta")
+    by_species = {}
+    for c in meta["chains"]:
+        by_species.setdefault(c["species_slug"], []).append(c["slug"])
+    for p in meta["products"]:
+        if not p["active"]:
+            continue
+        assert "species_slug" in p
+        assert by_species.get(p["species_slug"]), (
+            f"{p['slug']} has no supply chain for species {p['species_slug']}")
+
+
+def test_saffron_chains_are_not_offered_for_wings(client):
+    """The regression, stated as data rather than as a UI assertion."""
+    chains = get(client, "/api/meta")["chains"]
+    wing_chains = [c["slug"] for c in chains if c["species_slug"] == "broiler"]
+    assert "commodity_spice" not in wing_chains
+    assert "garden_saffron" not in wing_chains
+    assert "commodity_foodservice" in wing_chains

@@ -79,7 +79,8 @@ def list_products(conn) -> list[sqlite3.Row]:
     return conn.execute(
         """SELECT p.slug, p.label, p.label_plural, p.unit_name, p.yield_mode,
                   p.yield_period_days, p.max_units_per_day,
-                  s.common_name AS species, s.individual_plural, s.active
+                  s.common_name AS species, s.slug AS species_slug,
+                  s.individual_plural, s.active
            FROM product p JOIN species s ON s.id = p.species_id
            ORDER BY s.active DESC, p.slug"""
     ).fetchall()
@@ -233,9 +234,25 @@ def chain_floor_note(conn, chain_slug: str) -> str | None:
 
 
 def list_supply_chains(conn) -> list[sqlite3.Row]:
+    """Every route, WITH the species it belongs to.
+
+    `species_slug` is not decoration. `is_default` is per-species by design --
+    the unique index enforces exactly that -- so three species means three rows
+    with is_default = 1, and any caller that renders them as one flat list and
+    marks each default `selected` ends up with whichever sorts last. That is
+    precisely what happened when saffron landed: the wing calculator opened on
+    "Commodity spice trade", and a chicken question was about to be narrated
+    through a saffron picking tray.
+
+    A caller cannot filter by species without being told the species, so it is
+    returned here rather than left to be inferred from a label.
+    """
     return conn.execute(
-        "SELECT slug, label, description, is_default FROM supply_chain "
-        "ORDER BY is_default DESC, slug"
+        "SELECT sc.slug, sc.label, sc.description, sc.is_default, "
+        "       s.slug AS species_slug "
+        "FROM supply_chain sc "
+        "LEFT JOIN species s ON s.id = sc.species_id "
+        "ORDER BY sc.is_default DESC, sc.slug"
     ).fetchall()
 
 
