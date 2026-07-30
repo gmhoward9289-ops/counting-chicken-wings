@@ -129,10 +129,15 @@ def test_digits_are_not_forgiven(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_human_only_grades_are_named():
-    assert rb.HUMAN_ONLY_GRADES == {"measured", "derived"}
+    """`study` joined this set on 2026-07-29, on evidence rather than
+    principle: in a three-model A/B against a UC Master Gardeners WEB PAGE,
+    qwen2.5-coder returned confidence "study" even though the prompt permits it
+    only for peer-reviewed journal articles -- and the gate let it through.
+    Judging peer-review is a claim about provenance, not about sentences."""
+    assert rb.HUMAN_ONLY_GRADES == {"measured", "derived", "study"}
 
 
-@pytest.mark.parametrize("grade", ["measured", "derived"])
+@pytest.mark.parametrize("grade", ["measured", "derived", "study"])
 def test_verify_rejects_human_only_grades(tmp_path, monkeypatch, grade):
     """A local model claiming a government agency measured something is the
     highest-consequence failure available to it."""

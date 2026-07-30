@@ -91,9 +91,23 @@ All three cost only COOPER's idle time.
 |---|---|---|
 | `measured` | No | A government agency measured it |
 | `derived` | No | Computed from measured figures |
-| `study` | Only if the document is a journal article | Peer-reviewed |
+| `study` | **No** (changed 2026-07-29) | Peer-reviewed |
 | `industry` | Yes | Trade body or trade press |
 | `estimate` | Yes | Reasoning, flagged as such |
+
+`study` used to be allowed when the document was a journal article. It was
+withdrawn on evidence: in a three-model A/B on a **UC Master Gardeners web
+page**, qwen2.5-coder returned `confidence: "study"` regardless, and the gate
+permitted it.
+
+Whether a document is peer-reviewed is a fact about its provenance, not about
+its sentences — which is exactly why `measured` and `derived` were human-only
+from the start. The honey batch shows how fine the distinction gets: Jaganathan
+& Mandal 2009 *is* peer-reviewed, and the figure everyone takes from it is
+uncited scene-setting in a paper about cancer cells. A model that sees "Journal"
+in a header cannot tell those apart.
+
+COOPER assigns `industry` or `estimate`. A human promotes.
 
 ## Model notes, measured rather than assumed
 

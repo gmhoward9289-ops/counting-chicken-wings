@@ -54,7 +54,25 @@ REMOTE_ROOT = "C:/research"
 
 # Grades that assert something about provenance rather than about a number.
 # Neither is visible in a document's text, so neither is COOPER's to assign.
-HUMAN_ONLY_GRADES = {"measured", "derived"}
+# Grades that assert something a model cannot check from the text in front of
+# it, so none of them is COOPER's to assign.
+#
+# `study` was added 2026-07-29 on evidence rather than principle. The prompt
+# already tells the model to use it "only if the document is a peer-reviewed
+# journal article"; in a three-model A/B on a UC Master Gardeners WEB PAGE,
+# qwen2.5-coder returned confidence "study" anyway. The gate let it through,
+# because study was permitted.
+#
+# Deciding whether a document is peer-reviewed is a judgement about the
+# document's provenance, not about its sentences -- the same reason `measured`
+# and `derived` are human-only. The honey batch shows how sharp the distinction
+# gets: Jaganathan & Mandal 2009 IS a peer-reviewed article, and the figure
+# taken from it is uncited scene-setting in a paper about cancer cells. A model
+# that reads "Journal" in a header cannot tell those apart, and neither can one
+# that reads "Extension".
+#
+# COOPER may still assign `industry` and `estimate`. A human promotes.
+HUMAN_ONLY_GRADES = {"measured", "derived", "study"}
 
 
 # ---------------------------------------------------------------------------

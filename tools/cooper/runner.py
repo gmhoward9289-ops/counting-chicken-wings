@@ -39,8 +39,43 @@ BATCHES = ROOT / "batches"
 # qwen2.5-coder:7b  15.6s, returned exactly "170" -- no preamble, parseable.
 # gemma4-32k        11.2s, correct but wrapped in a reasoning trace AND ANSI
 #                   control codes. Only worth its 32k context on long docs.
+#
+# SECOND MODEL SWAPPED 2026-07-29 (later the same day), on an A/B against a
+# real chunk with a known answer: the UC ANR saffron page, where the right
+# reply is 150 flowers per gram inside a sentence that must come back
+# character-for-character.
+#
+#   model              trivial  real chunk  found 150  full quote verbatim
+#   qwen2.5-coder:7b     7.6s      16.5s       yes      no (partial)
+#   gemma4-32k          34.1s      43.3s       yes      no (partial)
+#   mistral:7b          16.5s      17.5s       yes      YES
+#
+# mistral is ~2.5x faster than gemma and produced the only fully verbatim
+# quote and the only correct confidence grade -- and no markdown fence to
+# strip. It is also a different model family from qwen, which is the entire
+# point of running two: two models from one family fail the same way, so their
+# agreement means nothing.
+#
+# A WRONG EXPLANATION, CORRECTED, because it was nearly written into the code:
+# the swap was first justified by gemma's 9.6 GB "spilling" out of 8 GB of
+# VRAM. It does not. 9.6 GB is the manifest size; gemma4-32k loads at 3.27 GB
+# and runs 100% on the GPU, exactly as the note below already said. Its cost is
+# TOKENS, not memory -- it narrates a reasoning trace before answering, so it
+# emits several times more output for the same reply. Measured, not assumed:
+#
+#   qwen 5.02 GB / gemma 3.27 GB / mistral 5.56 GB, all 100% size_vram.
+#
+# Note also that no useful pair co-resides in 8 GB (qwen+mistral = 10.6 GB,
+# qwen+gemma = 8.3 GB), so the models run sequentially either way and the swap
+# costs nothing that was previously being had.
+#
+# STILL OPEN, and the reason gemma is kept in the file rather than deleted:
+# this A/B tested PRECISION on one chunk, not RECALL across a batch. The
+# original case for gemma was that it found a figure qwen missed. If mistral's
+# recall turns out worse over a full run, put gemma back -- the evidence for
+# that lives in the next batch report, not here.
 EXTRACTOR = "qwen2.5-coder:7b"
-LONG_CONTEXT = "gemma4-32k"
+LONG_CONTEXT = "mistral:7b"
 EMBEDDER = "nomic-embed-text"
 
 # COOPER: i7-6700 (4c/8t), 32 GB RAM, RTX 2060 SUPER with 8 GB VRAM.
@@ -319,8 +354,11 @@ RULES, and breaking any of them makes the answer useless:
   checked against the document automatically. Do not paraphrase or tidy it.
 - If the text does not contain the figure, reply {{"found": false}}. Guessing is
   worse than not answering.
-- Never use confidence "measured" or "derived". Only "industry", "estimate", or
-  "study" if the document is a peer-reviewed journal article.
+- confidence MUST be either "industry" or "estimate". Nothing else is accepted.
+  Do not use "measured", "derived" or "study" -- those are claims about where a
+  document came from, not about what it says, and a human assigns them. This
+  used to permit "study" for journal articles and a model applied it to an
+  extension web page, so the option was removed rather than re-explained.
 
 QUESTION: {question}
 UNIT WANTED: {unit}
