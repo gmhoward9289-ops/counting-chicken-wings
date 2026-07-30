@@ -1,7 +1,13 @@
 # Batch 06 — ground beef
 
-> **SCOUTED 2026-07-30.** Every candidate URL below was fetched and confirmed
-> 200 with the figure present on this date. Ready to send.
+> **SCOUTED 2026-07-30, then RE-SCOUTED with COOPER's own fetcher.** The second
+> pass is the one that counts: batch-08-silk proved that "confirmed 200 with the
+> figure present" means nothing if it was confirmed in a JS-rendering browser
+> rather than in what COOPER actually retrieves.
+>
+> 5 of 6 URLs pass the re-scout — each fetched by `runner.fetch_once()` and
+> checked to contain its figure. The sixth (FSIS) 403s to COOPER site-wide and
+> its item is excluded below rather than left to fail silently.
 
 **Archetype:** `how-many`
 
@@ -65,7 +71,24 @@ source draws. This is a secondary source quoting a corporate statement — grade
 
 ---
 
-### Item 2 — cattle_per_production_lot
+### Blocked, not sent — cattle_per_production_lot
+
+> **`fsis.usda.gov` returns HTTP 403 to COOPER's fetcher, site-wide.** Verified
+> 2026-07-30 against `/policy/fsis-notice/05-23` and two `/shared/PDF/` and
+> `/sites/default/files/` PDFs — all 403. A browser (and the scout) fetches them
+> fine, which is exactly the batch-08-silk trap: a source can be real, correct
+> and cited, and still be invisible to the pipeline.
+>
+> This heading deliberately does **not** start with `### Item`, so `parse_spec`
+> skips the block entirely, and the URL below is deliberately **not** a bullet.
+> Both matter: an item with no URLs *inherits the previous item's*, which would
+> have sent a question about grinder lot structure to a burger article and
+> invited a verbatim-but-wrong answer.
+>
+> To revive this item, find a lot/combo definition on a host COOPER can reach
+> (eCFR fetches fine but section 325.1 carries none of the relevant terms).
+>
+> Blocked URL: https://www.fsis.usda.gov/policy/fsis-notice/05-23
 
 | | |
 |---|---|
@@ -79,10 +102,10 @@ source material commingle across a lot?
 
 **Candidate URLs (confirmed 200, 2026-07-30):**
 
-- https://www.fsis.usda.gov/policy/fsis-notice/05-23 — FSIS, cloth/N60 sampling
-  of beef manufacturing trimmings. Quote: "IPP are to use 1 cloth for up to 5
-  containers from the same lot of product." Combo bins are held as a
-  "multi-combo lot pending STEC test results."
+(de-bulleted so `parse_spec` cannot capture it — see the block note above)
+FSIS, cloth/N60 sampling of beef manufacturing trimmings. Quote: "IPP are to
+use 1 cloth for up to 5 containers from the same lot of product." Combo bins
+are held as a "multi-combo lot pending STEC test results."
 
 **Done means:** the lot/combo structure with a verbatim quote, graded
 `estimate` as a **pool proxy** — FSIS defines the container, not an animal count.
