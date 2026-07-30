@@ -17,3 +17,10 @@ data/cache/
 .DS_Store
 .pytest_cache/
 .ruff_cache/
+
+# Research batches: fetched source documents are not ours to redistribute, and
+# unverified model output must not sit in the tree looking like corpus.
+docs/research/inbox/*
+!docs/research/inbox/.gitkeep
+docs/research/outbox/*
+!docs/research/outbox/.gitkeep
