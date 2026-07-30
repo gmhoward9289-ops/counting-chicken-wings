@@ -1,10 +1,10 @@
 # Changelog
 
-## Unreleased
+## v1.1.0 — 2026-07-29
 
 Eggs become a first-class product rather than a proof that the schema
 generalises. Per [docs/VERSIONING.md](docs/VERSIONING.md) data additions are
-MINOR, so this is a 1.1.0 candidate.
+MINOR, so this is a MINOR release.
 
 ### The recurring-yield window
 
@@ -69,6 +69,14 @@ measures breakage closely.
 - The calculator had **no product selector**, so eggs were unreachable from
   the web UI entirely. Added, with the window control shown only for
   recurring products.
+- Scientific mode now defaults to **2,000** Monte Carlo iterations rather than
+  20,000. This is a hosting concession, and it does move a published band, so:
+  the draws are seeded, so both figures are reproducible rather than noisy, and
+  at 12 wings the 90% interval goes from 6.7833–7.3957 to 6.7794–7.3930 — a
+  shift in the third decimal, or 0.01 on the upper bound as displayed. Render's
+  free tier runs the CPU-bound resample 11-13x slower than a laptop, which made
+  the old default a 6-second wait on every visit to the tab and 30 seconds for
+  anyone choosing 100,000. Both larger counts are still in the dropdown.
 
 ### Known gaps
 

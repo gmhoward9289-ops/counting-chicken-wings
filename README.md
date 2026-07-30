@@ -173,12 +173,12 @@ ambiguity changes the answer more than every loss in the chain combined.
 
 ## Status
 
-**v1.0.0** — see [CHANGELOG.md](CHANGELOG.md).
+**v1.1.0** — see [CHANGELOG.md](CHANGELOG.md).
 
 Live at https://counting-chicken-wings.onrender.com/ (free tier; a first visit
 may wait ~20s for a cold start).
 
-163 tests, 31 sources, 34 facts, 26 tables. Every statistic is cited and the
+206 tests, 37 sources, 45 facts, 28 tables. Every statistic is cited and the
 build fails if one is not.
 
 Ongoing work, tracked in [docs/ROADMAP.md](docs/ROADMAP.md): replacing the 8
