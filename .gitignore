@@ -24,3 +24,5 @@ docs/research/inbox/*
 !docs/research/inbox/.gitkeep
 docs/research/outbox/*
 !docs/research/outbox/.gitkeep
+# accepted/ IS committed: a verified figure with a quote that survives verbatim
+# matching is worth keeping in history even before it becomes corpus.

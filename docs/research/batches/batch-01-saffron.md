@@ -75,18 +75,31 @@ accepted as an answer to this question.
 |---|---|
 | `target_table` | `product` |
 | `required_fields` | `value_lo/mode/hi`, `unit` |
-| `unit` | flowers per gram of dried saffron |
+| `unit` | flowers per unit mass — **whatever unit the source uses** |
 | `archetype` | `how-many` |
 
-**Question:** How many saffron crocus flowers are required to produce one gram
-of dried saffron?
+**Question:** How many saffron crocus flowers does the document say are needed
+to produce a stated quantity of dried saffron? Report the number **and the
+quantity it refers to**, in the source's own units.
 
 **Candidate URLs:** as Item 1.
 
-**Done means:** a lo/mode/hi band in flowers per gram, with the drying state
-named. First-pass reading suggests ~150, and other sources say 75,000 flowers
-per pound — report whichever the document actually states rather than
-converting silently.
+**Done means:** a figure with its own unit attached, whatever that unit is.
+
+**This question was rewritten after the first run returned nothing for it.** The
+original asked for "flowers per **gram**". The Penn State page states "4,000
+blossoms to yield just one **ounce**" and "50 flowers to produce just one
+**teaspoon**" — neither is a gram. The model correctly declined rather than
+converting ounces to grams to manufacture an answer, which is exactly the
+behaviour the contract asks for. The fault was the question, not the model:
+demanding a unit the literature does not use guarantees a miss.
+
+Unit conversion is a separate, checkable step performed after extraction. Do
+not fold it into the extraction, or the quote stops matching the number.
+
+For reference, the conversions close: 4,000/oz ÷ 28.35 g = **141 flowers/gram**,
+against the ~150 figure quoted elsewhere. Consistent — but that arithmetic is
+ours to do and to label `derived`, not COOPER's to assert.
 
 **Watch for:** **fresh versus dried.** This is the trap. Saffron loses most of
 its mass drying, so "flowers per gram" means something completely different

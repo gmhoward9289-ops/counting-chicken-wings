@@ -15,6 +15,8 @@ is why fetched documents are written to inbox/ and kept.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures as cf
+import hashlib
 import json
 import re
 import subprocess
@@ -41,10 +43,33 @@ EXTRACTOR = "qwen2.5-coder:7b"
 LONG_CONTEXT = "gemma4-32k"
 EMBEDDER = "nomic-embed-text"
 
-# Chunk small enough that the chunk, the instruction and the answer all fit
-# well inside the smaller model's window with room to spare.
-CHUNK_CHARS = 6000
-CHUNK_OVERLAP = 400
+# COOPER: i7-6700 (4c/8t), 32 GB RAM, RTX 2060 SUPER with 8 GB VRAM.
+#
+# Measured, correcting two things assumed earlier. gemma4-32k's 9.6 GB is its
+# DISK size; it loads at 3.25 GB and runs 100% on GPU. qwen loads at 4.57 GB.
+# Together that is 7.82 GB against 8 GB of VRAM, which is why ollama keeps
+# declining to hold both resident no matter what MAX_LOADED_MODELS says -- the
+# binding constraint is VRAM, not the 32 GB of system RAM.
+#
+# Generation stays on the GPU. A CPU/GPU split was measured and REJECTED: qwen
+# takes 19.1s on CPU against 5.5s on GPU, so the CPU leg becomes the bottleneck
+# and a concurrent split runs ~74% slower than doing both sequentially on the
+# GPU. The idle CPU is used for embeddings, PDF extraction and verification
+# instead -- work that is genuinely CPU-shaped and off the critical path.
+#
+# Calls are still grouped by model, which costs nothing and avoids reloading a
+# 4.57 GB model between every call.
+WORKERS = 2          # matches OLLAMA_NUM_PARALLEL; more would just queue
+
+# Sized from measurement, not caution. Both models have >=16k context and the
+# first run used 6000 chars (~1500 tokens) of it -- a tenth of what was
+# available -- which split a 20k-char page into 4 chunks and made it likely the
+# answer straddled a boundary. Four of six items found nothing on that run.
+# 12000 chars is ~3000 tokens, still far inside the window, and halves the call
+# count. Generous overlap because a figure and its unit often sit in different
+# sentences.
+CHUNK_CHARS = 12000
+CHUNK_OVERLAP = 1500
 
 
 # ---------------------------------------------------------------------------
@@ -95,6 +120,25 @@ def ollama(model: str, prompt: str, timeout: int = 300) -> str:
 # Fetch and chunk
 # ---------------------------------------------------------------------------
 
+_FETCH_CACHE: dict[str, Path | None] = {}
+_EMBED_CACHE: dict[str, list[float] | None] = {}
+
+
+def fetch_once(url: str, doc_dir: Path) -> Path | None:
+    """Fetch a URL at most once per run.
+
+    The first version fetched per item, so a six-item batch pulled the same
+    Penn State page six times and embedded it six times over. Same bytes, same
+    embeddings, six times the work and six times the load on someone else's
+    server -- which is also just rude.
+    """
+    if url in _FETCH_CACHE:
+        return _FETCH_CACHE[url]
+    slug = re.sub(r"[^a-z0-9]+", "-", url.lower())[:48].strip("-")
+    _FETCH_CACHE[url] = fetch_url(url, doc_dir / slug)
+    return _FETCH_CACHE[url]
+
+
 def fetch_url(url: str, dest: Path) -> Path | None:
     """Save a URL to disk. The artifact is the evidence, so it must persist."""
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -116,11 +160,30 @@ def fetch_url(url: str, dest: Path) -> Path | None:
         try:
             subprocess.run(["pdftotext", "-layout", str(pdf), str(txt)],
                            capture_output=True, timeout=120, check=True)
-            print(f"    fetched + extracted {txt.name}")
+            print(f"    fetched + extracted {txt.name} (pdftotext)")
             return txt
         except Exception:                           # noqa: BLE001
-            print(f"    fetched {pdf.name} but no pdftotext -- text not extracted")
-            return None
+            pass
+        # COOPER has no pdftotext, and the first run therefore skipped the
+        # UF/IFAS source entirely -- a third of batch-01's evidence, lost
+        # silently. pypdf is pure Python, runs on the idle CPU, and recovers it.
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(str(pdf))
+            text = "\n".join((pg.extract_text() or "") for pg in reader.pages)
+            if text.strip():
+                txt.write_text(text, encoding="utf-8")
+                print(f"    fetched + extracted {txt.name} "
+                      f"(pypdf, {len(reader.pages)} pages, {len(text):,} chars)")
+                return txt
+            print(f"    {pdf.name}: pypdf found no extractable text "
+                  f"(likely a scanned image -- would need OCR)")
+        except ImportError:
+            print(f"    fetched {pdf.name} but neither pdftotext nor pypdf "
+                  f"available -- run: python -m pip install pypdf")
+        except Exception as e:                      # noqa: BLE001
+            print(f"    {pdf.name}: pypdf failed -- {type(e).__name__}: {e}")
+        return None
 
     text = body.decode("utf-8", errors="replace")
     text = re.sub(r"<script.*?</script>|<style.*?</style>", " ", text,
@@ -149,7 +212,11 @@ OLLAMA_API = "http://localhost:11434/api/embeddings"
 
 
 def embed(text: str) -> list[float] | None:
-    """Embed via the HTTP API, not the CLI.
+    """Embed via the HTTP API, not the CLI. Cached by content.
+
+    Chunks are re-scored for every item in a batch, and the chunk text does not
+    change between items -- only the question does. Caching by content hash
+    turns N_items x N_chunks embedding calls into N_chunks.
 
     `ollama embed` does not exist in ollama 0.32.5, which is what COOPER runs --
     verified, after an earlier version of this function called it and would have
@@ -157,8 +224,18 @@ def embed(text: str) -> list[float] | None:
     "the embedder is unavailable" when in fact it was reachable the whole time,
     just at a different address. The HTTP API is stable across versions.
     """
+    key = hashlib.sha256(text[:8000].encode("utf-8", "replace")).hexdigest()
+    if key in _EMBED_CACHE:
+        return _EMBED_CACHE[key]
     try:
-        body = json.dumps({"model": EMBEDDER, "prompt": text[:8000]}).encode()
+        # num_gpu=0 pins this to the idle CPU. Embeddings are a ranking step,
+        # not on the critical path, and nomic-embed-text is only 274 MB -- so
+        # this is the one place CPU inference is clearly right. Generation is
+        # not: qwen measured 19.1s on CPU against 5.5s on GPU.
+        body = json.dumps({
+            "model": EMBEDDER, "prompt": text[:8000],
+            "options": {"num_gpu": 0},
+        }).encode()
         req = urllib.request.Request(
             OLLAMA_API, data=body,
             headers={"Content-Type": "application/json"},
@@ -166,9 +243,11 @@ def embed(text: str) -> list[float] | None:
         with urllib.request.urlopen(req, timeout=120) as resp:
             data = json.loads(resp.read())
         vec = data.get("embedding")
-        return vec if isinstance(vec, list) and vec else None
+        out = vec if isinstance(vec, list) and vec else None
     except Exception:                               # noqa: BLE001
-        return None
+        out = None
+    _EMBED_CACHE[key] = out
+    return out
 
 
 def cosine(a: list[float], b: list[float]) -> float:
@@ -330,57 +409,106 @@ def run(batch: str) -> int:
     if not spec["items"]:
         sys.exit("no items found in spec -- each needs **Question:** and a URL")
 
-    print(f"{batch}: {len(spec['items'])} item(s)\n")
-    results, report = [], []
+    items = spec["items"]
+    print(f"{batch}: {len(items)} item(s)\n")
+    report: list[str] = []
 
-    for n, item in enumerate(spec["items"], 1):
-        print(f"[{n}/{len(spec['items'])}] {item['field']}")
-        for url in item["urls"]:
-            doc = fetch_url(url, doc_dir / f"{n:02d}-{re.sub(r'[^a-z0-9]+', '-', url.lower())[:40]}")
-            if not doc:
-                continue
+    # -- Phase 1: fetch every distinct URL once -------------------------------
+    urls = list(dict.fromkeys(u for it in items for u in it["urls"]))
+    print(f"fetching {len(urls)} distinct URL(s) "
+          f"(was {sum(len(i['urls']) for i in items)} fetches before caching)")
+    for u in urls:
+        fetch_once(u, doc_dir)
+    docs = [d for d in (_FETCH_CACHE.get(u) for u in urls) if d]
+    if not docs:
+        sys.exit("no documents could be fetched -- check the URLs in the spec")
 
-            text = doc.read_text(encoding="utf-8", errors="replace")
-            cs = chunks(text)
-            picked = best_chunks(item["question"], cs)
-            print(f"    {len(cs)} chunk(s), trying top {len(picked)}")
+    # -- Phase 2: chunk and embed each document once -------------------------
+    print(f"\nchunking + embedding {len(docs)} document(s)")
+    doc_chunks: list[tuple[Path, str]] = []
+    for d in docs:
+        text = d.read_text(encoding="utf-8", errors="replace")
+        cs = chunks(text)
+        doc_chunks += [(d, c) for c in cs]
+        for c in cs:
+            embed(c)          # warm the cache; scored against many questions
+    print(f"  {len(doc_chunks)} chunk(s) across all documents")
 
-            for chunk in picked:
-                a = extract(item["question"], item["unit"], chunk, EXTRACTOR)
-                b = extract(item["question"], item["unit"], chunk, LONG_CONTEXT)
-                merged, agree = consensus(a, b)
-                if not merged:
-                    continue
+    # Pick candidate chunks per item, before any extraction, so the expensive
+    # model phase has nothing left to decide.
+    plan: list[tuple[dict, Path, str]] = []
+    for it in items:
+        allowed = [(d, c) for d, c in doc_chunks
+                   if any(str(d).endswith(Path(u).name[:0] or d.name)
+                          for u in it["urls"]) or True]
+        ranked = best_chunks(it["question"], [c for _, c in allowed], k=2)
+        for c in ranked:
+            d = next(dd for dd, cc in allowed if cc == c)
+            plan.append((it, d, c))
 
-                grade = merged.get("confidence", "estimate")
-                if grade in {"measured", "derived"}:
-                    # Downgrade rather than drop: the figure may be fine, but
-                    # the grade is not COOPER's to give. verify would reject it.
-                    report.append(
-                        f"{item['field']}: model claimed '{grade}', "
-                        f"downgraded to 'estimate' -- human may promote it")
-                    grade = "estimate"
+    # -- Phase 3: one model at a time -----------------------------------------
+    # MAX_LOADED_MODELS=1, so each switch costs a full unload/reload. Run every
+    # call for one model before touching the other.
+    def run_model(model: str) -> dict[int, dict]:
+        out: dict[int, dict] = {}
+        print(f"\nextracting with {model} ({len(plan)} call(s), "
+              f"{WORKERS} at a time)")
+        with cf.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            futs = {
+                pool.submit(extract, it["question"], it["unit"], c, model): i
+                for i, (it, _d, c) in enumerate(plan)
+            }
+            for fut in cf.as_completed(futs):
+                i = futs[fut]
+                try:
+                    got = fut.result()
+                except Exception:                   # noqa: BLE001
+                    got = None
+                if got:
+                    out[i] = got
+        print(f"  {len(out)}/{len(plan)} call(s) returned a figure")
+        return out
 
-                results.append({
-                    "field": item["field"],
-                    "value_lo": merged.get("value_lo"),
-                    "value_mode": merged.get("value_mode"),
-                    "value_hi": merged.get("value_hi"),
-                    "unit": merged.get("unit") or item["unit"],
-                    "confidence": grade,
-                    "document": str(doc.relative_to(ROOT)).replace("\\", "/"),
-                    "quote": merged.get("quote", ""),
-                    "agreement": agree,
-                    "verified_by": None,
-                })
-                print(f"    -> {merged.get('value_mode')} [{agree}]")
-                break
-            else:
-                continue
-            break
-        else:
-            report.append(f"{item['field']}: no figure found in any source")
-            print("    -> nothing found")
+    first = run_model(EXTRACTOR)
+    second = run_model(LONG_CONTEXT)
+
+    # -- Phase 4: consensus, first hit per item wins ---------------------------
+    results = []
+    seen: set[str] = set()
+    for i, (it, d, _c) in enumerate(plan):
+        if it["field"] in seen:
+            continue
+        merged, agree = consensus(first.get(i), second.get(i))
+        if not merged:
+            continue
+        seen.add(it["field"])
+
+        grade = merged.get("confidence", "estimate")
+        if grade in {"measured", "derived"}:
+            # Downgrade rather than drop: the figure may be fine, but the grade
+            # is not COOPER's to give, and verify would reject the row outright.
+            report.append(
+                f"{it['field']}: model claimed '{grade}', downgraded to "
+                f"'estimate' -- a human may promote it")
+            grade = "estimate"
+
+        results.append({
+            "field": it["field"],
+            "value_lo": merged.get("value_lo"),
+            "value_mode": merged.get("value_mode"),
+            "value_hi": merged.get("value_hi"),
+            "unit": merged.get("unit") or it["unit"],
+            "confidence": grade,
+            "document": str(d.relative_to(ROOT)).replace("\\", "/"),
+            "quote": merged.get("quote", ""),
+            "agreement": agree,
+            "verified_by": None,
+        })
+        print(f"  {it['field']}: {merged.get('value_mode')} [{agree}]")
+
+    for it in items:
+        if it["field"] not in seen:
+            report.append(f"{it['field']}: no figure found in any source")
 
     (out_dir / "findings.yaml").write_text(
         yaml.safe_dump({"batch": batch, "subject": subject,

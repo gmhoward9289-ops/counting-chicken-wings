@@ -42,6 +42,9 @@ RESEARCH = ROOT / "docs" / "research"
 BATCHES = RESEARCH / "batches"
 INBOX = RESEARCH / "inbox"
 OUTBOX = RESEARCH / "outbox"
+# Verified findings live here and ARE committed: a figure with a quote that
+# survives verbatim matching is worth keeping even before it becomes corpus.
+ACCEPTED = RESEARCH / "accepted"
 DATA = ROOT / "data"
 
 sys.path.insert(0, str(SRC))
@@ -299,24 +302,59 @@ def fetch(batch: str) -> int:
 
 
 def accept(batch: str) -> int:
+    """Promote verified findings to docs/research/accepted/. NOT into data/.
+
+    An earlier version copied findings straight into data/ and claimed the job
+    was done. It was not: build only reads files matching taxonomy*, loss_chain*
+    and nutrition*, so a `findings.yaml` sitting there is ignored entirely. The
+    audit passed because the file was never read, which is the most misleading
+    way for something to appear to work.
+
+    Findings are a research RESULT, not corpus. Turning `stigmas_per_flower: 3`
+    into a `product` row with `is_anatomical_constant: 1` requires deciding what
+    kind of thing it is and which yield mode applies -- schema judgement, and
+    therefore deliberately a human's job, for the same reason grading a source
+    is. Accepted findings are committed because a verified figure with a working
+    quote is worth keeping; they simply are not live data yet.
+    """
     marker = OUTBOX / batch / ".verified"
     if not marker.exists():
         raise SystemExit(
             f"{batch} has not passed verify. Run verify first -- accept "
-            f"deliberately refuses to move unverified data into data/."
+            f"deliberately refuses to promote unverified findings."
         )
-    moved = []
+
+    ACCEPTED.mkdir(parents=True, exist_ok=True)
+    promoted, rows = [], []
     for f in candidate_files(batch):
-        dst = DATA / f.name
+        dst = ACCEPTED / f"{batch}-{f.name}"
         shutil.copy(f, dst)
-        moved.append(dst.name)
-    print(f"accepted {len(moved)} file(s) into data/:")
-    for m in moved:
-        print(f"  {m}")
-    print("\nnow, on a Python 3.12 venv:")
-    print("  python -m counting_chicken_wings.build")
-    print("  python -m counting_chicken_wings.audit")
-    print("  pytest -q")
+        promoted.append(dst)
+        doc = yaml.safe_load(f.read_text()) or {}
+        rows += [r for _, r in rows_of(doc)
+                 if isinstance(r, dict) and "quote" in r]
+
+    print(f"promoted {len(promoted)} file(s) to {ACCEPTED.relative_to(ROOT)}:")
+    for p in promoted:
+        print(f"  {p.name}")
+
+    print(f"\n{len(rows)} verified figure(s). These are NOT yet in the corpus.")
+    print("\nTo make them live, a human decides the schema shape and writes the"
+          "\nrows into a prefixed file the build actually reads:\n")
+    for r in rows:
+        grade = r.get("confidence", "?")
+        note = ""
+        if grade == "estimate":
+            note = "  <- consider promoting; only a human may"
+        print(f"  {r.get('field','?'):<32} {r.get('value_mode')} "
+              f"{r.get('unit','')} [{grade}]{note}")
+
+    print("\n  1. choose the target: data/taxonomy_<subject>.yaml (species,")
+    print("     product) or data/loss_chain_<subject>.yaml (loss stages)")
+    print("  2. add the source to data/sources.yaml -- the figure cannot ship")
+    print("     without it, and the build will refuse")
+    print("  3. set confidence deliberately; COOPER cannot exceed 'industry'")
+    print("  4. then: build, audit, pytest -q on a Python 3.12 venv")
     return 0
 
 
