@@ -234,6 +234,23 @@ try {
   .v-better { color: var(--measured); }
   .v-worse  { color: var(--bad); }
   .v-same   { color: var(--dim); }
+  /* An unanswered leg of a verdict is not a bad result, it is no result.
+     It borrows the estimate stamp's hatch so "we have not sourced this"
+     looks the same everywhere it appears on the site, and it is set in
+     the body face rather than mono because it is prose, not a value. */
+  /* Selector must out-specify `.verdict .v-val`, which sets the mono face
+     for real values -- otherwise this reads as a value rather than prose. */
+  .verdict .v-open {
+    color: var(--estimate); font-family: 'Public Sans', system-ui, sans-serif;
+    font-size: 15px; font-weight: 600; font-style: italic;
+    text-decoration: underline; text-decoration-style: dashed;
+    text-underline-offset: 4px; text-decoration-thickness: 1px;
+  }
+  /* A species whose axis has no figures behind it stays pickable -- the
+     empty answer is worth reading -- but says so before you click. */
+  .chips button[data-thin]::after {
+    content: " ·"; color: var(--estimate); font-weight: 700;
+  }
 
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 8px 10px;
@@ -311,7 +328,7 @@ try {
   <button data-v="mix">Mixing simulator</button>
   <button data-v="states">By state</button>
   <button data-v="country">By country</button>
-  <button data-v="size">Is fatter better?</button>
+  <button data-v="size">Does size matter?</button>
   <button data-v="impact">Nutrition &amp; impact</button>
   <button data-v="trends">Trends</button>
   <button data-v="season">Seasons</button>
@@ -589,29 +606,32 @@ try {
 <!-- ------------------------------------------------ is fatter better -->
 <section class="view" id="v-size">
   <div class="panel">
-    <h3>Is a fatter chicken a better chicken?</h3>
+    <h3>Does size make it better?</h3>
+    <p class="muted">
+      Every species is graded on something, but not on the same thing, and
+      the answer does not carry across. Pick one to see its own axis — and,
+      where the corpus cannot answer yet, to see that stated rather than
+      filled in.
+    </p>
+    <div id="size-picker" class="chips"></div>
+  </div>
+
+  <div class="panel">
+    <h3 id="size-question">—</h3>
     <p class="muted" id="size-intro"></p>
     <div class="grid3" id="size-verdict"></div>
   </div>
 
-  <div class="panel">
-    <h3>Why birds differ by state</h3>
-    <p class="muted">
-      This is not biology, it is market segment. Small-bird programs serve
-      fast food and tray pack; big-bird programs serve deboning and further
-      processing. Same species, same year, different businesses.
-    </p>
+  <div class="panel" id="size-bands-panel">
+    <h3 id="size-bands-title">The axis</h3>
+    <p class="muted" id="size-bands-note"></p>
     <div id="size-programs"></div>
     <div id="size-chart" style="height:360px;margin-top:8px"></div>
   </div>
 
-  <div class="panel">
-    <h3>What heavier birds cost you</h3>
-    <p class="muted">
-      Every quality defect measured gets <em>more</em> common as live weight
-      rises. Note the contrast between the two parts: the breast is riddled
-      with problems and the wing has essentially none.
-    </p>
+  <div class="panel" id="size-defects-panel">
+    <h3 id="size-defects-title">What more of it costs you</h3>
+    <p class="muted" id="size-defects-note"></p>
     <div id="size-defects" style="height:300px"></div>
     <div id="size-defect-notes"></div>
   </div>
@@ -1580,72 +1600,173 @@ async function initSeason() {
     d.not_modelled.map(n => `<li>${n}</li>`).join('');
 }
 
-// ---- is fatter better
+// ---- does size make it better
+//
+// One view, one species at a time. "Is a fatter chicken better?" is a broiler
+// question; a laying hen is graded on egg size and saffron on colouring
+// strength, so the question, the x-axis and the verdict all arrive from the
+// API rather than being written here. An axis the corpus cannot answer yet
+// renders as an open question -- that absence is a real finding about the
+// data, and hiding it would misrepresent the corpus as more complete than it
+// is.
+
+// A verdict word carries its own colour: this is a claim about evidence, so
+// "we cannot say" must never be able to look like a settled answer.
+const VERDICT_CLASS = {
+  better: 'v-better', worse: 'v-worse', unchanged: 'v-same',
+};
+const verdictCell = (key, v) => {
+  const open = v == null;
+  return `<div class="verdict"><div class="v-val ${
+    open ? 'v-open' : VERDICT_CLASS[v] || 'v-same'}">${
+    open ? 'open question' : v}</div>
+    <div class="v-key">${key}</div></div>`;
+};
+
 async function initSize() {
-  const d = await api('/api/bird-size');
-  const s = d.spread;
+  const { axes } = await api('/api/quality-axes');
+  const box = $('#size-picker');
+  box.innerHTML = axes.map((a, i) =>
+    `<button data-sp="${a.slug}" class="${i ? '' : 'on'}"${
+      a.has_figures ? '' : ' data-thin="1"'}>${a.common_name}</button>`
+  ).join('');
+  box.querySelectorAll('button').forEach(b => {
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      showSize(b.dataset.sp);
+    };
+  });
+  await showSize(axes[0].slug);
+}
 
-  $('#size-intro').textContent = d.verdict.summary;
+async function showSize(species) {
+  const d = await api('/api/bird-size?species=' + encodeURIComponent(species));
+  const ax = d.axis, sp = d.species, s = d.spread;
+  const unit = ax.x_unit ? ` ${ax.x_unit}` : '';
 
-  const V = [
-    ['Yield per bird', d.verdict.yield_per_bird, 'v-better'],
-    ['Quality per pound', d.verdict.quality_per_pound, 'v-worse'],
-    ['Wings per chicken', d.verdict.wing_count_floor, 'v-same'],
-  ];
-  $('#size-verdict').innerHTML = V.map(([k, v, cls]) =>
-    `<div class="verdict"><div class="v-val ${cls}">${v}</div>
-     <div class="v-key">${k}</div></div>`).join('');
+  $('#size-question').textContent = ax.question;
+  $('#size-intro').textContent = d.verdict.summary || '';
 
-  $('#size-programs').innerHTML = `<table><tr><th>Program</th>
-    <th class="num">Live weight</th><th>Serves</th></tr>` +
-    d.programs.map(p => `<tr><td><b>${p.label}</b></td>
-      <td class="num">${p.size_lo}–${p.size_hi} ${p.size_unit || 'lb'}</td>
-      <td>${p.typical_market || '—'}</td></tr>`).join('') +
-    `</table><p class="note" style="margin-top:10px">
-     ${s.heaviest.region} averages ${s.heaviest.avg_size} lb against
-     ${s.lightest.region}'s ${s.lightest.avg_size} lb —
-     <b>${s.ratio.toFixed(2)}× heavier</b>, national average
-     ${d.national_avg} lb.</p>`;
+  // The three legs of the verdict, named for this species rather than for
+  // chickens: "wings per chicken" is meaningless on a crocus.
+  $('#size-verdict').innerHTML = [
+    [`Yield per ${sp.individual_noun}`, d.verdict.yield_per_individual],
+    ['Quality', d.verdict.quality],
+    [`${sp.individual_plural} on the plate`, d.verdict.count_floor],
+  ].map(([k, v]) => verdictCell(k, v)).join('');
 
-  // State weights, coloured by which program band they fall in.
+  // ---- the axis itself
+  const bands = d.axis_bands;
+  const bandsPanel = $('#size-bands-panel');
+  bandsPanel.hidden = !bands.length;
+  if (bands.length) {
+    const continuous = ax.x_kind === 'continuous';
+    $('#size-bands-title').textContent = continuous
+      ? `${ax.x_label} bands` : `${ax.x_label}es`;
+    $('#size-bands-note').textContent = continuous
+      ? 'Not biology, market segment. Each band is a different business ' +
+        'buying a different bird.'
+      : 'A graded ladder rather than a measured quantity: the grade is the ' +
+        'axis, so there is nothing in between the rungs.';
+
+    $('#size-programs').innerHTML = continuous
+      ? `<table><tr><th>Program</th><th class="num">${ax.x_label}</th>
+         <th>Serves</th></tr>` +
+        bands.map(p => `<tr><td><b>${p.label}</b></td>
+          <td class="num">${p.size_lo}–${p.size_hi} ${p.size_unit || unit}</td>
+          <td>${p.typical_market || '—'}</td></tr>`).join('') + '</table>'
+      : `<table><tr><th>Grade</th><th>Product</th>
+         <th class="num">Per lb</th></tr>` +
+        bands.map(g => `<tr><td><b>${g.label}</b></td>
+          <td>${g.product_label}</td>
+          <td class="num">${g.units_per_lb_lo != null
+            ? `${g.units_per_lb_lo}–${g.units_per_lb_hi}` : '—'}</td>
+          </tr>`).join('') + '</table>';
+  }
+
+  // Regional spread is a broiler-only series, so the chart and its summary
+  // line appear only where there is one. Everything above still renders.
   const reg = d.regions;
-  Plotly.newPlot('size-chart', [{
-    type: 'bar', x: reg.map(r => r.region), y: reg.map(r => r.avg_size),
-    marker: {
-      color: reg.map(r => r.avg_size >= 7.2 ? CH.amberBright
-                        : r.avg_size >= 5.5 ? CH.amber2 : CH.brown),
-    },
-    hovertemplate: '%{x}<br>%{y} lb live weight<extra></extra>',
-  }], Object.assign({}, PLOT, {
-    margin: { l: 50, r: 16, t: 10, b: 96 },
-    yaxis: Object.assign({}, PLOT.yaxis, { title: 'lb live weight' }),
-    xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -45 }),
-    shapes: d.national_avg ? [{
-      type: 'line', x0: -0.5, x1: reg.length - 0.5,
-      y0: d.national_avg, y1: d.national_avg,
-      line: { color: CH.faint, dash: 'dot', width: 1 },
-    }] : [],
-  }), CFG);
+  const chart = $('#size-chart');
+  chart.hidden = !reg.length;
+  if (reg.length) {
+    $('#size-programs').insertAdjacentHTML('beforeend',
+      `<p class="note" style="margin-top:10px">
+       ${s.heaviest.region} averages ${s.heaviest.avg_size}${unit} against
+       ${s.lightest.region}'s ${s.lightest.avg_size}${unit} —
+       <b>${s.ratio.toFixed(2)}× heavier</b>, national average
+       ${d.national_avg}${unit}.</p>`);
 
-  // Breast vs wing defects. The zero wing-myopathy row is deliberate: it
-  // makes the asymmetry visible instead of an absent category.
+    // Coloured by which band each region falls in, read from the bands
+    // themselves rather than from thresholds retyped here.
+    const bandOf = v => {
+      const i = bands.findIndex(b => v >= b.size_lo && v <= b.size_hi);
+      return [CH.brown, CH.amber2, CH.amberBright][
+        i < 0 ? (v > (bands[bands.length - 1] || {}).size_hi ? 2 : 0) : i];
+    };
+    Plotly.newPlot('size-chart', [{
+      type: 'bar', x: reg.map(r => r.region), y: reg.map(r => r.avg_size),
+      marker: { color: reg.map(r => bandOf(r.avg_size)) },
+      hovertemplate: `%{x}<br>%{y}${unit}<extra></extra>`,
+    }], Object.assign({}, PLOT, {
+      margin: { l: 50, r: 16, t: 10, b: 96 },
+      yaxis: Object.assign({}, PLOT.yaxis, { title: ax.x_label + unit }),
+      xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -45 }),
+      shapes: d.national_avg ? [{
+        type: 'line', x0: -0.5, x1: reg.length - 0.5,
+        y0: d.national_avg, y1: d.national_avg,
+        line: { color: CH.faint, dash: 'dot', width: 1 },
+      }] : [],
+    }), CFG);
+  }
+
+  // ---- what more of it costs
   const def = d.defects.slice().reverse();
+  const dp = $('#size-defects-panel');
+  if (!def.length) {
+    // No defect figures is itself the finding, and it reads very differently
+    // from "no defects". Say which one this is.
+    dp.hidden = false;
+    $('#size-defects-title').textContent = 'What more of it costs you';
+    $('#size-defects-note').innerHTML =
+      `No quality figures for ${sp.common_name.toLowerCase()} are in the ` +
+      'corpus yet. That is a gap in the sourcing, not a finding that ' +
+      'nothing goes wrong — the difference matters, so the panel says so ' +
+      'rather than showing an empty chart.';
+    $('#size-defects').innerHTML = '';
+    $('#size-defects').hidden = true;
+    $('#size-defect-notes').innerHTML = '';
+    return;
+  }
+  dp.hidden = false;
+  $('#size-defects').hidden = false;
+  $('#size-defects-title').textContent = `What more ${
+    ax.x_label.toLowerCase()} costs you`;
+  $('#size-defects-note').textContent =
+    'Every defect measured gets more common as the axis rises. The contrast ' +
+    'between parts is the point: one is riddled with problems and the other ' +
+    'has essentially none.';
+
+  // The zero wing-myopathy row is deliberate: it makes the asymmetry visible
+  // instead of an absent category.
   Plotly.newPlot('size-defects', [{
     type: 'bar', orientation: 'h',
     x: def.map(x => x.prevalence_pct_mode), y: def.map(x => x.label),
-    marker: { color: def.map(x => x.affected_part === 'wing'
+    marker: { color: def.map(x => x.weight_association === 'none'
                                 ? CH.study : CH.bad) },
     customdata: def.map(x => [x.affected_part, x.weight_association]),
-    hovertemplate: '%{y}<br>%{x}% of fillets<br>' +
-      'part: %{customdata[0]}<br>with weight: %{customdata[1]}<extra></extra>',
+    hovertemplate: '%{y}<br>%{x}% affected<br>' +
+      'part: %{customdata[0]}<br>with axis: %{customdata[1]}<extra></extra>',
   }], Object.assign({}, PLOT, {
     margin: { l: 250, r: 20, t: 10, b: 44 },
     xaxis: Object.assign({}, PLOT.xaxis, { title: '% prevalence' }),
   }), CFG);
 
   $('#size-defect-notes').innerHTML = def.slice().reverse().map(x =>
-    `<div class="step ${x.affected_part === 'wing' ? '' : 'count'}">
-      <h4>${x.label} ${badge(x.affected_part === 'wing' ? 'study' : 'estimate')}
+    `<div class="step ${x.weight_association === 'none' ? '' : 'count'}">
+      <h4>${x.label} ${badge(x.weight_association === 'none'
+        ? 'study' : 'estimate')}
       </h4>
       <p>${x.notes || ''}</p>
       <div class="cite">${x.source_title} — ${x.publisher}

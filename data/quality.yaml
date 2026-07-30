@@ -93,3 +93,78 @@ defects:
       shackling, against under 1% for legs, breast and shoulders. Heavier
       birds are harder to handle, so this rises with live weight too - the
       one respect in which a bigger bird is worse for wings specifically.
+
+
+# ---------------------------------------------------------------------------
+# The size question, per species
+# ---------------------------------------------------------------------------
+#
+# "Is a fatter chicken a better chicken?" is a broiler question. Asked of a
+# laying hen it is the wrong question -- nobody grows a hen for her carcass,
+# and the trade that matters is egg SIZE against shell strength and count.
+# Asked of saffron it is meaningless: the graded axis is colouring strength.
+#
+# So each species declares its own axis and its own verdict. This is the
+# floor_note lesson again -- prose that lives in a handler cannot be fixed by
+# editing data, and the verdict was hardcoded in api.py until now.
+#
+# A verdict left null is an open question, not a "no". The API says so.
+axes:
+  - species: broiler
+    question: Is a fatter chicken a better chicken?
+    x_label: Live weight
+    x_unit: lb
+    x_kind: continuous
+    verdict_yield: better
+    verdict_quality: worse
+    verdict_count: unchanged
+    summary: >-
+      Heavier birds give more meat per bird and better processing economics.
+      They also carry worse meat quality: every breast myopathy measured gets
+      more common as live weight rises, and heavier birds are harder to handle
+      so more wings break. The anatomical floor does not move at all - a
+      chicken has two wings whatever it weighs. So "fatter is better" is true
+      for yield, false for quality, and irrelevant to the count.
+
+  - species: layer_hen
+    question: Is a bigger egg a better egg?
+    x_label: Egg size class
+    x_kind: classes
+    verdict_yield: better
+    verdict_quality: null
+    verdict_count: unchanged
+    summary: >-
+      A bigger egg is more food per egg, and that much is arithmetic. Whether
+      it is a better egg is not something this corpus can answer yet: the
+      trade a producer actually makes is size against shell strength and
+      against eggs per hen, and we hold no sourced figure for either. What
+      does not move is the count - one hen lays at most one egg a day whatever
+      size it grades, so twelve eggs in a day is twelve hens regardless.
+
+  - species: turkey
+    question: Is a heavier turkey a better turkey?
+    x_label: Live weight
+    x_unit: lb
+    x_kind: continuous
+    verdict_yield: null
+    verdict_quality: null
+    verdict_count: unchanged
+    summary: >-
+      The same question the broiler answers, and we cannot answer it. Turkeys
+      are in the corpus as a species with no size or quality figures behind
+      them. Only the count part carries over, and it carries by anatomy rather
+      than by evidence: a turkey has two wings.
+
+  - species: saffron_crocus
+    question: Is a deeper red saffron a better saffron?
+    x_label: ISO colouring category
+    x_kind: classes
+    verdict_yield: null
+    verdict_quality: better
+    verdict_count: unchanged
+    summary: >-
+      Saffron grades on colouring strength, not on size - ISO 3632 sorts it by
+      crocin content, and a deeper red genuinely is the better spice. It says
+      nothing about yield, because grade is a property of the stigma rather
+      than of how many the flower produced, and nothing about the count: a
+      crocus gives three stigmas in every category.

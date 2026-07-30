@@ -500,3 +500,72 @@ def test_saffron_chains_are_not_offered_for_wings(client):
     assert "commodity_spice" not in wing_chains
     assert "garden_saffron" not in wing_chains
     assert "commodity_foodservice" in wing_chains
+
+
+# ---------------------------------------------------------------------------
+# Quality axes
+#
+# "Is a fatter chicken a better chicken?" is a broiler question. These tests
+# exist because the previous version answered it for every species by
+# hardcoding the broiler verdict in the handler, where no YAML edit could
+# reach it.
+# ---------------------------------------------------------------------------
+
+
+def test_every_axis_names_its_own_question_and_x_axis(client):
+    axes = get(client, "/api/quality-axes")["axes"]
+    assert len(axes) >= 2
+    questions = {a["question"] for a in axes}
+    assert len(questions) == len(axes), "two species share a question"
+    for a in axes:
+        assert a["x_label"], a["slug"]
+        assert a["x_kind"] in ("continuous", "classes")
+
+
+def test_a_graded_species_does_not_borrow_weight_bands(client):
+    """A laying hen has production_program rows, and they are flock sizes.
+
+    Counting them as the egg-size axis would put "hens per house" behind
+    the question "is a bigger egg a better egg?" -- a real bug that the
+    first draft of this endpoint had.
+    """
+    axes = {a["slug"]: a for a in get(client, "/api/quality-axes")["axes"]}
+    hen = axes["layer_hen"]
+    assert hen["x_kind"] == "classes"
+    assert hen["programs"] > 0, "fixture assumption: hens have programs"
+    assert hen["axis_rows"] == hen["grades"]
+    assert hen["axis_rows"] != hen["programs"]
+
+    d = get(client, "/api/bird-size", species="layer_hen")
+    units = {b.get("size_unit") for b in d["axis_bands"]}
+    assert "hens per house" not in units
+
+
+def test_unanswered_verdict_legs_stay_null(client):
+    """An open question must not default to a settled-looking answer."""
+    d = get(client, "/api/bird-size", species="turkey")
+    assert d["verdict"]["yield_per_individual"] is None
+    assert d["verdict"]["quality"] is None
+    # Anatomy carries even where evidence does not: a turkey has two wings.
+    assert d["verdict"]["count_floor"] == "unchanged"
+    assert d["has_figures"] is False
+
+
+def test_regional_weights_are_broiler_only(client):
+    """v_broiler_size_stat is broilers; no other species may inherit it."""
+    assert get(client, "/api/bird-size", species="broiler")["regions"]
+    for s in ("layer_hen", "turkey", "saffron_crocus"):
+        assert get(client, "/api/bird-size", species=s)["regions"] == []
+
+
+def test_broiler_verdict_comes_from_data_not_code(client):
+    d = get(client, "/api/bird-size", species="broiler")
+    assert d["verdict"]["yield_per_individual"] == "better"
+    assert d["verdict"]["quality"] == "worse"
+    assert d["verdict"]["count_floor"] == "unchanged"
+    assert "two wings" in d["verdict"]["summary"]
+
+
+def test_unknown_species_is_404_not_an_empty_page(client):
+    assert client.get("/api/bird-size", params={"species": "nope"}) \
+        .status_code == 404

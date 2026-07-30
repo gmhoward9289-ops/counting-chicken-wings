@@ -958,34 +958,105 @@ def trends():
         conn.close()
 
 
-@app.get("/api/bird-size")
-def bird_size(year: int = 2025):
-    """Is a fatter bird better? Everything needed to answer it.
+@app.get("/api/quality-axes")
+def quality_axes():
+    """Every species' size question, and whether the corpus can answer it.
 
-    Composes state weights, production programs, and quality defects so the
-    trade-off is visible in one payload: heavier birds yield more meat per
-    bird, and carry worse meat quality per pound.
+    The view is built from this rather than from a hardcoded list, so a
+    species with an axis row appears the moment its YAML lands.
     """
     conn = dbm.connect()
     try:
-        regions = conn.execute(
-            """SELECT region, avg_size, size_unit, volume
-               FROM v_broiler_size_stat
-               WHERE year = ? AND month IS NULL AND region != 'United States'
-               ORDER BY avg_size DESC""",
-            (year,),
+        rows = conn.execute(
+            """SELECT sp.slug, sp.common_name, sp.individual_noun,
+                      a.question, a.x_label, a.x_unit, a.x_kind,
+                      a.verdict_yield, a.verdict_quality, a.verdict_count,
+                      (SELECT COUNT(*) FROM quality_defect q
+                        WHERE q.species_id = sp.id) AS defects,
+                      (SELECT COUNT(*) FROM production_program p
+                        WHERE p.species_id = sp.id) AS programs,
+                      (SELECT COUNT(*) FROM product_grade g
+                        JOIN product pr ON pr.id = g.product_id
+                       WHERE pr.species_id = sp.id) AS grades
+               FROM quality_axis a JOIN species sp ON sp.id = a.species_id
+               WHERE sp.active = 1
+               ORDER BY sp.id"""
         ).fetchall()
-        national = conn.execute(
-            """SELECT avg_size FROM v_broiler_size_stat
-               WHERE year = ? AND month IS NULL AND region = 'United States'""",
-            (year,),
+        out = []
+        for r in rows:
+            d = dict(r)
+            # Which table backs the x-axis depends on the kind of axis, and
+            # getting this wrong is subtle: a laying hen HAS production_program
+            # rows, but they measure hens per house, not egg size. Counting
+            # them here would put a flock-size taxonomy behind the question
+            # "is a bigger egg a better egg?" and report a chart we cannot
+            # draw. Continuous axes are backed by weight bands, graded ladders
+            # by product grades, and neither borrows the other's rows.
+            on_axis = d["programs"] if d["x_kind"] == "continuous" \
+                else d["grades"]
+            d["axis_rows"] = on_axis
+            d["has_figures"] = bool(on_axis or d["defects"])
+            out.append(d)
+        return {"axes": out}
+    finally:
+        conn.close()
+
+
+@app.get("/api/bird-size")
+def bird_size(year: int = 2025, species: str = "broiler"):
+    """One species' size question, and everything needed to answer it.
+
+    Composes state weights, production programs, and quality defects so the
+    trade-off is visible in one payload. The question, the x-axis and the
+    verdict all come from `quality_axis` -- a species whose answer differs
+    (or does not exist) is a YAML change, not a code change.
+    """
+    conn = dbm.connect()
+    try:
+        axis = conn.execute(
+            """SELECT sp.slug AS species_slug, sp.common_name,
+                      sp.individual_noun, sp.individual_plural,
+                      a.question, a.x_label, a.x_unit, a.x_kind,
+                      a.verdict_yield, a.verdict_quality, a.verdict_count,
+                      a.summary
+               FROM quality_axis a JOIN species sp ON sp.id = a.species_id
+               WHERE sp.slug = ?""",
+            (species,),
         ).fetchone()
+        if axis is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"no size question recorded for species '{species}'")
+        # v_broiler_size_stat is, as its name says, broilers only. Other
+        # species have no regional weight series, and inheriting the broiler
+        # one would put chicken pounds on a turkey's axis.
+        if species == "broiler":
+            regions = conn.execute(
+                """SELECT region, avg_size, size_unit, volume
+                   FROM v_broiler_size_stat
+                   WHERE year = ? AND month IS NULL
+                     AND region != 'United States'
+                   ORDER BY avg_size DESC""",
+                (year,),
+            ).fetchall()
+            national = conn.execute(
+                """SELECT avg_size FROM v_broiler_size_stat
+                   WHERE year = ? AND month IS NULL
+                     AND region = 'United States'""",
+                (year,),
+            ).fetchone()
+        else:
+            regions, national = [], None
         programs = conn.execute(
             """SELECT p.slug, p.label, p.size_lo, p.size_mode, p.size_hi,
                       p.size_unit, p.typical_market, p.notes,
                       s.slug AS source_slug
-               FROM production_program p JOIN source s ON s.id = p.source_id
-               ORDER BY p.size_lo"""
+               FROM production_program p
+               JOIN source s ON s.id = p.source_id
+               JOIN species sp ON sp.id = p.species_id
+               WHERE sp.slug = ?
+               ORDER BY p.size_lo""",
+            (species,),
         ).fetchall()
         defects = conn.execute(
             """SELECT q.slug, q.label, q.affected_part, q.severity,
@@ -994,8 +1065,26 @@ def bird_size(year: int = 2025):
                       q.first_year, q.first_year_pct, q.notes,
                       s.slug AS source_slug, s.title AS source_title,
                       s.publisher, s.url
-               FROM quality_defect q JOIN source s ON s.id = q.source_id
-               ORDER BY q.prevalence_pct_mode DESC"""
+               FROM quality_defect q
+               JOIN source s ON s.id = q.source_id
+               JOIN species sp ON sp.id = q.species_id
+               WHERE sp.slug = ?
+               ORDER BY q.prevalence_pct_mode DESC""",
+            (species,),
+        ).fetchall()
+        # Graded ladders are the classes-axis analogue of production programs:
+        # for eggs the x-axis IS the grade, so it has to come back as data.
+        grades = conn.execute(
+            """SELECT g.slug, g.label, g.units_per_lb_lo, g.units_per_lb_hi,
+                      pr.slug AS product_slug, pr.label AS product_label,
+                      pr.unit_name, s.slug AS source_slug
+               FROM product_grade g
+               JOIN product pr ON pr.id = g.product_id
+               JOIN species sp ON sp.id = pr.species_id
+               JOIN source s ON s.id = g.source_id
+               WHERE sp.slug = ?
+               ORDER BY g.units_per_lb_lo""",
+            (species,),
         ).fetchall()
 
         rows = [dict(r) for r in regions]
@@ -1006,32 +1095,44 @@ def bird_size(year: int = 2025):
             lightest = heaviest = None
             ratio = None
 
+        ax = dict(axis)
+        # Same rule as /api/quality-axes: only the table that actually carries
+        # this axis is returned as the axis. A laying hen's production_program
+        # rows are flock sizes and belong to a different question entirely, so
+        # they are not handed to a view that would chart them as egg sizes.
+        on_axis = programs if ax["x_kind"] == "continuous" else grades
         return {
             "year": year,
+            "species": {
+                "slug": ax["species_slug"],
+                "common_name": ax["common_name"],
+                "individual_noun": ax["individual_noun"],
+                "individual_plural": ax["individual_plural"],
+            },
+            "axis": {
+                "question": ax["question"],
+                "x_label": ax["x_label"],
+                "x_unit": ax["x_unit"],
+                "x_kind": ax["x_kind"],
+            },
             "national_avg": national["avg_size"] if national else None,
             "regions": rows,
-            "programs": [dict(p) for p in programs],
+            "axis_bands": [dict(b) for b in on_axis],
             "defects": [dict(d) for d in defects],
+            "has_figures": bool(on_axis or defects),
             "spread": {
                 "lightest": lightest,
                 "heaviest": heaviest,
                 "ratio": ratio,
             },
-            # The verdict, stated rather than left for the reader to assemble.
+            # The verdict comes from quality_axis. A null is an open question
+            # -- the corpus cannot support that leg yet -- and the client is
+            # expected to render it as such rather than as a "no".
             "verdict": {
-                "yield_per_bird": "better",
-                "quality_per_pound": "worse",
-                "wing_count_floor": "unchanged",
-                "summary": (
-                    "Heavier birds give more meat per bird and better "
-                    "processing economics. They also carry worse meat "
-                    "quality: every breast myopathy measured gets more "
-                    "common as live weight rises, and heavier birds are "
-                    "harder to handle so more wings break. The anatomical "
-                    "floor does not move at all -- a chicken has two wings "
-                    "whatever it weighs. So 'fatter is better' is true for "
-                    "yield, false for quality, and irrelevant to the count."
-                ),
+                "yield_per_individual": ax["verdict_yield"],
+                "quality": ax["verdict_quality"],
+                "count_floor": ax["verdict_count"],
+                "summary": ax["summary"],
             },
         }
     finally:
