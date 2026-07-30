@@ -19,6 +19,7 @@ import concurrent.futures as cf
 import hashlib
 import json
 import re
+import ssl
 import subprocess
 import sys
 import urllib.request
@@ -69,11 +70,36 @@ BATCHES = ROOT / "batches"
 # qwen+gemma = 8.3 GB), so the models run sequentially either way and the swap
 # costs nothing that was previously being had.
 #
-# STILL OPEN, and the reason gemma is kept in the file rather than deleted:
-# this A/B tested PRECISION on one chunk, not RECALL across a batch. The
-# original case for gemma was that it found a figure qwen missed. If mistral's
-# recall turns out worse over a full run, put gemma back -- the evidence for
-# that lives in the next batch report, not here.
+# THE A/B WAS MEASURING THE WRONG THING. Read this before trusting it.
+#
+# batch-04-honey ran an hour later and inverted the result. Recall went UP and
+# precision collapsed: mistral answered 13 of 14 calls against qwen's 3, and
+# almost every extra answer was junk.
+#
+#   flowers_per_pound_honey       2670588   <- plausible
+#   honey_yield_per_colony_year   2670588   <- same number, different question
+#   nectar_to_honey_ratio         2670588   <- same number again
+#   colony_size                   "industry"        <- the confidence grade,
+#                                                      in the value field
+#   forager_fraction              "Several thousand" <- prose, not a figure
+#   honey_per_bee_lifetime        "32 mg"   <- a nectar LOAD, not a lifetime
+#
+# The gate rejected all seven rows, three of them only after a fix it exposed
+# (band_in_quote silently passed non-numeric values). So nothing shipped, which
+# is the system working -- but the model comparison was confounded and must not
+# be read as settled.
+#
+# WHY IT WAS CONFOUNDED: five of seventeen URLs failed on SSL certificate
+# verification on COOPER -- all three PMC articles and the U. Arkansas PDF, the
+# four best documents in the batch. Both models were therefore asked to find
+# figures that were not in the text they had. qwen mostly declined; mistral
+# answered by proximity. That IS the failure mode that matters most for this
+# project, and on it qwen's low count looks like correct refusal rather than
+# weak recall -- but a fair comparison needs the sources present.
+#
+# So: fix COOPER's certificate trust, re-run, THEN judge. Do not flip this
+# constant again on the evidence above; it does not support a decision either
+# way. gemma stays in the file for the same reason.
 EXTRACTOR = "qwen2.5-coder:7b"
 LONG_CONTEXT = "mistral:7b"
 EMBEDDER = "nomic-embed-text"
@@ -198,13 +224,44 @@ def fetch_once(url: str, doc_dir: Path) -> Path | None:
     return _FETCH_CACHE[url]
 
 
+def _ca_context() -> ssl.SSLContext | None:
+    """An SSL context with a real CA bundle, or None to use the default.
+
+    COOPER's Python 3.14 reports `cafile: None` and `capath: None` -- it has no
+    CA bundle at all -- so certificate verification fails for any site whose
+    chain Windows has not already cached. In batch-04-honey that silently cost
+    the four best documents in the batch: all three PMC articles and the U.
+    Arkansas PDF, every one of which fetches fine from a Mac.
+
+    The failure mode is the dangerous kind. Each one printed a single `fetch
+    failed` line among sixteen successes, the run completed, models were asked
+    for figures that were not in the text they had, and the output looked like a
+    model problem rather than a plumbing one.
+
+    Verification is never disabled to make a fetch succeed. An unverified
+    document is not evidence, and this pipeline exists to produce evidence.
+    """
+    try:
+        import certifi
+    except ImportError:
+        return None
+    return ssl.create_default_context(cafile=certifi.where())
+
+
+_SSL_CTX = _ca_context()
+if _SSL_CTX is None:
+    print("  WARNING: certifi is not installed, so HTTPS verification falls "
+          "back to a trust store that COOPER does not have. Expect fetch "
+          "failures on PMC and some .edu hosts. Fix: pip install certifi")
+
+
 def fetch_url(url: str, dest: Path) -> Path | None:
     """Save a URL to disk. The artifact is the evidence, so it must persist."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         req = urllib.request.Request(
             url, headers={"User-Agent": "counting-chicken-wings/research"})
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=60, context=_SSL_CTX) as resp:
             body = resp.read()
     except Exception as e:                          # noqa: BLE001
         print(f"    fetch failed: {url} -- {type(e).__name__}: {e}")

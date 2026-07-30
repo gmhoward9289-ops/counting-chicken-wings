@@ -146,6 +146,26 @@ WORD_NUMBERS = {
 }
 
 
+def _is_number(value) -> bool:
+    """True only for something that will survive becoming a REAL column.
+
+    `bool` is excluded deliberately: `float(True)` is 1.0, so a stray `true`
+    would otherwise pass as the figure 1.
+    """
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, str):
+        # "60,000" and "60 000" are figures, written the way sources write
+        # them. "32 mg" is not -- the unit belongs in `unit`, and letting it
+        # ride here would re-open the hole this function exists to close.
+        value = re.sub(r"(?<=\d)[,\s](?=\d)", "", value.strip())
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 def band_in_quote(row: dict, quote: str) -> tuple[bool, str]:
     """A row is grounded if ANY of its lo/mode/hi appears in the quote.
 
@@ -163,6 +183,32 @@ def band_in_quote(row: dict, quote: str) -> tuple[bool, str]:
     vals = [v for v in vals if v is not None]
     if not vals:
         return True, ""
+
+    # A figure has to be a NUMBER before it can be checked against a sentence,
+    # and value_in_quote is permissive about anything it cannot parse -- so
+    # without this, non-numeric junk sailed straight through the strongest
+    # check in the gate. batch-04-honey produced three such rows in one run:
+    #
+    #   honey_per_bee_lifetime  value: '32 mg'            (a string, and the
+    #                                                      wrong figure -- 32 mg
+    #                                                      is a nectar load)
+    #   colony_size             value: 'industry'         (the confidence word
+    #                                                      landed in the value)
+    #   forager_fraction        value: 'Several thousand'  (prose, not a figure)
+    #
+    # Every value_* field maps to a REAL column in schema.sql, so a value that
+    # will not become a float is not a near-miss to be salvaged -- it is not a
+    # figure at all. Rejected here rather than left for the build to trip over,
+    # because the message can say what is actually wrong.
+    bad = [v for v in vals if not _is_number(v)]
+    if bad:
+        shown = ", ".join(repr(v) for v in bad)
+        return False, (
+            f"value(s) {shown} are not numbers. A figure must be numeric -- "
+            f"units belong in `unit`, and a model that puts prose or its own "
+            f"confidence grade in a value field has not answered the question"
+        )
+
     for v in vals:
         if value_in_quote(v, quote)[0]:
             return True, ""

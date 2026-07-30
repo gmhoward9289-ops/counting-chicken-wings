@@ -478,3 +478,34 @@ def test_band_with_nothing_quoted_is_rejected():
 
 def test_band_with_no_values_passes():
     assert rb.band_in_quote({"field": "x"}, "any text")[0]
+
+
+# ---------------------------------------------------------------------------
+# Non-numeric values -- the hole batch-04-honey found
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("junk", ["32 mg", "industry", "Several thousand",
+                                  "2.6 million", True])
+def test_non_numeric_values_are_rejected(junk):
+    """value_in_quote is permissive about anything it cannot parse as a float,
+    so before this check three junk rows passed the strongest gate in one run:
+    a value of '32 mg' (string, and the wrong figure), a value of 'industry'
+    (the confidence grade in the value field), and 'Several thousand' (prose).
+
+    Every value_* field maps to a REAL column, so a value that will not become
+    a float is not a figure at all."""
+    ok, msg = rb.band_in_quote({"value_mode": junk}, "a quote mentioning 32 mg")
+    assert not ok
+    assert "not numbers" in msg
+
+
+@pytest.mark.parametrize("good,quote", [
+    ("60,000", "a colony of 60,000 workers"),
+    ("60 000", "a colony of 60 000 workers"),
+    (3, "exactly three stigmas"),
+])
+def test_numbers_written_the_way_sources_write_them_still_pass(good, quote):
+    """Thousands separators are how sources actually print figures. Rejecting
+    them would trade one false negative for a stream of false positives."""
+    assert rb._is_number(good)
+    assert rb.band_in_quote({"value_mode": good}, quote)[0]
