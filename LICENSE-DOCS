@@ -1,0 +1,20 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+The research corpus and written documentation in this repository — everything
+under docs/ and data/ — are licensed under the Creative Commons Attribution
+4.0 International License.
+
+You are free to share and adapt this material for any purpose, including
+commercially, provided you give appropriate credit ("George Howard,
+counting-chicken-wings, https://github.com/gmhoward9289-ops/counting-chicken-wings"),
+link to the license, and indicate if changes were made.
+
+Full legal text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Note: the underlying statistics themselves are facts drawn from the primary
+sources cited alongside each figure; facts are not subject to copyright. This
+license covers the selection, arrangement, and written presentation of the
+corpus, not the facts, and does not override the terms of the cited sources.
+
+The source code in this repository is separately licensed under the MIT
+License — see LICENSE.
