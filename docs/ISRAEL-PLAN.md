@@ -72,6 +72,29 @@ lead, not a fact, until it comes from CBS or FAOSTAT.
 4. **USDA FAS GAIN reports** — US attaché reports on Israeli agriculture,
    in English, often with good structural commentary.
 
+### Access findings — tested 2026-07-29
+
+All four were tried in the order above. Recorded because a dead source costs
+the next attempt the same hour it cost this one, and because
+`docs/research/SOURCE-LIBRARY.md` is right that coverage, not existence, is
+what a source entry is worth.
+
+| Source | Result |
+|---|---|
+| **CBS series API** | **Works, and is the way in.** `GET https://apis.cbs.gov.il/series/data/list?id=<N>&format=json` returns real series JSON, and `https://api.cbs.gov.il/index/data/price?id=120010` returns CPI. Answers the open question above: there *is* an API, not just PDF/XLSX. |
+| CBS catalog endpoints | Not navigable. `/series/catalog/{tree,maintopic,level}` return HTML error pages, so series IDs cannot be discovered from the API itself. **This is the one blocker left** — find the poultry series IDs via the web UI, then the data endpoint serves them. |
+| CBS abstract chapter pages | JS-rendered. The agriculture chapter returns HTTP 200 and ~37 KB with **zero** occurrences of "poultry" — a shell, not content. Do not list these URLs in a batch; COOPER would fetch the shell and return empty. |
+| FAOSTAT | Closed off three ways. API returns `Missing Authorization Header`; `bulks-faostat.fao.org` returns **403**; `fenixservices.fao.org` returns **521**. The plan's assumption of "free bulk download and API" no longer holds. |
+| OECD-FAO Outlook 2025-2034 | Statistical annex PDF downloads fine (2 MB) but uses a **custom font encoding**: table text extracts as shifted gibberish (`7DEOH&:RUOG...` for "Table C. World..."). Not machine-readable, and a keyword search for "Israel" on the extracted text proves nothing. The HTML full-report chapter returns **403**. |
+| USDA FAS GAIN | **No Israel poultry report exists.** Israel gets Grain and Feed / Exporter Guide reports, where poultry appears only as feed demand. The 2026 Grain and Feed Annual PDF returns **403** from `fas.usda.gov` anyway. |
+
+**And the citation the headline rests on is gone.** The 58.2 kg figure at the
+top of this document traces to a Euromeatnews article which now returns
+**404**. WATTAgNet's per-capita ranking piece returns 403. So the "Israel is
+#1" claim currently has *no reachable source at all*, which settles the
+question of whether to lead the demo with it: not until it is re-sourced from
+a series, not a headline.
+
 ---
 
 ## Priority 2 — What makes the demo land
@@ -121,10 +144,23 @@ Consequences, and they are the reason the schema work below got done first:
   inversion needs population for both countries, which is why `population`
   is now a column.
 
-## Schema work — DONE
+## Schema work — DONE, after one correction
 
 Completed 2026-07-29, ahead of any Israeli data, so that adding figures is
 data rather than a migration.
+
+**It was not done the first time, and the gap was invisible.** `country_id`
+went onto all five tables; the UNIQUE keys were left alone. Every one of them
+still keyed on `(species_id, year)` or `(species_id, region, …)`, so an
+Israeli broiler row for a year the US already had was rejected by the
+database. The dimension existed and each table could hold exactly one
+country. Fixed by putting `country_id` in all five keys.
+
+Worth knowing *why* the seven guard tests passed anyway: they all read, and a
+read-only assertion over a single-country corpus cannot detect a key that
+admits only one country — `test_israel_is_stubbed_with_no_data` even asserts
+the absence of the rows that would have exposed it. The suite now includes the
+insert it was missing.
 
 - New `country` table: `iso3`, `name`, `native_mass_unit`, `native_currency`,
   `population`, `population_year`. USA and an ISR stub are seeded.
