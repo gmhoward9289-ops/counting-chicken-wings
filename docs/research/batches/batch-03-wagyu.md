@@ -1,5 +1,13 @@
 # Batch 03 — wagyu
 
+> **DEFERRED, not abandoned.** Written before batch-01 ran, and its candidate
+> URLs are still blank. It remains the only specced subject that tests
+> quality-as-a-dimension — BMS marbling grade, which should reuse the
+> `quality_defect` pattern built for woody breast and must not change a count.
+> Worth noting it would also be the project's first subject where the individual
+> is a large animal and the product is most of it, which inverts the wing ratio
+> rather than extending it.
+
 **Archetype:** `comparison`
 
 **Question in one sentence:** How much beef does one wagyu animal yield, and

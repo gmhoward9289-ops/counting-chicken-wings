@@ -1,5 +1,13 @@
 # Batch 02 — vanilla
 
+> **DEFERRED, not abandoned.** Written before batch-01 ran, and its candidate
+> URLs are still blank. Honey and milk were picked ahead of it: honey because it
+> is the most extreme ratio available, milk because it is the first non-poultry
+> subject that can reach `measured`. Vanilla's premise — one pod per
+> hand-pollinated flower, ~5-6 kg green pods curing to 1 kg — is still the
+> cleanest test of a large concentration ratio, and this spec should be picked
+> up once a URL scout has run for it.
+
 **Archetype:** `how-many`
 
 **Question in one sentence:** How many vanilla orchid flowers does it take to

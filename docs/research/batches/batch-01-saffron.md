@@ -109,7 +109,13 @@ and reporting both as if independent would be double-counting one source.
 
 ---
 
-### Item 3 — stigmas_per_pound cross-check
+### Item 3 — stigmas_per_pound
+
+<!-- Was "stigmas_per_pound cross-check". The parser turns the heading into the
+     `field` of the emitted finding, so that produced a field name with spaces
+     in it and the review dropped the row. The item IS a cross-check; the
+     heading is a field name and cannot say so. -->
+
 
 | | |
 |---|---|
