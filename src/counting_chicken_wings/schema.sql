@@ -417,7 +417,18 @@ CREATE TABLE output_stat_year (
                         'meat_output',      -- output of meat, per the source
                         'output_value',     -- value of that output
                         'inventory_eoy',    -- standing flock, end of year
-                        'marketed'          -- quantity marketed, not produced
+                        'marketed',         -- quantity marketed, not produced
+                        -- Chicks PLACED: birds entering the system, counted at
+                        -- the hatchery. The only head count CBS publishes for
+                        -- poultry -- it has no slaughter series at all, and
+                        -- inventory_eoy is a standing flock rather than a
+                        -- throughput. Distinct from slaughter by farm
+                        -- mortality, so it must never be read as one.
+                        --
+                        -- For "how many birds had to enter the funnel" this is
+                        -- arguably the better denominator, since it already
+                        -- includes the mortality a slaughter figure excludes.
+                        'chicks_placed'
                     )),
     value           REAL,
     unit            TEXT    NOT NULL,          -- 'tonnes','ILS_million','thousand_head'

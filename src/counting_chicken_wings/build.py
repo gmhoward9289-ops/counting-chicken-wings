@@ -541,7 +541,7 @@ class Builder:
 
             nat = t.get("national", {})
             nat_source = nat.get("source")
-            for measure in ("meat_output", "output_value"):
+            for measure in ("meat_output", "output_value", "chicks_placed"):
                 block = nat.get(measure)
                 if not block:
                     continue

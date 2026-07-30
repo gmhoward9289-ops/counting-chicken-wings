@@ -729,3 +729,78 @@
     "Outside regional councils" appears once per district in the source. The
     bare label is not unique, so each is qualified with its district - the
     figure means nothing without knowing which district it is outside of.
+
+- slug: cbs-quarterly-agriculture-2025q2
+  title: >-
+    Quarterly Agriculture Statistics 2025 Q2, Table 7: Marketing of selected
+    animals and animal products, detailed data
+  publisher: Israel Central Bureau of Statistics
+  url: https://www.cbs.gov.il/he/publications/DocLib/2025/agriculture_q202502/t07.xlsx
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    The only source found that puts a head count on Israeli broilers, and a
+    different publication from the three Statistical Abstract tables.
+
+    Chick placements, heavy breeds: 275,427,900 head for 2024 and 262,848,753
+    for 2023. Heavy breeds are broilers; light breeds are layers and turkeys
+    are separate. This retires the unverified trade-press lead of "~260 million
+    broilers/year" in docs/ISRAEL-PLAN.md - that is essentially the 2023
+    placement figure, now with a government citation rather than a headline
+    whose article has since 404ed.
+
+    CBS publishes no poultry head slaughtered, in either publication. Table 7
+    does carry a slaughterhouse head-count block, but its 2024 total of 529,550
+    is exactly cattle 164,559 plus sheep and goats 229,195 plus pigs 135,796 -
+    poultry is excluded by construction.
+
+    Annual figures are in columns Q (2024) and R (2023). The header's
+    "P = 2011" appears to be a CBS typo or merged-cell artifact.
+
+    Also carries broiler marketing of 571,497 tonnes for 2024, which
+    corroborates Statistical Abstract table 21.4 to within three tonnes across
+    two separately published tables. Not loaded as a mass - see the weight
+    basis conflict recorded on cbs-st21-11-output-2025.
+
+- slug: usda-psd-israel-broiler-2000
+  title: >-
+    Production, Supply and Distribution database, Israel broiler meat
+    production, market years 1964-2000
+  publisher: USDA Foreign Agricultural Service
+  url: https://apps.fas.usda.gov/psdonline/downloads/psd_livestock_csv.zip
+  retrieved_on: '2026-07-29'
+  source_type: government
+  notes: >-
+    Held ONLY as evidence in the CBS weight-basis question. No figure from it
+    is loaded, and it is not an Israeli source.
+
+    The question it addresses: CBS reports Israeli broiler tonnage but never
+    states whether the figure is live weight or carcass weight, so the tonnage
+    cannot be used for anything that depends on the basis. USDA PSD reports
+    broiler meat on a ready-to-cook basis by its own convention, which makes it
+    a yardstick.
+
+    The one overlapping year is 2000. CBS reports 270,000 tonnes; PSD reports
+    195,000 tonnes. The ratio is 72.2%, which is dressing-yield shaped - this
+    project's own US figure derives to 75.67% from two NASS totals. If CBS were
+    already reporting carcass weight the ratio would sit near 100%.
+
+    That is evidence for CBS being LIVE weight, not proof, and three things
+    keep it from being proof. It is a single overlapping year. That year is
+    2000, twenty-six years before the figures actually in use. And PSD's unit
+    string for broiler meat is a bare "(1000 MT)" where its beef series says
+    "(1000 MT CWE)" explicitly, so the ready-to-cook basis is convention rather
+    than a label on the row.
+
+    Two further checks, both consistent with live weight and neither decisive.
+    CBS's own output and marketing series agree at 95-100% for the same year,
+    so both share one basis and the gap between them is stock change rather
+    than dressing. And 571,497 tonnes marketed against 275,427,900 chicks
+    placed gives 2.075 kg per bird placed, or about 2.18 kg per bird marketed
+    at 5% farm mortality - plausible as a live weight for Israel's smaller
+    birds, and requiring roughly 2.9 kg live if read as carcass weight.
+
+    Recorded as a conflict rather than resolved, per the rule in
+    docs/research/README.md that a source disagreement is reported and not
+    adjudicated, and because promoting this to a stated basis is a human
+    judgement about provenance.

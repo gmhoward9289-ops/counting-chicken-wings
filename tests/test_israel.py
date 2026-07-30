@@ -253,7 +253,44 @@ def test_national_and_regional_rows_cannot_be_confused(conn):
         """SELECT COUNT(*) FROM output_stat_year
            WHERE country_id=? AND region IS NULL""", (isr(conn),)
     ).fetchone()[0]
-    assert national == 20        # 5 output + 5 value + 10 inventory years
+    # 5 output + 5 value + 10 inventory, from Statistical Abstract chapter 21,
+    # plus 2 chicks_placed from the quarterly series -- a second publication,
+    # in data/output_israel_quarterly.yaml.
+    assert national == 22
+
+
+def test_the_only_israeli_head_count_is_placements_not_slaughter(conn):
+    """Israel's head count exists, and it is not a slaughter figure.
+
+    CBS publishes no poultry head slaughtered in either publication -- the
+    quarterly's slaughterhouse head-count block covers only cattle, sheep and
+    goats, and pigs. Placements are what it does publish, and they differ from
+    slaughter by farm mortality.
+
+    This asserts both halves, because the useful thing about the figure and the
+    dangerous thing about it are the same fact: it counts birds entering the
+    system, not birds killed.
+    """
+    placed = dict(conn.execute(
+        """SELECT year, value FROM output_stat_year
+           WHERE country_id=? AND measure='chicks_placed'""", (isr(conn),)))
+    assert placed, "Israel has no head count at all"
+    assert placed[2024] == pytest.approx(275427.900)
+    assert placed[2023] == pytest.approx(262848.753)
+
+    units = {r[0] for r in conn.execute(
+        """SELECT unit FROM output_stat_year
+           WHERE country_id=? AND measure='chicks_placed'""", (isr(conn),))}
+    assert units == {"thousand_head"}, (
+        "left in CBS's own thousands; expanding to head would be a conversion"
+    )
+
+    # The distinction that matters: no slaughter series exists for Israel.
+    assert conn.execute(
+        """SELECT COUNT(*) FROM slaughter_stat_year WHERE country_id=?""",
+        (isr(conn),)).fetchone()[0] == 0, (
+        "placements are not slaughter and must not be loaded as one"
+    )
 
 
 def test_us_tables_did_not_gain_israeli_rows(conn):
