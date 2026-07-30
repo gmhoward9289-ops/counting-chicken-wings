@@ -37,21 +37,49 @@ duller and correct. Revisit only if the deploy pipeline starts fetching tags.
 - **MAJOR** — breaking change to the CLI contract, the API response shapes,
   or the meaning of a published figure.
 - **MINOR** — new capability, backwards compatible. New views, new endpoints,
-  **new data**.
-- **PATCH** — fixes only, no new capability.
+  a new **kind** of data.
+- **PATCH** — fixes, and **more of a kind of data we already had**.
 
-### Data changes are versioned changes
+### Data changes are versioned changes — but not all of them are MINOR
 
 Unusually for a library, **this project's data is part of its public
 interface**. Someone citing "6.90 chickens required for a dozen wings" is
-citing a number that moves when we source a better loss factor.
+citing a number that moves when we source a better loss factor. That is why
+data is versioned at all, and it stays true.
 
-So:
+What was wrong was treating *every* data addition as new capability. The rule
+used to read "adding sources, states, or facts → MINOR", and under it the
+project went **1.0.0 to 1.7.0 in about two days**, almost entirely on data.
+A minor number that increments whenever anyone adds rows stops telling you
+anything: it cannot distinguish "eggs are now a product" from "twenty more
+Israeli rows landed in a table that already existed".
 
-- Adding sources, states, or facts → **MINOR**.
-- Correcting a figure such that a headline answer changes → **MINOR**, and
-  the changelog must state the old and new values.
-- Fixing a typo in a note → **PATCH**.
+The test is **capability, not volume**:
+
+| Change | Bump | Why |
+|---|---|---|
+| New domain, species, product, or table | **MINOR** | you can ask a question you could not ask before |
+| New view, endpoint, CLI flag, or output | **MINOR** | same reason |
+| More rows of a kind already present — states, sources, facts, another year, another country's series | **PATCH** | nothing new is answerable; the corpus is denser, not wider |
+| A figure moves such that a **published headline answer changes** | **MINOR** | a citation someone already made is now wrong, which is exactly the case data-versioning exists for. Changelog states old → new |
+| Typo, note, comment, formatting | **PATCH** | |
+
+Two consequences worth stating plainly, because both look wrong at a glance:
+
+- **Adding a whole country's statistics can be a PATCH** if it lands in tables
+  that already exist and answers questions the schema already answered. Israel
+  arriving in `output_stat_year` is more rows. Israel forcing the `country`
+  dimension into existence was the MINOR.
+- **A one-line data fix can be a MINOR** if it moves a number the front page
+  publishes. Size is not the criterion.
+
+Past releases are **not renumbered**. v1.0.0 through v1.7.0 stand as tagged —
+retagging would break the release links and the deploy history for no gain.
+This applies from the next release onward.
+
+`GET /api/version` returns row counts alongside the version for exactly this
+reason: under this rule a PATCH can move thousands of rows, so the version
+alone cannot tell you whether the corpus grew. The counts can.
 
 `GET /api/version` returns row counts alongside the version for exactly this
 reason: data ships in the same push as code, so a version number alone cannot

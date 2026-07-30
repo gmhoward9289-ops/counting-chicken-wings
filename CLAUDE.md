@@ -76,9 +76,13 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
 
 - **Version lives only in `pyproject.toml`.** Everything else derives it from installed
   package metadata. An editable install can report a stale version until reinstalled.
-- **Data changes are MINOR version changes.** The data is part of the public interface —
-  someone citing a figure is citing something that moves. If a headline number changes,
-  the changelog states old and new.
+- **Version by capability, not by volume.** A new *kind* of data — a domain, a product,
+  a table, a dimension — is MINOR. **More rows of a kind we already have is PATCH**,
+  however many rows: another country's series landing in an existing table answers
+  nothing new. The exception runs the other way — a one-line fix that moves a published
+  headline figure is MINOR, because someone's existing citation is now wrong, and the
+  changelog states old and new. The old rule ("all data changes are MINOR") took the
+  project 1.0.0 → 1.7.0 in two days and made the minor number meaningless.
 
 Render tracks `branch: master`, not tags, so the deployed site is normally *ahead* of the
 latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version` for the
