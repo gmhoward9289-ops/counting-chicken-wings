@@ -168,17 +168,54 @@ free. Step 3 of the release procedure is what covers that.
 
 ## Release procedure
 
-1. Update `version` in `pyproject.toml`.
-2. Add a `CHANGELOG.md` section. State what moved, including any figure whose
-   value changed.
-3. Commit.
-4. Tag: `git tag -a vX.Y.Z -m "..."` — the tag is `v`-prefixed, the
-   `pyproject.toml` value is not.
-5. `git push --follow-tags`.
-6. `gh release create vX.Y.Z --notes-file CHANGELOG.md --verify-tag`
+While the work is in progress:
 
-CI enforces step 1 against step 4: pushing a tag whose version disagrees with
+1. Write the changelog section under `## Unreleased`. State what moved,
+   including any figure whose value changed.
+2. Leave `pyproject.toml` alone. Do not pick a number yet.
+
+Immediately before merging:
+
+3. Check what has already been taken: `git fetch origin`, then
+   `git log --oneline origin/master` for a `(vX.Y.Z)` in a subject line and
+   `git tag --list 'v*'`. Releases announce themselves in the subject.
+4. In one commit: rename `## Unreleased` to `## vX.Y.Z — YYYY-MM-DD` and set
+   `version` in `pyproject.toml` to match.
+5. Tag: `git tag -a vX.Y.Z -m "..."` — the tag is `v`-prefixed, the
+   `pyproject.toml` value is not.
+6. `git push --follow-tags`.
+7. `gh release create vX.Y.Z --notes-file CHANGELOG.md --verify-tag`
+
+CI enforces step 4 against step 5: pushing a tag whose version disagrees with
 `pyproject.toml` fails the build rather than publishing a mislabelled release.
+
+### Why the number is picked last
+
+Several branches are usually open at once, and they ship to this repo on the
+same day — seven releases across 2026-07-29 and 07-30. A version number claimed
+when a branch *starts* is a claim on a number the brancher cannot hold: on
+2026-07-30 a seasonality branch took v1.5.0, another session released v1.5.0
+while it was in review, it renumbered to v1.6.0, and that number went too within
+minutes. It shipped as v1.7.0.
+
+Each renumber costs a rebase plus a sweep of the version string through
+`CHANGELOG.md` (the heading, plus any cross-reference to it in an earlier
+entry), `docs/ROADMAP.md` (the status table plus every "*Shipped in*" marker),
+and `pyproject.toml`. Writing under `## Unreleased` costs nothing and cannot
+collide, because the heading carries no number to collide with.
+
+Step 3 is not optional and `git fetch` is the point of it. A working tree that
+has not fetched cannot see the release that took your number — the collision is
+invisible locally, and the CI gate that would catch it only runs on
+`refs/tags/v*`, which is to say after you have already pushed.
+
+Rebase conflicts from concurrent releases are predictable and narrow: only
+`CHANGELOG.md` and the generated README stats block. Never hand-merge the README
+block — take either side and re-run `python tools/update_readme.py`, which
+regenerates it from the database. For `CHANGELOG.md`, if both sides used the
+same heading text git auto-merges the *heading* and conflicts only the bodies,
+which quietly files your prose under someone else's version. Check which body
+sits under which heading after resolving.
 
 ## What is deployed is not necessarily what is tagged
 

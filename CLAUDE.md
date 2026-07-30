@@ -85,6 +85,12 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
   because someone's existing citation is now wrong, and the changelog states old and new.
   The old rule ("all data changes are MINOR") took the project 1.0.0 → 1.7.0 in two days
   and made the middle number meaningless.
+- **Do not bump `pyproject.toml` when you start a branch.** Write the changelog under
+  `## Unreleased` and set the number in one commit right before merging, after
+  `git fetch` and a look at `git log origin/master` for a `(vX.Y.Z)` subject. Several
+  branches are open at once and they release the same day — a number claimed early gets
+  taken while you are in review, and each renumber costs a rebase plus a sweep of the
+  version string through three files.
 
 Render tracks `branch: master`, not tags, so the deployed site is normally *ahead* of the
 latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version` for the
