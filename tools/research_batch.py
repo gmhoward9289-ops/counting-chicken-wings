@@ -243,9 +243,11 @@ def band_in_quote(row: dict, quote: str) -> tuple[bool, str]:
             return False, (
                 f"{name}={v:g} does not appear in the quoted sentence. lo and "
                 f"hi are BOUNDS, and a bound is a claim the source made, so it "
-                f"has to be in the source. Only mode may be interpolated -- if "
-                f"this bound came from reasoning rather than reading, it is an "
-                f"`estimate` a human has to record deliberately"
+                f"has to be in the source. Only mode may be interpolated. If "
+                f"this bound came from reasoning on the quote rather than "
+                f"reading it -- inverting an '80% loss' into 0.2, say -- that "
+                f"is a `derived` or `estimate` claim, and a human has to "
+                f"record it as one"
             )
 
     if mode is not None and not value_in_quote(mode, quote)[0]:
