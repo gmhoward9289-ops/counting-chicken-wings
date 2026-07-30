@@ -171,6 +171,23 @@
   .warn { color: var(--estimate); }
   h3 { margin: 0 0 4px; font-size: 17px; }
   .muted { color: var(--dim); font-size: 14px; margin: 0 0 18px; }
+
+  /* Build stamp. Render tracks master rather than tags, so the deployed site
+     is normally ahead of the latest release -- the commit is the honest
+     answer to "what am I looking at?" and the version alone is not. The
+     corpus counts sit alongside it because data ships in the same push as
+     code, so the version cannot tell you whether the numbers moved. */
+  footer.build {
+    margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--faint); font-size: 12px; display: flex; flex-wrap: wrap;
+    gap: 6px 14px; align-items: baseline;
+  }
+  footer.build .sep { color: var(--line); }
+  footer.build code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; color: var(--dim);
+  }
+  footer.build .ver { color: var(--dim); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -547,6 +564,8 @@
     <div id="sourcelist"></div>
   </div>
 </section>
+
+<footer class="build" id="build" hidden></footer>
 
 </div>
 
@@ -1244,12 +1263,45 @@ async function load(v) {
   }
 }
 
+// ---- build stamp
+//
+// The version is never written here. It comes from /api/version, which reads
+// installed package metadata, so pyproject.toml stays the single source of
+// truth -- see docs/VERSIONING.md. Hardcoding it would give the page a second
+// place to be wrong.
+function renderBuild(v) {
+  const bits = [`<span class="ver">v${v.package_version}</span>`];
+
+  // Locally there is no commit -- say "local" rather than printing "null" or
+  // quietly implying the tag is what is running.
+  bits.push(v.git_commit_short
+    ? `build <code>${v.git_commit_short}</code>`
+    : `<code>local</code>`);
+  if (v.branch) bits.push(`<code>${v.branch}</code>`);
+
+  const r = v.row_counts || {};
+  const corpus = [
+    [r.source, 'source'],
+    [r.fact, 'fact'],
+    [r.loss_factor, 'loss factor'],
+  ].filter(([n]) => n != null)
+   .map(([n, label]) => `${n} ${label}${n === 1 ? '' : 's'}`);
+  if (corpus.length) bits.push(corpus.join(', '));
+
+  $('#build').innerHTML = bits.join('<span class="sep">·</span>');
+  $('#build').hidden = false;
+}
+
 // ---- boot
 READY = (async () => {
   // Logo is decorative, so a failure here must never block the page.
   api('/api/brand')
     .then(b => { $('#logo').textContent = b.chicken; })
     .catch(() => {});
+
+  // Same rule for the build stamp: informational, so it must never be able to
+  // take the page down with it. It stays hidden if the fetch fails.
+  api('/api/version').then(renderBuild).catch(() => {});
 
   META = await api('/api/meta');
   $('#chain').innerHTML = META.chains.map(c =>

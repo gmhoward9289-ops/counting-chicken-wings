@@ -178,8 +178,13 @@ ambiguity changes the answer more than every loss in the chain combined.
 Live at https://counting-chicken-wings.onrender.com/ (free tier; a first visit
 may wait ~20s for a cold start).
 
-206 tests, 37 sources, 45 facts, 28 tables. Every statistic is cited and the
+228 tests, 37 sources, 45 facts, 28 tables. Every statistic is cited and the
 build fails if one is not.
+
+Every page carries a build stamp in the footer — version, commit, and corpus
+counts, read from `/api/version`. Because Render tracks `master` rather than
+tags, the commit is the honest answer to "what am I looking at?"; the version
+alone is not.
 
 Ongoing work, tracked in [docs/ROADMAP.md](docs/ROADMAP.md): replacing the 8
 estimate-grade loss factors with sourced ones, US regions, more producers and
