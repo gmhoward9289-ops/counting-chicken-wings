@@ -30,19 +30,29 @@ says `v1.0.0`.
 A static version plus a CI check that tag and `pyproject.toml` agree is
 duller and correct. Revisit only if the deploy pipeline starts fetching tags.
 
-## Semantic versioning
+## MAJOR.MINOR.MINOR
 
-[SemVer 2.0.0](https://semver.org). Given `MAJOR.MINOR.PATCH`:
+Three numeric components, `v`-prefixed tags, still ordered the obvious way —
+but **not** SemVer, and the third component is not a patch level:
 
 - **MAJOR** — breaking change to the CLI contract, the API response shapes,
   or the meaning of a published figure.
-- **MINOR** — new capability, backwards compatible. New views, new endpoints,
-  a new **kind** of data.
-- **PATCH** — fixes, and **more of a kind of data we already had**.
+- **Second** — new capability. A new *kind* of data — a domain, a species, a
+  product, a table, a dimension — or a new view, endpoint, CLI flag or output.
+  You can ask a question you could not ask before.
+- **Third** — everything else that ships. More rows of a kind already present,
+  corrections, small features, fixes. Routine forward movement.
 
-### Data changes are versioned changes — but not all of them are MINOR
+The third component is **not a patch level**, and calling it one was the thing
+that had to go. It carries real data — sometimes thousands of rows of it.
+Neither minor is "breaking-safe" in the SemVer sense either, because for this
+project that guarantee was never the interesting one. Both are additive; they
+differ in *size*, not in *risk*.
 
-Unusually for a library, **this project's data is part of its public
+### Why not SemVer, and why not all data changes are second-digit
+
+SemVer's third component means "fixes only, no new capability", and this
+project cannot honour that, because **the data is part of the public
 interface**. Someone citing "6.90 chickens required for a dozen wings" is
 citing a number that moves when we source a better loss factor. That is why
 data is versioned at all, and it stays true.
@@ -50,7 +60,7 @@ data is versioned at all, and it stays true.
 What was wrong was treating *every* data addition as new capability. The rule
 used to read "adding sources, states, or facts → MINOR", and under it the
 project went **1.0.0 to 1.7.0 in about two days**, almost entirely on data.
-A minor number that increments whenever anyone adds rows stops telling you
+A second digit that increments whenever anyone adds rows stops telling you
 anything: it cannot distinguish "eggs are now a product" from "twenty more
 Israeli rows landed in a table that already existed".
 
@@ -58,30 +68,39 @@ The test is **capability, not volume**:
 
 | Change | Bump | Why |
 |---|---|---|
-| New domain, species, product, or table | **MINOR** | you can ask a question you could not ask before |
-| New view, endpoint, CLI flag, or output | **MINOR** | same reason |
-| More rows of a kind already present — states, sources, facts, another year, another country's series | **PATCH** | nothing new is answerable; the corpus is denser, not wider |
-| A figure moves such that a **published headline answer changes** | **MINOR** | a citation someone already made is now wrong, which is exactly the case data-versioning exists for. Changelog states old → new |
-| Typo, note, comment, formatting | **PATCH** | |
+| New domain, species, product, or table | **second** | you can ask a question you could not ask before |
+| New view, endpoint, CLI flag, or output | **second** | same reason |
+| More rows of a kind already present — states, sources, facts, another year, another country's series | **third** | nothing new is answerable; the corpus is denser, not wider |
+| A figure moves such that a **published headline answer changes** | **second** | a citation someone already made is now wrong, which is exactly the case data-versioning exists for. Changelog states old → new |
+| Typo, note, comment, formatting | **third** | |
+
+If the *meaning* of a published figure changed rather than its value, that is
+a MAJOR, not a second-digit bump.
 
 Two consequences worth stating plainly, because both look wrong at a glance:
 
-- **Adding a whole country's statistics can be a PATCH** if it lands in tables
-  that already exist and answers questions the schema already answered. Israel
-  arriving in `output_stat_year` is more rows. Israel forcing the `country`
-  dimension into existence was the MINOR.
-- **A one-line data fix can be a MINOR** if it moves a number the front page
-  publishes. Size is not the criterion.
+- **Adding a whole country's statistics can be a third-digit bump** if it lands
+  in tables that already exist and answers questions the schema already
+  answered. Israel arriving in `output_stat_year` is more rows. Israel forcing
+  the `country` dimension into existence was the second.
+- **A one-line data fix can be a second-digit bump** if it moves a number the
+  front page publishes. Size is not the criterion.
 
 Past releases are **not renumbered**. v1.0.0 through v1.7.0 stand as tagged —
 retagging would break the release links and the deploy history for no gain.
-This applies from the next release onward.
+This applies from the next release onward, and the numbers themselves do not
+change shape: three components, `v`-prefixed tags, same CI gate.
 
 `GET /api/version` returns row counts alongside the version for exactly this
-reason: under this rule a PATCH can move thousands of rows, so the version
-alone cannot tell you whether the corpus grew. The counts can.
+reason: under this rule a third-digit release can move thousands of rows, so
+the version alone cannot tell you whether the corpus grew. The counts can.
 
 ### The rule is checked, not remembered
+
+**`release_check.py` still speaks SemVer.** It says `MINOR` where this document
+says *second* and `PATCH` where this document says *third*; the thresholds are
+identical, only the words differ. Retermed in a follow-up — the tool landed
+first and its vocabulary is not worth a rebase against the release queue.
 
 ```bash
 python tools/release_check.py              # this tree against the latest tag
@@ -141,9 +160,11 @@ on **under**-bumping, so a human who bumps MINOR for new capability passes
 regardless. It is a floor on the required bump, never a ceiling, and "PATCH
 required" means *at least* patch — not *only* patch.
 
-`GET /api/version` returns row counts alongside the version for exactly this
-reason: data ships in the same push as code, so a version number alone cannot
-tell you whether the corpus moved.
+The floor is also why this check and the "pick the number last" rule below do
+not argue: the check tells you the smallest number the diff justifies, and you
+claim a number after running it. It cannot tell you the claim is *big* enough —
+a new endpoint is invisible to it — and it cannot tell you the number is still
+free. Step 3 of the release procedure is what covers that.
 
 ## Release procedure
 
