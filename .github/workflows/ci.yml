@@ -87,8 +87,25 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,gui]"
+      # On a PULL REQUEST, compare against the PR's own base rather than the
+      # latest tag. Against the tag the diff carries everything anyone has
+      # merged since the release, so an author reads "the published answer
+      # moved" without being able to tell whether THEY moved it. Against the
+      # base it is this branch's contribution alone, and the annotation
+      # actually means something.
+      #
+      # On a push to master the latest tag is the right base: the question
+      # there is "what does the next release owe", not "what did this commit
+      # do".
       - name: Bump must match what changed
-        run: python tools/release_check.py --explain
+        run: |
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            echo "pull request: comparing against its base"
+            python tools/release_check.py --explain \
+              --base "${{ github.event.pull_request.base.sha }}"
+          else
+            python tools/release_check.py --explain
+          fi
 
   version-consistency:
     if: startsWith(github.ref, 'refs/tags/v')

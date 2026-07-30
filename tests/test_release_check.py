@@ -41,7 +41,7 @@ def test_a_new_table_is_minor():
         kinds=BASE["kinds"],
         counts={**BASE["counts"], "output_stat_year": 75},
     )
-    need, why = rc.required_bump(BASE, head, "6 12", "6 12")
+    need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "minor"
     assert "new table" in why[0]
 
@@ -58,7 +58,7 @@ def test_a_new_kind_row_is_minor(table, slug):
     kinds[table] = kinds[table] + [slug]
     head = snap(BASE["tables"], kinds=kinds,
                 counts={**BASE["counts"], table: 2})
-    need, why = rc.required_bump(BASE, head, "6 12", "6 12")
+    need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "minor"
     assert slug in why[0]
 
@@ -73,13 +73,13 @@ def test_more_rows_of_an_existing_kind_is_only_patch():
     project 1.0.0 -> 1.7.0 in two days under the old rule."""
     head = snap(BASE["tables"], kinds=BASE["kinds"],
                 counts={**BASE["counts"], "source": 49})
-    need, why = rc.required_bump(BASE, head, "6 12", "6 12")
+    need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "patch"
     assert "no new kind" in why[0]
 
 
 def test_an_identical_corpus_needs_nothing():
-    need, _ = rc.required_bump(BASE, BASE, "6 12", "6 12")
+    need, _ = rc.required_bump(BASE, BASE, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "none"
 
 
@@ -88,18 +88,21 @@ def test_an_identical_corpus_needs_nothing():
 # ---------------------------------------------------------------------------
 
 def test_a_moved_answer_is_minor_even_with_an_identical_corpus():
-    """The signal the other two cannot see. The saffron ceiling bug changed a
-    published answer through a pure CODE change and shipped under no bump at
-    all -- structure and row counts were untouched."""
-    need, why = rc.required_bump(BASE, BASE, "6 11.99997", "6 150")
+    """The signal the other two cannot see: it fires on a code change as
+    readily as a data one, with the schema and every row count untouched.
+
+    Uses saffron_gram because a per-product answer is exactly what the
+    single-product first version could not have seen."""
+    need, why = rc.required_bump(BASE, BASE, {"saffron_gram": "150 150"}, {"saffron_gram": "150 1"})
     assert need == "minor"
-    assert "published answer moved" in why[0]
+    assert "published answer moved for saffron_gram" in why[0]
 
 
 def test_an_unavailable_answer_does_not_invent_a_reason():
-    """An old tag whose CLI took different flags yields None, which must read
-    as "signal unavailable", never as "the answer changed"."""
-    need, _ = rc.required_bump(BASE, BASE, None, "6 12")
+    """A product absent from the base -- an older tag, or one added by this
+    very diff -- must read as "not comparable", never as "the answer changed".
+    New products are already reported by the new-kind check."""
+    need, _ = rc.required_bump(BASE, BASE, {}, {"whole_wing": "6 12"})
     assert need == "none"
 
 
@@ -132,7 +135,7 @@ def test_a_removed_table_is_not_silently_a_patch():
                 kinds=BASE["kinds"],
                 counts={k: v for k, v in BASE["counts"].items()
                         if k != "source"})
-    need, why = rc.required_bump(BASE, head, "6 12", "6 12")
+    need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "minor"
     assert "REMOVED" in why[0]
 
@@ -144,7 +147,7 @@ def test_removal_is_seen_even_when_rows_changed_elsewhere():
     head = snap([t for t in BASE["tables"] if t != "source"],
                 kinds=BASE["kinds"],
                 counts={"domain": 1, "species": 1, "product": 9})
-    need, why = rc.required_bump(BASE, head, "6 12", "6 12")
+    need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "minor"
     assert any("REMOVED" in r for r in why), why
 
@@ -153,6 +156,32 @@ def test_a_removed_species_is_minor():
     kinds = {**BASE["kinds"], "species": []}
     head = snap(BASE["tables"], kinds=kinds,
                 counts={**BASE["counts"], "species": 0})
-    need, why = rc.required_bump(BASE, head, "6 12", "6 12")
+    need, why = rc.required_bump(BASE, head, {"whole_wing": "6 12"}, {"whole_wing": "6 12"})
     assert need == "minor"
     assert any("REMOVED" in r for r in why), why
+
+
+def test_a_move_in_any_product_counts_not_just_wings():
+    """The single-product first version watched `whole_wing` alone, so a
+    regression confined to eggs or saffron registered as nothing at all."""
+    for slug in ("table_egg", "saffron_gram", "boneless_wing"):
+        need, why = rc.required_bump(
+            BASE, BASE, {slug: "1 2 3"}, {slug: "1 2 4"})
+        assert need == "minor", slug
+        assert slug in why[0]
+
+
+def test_products_are_compared_only_where_both_sides_have_one():
+    """Intersection, not union. A product added by this very diff has no base
+    answer to differ from, and is already reported as a new kind."""
+    moved = rc.answers_moved(
+        {"whole_wing": "6 12"},
+        {"whole_wing": "6 12", "saffron_gram": "150 150"})
+    assert moved == []
+
+
+def test_every_moved_product_is_named():
+    moved = rc.answers_moved(
+        {"a": "1", "b": "2", "c": "3"},
+        {"a": "1", "b": "9", "c": "8"})
+    assert moved == ["b", "c"]
