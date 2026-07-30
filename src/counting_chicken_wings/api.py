@@ -162,6 +162,7 @@ def calculate(
         loss = dbm.load_loss_stages(
             conn, prod["species_slug"], prod["slug"],
             include_optional=include_mortality,
+            chain_slug=chain,
         )
         mixing = dbm.load_mixing_stages(conn, chain)
         if not mixing and chain != "whole_bird_home":
@@ -302,6 +303,7 @@ def scientific(
         loss = dbm.load_loss_stages(
             conn, prod["species_slug"], prod["slug"],
             include_optional=include_mortality,
+            chain_slug=chain,
         )
         mixing = dbm.load_mixing_stages(conn, chain)
 

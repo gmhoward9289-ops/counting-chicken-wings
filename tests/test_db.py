@@ -290,3 +290,60 @@ def test_connect_builds_a_missing_database(tmp_path):
 
 def test_foreign_keys_are_enforced_on_every_connection(conn):
     assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+
+
+# ---------------------------------------------------------------------------
+# Channel-aware loss stages
+# ---------------------------------------------------------------------------
+
+def test_a_chain_can_declare_its_own_losses(conn):
+    """The grocery route pays supermarket shrink; the restaurant route does not.
+
+    Before chains could select losses, every chain got every stage, so
+    retail_shrink had to be parked default-off to stop it double-counting
+    against kitchen_loss. That was a workaround standing in for a model.
+    """
+    food = {s.slug for s in dbm.load_loss_stages(
+        conn, "broiler", "whole_wing", chain_slug="commodity_foodservice")}
+    groc = {s.slug for s in dbm.load_loss_stages(
+        conn, "broiler", "whole_wing", chain_slug="grocery_retail")}
+
+    assert "kitchen_loss" in food and "retail_shrink" not in food
+    assert "retail_shrink" in groc and "kitchen_loss" not in groc
+
+
+def test_no_route_pays_both_retail_and_kitchen(conn):
+    """The double-count the old workaround existed to prevent.
+
+    A wing does not pass a supermarket meat counter AND a restaurant kitchen.
+    Any route claiming both is charging the same loss twice.
+    """
+    for ch in dbm.list_supply_chains(conn):
+        stages = {s.slug for s in dbm.load_loss_stages(
+            conn, "broiler", "whole_wing", chain_slug=ch["slug"])}
+        assert not {"retail_shrink", "kitchen_loss"} <= stages, ch["slug"]
+
+
+def test_a_declaring_chain_may_claim_a_default_off_stage(conn):
+    """retail_shrink is default_enabled=0, and the grocery route still gets it.
+
+    That is the point: the stage is not globally disabled, it belongs to one
+    route. A chain being explicit overrides the global default.
+    """
+    row = conn.execute(
+        "SELECT default_enabled, optional FROM loss_stage "
+        "WHERE slug = 'retail_shrink'"
+    ).fetchone()
+    assert not row["default_enabled"], "precondition: stage is default-off"
+
+    groc = {s.slug for s in dbm.load_loss_stages(
+        conn, "broiler", "whole_wing", chain_slug="grocery_retail")}
+    assert "retail_shrink" in groc
+
+
+def test_chains_without_declared_losses_are_unaffected(conn):
+    """Silence means "species defaults", so existing routes keep working."""
+    assert dbm.chain_loss_stages(conn, "local_butcher") is None
+    stages = dbm.load_loss_stages(
+        conn, "broiler", "whole_wing", chain_slug="local_butcher")
+    assert stages, "default path returned nothing"

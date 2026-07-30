@@ -116,6 +116,7 @@ def cmd_count(args) -> int:
     loss = dbm.load_loss_stages(
         conn, product["species_slug"], product["slug"],
         include_optional=args.include_mortality,
+        chain_slug=chain,
     )
     mixing = dbm.load_mixing_stages(conn, chain)
 

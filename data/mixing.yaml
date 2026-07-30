@@ -224,3 +224,39 @@ supply_chains:
       answer is exactly the floor. This is the only realistic way to get twelve
       wings from six chickens.
     stages: []
+
+  - slug: grocery_retail
+    domain: poultry
+    species: broiler
+    label: Grocery retail
+    is_default: 0
+    description: >-
+      Wings bought as a tray at a supermarket and cooked at home. Same plant
+      and same distribution as foodservice, then a meat counter instead of a
+      restaurant kitchen.
+    floor_note: >-
+      The plant-side mixing is identical to the foodservice route, so the
+      distinct count lands in the same place. What differs is the losses: this
+      route pays supermarket shrink and never pays a restaurant kitchen.
+    loss_stages:
+      # An explicit list, which is the whole point of this route existing.
+      # Before chains could select losses, retail_shrink had to be parked
+      # default-off so it could not double-count against kitchen_loss -- every
+      # chain got every stage. Now the grocery route claims it and the
+      # restaurant route does not.
+      - transport_doa
+      - postmortem_condemnation
+      - wing_damage
+      - grading_downgrade
+      - further_processing
+      - distribution_shrink
+      - transit_rejection
+      - retail_shrink
+    stages:
+      - separation
+      - wing_chiller
+      - size_grading
+      - combo_bin
+      - iqf_freezer
+      - case_pack
+      - distributor

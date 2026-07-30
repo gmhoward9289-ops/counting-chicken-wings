@@ -78,3 +78,178 @@ that today, and finding out whether it needs one is the interesting part.
 - [ ] Every mass figure names green or cured
 - [ ] Concentration recorded as `applies_to: mass` and shown not to move a count
 - [ ] Species named on every yield figure
+
+---
+
+## Items
+
+<!--
+URLs below were each fetched and confirmed 200 with real content on 2026-07-29
+before being written here, per the warning above. A guessed PSU URL
+(extension.psu.edu/vanilla) returned 404 during that pass and was discarded
+rather than left in looking plausible.
+
+Coverage was checked per source, not assumed. The World Bank guide is strong on
+pollination and field yields (43 and 48 keyword hits over 4,433 lines) but
+mentions "cured" exactly ONCE, so it cannot answer the curing ratio. The
+Package of Practice PDF is short but carries that figure verbatim. Sources are
+therefore listed per item by what they actually contain.
+-->
+
+### Item 1 — flowers_per_bean
+
+| | |
+|---|---|
+| `target_table` | `product` |
+| `required_fields` | `units_per_individual_lo/mode/hi`, `is_anatomical_constant` |
+| `unit` | flowers per bean |
+| `archetype` | `how-many` |
+
+**Question:** How many vanilla flowers produce one vanilla bean?
+
+**Candidate URLs:**
+
+- https://gardeningsolutions.ifas.ufl.edu/plants/edibles/vegetables/vanilla/ — UF/IFAS extension
+- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11547731/ — Vanilla planifolia pollination, peer-reviewed
+- https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf — World Bank sustainable vanilla cultivation guide
+
+**Done means:** the figure **1**, with lo = mode = hi = 1 and
+`is_anatomical_constant: 1`, plus a quote supporting it.
+
+**Watch for:** this is the degenerate case and the point is that it is boring.
+One pollinated flower becomes one bean. If the floor machinery misbehaves at 1
+it is fragile, so a clean 1 here is a test result, not a null result. Do NOT
+accept a figure about flowers per *vine* or per *inflorescence* — a vine carries
+many flowers, and that is a different question.
+
+---
+
+### Item 2 — green_to_cured_ratio
+
+| | |
+|---|---|
+| `target_table` | `loss_factor` |
+| `required_fields` | `survive_lo/mode/hi`, `applies_to`, `confidence` |
+| `unit` | kg green per kg cured — **report the direction the source uses** |
+| `archetype` | `how-many` |
+
+**Question:** How many kilograms of green vanilla beans produce one kilogram of
+cured vanilla beans?
+
+**Candidate URLs:**
+
+- https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf — Package of Practice, Vanilla Cultivation
+- https://gardeningsolutions.ifas.ufl.edu/plants/edibles/vegetables/vanilla/ — UF/IFAS extension
+
+**Done means:** a ratio with a verbatim quote. The Package of Practice document
+is known to contain this figure, so an empty return on this item means the
+retrieval step failed, not that the fact is unavailable — say which.
+
+**Watch for:** the direction inverts and inverting it silently is the whole
+risk. "6 kg green per 1 kg cured" and "a 17% yield" are the same fact; "6:1"
+with no units attached is ambiguous and must be reported as stated rather than
+normalised. Record `applies_to: mass` — curing concentrates mass and does not
+change a bean count, so this must be shown NOT to move a count answer.
+
+---
+
+### Item 3 — beans_per_kg_cured
+
+| | |
+|---|---|
+| `target_table` | `product` |
+| `required_fields` | `value_lo/mode/hi`, `unit` |
+| `unit` | beans per kg cured |
+| `archetype` | `how-many` |
+
+**Question:** How many cured vanilla beans are in one kilogram?
+
+**Candidate URLs:**
+
+- https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf — Package of Practice, Vanilla Cultivation
+- https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf — World Bank guide
+
+**Done means:** a count per kilogram with a quote, or an explicit "not found".
+
+**Watch for:** bean count per kg depends on grade and length, so a single number
+without a grade is weaker than it looks. If the source gives a range or ties it
+to a grade, keep the grade with the figure.
+
+---
+
+### Item 4 — hand_pollination_window_hours
+
+| | |
+|---|---|
+| `target_table` | `quality_defect` |
+| `required_fields` | `value_lo/mode/hi`, `unit`, `notes` |
+| `unit` | hours a flower remains receptive |
+| `archetype` | `how-many` |
+
+**Question:** For how many hours after opening can a vanilla flower be
+successfully pollinated?
+
+**Candidate URLs:**
+
+- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11547731/ — Vanilla planifolia pollination, peer-reviewed
+- https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf — World Bank guide
+
+**Done means:** a duration in hours with a quote. `target_table` is a
+placeholder — there is no field for this yet, which is deliberate. Record it and
+let the shape follow the data.
+
+**Watch for:** "the flower lasts one day" is not the same claim as "the flower
+is receptive for N hours". Opening duration and receptive window may differ, and
+conflating them overstates how forgiving the work is. Report which was said.
+
+---
+
+### Item 5 — labour_hours_per_kg
+
+| | |
+|---|---|
+| `target_table` | `economic_stat` |
+| `required_fields` | `value_lo/mode/hi`, `unit` |
+| `unit` | labour hours per kg cured |
+| `archetype` | `comparison` |
+
+**Question:** How many hours of labour does one kilogram of cured vanilla
+require?
+
+**Candidate URLs:**
+
+- https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf — World Bank guide
+- https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf — Package of Practice
+
+**Done means:** a figure with a quote, or "not found". Saffron's equivalent item
+found nothing in any source, so a null here is a real and expected outcome —
+report it plainly rather than reaching for a weaker source.
+
+**Watch for:** this is the shared axis with saffron, so it is only a comparison
+if the unit and the basis match. Labour per kg and labour per hectare are not
+the same measurement.
+
+---
+
+### Item 6 — curing_duration_days
+
+| | |
+|---|---|
+| `target_table` | `quality_defect` |
+| `required_fields` | `value_lo/mode/hi`, `unit` |
+| `unit` | days |
+| `archetype` | `how-many` |
+
+**Question:** How many days or months does the vanilla curing process take?
+
+**Candidate URLs:**
+
+- https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf — Package of Practice
+- https://gardeningsolutions.ifas.ufl.edu/plants/edibles/vegetables/vanilla/ — UF/IFAS extension
+
+**Done means:** a duration with a quote, converted to days with the original
+value kept alongside.
+
+**Watch for:** do not add bean maturation on the vine (about nine months) to the
+curing time. They are sequential stages of different kinds, and summing them
+answers a question nobody asked.

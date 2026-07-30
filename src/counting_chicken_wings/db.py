@@ -85,17 +85,57 @@ def list_products(conn) -> list[sqlite3.Row]:
     ).fetchall()
 
 
+def _loss_stage_from_row(r) -> LossStage:
+    """Row to LossStage. Shared by the declared-chain and default paths so the
+    two cannot drift apart."""
+    return LossStage(
+        slug=r["slug"], label=r["label"], sequence=r["sequence"],
+        phase=r["phase"], applies_to=r["applies_to"],
+        survive_lo=r["survive_lo"], survive_mode=r["survive_mode"],
+        survive_hi=r["survive_hi"], confidence=r["confidence"],
+        description=r["description"] or "", notes=r["notes"] or "",
+        optional=bool(r["optional"]),
+        default_enabled=bool(r["default_enabled"]),
+        source_slug=r["source_slug"],
+    )
+
+
+def chain_loss_stages(conn, chain_slug: str) -> set[str] | None:
+    """The loss stages a chain declares, or None if it declares none.
+
+    None means "use the species defaults", which is how every route behaved
+    before chains could select losses. A chain that lists stages gets exactly
+    those.
+    """
+    rows = conn.execute(
+        """SELECT ls.slug FROM supply_chain sc
+           JOIN supply_chain_loss_stage scls ON scls.supply_chain_id = sc.id
+           JOIN loss_stage ls ON ls.id = scls.loss_stage_id
+           WHERE sc.slug = ?""",
+        (chain_slug,),
+    ).fetchall()
+    return {r["slug"] for r in rows} or None
+
+
 def load_loss_stages(
     conn,
     species_slug: str = "broiler",
     product_slug: str | None = "whole_wing",
     include_optional: bool = False,
+    chain_slug: str | None = None,
 ) -> list[LossStage]:
     """Load the loss chain.
 
     Factor resolution is by specificity: a factor naming this product beats
     a general one for the same stage. Optional stages (grow-out mortality)
     are excluded unless asked for.
+
+    `chain_slug` lets a route declare its own losses. Without it, every chain
+    got every stage, which is why `retail_shrink` had to be parked
+    default-off: a restaurant route would otherwise have charged supermarket
+    shrink on top of restaurant kitchen loss and double-counted. A grocery
+    route can now claim retail shrink and skip the kitchen without either
+    being globally disabled.
     """
     rows = conn.execute(
         """
@@ -117,26 +157,30 @@ def load_loss_stages(
         (species_slug, product_slug),
     ).fetchall()
 
+    declared = chain_loss_stages(conn, chain_slug) if chain_slug else None
+
     out: list[LossStage] = []
     seen: set[str] = set()
     for r in rows:
         if r["slug"] in seen:
             continue          # first row wins: most specific factor
         seen.add(r["slug"])
+
+        if declared is not None:
+            # The chain is explicit, so it decides -- including claiming a
+            # stage that is optional or default-off for everyone else. That is
+            # the point: retail shrink belongs to the grocery route and to no
+            # other, and listing it here is how a route says so.
+            if r["slug"] not in declared:
+                continue
+            out.append(_loss_stage_from_row(r))
+            continue
+
         if r["optional"] and not include_optional:
             continue
         if not r["default_enabled"] and not include_optional:
             continue
-        out.append(LossStage(
-            slug=r["slug"], label=r["label"], sequence=r["sequence"],
-            phase=r["phase"], applies_to=r["applies_to"],
-            survive_lo=r["survive_lo"], survive_mode=r["survive_mode"],
-            survive_hi=r["survive_hi"], confidence=r["confidence"],
-            description=r["description"] or "", notes=r["notes"] or "",
-            optional=bool(r["optional"]),
-            default_enabled=bool(r["default_enabled"]),
-            source_slug=r["source_slug"],
-        ))
+        out.append(_loss_stage_from_row(r))
     return out
 
 

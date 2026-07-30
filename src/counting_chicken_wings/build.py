@@ -348,6 +348,20 @@ class Builder:
                     (cid, self.mixing_stage[slug], override),
                 )
 
+            # Optional per-chain loss selection. Omitted means "species
+            # defaults", so existing routes are unaffected.
+            for slug in ch.get("loss_stages", []):
+                if slug not in self.loss_stage:
+                    raise BuildError(
+                        f"supply_chain {ch['slug']}: unknown loss stage "
+                        f"'{slug}'"
+                    )
+                self.c.execute(
+                    "INSERT INTO supply_chain_loss_stage "
+                    "(supply_chain_id, loss_stage_id) VALUES (?,?)",
+                    (cid, self.loss_stage[slug]),
+                )
+
     def stats(self):
         t = load("stats_national.yaml")
 

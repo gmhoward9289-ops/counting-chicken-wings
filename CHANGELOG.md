@@ -54,10 +54,39 @@ roughly 15 individuals" — more contributors than units, which cannot happen.
 The count was unaffected because the caller re-clamped, but the audit trail
 printed the impossible figure.
 
+### Channel-aware loss stages
+
+A second instance of the same defect, one level down. `supply_chain` selected
+which **mixing** stages applied but had no say over **losses**, so every route
+got every stage. `retail_shrink` was therefore parked `optional`/default-off
+purely to stop it double-counting against `kitchen_loss` — a workaround
+standing in for a model, and the grocery path could not be expressed at all.
+
+Routes now declare their own losses via `supply_chain_loss_stage`, and a new
+`grocery_retail` chain demonstrates it:
+
+| Route | `kitchen_loss` | `retail_shrink` |
+|---|---|---|
+| `commodity_foodservice` | yes | no |
+| `grocery_retail` | no | **yes** |
+
+A wing does not pass both a supermarket meat counter and a restaurant kitchen,
+and no route may now claim both — asserted by a test over every chain. A chain
+that declares nothing still gets the species defaults, so existing routes are
+untouched.
+
+### Egg grading is documented, not just decided
+
+Modelling egg grading as ordinary mixing rather than active separation is a
+judgement about mechanism, not a sourced figure, so it is now stated where
+readers can find it: the stage description, and a learning-centre fact. A bird
+has two wings and weighing them pulls the pair apart; an egg reaches the grader
+already alone, so there is no pair to break.
+
 ### Unchanged
 
 Wings still answer 6 → 11.99997, and still explain themselves via the cut-up
-line. 255 tests pass.
+line. 261 tests pass.
 
 ## v1.1.0 — 2026-07-29
 

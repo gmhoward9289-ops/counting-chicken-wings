@@ -550,6 +550,24 @@ CREATE UNIQUE INDEX idx_supply_chain_one_default
     ON supply_chain (COALESCE(species_id, -1))
     WHERE is_default = 1;
 
+-- Which LOSS stages a route applies, mirroring supply_chain_stage for mixing.
+--
+-- Its absence was the bug. A chain selected its mixing stages but had no say
+-- over its losses, so the grocery path and the restaurant path could not be
+-- told apart: `retail_shrink` had to be parked optional/default-off purely to
+-- stop it double-counting `kitchen_loss`, since every chain otherwise got
+-- every stage. That was a workaround standing in for a model.
+--
+-- Empty for a chain means "apply the species defaults", which keeps every
+-- existing route working unchanged. A chain that lists stages gets exactly
+-- those, so a grocery route can claim retail shrink and skip restaurant
+-- losses without either being globally disabled.
+CREATE TABLE supply_chain_loss_stage (
+    supply_chain_id INTEGER NOT NULL REFERENCES supply_chain(id),
+    loss_stage_id   INTEGER NOT NULL REFERENCES loss_stage(id),
+    PRIMARY KEY (supply_chain_id, loss_stage_id)
+);
+
 CREATE TABLE supply_chain_stage (
     supply_chain_id INTEGER NOT NULL REFERENCES supply_chain(id),
     mixing_stage_id INTEGER NOT NULL REFERENCES mixing_stage(id),
