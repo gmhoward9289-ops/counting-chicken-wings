@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+### The web UI is a statistical bulletin now, and it comes in slate
+
+The restyle: paper ground, ink numerals, and one accent — the violet of USDA
+inspection-stamp ink. Evidence grades render as stamps, and an estimate is
+dashed and hatched, so an unsourced figure is visibly different from a sourced
+one everywhere it appears. Dark mode is the same bulletin printed on slate:
+theme follows the system, a header toggle stores an explicit choice, and every
+colour — UI and charts — is defined once, so the toggle re-colours the charts
+too.
+
+**Each species now gets its own size question.** "Is a fatter chicken a better
+chicken?" was asked of the whole corpus and answered from a verdict hardcoded
+in `api.py`. A laying hen is graded on egg size and saffron on ISO colouring
+strength, so the question, its axis, and the three-part verdict now live in a
+`quality_axis` row per species — the new table that makes this release a
+second-digit bump. A null verdict leg renders as an open question in estimate
+ink, not as a no.
+
+`tests/test_static.py` is the first coverage the web UI has ever had, and it
+immediately caught a live bug: the page still printed hardcoded wing prose —
+"the instant the wings leave the bird", a cut-up line — to anyone asking about
+eggs. `/api/calculate` now returns `supply_chain.floor_note` and the page
+renders it. Also fixed: the floor..ceiling band no longer shows "floor 0.03
+hens" above prose that rounds the same number to "at least 1 hen".
+
+### Israel gets a head count after all — in placements, not slaughter
+
+CBS publishes no poultry head-slaughtered series, and that held. But the
+quarterly series publishes **chick placements**: heavy breeds, 275,427.9
+thousand head for 2024 and 262,848.753 thousand for 2023. Loaded as its own
+measure, `chicks_placed`, in CBS's own thousands — placements differ from
+slaughter by farm mortality, and substituting one for the other is exactly the
+conflation this corpus exists to prevent. This retires the unverified "~260
+million broilers a year" trade-press figure: it was essentially the 2023
+placement number, and it now has a government citation instead of a 404ing
+article.
+
+The open tonnage-basis question gained evidence, not an answer: USDA PSD's
+ready-to-cook figure against CBS's 2000 output is 72.2%, dressing-yield-shaped
+against the project's own derived 75.67%. Recorded as a conflict on the source,
+per `docs/research/README.md` — promoting it to a stated basis is a human
+judgement about provenance.
+
+### The version bump is checked, not remembered
+
+`tools/release_check.py` builds the corpus at the base ref and at the working
+tree, then reports the smallest bump the diff justifies: a new table or kind
+demands the second digit, more rows of an existing kind the third, and **every
+active product's published answer is compared** — a corpus that gains products
+gains coverage with no list to maintain. An answer that moves emits a warning
+naming the product and old → new values; a better loss factor *should* move
+the number, it just must not move silently.
+
+CI runs it advisory on pull requests — against the PR's own base, so the
+signal is that branch's contribution alone — and enforcing at tag push,
+against the previous tag. It fails only on under-bumping: a floor on the
+required bump, never a ceiling. Honest about its blind spot, learned by
+pointing it at the actual saffron-ceiling commit: an API-only regression is
+invisible to a check that runs the CLI. That claim was wrong in the docs and
+is now corrected.
+
 ### The third digit is a minor, not a patch
 
 Versioning is now **MAJOR.MINOR.MINOR** and no longer claims to be SemVer. The
@@ -46,6 +107,58 @@ cattle" is a corporate statement, the per-garment silk counts are craft-site
 lore, and the sourced silk filament (**300–900 m**) is deliberately the cited
 figure over the higher number that circulates. Said here so that proximity to
 the NASS-backed poultry rows lends them no credibility they have not earned.
+
+### Three of those batches ran. One was accepted; the negatives were kept.
+
+**Maple was accepted**: 5 figures, with the 40:1 sap-to-syrup ratio at 2/2
+model consensus and the other four flagged `needs_human` rather than averaged.
+`season_length` came back with a quote and no number, which is right — the
+source gives calendar windows, not a duration, and subtracting them would be
+our arithmetic rather than the source's. Findings live in
+`docs/research/accepted/`, not `data/`: promotion is a human call, so nothing
+here moves the version.
+
+**Ground beef and silk both failed verification, and the runs were worth more
+as bug reports than the figures would have been.** Silk's best row — reeling,
+2/2 consensus — was rejected because `fetch_url()` never decoded HTML
+entities, so a model that read the prose correctly produced a quote that could
+never match the inbox: manufactured false guilt that reads exactly like an
+invented citation. Ground beef stored the hedged ceiling "more than 100
+cattle" as lo=mode=hi=100 and verified a lab's test-patty mold size as a
+market standard. And an egg-breakage run named a new failure class the gate
+cannot see: a **pie-chart label** — verbatim quote, right document, right
+words — that is a share of calorie loss, not a loss rate, wrong by a factor of
+twenty with every check passing. A figure whose basis cannot be read off its
+own quote is not usable however well it verifies.
+
+### The research pipeline earned four fixes from those failures
+
+- **Colliding filenames silently deleted fetched documents.** Three govinfo
+  URLs shared their first 47 characters and the filename was `slug[:48]`, so
+  two documents were downloaded, logged as "fetched + extracted", and
+  overwritten by the third — a 693 KB CFR text never reached the extractor and
+  the run's "0 of 8 figures" read as source scarcity. Fixed with a URL-hash
+  suffix and a regression test.
+- **HTML entities are now decoded** before the inbox is written, per above.
+- **The extractor finally sees the trap the spec named.** Every spec item
+  carries a "Watch for" paragraph, and `parse_spec` used to throw it away.
+  Measured on ground beef after the fix: the flattened "more than 100" ceiling
+  became `null/100/null`, and the mold-size figure withdrew. Three figures
+  became two — precision bought with recall, the right trade for a corpus
+  whose value is that every number traces to a source.
+- **Verification runs on Windows now**: explicit UTF-8 in `build.py`, and a
+  temp-dir teardown failure no longer discards an audit verdict already
+  correctly arrived at.
+
+### Licensed: MIT for code, CC BY 4.0 for the words and the data
+
+The code is MIT. `docs/` and `data/` are CC BY 4.0 — attribution is the one
+condition, which is fitting for a corpus whose entire point is citation.
+
+### Housekeeping
+
+`.ccwork` is committed, so a fresh worktree comes up with its venv built and a
+port assigned instead of being rebuilt by hand.
 
 ## v1.7.0 — 2026-07-30
 Seasonality. The corpus has held twelve months of live weight for every state
