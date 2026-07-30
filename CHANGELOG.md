@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+### Three new "how many X" subjects, scouted and ready to run
+
+Ground beef, maple syrup, and silk are drafted as research work-orders under
+`docs/research/batches/` (06, 07, 08). Every candidate URL has been fetched,
+confirmed 200, and pinned to the verbatim sentence that carries its figure — so
+the quote-gate has a real target before COOPER ever runs. Nothing is in `data/`
+yet: these are specs, not corpus, so the version does not move until COOPER runs
+them and a human accepts. The batches were the surviving third of a larger idea
+(saffron already shipped; honey and milk were already drafted as 04 and 05).
+
+Each was chosen to exercise something the poultry corpus does not:
+
+- **Ground beef** is the mixing model with **no anatomical floor** — the count is
+  set by grinding, not biology, so it is the purest test of pooling standing
+  alone. The floor is 1 (ground at home by hand); a documented contamination
+  traceback puts one patty's trimmings at **four separate sources** (Nebraska,
+  Texas, Uruguay, and a South Dakota trim plant).
+- **Maple syrup** stacks a concentration ratio (~40 gal sap to 1 gal syrup, by
+  the Jones Rule of 86) on a `recurring` per-tap rate over a **~6-week season** —
+  a shorter period than eggs' year, and a test that the period is data rather
+  than a hardcoded assumption.
+- **Silk** adds a **garment-level** product (tie, shirt, dress) on a
+  one-cocoon-per-worm constant, with a small honest reeling step (~5 cocoons per
+  thread) that is real mixing but does not dominate the count.
+
+Honest about grade: none rises above `industry`. Ground beef's headline "100+
+cattle" is a corporate statement, the per-garment silk counts are craft-site
+lore, and the sourced silk filament (**300–900 m**) is deliberately the cited
+figure over the higher number that circulates. Said here so that proximity to
+the NASS-backed poultry rows lends them no credibility they have not earned.
+
 ## v1.4.0 — 2026-07-29
 
 Israel gets the sources CBS is not, and the reader gets to choose how much to
