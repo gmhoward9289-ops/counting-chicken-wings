@@ -63,12 +63,22 @@ def version():
 
     Exists because this was not answerable from outside. Recent commits added
     schema and data without new endpoints, so feature-probing could not
-    distinguish a current build from one several commits stale -- and
-    render.yaml tracks `branch: master` rather than a tag, so the deployed
-    code is whatever master last was, not necessarily a release.
+    distinguish a current build from one several commits stale -- and the
+    deploy tracks `master` rather than a tag, so the deployed code is whatever
+    master last was, not necessarily a release.
 
-    RENDER_GIT_COMMIT is injected by Render at build time; it is absent when
-    running locally, which is itself informative.
+    THE COMMIT IS READ FROM A HOST-NEUTRAL VARIABLE FIRST. It used to read
+    only RENDER_GIT_COMMIT, which Render injects at build time. Moving to a
+    self-hosted box made that variable nobody's job to set, so the endpoint
+    answered `null` to the exact question it was built to answer -- and
+    "what am I looking at?" is not a question this project should shrug at.
+
+    GIT_COMMIT is what the deploy sets now. RENDER_GIT_COMMIT stays as a
+    fallback rather than being deleted, because the Dockerfile is deliberately
+    provider-agnostic and someone may still run this on Render.
+
+    Absent both, the value is None, which is itself informative: it means
+    nobody told this process what it is, so it is almost certainly local.
     """
     import os
     from importlib.metadata import PackageNotFoundError
@@ -79,7 +89,7 @@ def version():
     except PackageNotFoundError:          # running from source, not installed
         pkg = None
 
-    sha = os.environ.get("RENDER_GIT_COMMIT")
+    sha = os.environ.get("GIT_COMMIT") or os.environ.get("RENDER_GIT_COMMIT")
     conn = dbm.connect()
     try:
         counts = {
@@ -99,8 +109,17 @@ def version():
         "package_version": pkg,
         "git_commit": sha,
         "git_commit_short": sha[:7] if sha else None,
+        # Which host is serving this. Named `service` rather than
+        # `render_service` since 2026-07-30, when the deploy moved to a
+        # self-hosted box -- a field called `render_service` reporting a
+        # Hetzner container is the sort of quiet wrongness this project
+        # spends its time removing. The old key is kept alongside so any
+        # existing caller keeps working.
+        "service": (os.environ.get("SERVICE_NAME")
+                    or os.environ.get("RENDER_SERVICE_NAME")),
         "render_service": os.environ.get("RENDER_SERVICE_NAME"),
-        "branch": os.environ.get("RENDER_GIT_BRANCH"),
+        "branch": (os.environ.get("GIT_BRANCH")
+                   or os.environ.get("RENDER_GIT_BRANCH")),
         "table_count": tables,
         "row_counts": counts,
     }

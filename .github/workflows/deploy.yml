@@ -1,0 +1,71 @@
+name: Deploy
+
+# Replaces Render's push-to-deploy. Render's free tier spun the service down
+# when idle, which cost every first visitor a 12-23s cold start on the HTML
+# document itself -- no client-side loading UI can hide that, because the
+# browser has no page yet. /healthz exists as the hook for an external
+# keep-warm cron, which was the only fix short of paying for an always-on
+# instance. The self-hosted box IS always on, so the problem and its
+# workaround both go away.
+#
+# WHY THIS JOB IS THIN. It runs one command over SSH and nothing else. The
+# build, the corpus compile and the citation audit all happen inside the
+# Docker build on the server, so a data commit that breaks the audit fails
+# the image build and the RUNNING CONTAINER IS NEVER TOUCHED. Duplicating
+# those steps here would mean two places to keep in step, and the one that
+# actually gates the deploy is the one on the box.
+
+on:
+  push:
+    branches: [master]
+  # Deliberately available by hand: a failed deploy should be re-runnable
+  # without an empty commit.
+  workflow_dispatch:
+
+# One deploy at a time. Two pushes in quick succession would otherwise race
+# to `docker run --name wings` and one would lose.
+concurrency:
+  group: deploy-swamplink
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Belt and braces: the repo's own CI must be green on master before this
+    # ships it. The audit runs again inside the image build regardless.
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.SWAMPLINK_SSH_KEY }}
+          HOST: ${{ secrets.SWAMPLINK_HOST }}
+        run: |
+          if [ -z "$SSH_KEY" ] || [ -z "$HOST" ]; then
+            echo "::error::SWAMPLINK_SSH_KEY and SWAMPLINK_HOST must be set as repository secrets."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          # Pin the host key rather than trusting on first use: a deploy that
+          # accepts any key is a deploy that can be pointed anywhere.
+          printf '%s\n' "${{ secrets.SWAMPLINK_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -o BatchMode=yes "$HOST" 'wings-deploy'
+
+      - name: Verify what is actually serving
+        run: |
+          for i in $(seq 1 20); do
+            body="$(curl -fsS https://wings.swamplink.com/api/version || true)"
+            if [ -n "$body" ]; then
+              echo "$body"
+              got="$(printf '%s' "$body" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("git_commit") or "")')"
+              if [ "$got" = "$GITHUB_SHA" ]; then
+                echo "serving $GITHUB_SHA"
+                exit 0
+              fi
+              echo "serving $got, waiting for $GITHUB_SHA"
+            fi
+            sleep 5
+          done
+          echo "::error::wings.swamplink.com is not serving $GITHUB_SHA"
+          exit 1
