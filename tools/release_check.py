@@ -6,8 +6,13 @@
 
 docs/VERSIONING.md says to version by CAPABILITY, not by volume. That rule is
 correct and completely unenforced: CI checks only that a tag matches
-pyproject.toml, so nothing notices when a release adds a domain and calls it a
-patch, or renames a comment and calls it a minor.
+pyproject.toml, so nothing notices when a release adds a domain and moves only
+the third digit, or renames a comment and moves the second.
+
+VOCABULARY. The scheme is MAJOR.MINOR.MINOR, not SemVer, so the verdicts here
+are "second" and "third" after the digit that moves -- not "minor" and "patch",
+which would import the SemVer meaning the project deliberately dropped.
+"major" keeps its name because MAJOR did not change.
 
 An unenforced convention drifts fastest when several people are cutting
 releases, which is exactly this project's situation. So this executes the rule
@@ -17,18 +22,18 @@ WHAT IT COMPARES, and why these three
 
   1. STRUCTURE -- tables, and the domain/species/product rows. A new KIND of
      thing is the definition of new capability: you can ask a question that
-     did not exist before. MINOR required.
+     did not exist before. SECOND digit required.
 
   2. VOLUME -- row counts of tables that already existed. More rows of a kind
-     we already had answers nothing new, however many rows. PATCH is enough.
+     we already had answers nothing new, however many rows. THIRD is enough.
      This is the case the old rule got wrong and inflated 1.0.0 to 1.7.0 in
      two days.
 
   3. THE PUBLISHED ANSWER -- `wings count 12` for EVERY active product, run
      against both corpora. If floor, required or distinct moved for any of
      them, someone's existing citation is now wrong, and that is the whole
-     reason data is versioned here at all. MINOR required regardless of how
-     small the diff was.
+     reason data is versioned here at all. SECOND digit required regardless
+     of how small the diff was.
 
 The third is the one worth having, because it is the rule's own criterion
 rather than a proxy for it: it fires on a code change as readily as a data
@@ -71,7 +76,7 @@ ROOT = Path(__file__).resolve().parent.parent
 KIND_TABLES = ("domain", "species", "product")
 
 # The question the project exists to answer. Any release that moves this owes
-# the world a MINOR and a changelog line, however it moved.
+# the world a second-digit bump and a changelog line, however it moved.
 HEADLINE = ["count", "12"]
 
 
@@ -219,7 +224,7 @@ def required_bump(base: dict, head: dict,
 
     # Removal is checked BEFORE volume, and the order is load-bearing. Written
     # the other way round, a release that dropped a table AND changed rows
-    # anywhere else returned "patch" and never mentioned the removal -- the
+    # anywhere else returned "third" and never mentioned the removal -- the
     # volume branch matched first and won. Retraction breaks a citation
     # somebody already made, which is the exact harm this versioning exists to
     # signal, so it must not be reachable only when nothing else moved.
@@ -233,7 +238,7 @@ def required_bump(base: dict, head: dict,
             reasons.append(f"{t}(s) REMOVED: {', '.join(dropped)}")
 
     if reasons:
-        return "minor", reasons
+        return "second", reasons
 
     # Volume only.
     grew = {t: (base["counts"].get(t, 0), head["counts"][t])
@@ -241,7 +246,7 @@ def required_bump(base: dict, head: dict,
             if head["counts"][t] != base["counts"].get(t, 0)}
     if grew:
         detail = ", ".join(f"{t} {a}->{b}" for t, (a, b) in sorted(grew.items()))
-        return "patch", [f"rows changed, no new kind: {detail}"]
+        return "third", [f"rows changed, no new kind: {detail}"]
 
     return "none", ["corpus identical"]
 
@@ -252,13 +257,13 @@ def actual_bump(old: str, new: str) -> str:
     if n[0] != o[0]:
         return "major"
     if n[1] != o[1]:
-        return "minor"
+        return "second"
     if n[2] != o[2]:
-        return "patch"
+        return "third"
     return "none"
 
 
-RANK = {"none": 0, "patch": 1, "minor": 2, "major": 3}
+RANK = {"none": 0, "third": 1, "second": 2, "major": 3}
 
 
 def main(argv: list[str] | None = None) -> int:
