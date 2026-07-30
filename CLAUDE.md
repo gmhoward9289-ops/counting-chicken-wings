@@ -76,13 +76,21 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
 
 - **Version lives only in `pyproject.toml`.** Everything else derives it from installed
   package metadata. An editable install can report a stale version until reinstalled.
-- **Version by capability, not by volume.** A new *kind* of data — a domain, a product,
-  a table, a dimension — is MINOR. **More rows of a kind we already have is PATCH**,
-  however many rows: another country's series landing in an existing table answers
-  nothing new. The exception runs the other way — a one-line fix that moves a published
-  headline figure is MINOR, because someone's existing citation is now wrong, and the
-  changelog states old and new. The old rule ("all data changes are MINOR") took the
-  project 1.0.0 → 1.7.0 in two days and made the minor number meaningless.
+- **The scheme is MAJOR.MINOR.MINOR, not SemVer** — the third digit is not a patch
+  level, and routinely carries data. **Version by capability, not by volume.** A new
+  *kind* of data — a domain, a product, a table, a dimension — takes the second digit.
+  **More rows of a kind we already have takes the third**, however many rows: another
+  country's series landing in an existing table answers nothing new. The exception runs
+  the other way — a one-line fix that moves a published headline figure takes the second,
+  because someone's existing citation is now wrong, and the changelog states old and new.
+  The old rule ("all data changes are MINOR") took the project 1.0.0 → 1.7.0 in two days
+  and made the middle number meaningless.
+- **Do not bump `pyproject.toml` when you start a branch.** Write the changelog under
+  `## Unreleased` and set the number in one commit right before merging, after
+  `git fetch` and a look at `git log origin/master` for a `(vX.Y.Z)` subject. Several
+  branches are open at once and they release the same day — a number claimed early gets
+  taken while you are in review, and each renumber costs a rebase plus a sweep of the
+  version string through three files.
 
 Render tracks `branch: master`, not tags, so the deployed site is normally *ahead* of the
 latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version` for the
