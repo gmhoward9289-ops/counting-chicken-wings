@@ -259,8 +259,26 @@ def fetch_once(url: str, doc_dir: Path) -> Path | None:
     """
     if url in _FETCH_CACHE:
         return _FETCH_CACHE[url]
-    slug = re.sub(r"[^a-z0-9]+", "-", url.lower())[:48].strip("-")
-    _FETCH_CACHE[url] = fetch_url(url, doc_dir / slug)
+    # The 48-character truncation alone SILENTLY DESTROYED DOCUMENTS. In
+    # batch-09 three govinfo URLs --
+    #
+    #   .../CFR-2024-title9-vol2-part381.pdf     693,586 chars
+    #   .../CFR-2024-title7-vol3-part70.pdf       79,871 chars
+    #   .../CFR-2024-title9-vol2-sec381-90.pdf     3,954 chars
+    #
+    # share their first 47 characters, so all three wrote to
+    # "https-www-govinfo-gov-content-pkg-cfr-2024-title" and the last fetch
+    # won. Two documents were downloaded, logged as fetched, and deleted by the
+    # next fetch. The run then reported 0 of 8 extractions and looked like
+    # source scarcity.
+    #
+    # This is the worst shape a bug can take here: the evidence directory is
+    # the thing the gate checks quotes against, so losing a document does not
+    # just lose a figure, it makes any quote from it unverifiable. A short hash
+    # of the FULL url keeps names readable and collisions impossible.
+    digest = hashlib.sha256(url.encode()).hexdigest()[:8]
+    stem = re.sub(r"[^a-z0-9]+", "-", url.lower())[:48].strip("-")
+    _FETCH_CACHE[url] = fetch_url(url, doc_dir / f"{stem}-{digest}")
     return _FETCH_CACHE[url]
 
 

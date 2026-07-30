@@ -509,3 +509,45 @@ def test_numbers_written_the_way_sources_write_them_still_pass(good, quote):
     them would trade one false negative for a stream of false positives."""
     assert rb._is_number(good)
     assert rb.band_in_quote({"value_mode": good}, quote)[0]
+
+
+# ---------------------------------------------------------------------------
+# Document filenames must be collision-free
+# ---------------------------------------------------------------------------
+
+def test_distinct_urls_get_distinct_document_names(tmp_path, monkeypatch):
+    """The bug this catches destroyed evidence silently.
+
+    batch-09 fetched three govinfo PDFs whose URLs share their first 47
+    characters. The slug truncated at 48, so all three wrote to
+    "https-www-govinfo-gov-content-pkg-cfr-2024-title" and the last fetch won:
+    693,586 and 79,871 characters were downloaded, logged as fetched, and then
+    deleted by the next fetch. The run reported 0 of 8 extractions and read as
+    source scarcity.
+
+    Worse than losing a figure: the inbox is what the gate checks quotes
+    against, so a lost document makes any quote from it unverifiable.
+    """
+    import runner
+
+    urls = [
+        "https://www.govinfo.gov/content/pkg/CFR-2024-title9-vol2/pdf/"
+        "CFR-2024-title9-vol2-part381.pdf",
+        "https://www.govinfo.gov/content/pkg/CFR-2024-title7-vol3/pdf/"
+        "CFR-2024-title7-vol3-part70.pdf",
+        "https://www.govinfo.gov/content/pkg/CFR-2024-title9-vol2/pdf/"
+        "CFR-2024-title9-vol2-sec381-90.pdf",
+    ]
+    # Shared prefix long enough to defeat any pure-truncation scheme.
+    assert len({u[:48] for u in urls}) == 1
+
+    seen = []
+    monkeypatch.setattr(runner, "_FETCH_CACHE", {})
+    monkeypatch.setattr(runner, "fetch_url",
+                        lambda url, dest: seen.append(dest) or dest)
+    for u in urls:
+        runner.fetch_once(u, tmp_path)
+
+    assert len(seen) == len(urls)
+    assert len({p.name for p in seen}) == len(urls), (
+        f"filenames collided: {[p.name for p in seen]}")
