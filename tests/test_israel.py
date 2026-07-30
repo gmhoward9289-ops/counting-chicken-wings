@@ -260,8 +260,44 @@ def test_national_and_regional_rows_cannot_be_confused(conn):
         """SELECT COUNT(*) FROM output_stat_year
            WHERE country_id=? AND region IS NULL""", (isr(conn),)
     ).fetchone()[0]
-    # 5 output + 5 value + 10 inventory + 1 head count + 1 chicks + 1 growers
-    assert national == 23
+    # 5 output + 5 value + 10 inventory + 1 head count + 1 chicks + 1 growers,
+    # plus 2 chicks_placed from the CBS quarterly series (a second
+    # publication, data/output_israel_quarterly.yaml) merged in from #2.
+    assert national == 25
+
+
+def test_the_only_israeli_head_count_is_placements_not_slaughter(conn):
+    """Israel's head count exists, and it is not a slaughter figure.
+
+    CBS publishes no poultry head slaughtered in either publication -- the
+    quarterly's slaughterhouse head-count block covers only cattle, sheep and
+    goats, and pigs. Placements are what it does publish, and they differ from
+    slaughter by farm mortality.
+
+    This asserts both halves, because the useful thing about the figure and the
+    dangerous thing about it are the same fact: it counts birds entering the
+    system, not birds killed.
+    """
+    placed = dict(conn.execute(
+        """SELECT year, value FROM output_stat_year
+           WHERE country_id=? AND measure='chicks_placed'""", (isr(conn),)))
+    assert placed, "Israel has no head count at all"
+    assert placed[2024] == pytest.approx(275427.900)
+    assert placed[2023] == pytest.approx(262848.753)
+
+    units = {r[0] for r in conn.execute(
+        """SELECT unit FROM output_stat_year
+           WHERE country_id=? AND measure='chicks_placed'""", (isr(conn),))}
+    assert units == {"thousand_head"}, (
+        "left in CBS's own thousands; expanding to head would be a conversion"
+    )
+
+    # The distinction that matters: no slaughter series exists for Israel.
+    assert conn.execute(
+        """SELECT COUNT(*) FROM slaughter_stat_year WHERE country_id=?""",
+        (isr(conn),)).fetchone()[0] == 0, (
+        "placements are not slaughter and must not be loaded as one"
+    )
 
 
 def test_us_tables_did_not_gain_israeli_rows(conn):
@@ -570,11 +606,44 @@ def test_neither_promoted_figure_claims_a_government_grade(conn):
 
 
 def test_the_government_only_view_drops_all_three_industry_figures(conn):
-    """min_confidence=measured must leave only what CBS published."""
+    """min_confidence=measured must leave only what CBS published.
+
+    UPDATED when #2 merged, and the change is the point of that merge rather
+    than a nuisance. `chicks_placed` now appears on BOTH sides of this line:
+
+      - Ofot's 244,000 for 2021, `industry`, dropped here
+      - CBS's 262,849 / 275,428 for 2023-24, `measured`, kept
+
+    So Israel's bird count survives a government-only view for the first time.
+    Before this, every head figure the corpus held for Israel came from a trade
+    body or a trade-press interview, and this assertion was the proof of it.
+
+    What has NOT changed: the three industry figures are still dropped, and
+    `head_slaughtered` still is not here at all, because CBS publishes none --
+    placements are not slaughter.
+    """
     kept = {
         r[0] for r in conn.execute(
             """SELECT DISTINCT measure FROM output_stat_year
                WHERE country_id=? AND confidence IN ('measured','derived')""",
             (isr(conn),))
     }
-    assert kept == {"meat_output", "output_value", "inventory_eoy", "marketed"}
+    assert kept == {"meat_output", "output_value", "inventory_eoy", "marketed",
+                    "chicks_placed"}
+
+    # The half that must not drift: a government-only view still has no
+    # slaughter figure for Israel, so nothing may present one.
+    assert "head_slaughtered" not in kept
+
+    # And the industry-graded rows really are excluded, including the OTHER
+    # chicks_placed. Same measure, different grade, different source.
+    dropped = {
+        (r[0], r[1]) for r in conn.execute(
+            """SELECT o.measure, s.slug FROM output_stat_year o
+               JOIN source s ON s.id = o.source_id
+               WHERE o.country_id=? AND o.confidence NOT IN
+                     ('measured','derived')""",
+            (isr(conn),))
+    }
+    assert ("chicks_placed", "ofot-sector-summary-2021") in dropped
+    assert ("head_slaughtered", "toi-poultry-imports-2025") in dropped

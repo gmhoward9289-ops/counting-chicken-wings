@@ -130,10 +130,124 @@
     measurements so the gap is probably real, but a reader who adds up the
     districts will find it, and finding it unannounced reads as an error.
 
+- url: https://www.cbs.gov.il/he/publications/DocLib/2025/agriculture_q202502/t07.xlsx
+  title: >-
+    Table 7, Marketing of selected animals and animal products, detailed data —
+    CBS Quarterly Agriculture Statistics 2025 Q2
+  publisher: Israel Central Bureau of Statistics
+  kind: government
+  verified_on: '2026-07-29'
+  http_status: 200
+  content_type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+  bytes: 29784
+  rows_non_empty: 37
+  subjects: [poultry, israel]
+  covers:
+    - broiler_chicks_placed_head      # the count the plan was missing
+    - layer_chicks_placed_head
+    - turkey_chicks_placed_head
+    - broiler_marketing_tonnes
+    - monthly_and_quarterly_series
+  does_not_cover:
+    - poultry_head_slaughtered        # see notes -- poultry is excluded
+    - poultry_weight_basis            # live vs carcass never stated
+    - average_live_weight
+  confidence_ceiling: measured
+  notes: >-
+    The most useful Israeli table found, and it is in the QUARTERLY series
+    rather than the Statistical Abstract. Monthly, quarterly and annual columns;
+    annual sits in columns Q (2024) and R (2023). The header's "P=2011" looks
+    like a CBS typo or merged-cell artifact -- do not read column P as a year
+    without checking.
+
+    BROILER CHICKS PLACED, heavy breeds, head: 275,427,900 (2024) and
+    262,848,753 (2023). Light breeds are layers (7,371,236 in 2024) and turkeys
+    are separate (8,976,298), so heavy breeds is the broiler figure.
+
+    This retires the trade-press lead in docs/ISRAEL-PLAN.md: the unverified
+    "~260 million broilers/year" is essentially the 2023 placement figure, and
+    it now has a government citation instead of a headline. It also corrects
+    the plan's scale comparison -- Israel against the US 9,579,797,000 is
+    34.8x, not the "roughly 37x" the plan estimates.
+
+    PLACEMENTS ARE NOT SLAUGHTER, and this is the one thing not to gloss. A
+    chick placed is a bird entering the system; some fraction dies before
+    market. For the "how many birds had to enter the funnel" question that is
+    arguably the better denominator than slaughter, but it must not be loaded
+    into a head_slaughtered column, because it is a different measurement and
+    the whole project rests on not conflating those.
+
+    HOW TO LOAD IT, settled 2026-07-29 after a collision. A concurrent session
+    built output_stat_year for the Israeli figures, and that design wins: it
+    carries measure + unit + provisional + suppressed, so a tonnage or a head
+    count says what it is instead of being poured into a column named _lb. An
+    earlier attempt here added a head_placed column to slaughter_stat_year and
+    put Israeli rows in it; that was reverted, because it mislabels Israeli
+    reporting as US-shaped and trips that session's own
+    test_us_shaped_tables_stay_us_only.
+
+    So this figure needs exactly three things, none of them a new table:
+
+      1. 'chicks_placed' added to the output_stat_year.measure CHECK list.
+         The four existing values -- meat_output, output_value, inventory_eoy,
+         marketed -- have no room for a placement, which is why it is missing
+         from the corpus rather than by oversight.
+      2. this source, cbs-quarterly-agriculture-2025q2, added to sources.yaml.
+         The three sources already added there are all Statistical Abstract
+         tables; the quarterly series is separate and is the only one with a
+         head count.
+      3. two rows in data/output_israel.yaml: 275,427,900 for 2024 (provisional,
+         CBS's asterisk) and 262,848,753 for 2023, unit 'head'.
+
+    Worth doing because that session's own test docstring says Israel has "no
+    head slaughtered, which is the denominator the count question needs". This
+    is the nearest real count to that denominator, and it is measured rather
+    than derived.
+
+    Broiler marketing, tonnes: 571,497 (2024), 553,630 (2023). This
+    independently corroborates st21_04, whose districts sum to 571,499.95 --
+    agreement to 3 tonnes across two separately published tables. It also
+    resolves the 4.76% gap against st21_11: marketing is ~571.5 kt and output
+    is 600.1 kt, two consistent concepts rather than an error in either.
+
+    WEIGHT BASIS UNSTATED for poultry. Footnote (1) reads "Live weight
+    (estimated) of slaughtering in slaughterhouses only" but tags only the
+    cattle, sheep-and-goats and pigs rows; the broiler row carries no footnote,
+    and intro_h.docx does not define it either. Treat the tonnage as
+    basis-unknown until a definition is found -- the same discipline as
+    vanilla's green-versus-cured trap, where a mass figure without its state
+    named is not usable.
+
 # ---------------------------------------------------------------- dead ends
 #
 # Recorded deliberately. ../SOURCE-LIBRARY.md is right that an absence is the
 # expensive half of an entry, and every line here cost time to establish.
+
+- url: https://www.cbs.gov.il/he/publications/DocLib/2025/agriculture_q202502/t07.xlsx#slaughter-block
+  title: "CBS slaughterhouse head-count block (within quarterly Table 7)"
+  publisher: Israel Central Bureau of Statistics
+  kind: government
+  verified_on: '2026-07-29'
+  http_status: 200
+  subjects: [israel, slaughter]
+  covers:
+    - cattle_head_slaughtered
+    - sheep_and_goat_head_slaughtered
+    - pig_head_slaughtered
+  does_not_cover:
+    - poultry_head_slaughtered      # the point of this entry
+  notes: >-
+    Recorded so nobody spends the hour again. Table 7 does contain a
+    "Slaughtering in slaughterhouses" block reported in HEADS -- but it covers
+    only cattle, sheep and goats, and pigs. The 2024 grand total of 529,550
+    head is exactly cattle 164,559 + sheep and goats 229,195 + pigs 135,796,
+    which confirms poultry is excluded rather than merely unlabelled.
+
+    So CBS appears not to publish poultry head slaughtered anywhere: not in
+    Statistical Abstract chapter 21, and not in the quarterly series. Chicks
+    placed (above) is the closest real count. If a true slaughter figure is
+    needed, the untried source is the Israeli Poultry Board / מועצת הלול, which
+    ISRAEL-PLAN.md lists third and expects to be Hebrew-only.
 
 - url: https://apis.cbs.gov.il/series/data/list
   title: CBS time-series API
