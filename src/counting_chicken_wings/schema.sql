@@ -758,6 +758,37 @@ CREATE TABLE quality_defect (
     notes               TEXT
 );
 
+-- Each species' own version of the size-vs-quality question. "Is a fatter
+-- chicken a better chicken?" only makes sense for broilers -- eggs are
+-- graded on size classes, saffron on ISO colouring categories -- so the
+-- question and its x-axis are data, not prose in a handler. This is the
+-- floor_note lesson applied again: the verdict text used to be hardcoded
+-- in api.py, where no YAML change could ever fix it.
+--
+-- No source_id: every column here is editorial framing. The figures that
+-- back a verdict live in quality_defect and product_grade rows, which are
+-- statistics and cite sources individually. A species with an axis row but
+-- no figure rows has a question and no answer -- the API reports that
+-- honestly rather than this table pretending otherwise.
+CREATE TABLE quality_axis (
+    id                  INTEGER PRIMARY KEY,
+    species_id          INTEGER NOT NULL UNIQUE REFERENCES species(id),
+    question            TEXT    NOT NULL,   -- 'Is a fatter chicken better?'
+    x_label             TEXT    NOT NULL,   -- 'Live weight'
+    x_unit              TEXT,               -- 'lb'; NULL for pure classes
+    -- 'continuous': the axis is a measured quantity (live weight).
+    -- 'classes'   : the axis is a graded ladder (egg sizes, ISO categories).
+    x_kind              TEXT    NOT NULL CHECK (x_kind IN
+                            ('continuous','classes')),
+    -- The three-part verdict, each 'better'/'worse'/'unchanged'/NULL.
+    -- NULL means the corpus cannot support a verdict yet, and the API
+    -- passes that on as an open question rather than defaulting it.
+    verdict_yield       TEXT,
+    verdict_quality     TEXT,
+    verdict_count       TEXT,
+    summary             TEXT
+);
+
 
 -- ---------------------------------------------------------------------------
 -- Nutrition
