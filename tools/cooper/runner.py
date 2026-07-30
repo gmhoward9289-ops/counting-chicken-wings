@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as cf
 import hashlib
+import html
 import json
 import re
 import ssl
@@ -368,6 +369,21 @@ def fetch_url(url: str, dest: Path) -> Path | None:
     text = re.sub(r"<script.*?</script>|<style.*?</style>", " ", text,
                   flags=re.S | re.I)
     text = re.sub(r"<[^>]+>", " ", text)
+    # Decode entities AFTER tag stripping, so an escaped &lt;tag&gt; sitting in
+    # prose cannot be turned into a real tag and then eaten by the line above.
+    #
+    # Left raw, &nbsp; and &#xE5D2; survive into the inbox -- and the inbox is
+    # what `verify` matches quotes against. A model that reads the prose
+    # correctly and writes it back as ordinary words then produces a quote that
+    # can NEVER match, however honest it was. batch-08-silk lost a 2/2 consensus
+    # row to exactly this: suekayton carries 47 &nbsp; and its reeling quote
+    # spanned one; newworldencyclopedia carries none and its quotes verified.
+    # That is a false NEGATIVE, the mirror of the filename-collision bug, and
+    # just as invisible -- it reads as "the model made the quote up".
+    #
+    # NBSP decodes to U+00A0, which verify's NFKC pass folds to a space, so
+    # nothing further is needed here.
+    text = html.unescape(text)
     text = re.sub(r"[ \t]+", " ", text)
     dest = dest.with_suffix(".txt")
     dest.write_text(text, encoding="utf-8")

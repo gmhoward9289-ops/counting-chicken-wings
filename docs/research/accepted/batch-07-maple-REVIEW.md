@@ -46,13 +46,35 @@ is the rounded folk form of the same rule. Worth storing the *rule* rather than
 the constant, because the constant is only true at 2°Brix. The gal/tap pair is
 a genuine regional spread and should stay a range, not an average.
 
-**3. The strongest source contributed nothing.** The UVM Rule-of-86 PDF was
-fetched and converted (7,042 chars via pdftotext) but no accepted figure came
-from it — every row except `season_length` came off the NY State Maple page.
-Only **4 chunks were embedded across all three documents**, which is few for
-~30k chars, so the Rule-of-86 passage may never have been retrieved to be
-extracted. That is a retrieval finding, not a source finding, and it is the
-thing most worth looking at before batches 06 and 08 run.
+**3. The strongest source contributed nothing — and it is NOT a retrieval bug.**
+*(Corrected 2026-07-30, after checking. The commit message and PR #16 for this
+run said the Rule-of-86 passage "may never have been retrieved." That was wrong,
+and this is the durable record, so the correction belongs here.)*
+
+Every row except `season_length` came off the NY State Maple page; the UVM
+Rule-of-86 PDF produced nothing. The first guess was thin chunking — 4 chunks
+across ~30k chars. Checking it kills that theory:
+
+- The UVM PDF is 7,042 chars, so at `CHUNK_CHARS = 12000` it is exactly **one**
+  chunk, never split and never truncated.
+- `sap_to_syrup_ratio` lists exactly two URLs, so `allowed` was 2 chunks and
+  `best_chunks(..., k=2)` returned **both**. The UVM chunk was in front of the
+  model.
+- The text is demonstrably there: the fetched document carries "one divides 86
+  by the sugar content of sap" and "an average sap sugar concentration of
+  2°Brix".
+
+So both models saw the rule and quoted the folk constant anyway. That is a model
+preference, not a pipeline fault, and it is worth knowing that the gate cannot
+catch it: 40 is not *wrong*, it is the rounded form, and the UVM document itself
+says "a sap:syrup ratio of close to 40:1" a sentence later.
+
+**The consequence for promotion:** the accepted quote cites the weaker source
+for a figure the stronger source both states and *explains*. If this row goes
+into the corpus, cite UVM and store the rule (86 ÷ °Brix) with its 2°Brix basis,
+not NY State Maple's bare 40 — otherwise the corpus records a constant that is
+only true at one sugar concentration, which is precisely what the batch spec
+said to avoid.
 
 ## Portability fixes this run required
 
