@@ -97,11 +97,38 @@ BATCHES = ROOT / "batches"
 # project, and on it qwen's low count looks like correct refusal rather than
 # weak recall -- but a fair comparison needs the sources present.
 #
-# So: fix COOPER's certificate trust, re-run, THEN judge. Do not flip this
-# constant again on the evidence above; it does not support a decision either
-# way. gemma stays in the file for the same reason.
+# RE-RUN DONE, AND MISTRAL IS OUT. The certificate fix landed all 17 documents
+# (59 chunks against 25), so the confound is gone -- and the behaviour did not
+# change. With every source present, mistral still returned 2670588 as the
+# value for three unrelated fields, "Several thousand" for a fraction, and
+# "1 and 1/2 teaspoons" for a mass. 11 answers of 14, and the gate rejected
+# every row worth rejecting. qwen answered 4 and declined the rest.
+#
+# The tell is one number appearing under three different questions. That is not
+# weak extraction, it is answering from proximity rather than from meaning, and
+# the prompt's "Guessing is worse than not answering" does not restrain it.
+#
+# So the second model goes back to gemma4-32k -- not because gemma is good, it
+# is 2.5x slower and needs a reasoning trace stripped, but because
+# qwen + gemma is the ONLY configuration that has ever produced accepted
+# corpus (batch-01-saffron, three figures). mistral has produced zero across
+# two full runs. Slow and quiet beats fast and confident here, because the
+# product is trustworthiness and a fabricated figure costs more than a missing
+# one.
+#
+# What the A/B got right, and why it still misled: mistral genuinely does quote
+# more faithfully WHEN THE ANSWER IS PRESENT. That is what was measured, on a
+# chunk chosen because it contained the answer. It never tested the case that
+# dominates a real batch -- most chunks do not contain most answers -- and on
+# that case mistral is the worst of the three.
+#
+# NEXT THING TO TRY, when a batch next makes sense rather than as a fishing
+# expedition: harden the refusal instruction and re-measure with a chunk that
+# deliberately does NOT contain the answer. A model's refusal rate on absent
+# figures is the number that actually predicts batch quality, and no test here
+# has measured it yet.
 EXTRACTOR = "qwen2.5-coder:7b"
-LONG_CONTEXT = "mistral:7b"
+LONG_CONTEXT = "gemma4-32k"
 EMBEDDER = "nomic-embed-text"
 
 # COOPER: i7-6700 (4c/8t), 32 GB RAM, RTX 2060 SUPER with 8 GB VRAM.
