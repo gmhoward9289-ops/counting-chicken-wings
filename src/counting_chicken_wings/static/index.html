@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Counting Chicken Wings</title>
+<script>
+/* Theme lands before first paint so a dark reload never flashes light.
+   Stored choice wins; otherwise follow the system. */
+try {
+  document.documentElement.dataset.theme =
+    localStorage.getItem('ccw-theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+} catch (e) { document.documentElement.dataset.theme = 'light'; }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Besley:wght@700;900&family=IBM+Plex+Mono:wght@400;500;700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -19,8 +28,29 @@
     --stamp: #4B3A8F; --stamp-soft: #7A68BE;
     --measured: #1F7A46; --derived: #1F7A46; --study: #1D5FBF;
     --industry: #0E7490; --estimate: #A05A0B; --bad: #C2413B;
+    --field: #ffffff; --hatch: rgba(160,90,11,.14);
+    --amber: #C58A2E; --amber2: #d97706; --amber-bright: #E0A93E;
+    --scale-lo: #EFE7D6; --scale-hi: #54350F; --brown: #7c2d12;
+    --bar-muted: #B3AC9D; --bar-recede: #C6BFAF;
+    --grey: #7E7869; --grey2: #9A948A;
     --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     --display: 'Besley', Georgia, serif;
+  }
+  /* Dark: the same bulletin printed on slate. Ink and paper trade places,
+     the stamp ink brightens to stay legible, and the choropleth scale flips
+     so "more" is always the end that stands off the ground. */
+  :root[data-theme="dark"] {
+    --paper: #191612; --card: #201C16; --well: #29241C;
+    --line: #383228; --rule: #5A5244;
+    --ink: #ECE6D9; --dim: #A79F8F; --faint: #7D766A;
+    --stamp: #A493E4; --stamp-soft: #7A68BE;
+    --measured: #52B383; --study: #6EA3EF;
+    --industry: #45B6CE; --estimate: #D3924C; --bad: #E4756B;
+    --field: #14110C; --hatch: rgba(211,146,76,.16);
+    --amber: #D19A3E; --amber2: #E8912D; --amber-bright: #E8B65A;
+    --scale-lo: #2A2318; --scale-hi: #F2C879; --brown: #B65B32;
+    --bar-muted: #5F584A; --bar-recede: #453F33;
+    --grey: #8D8577; --grey2: #948D80;
   }
   * { box-sizing: border-box; }
   body {
@@ -31,7 +61,10 @@
   :focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
 
-  header { padding: 44px 0 24px; }
+  header { padding: 44px 0 24px; position: relative; }
+  #theme-toggle { position: absolute; top: 44px; right: 0; }
+  @media (max-width: 560px) { #theme-toggle { position: static;
+    margin-bottom: 14px; } }
   /* The ASCII chicken is set as a rubber stamp: inspection-ink violet,
      bordered, slightly off-square, the way a stamp lands on a carton.
      aria-hidden because a screen reader spelling out backslashes is noise,
@@ -71,7 +104,7 @@
           color: var(--faint); text-transform: uppercase;
           letter-spacing: .08em; margin-bottom: 5px; }
   input[type=number], select {
-    background: #fff; color: var(--ink); border: 1px solid var(--rule);
+    background: var(--field); color: var(--ink); border: 1px solid var(--rule);
     border-radius: 2px; padding: 9px 11px; font-size: 15px; min-width: 90px;
     font-family: var(--mono);
   }
@@ -136,7 +169,7 @@
   .b-estimate { color: var(--estimate); border-color: var(--estimate);
                 border-style: dashed;
                 background: repeating-linear-gradient(45deg,
-                  transparent 0 3px, rgba(160,90,11,.14) 3px 4px); }
+                  transparent 0 3px, var(--hatch) 3px 4px); }
 
   .fact { border-left: 3px solid var(--stamp); padding: 12px 0 12px 16px;
           margin: 16px 0; }
@@ -261,6 +294,7 @@
 <div class="wrap">
 
 <header>
+  <button class="btn" id="theme-toggle" type="button"></button>
   <div class="brand">
     <pre id="logo" aria-hidden="true"></pre>
     <div>
@@ -767,13 +801,63 @@ if (typeof Plotly === 'undefined') {
   };
 }
 
-const PLOT = {
-  paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-  font: { color: '#5C574E', size: 11 },
-  margin: { l: 50, r: 16, t: 30, b: 40 },
-  xaxis: { gridcolor: '#DDD7C9', zerolinecolor: '#DDD7C9' },
-  yaxis: { gridcolor: '#DDD7C9', zerolinecolor: '#DDD7C9' },
+// Chart colours are read from the CSS custom properties at draw time, so a
+// theme change re-colours every chart by re-running the view inits -- there
+// is exactly one place a colour is defined, and it is the stylesheet.
+const CHVARS = {
+  stamp: '--stamp', stampSoft: '--stamp-soft', measured: '--measured',
+  study: '--study', industry: '--industry', estimate: '--estimate',
+  bad: '--bad', faint: '--faint', dim: '--dim', line: '--line',
+  ink: '--ink', barMuted: '--bar-muted', barRecede: '--bar-recede',
+  amber: '--amber', amber2: '--amber2', amberBright: '--amber-bright',
+  scaleLo: '--scale-lo', scaleHi: '--scale-hi',
+  grey: '--grey', grey2: '--grey2', brown: '--brown',
 };
+const CH = new Proxy({}, { get: (_, k) =>
+  getComputedStyle(document.documentElement)
+    .getPropertyValue(CHVARS[k]).trim() });
+
+let PLOT;
+function mkPlot() {
+  PLOT = {
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: CH.dim, size: 11 },
+    margin: { l: 50, r: 16, t: 30, b: 40 },
+    xaxis: { gridcolor: CH.line, zerolinecolor: CH.line },
+    yaxis: { gridcolor: CH.line, zerolinecolor: CH.line },
+  };
+}
+mkPlot();
+
+function applyTheme() {
+  const mode = localStorage.getItem('ccw-theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.dataset.theme = mode;
+  const t = document.getElementById('theme-toggle');
+  if (t) {
+    t.textContent = mode === 'dark' ? 'Light mode' : 'Dark mode';
+    t.setAttribute('aria-pressed', mode === 'dark');
+  }
+  mkPlot();
+  return mode;
+}
+// Redraw whatever view is showing; the others rebuild when opened.
+function redrawTheme() {
+  loaded = {};
+  const cur = document.querySelector('nav button.on');
+  if (cur && cur.dataset.v !== 'calc') load(cur.dataset.v);
+}
+document.getElementById('theme-toggle').onclick = () => {
+  const now = document.documentElement.dataset.theme === 'dark'
+    ? 'light' : 'dark';
+  localStorage.setItem('ccw-theme', now);
+  applyTheme();
+  redrawTheme();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (!localStorage.getItem('ccw-theme')) { applyTheme(); redrawTheme(); }
+});
+applyTheme();
 const CFG = { displayModeBar: false, responsive: true };
 let META = null, loaded = {};
 
@@ -900,10 +984,10 @@ async function calc() {
 }
 
 // ---- scientific mode
-const CONF_COLOUR = {
-  measured: '#1F7A46', derived: '#1F7A46', study: '#1D5FBF',
-  industry: '#0E7490', estimate: '#A05A0B',
-};
+const CONF_COLOUR = () => ({
+  measured: CH.measured, derived: CH.measured, study: CH.study,
+  industry: CH.industry, estimate: CH.estimate,
+});
 
 // Requests are not guaranteed to resolve in the order they were sent, and a
 // 100,000-iteration run can easily finish after a 2,000-iteration one fired
@@ -948,7 +1032,7 @@ async function sci() {
   Plotly.newPlot('s-tornado', [{
     type: 'bar', orientation: 'h',
     x: t.map(x => x.swing), y: t.map(x => x.label),
-    marker: { color: t.map(x => CONF_COLOUR[x.confidence] || '#8A8478') },
+    marker: { color: t.map(x => CONF_COLOUR()[x.confidence] || CH.faint) },
     customdata: t.map(x => [x.share, x.confidence, x.low, x.high]),
     hovertemplate: '%{y}<br>swing %{x:.4f} chickens<br>' +
       '%{customdata[0]:.1%} of total uncertainty<br>' +
@@ -962,7 +1046,7 @@ async function sci() {
   const h = d.required_hist;
   Plotly.newPlot('s-hist', [{
     type: 'bar', x: h.centres, y: h.counts,
-    marker: { color: '#4B3A8F' }, name: 'draws',
+    marker: { color: CH.stamp }, name: 'draws',
     hovertemplate: '%{x:.3f} chickens<br>%{y:,} draws<extra></extra>',
   }], Object.assign({}, PLOT, {
     bargap: 0.02,
@@ -970,19 +1054,19 @@ async function sci() {
     yaxis: Object.assign({}, PLOT.yaxis, { title: 'draws' }),
     shapes: [
       { type: 'line', x0: a.required_lo, x1: a.required_lo, yref: 'paper',
-        y0: 0, y1: 1, line: { color: '#7A68BE', width: 2, dash: 'dash' } },
+        y0: 0, y1: 1, line: { color: CH.stampSoft, width: 2, dash: 'dash' } },
       { type: 'line', x0: a.required_hi, x1: a.required_hi, yref: 'paper',
-        y0: 0, y1: 1, line: { color: '#7A68BE', width: 2, dash: 'dash' } },
+        y0: 0, y1: 1, line: { color: CH.stampSoft, width: 2, dash: 'dash' } },
       { type: 'line', x0: a.required, x1: a.required, yref: 'paper',
-        y0: 0, y1: 1, line: { color: '#1E1B16', width: 2 } },
+        y0: 0, y1: 1, line: { color: CH.ink, width: 2 } },
     ],
     annotations: [
       { x: a.required, yref: 'paper', y: 1.06, showarrow: false,
-        text: `mean ${a.required.toFixed(2)}`, font: { color: '#1E1B16' } },
+        text: `mean ${a.required.toFixed(2)}`, font: { color: CH.ink } },
       { x: a.required_lo, yref: 'paper', y: 1.06, showarrow: false,
-        text: a.required_lo.toFixed(2), font: { color: '#7A68BE' } },
+        text: a.required_lo.toFixed(2), font: { color: CH.stampSoft } },
       { x: a.required_hi, yref: 'paper', y: 1.06, showarrow: false,
-        text: a.required_hi.toFixed(2), font: { color: '#7A68BE' } },
+        text: a.required_hi.toFixed(2), font: { color: CH.stampSoft } },
     ],
   }), CFG);
 
@@ -993,9 +1077,9 @@ async function sci() {
     measure: ['absolute'].concat(w.map(() => 'relative')),
     x: ['Anatomical floor'].concat(w.map(s => s.label)),
     y: [a.floor].concat(w.map(s => s.delta)),
-    connector: { line: { color: '#DDD7C9' } },
-    increasing: { marker: { color: '#7A68BE' } },
-    totals: { marker: { color: '#4B3A8F' } },
+    connector: { line: { color: CH.line } },
+    increasing: { marker: { color: CH.stampSoft } },
+    totals: { marker: { color: CH.stamp } },
     hovertemplate: '%{x}<br>%{y:+.4f} chickens<extra></extra>',
   }], Object.assign({}, PLOT, {
     margin: { l: 50, r: 16, t: 10, b: 110 },
@@ -1013,7 +1097,7 @@ async function sci() {
   const keys = Object.keys(d.evidence_mix);
   Plotly.newPlot('s-evidence', [{
     type: 'bar', orientation: 'h', x: keys.map(k => d.evidence_mix[k]),
-    y: keys, marker: { color: keys.map(k => CONF_COLOUR[k] || '#8A8478') },
+    y: keys, marker: { color: keys.map(k => CONF_COLOUR()[k] || CH.faint) },
     hovertemplate: '%{y}: %{x} stage(s)<extra></extra>',
   }], Object.assign({}, PLOT, {
     margin: { l: 90, r: 20, t: 10, b: 40 },
@@ -1039,14 +1123,14 @@ async function initMix() {
   const xs = CURVE.points.map(p => p.pool);
   const ys = CURVE.points.map(p => p.distinct);
   Plotly.newPlot('mixchart', [
-    { x: xs, y: ys, mode: 'lines', line: { color: '#4B3A8F', width: 3 },
+    { x: xs, y: ys, mode: 'lines', line: { color: CH.stamp, width: 3 },
       name: 'distinct chickens', hovertemplate:
       '%{x:,} chickens in pool<br>%{y:.4f} distinct<extra></extra>' },
     { x: [xs[0], xs[xs.length-1]], y: [CURVE.ceiling, CURVE.ceiling],
-      mode: 'lines', line: { color: '#8A8478', dash: 'dot', width: 1 },
+      mode: 'lines', line: { color: CH.faint, dash: 'dot', width: 1 },
       name: 'ceiling (12)', hoverinfo: 'skip' },
     { x: [xs[0], xs[xs.length-1]], y: [CURVE.floor, CURVE.floor],
-      mode: 'lines', line: { color: '#8A8478', dash: 'dot', width: 1 },
+      mode: 'lines', line: { color: CH.faint, dash: 'dot', width: 1 },
       name: 'floor (6)', hoverinfo: 'skip' },
   ], Object.assign({}, PLOT, {
       xaxis: Object.assign({}, PLOT.xaxis, { type: 'log',
@@ -1066,7 +1150,7 @@ function mixMove() {
   $('#mixout').textContent = fmtDistinct(p.distinct, CURVE.ceiling);
   Plotly.relayout('mixchart', {
     shapes: [{ type: 'line', x0: p.pool, x1: p.pool, y0: 5.5, y1: 12.5,
-               line: { color: '#7A68BE', width: 2 } }]
+               line: { color: CH.stampSoft, width: 2 } }]
   });
 }
 $('#pool').oninput = mixMove;
@@ -1087,11 +1171,11 @@ async function initStates() {
     z: rows.map(r => r.avg_size),
     text: rows.map(r => `${r.region}<br>${r.avg_size} lb<br>${r.program || ''}`),
     hovertemplate: '%{text}<extra></extra>',
-    colorscale: [[0,'#EFE7D6'],[0.5,'#C58A2E'],[1,'#54350F']],
+    colorscale: [[0, CH.scaleLo], [0.5, CH.amber], [1, CH.scaleHi]],
     colorbar: { title: 'lb', thickness: 12 },
   }], Object.assign({}, PLOT, {
     geo: { scope: 'usa', bgcolor: 'rgba(0,0,0,0)',
-           lakecolor: 'rgba(0,0,0,0)', subunitcolor: '#DDD7C9' },
+           lakecolor: 'rgba(0,0,0,0)', subunitcolor: CH.line },
   }), CFG);
 
   $('#statetable').innerHTML = `<table><tr><th>State</th>
@@ -1125,12 +1209,13 @@ const CAN_LABEL = {
 // put on a shared axis: the US answers head slaughtered and not national
 // output, Israel the exact inverse, so a side-by-side would invite a
 // comparison the data cannot support.
-const MEASURE = {
-  meat_output:  { title: 'Broiler meat output', colour: '#d97706' },
-  head_slaughtered: { title: 'Birds slaughtered per year', colour: '#1F7A46' },
-  output_value: { title: 'Output value',        colour: '#8A8478' },
-  inventory_eoy:{ title: 'Flock, end of year',  colour: '#E0A93E' },
-};
+const MEASURE = () => ({
+  meat_output:  { title: 'Broiler meat output', colour: CH.amber2 },
+  head_slaughtered: { title: 'Birds slaughtered per year',
+                      colour: CH.measured },
+  output_value: { title: 'Output value',        colour: CH.faint },
+  inventory_eoy:{ title: 'Flock, end of year',  colour: CH.amberBright },
+});
 
 let COUNTRIES = null;
 
@@ -1268,7 +1353,7 @@ async function showCountry(iso3) {
   // number, so name the dropped rows rather than quietly showing fewer.
   $('#c-excluded').innerHTML = (d.excluded || []).length
     ? 'Hidden by this filter: ' + d.excluded.map(e =>
-        `<strong>${(MEASURE[e.measure] || {}).title || e.measure}</strong>
+        `<strong>${(MEASURE()[e.measure] || {}).title || e.measure}</strong>
          (${e.confidence}, <code>${e.source}</code>)`).join(', ') + '.'
     : (C_GRADE && (d.national || []).length
         ? `Nothing hidden — every figure ${meta.name} has in this panel is
@@ -1353,7 +1438,7 @@ function plotSeries(div, measures, byMeasure, meta) {
   const traces = measures.map(m => {
     const rows = byMeasure(m);
     if (!rows.length) return null;
-    const cfg = MEASURE[m] || { title: m, colour: '#d97706' };
+    const cfg = MEASURE()[m] || { title: m, colour: CH.amber2 };
     return {
       x: rows.map(r => r.year),
       y: rows.map(r => r.value),
@@ -1398,14 +1483,14 @@ async function initTrends() {
     Object.assign({}, PLOT, { title: { text: title, font: { size: 13 } } }),
     CFG);
   line('t-weight', yr, d.husbandry.map(r => r.end_size),
-       'Market weight (lb)', '#4B3A8F');
+       'Market weight (lb)', CH.stamp);
   line('t-mort', yr, d.husbandry.map(r => r.mortality_pct),
-       'Grow-out mortality (%) — rising since 2013', '#C2413B');
+       'Grow-out mortality (%) — rising since 2013', CH.bad);
   line('t-fcr', yr, d.husbandry.map(r => r.feed_conversion),
-       'Feed conversion ratio (lower is better)', '#1D5FBF');
+       'Feed conversion ratio (lower is better)', CH.study);
   line('t-yield', d.dressing_yield.map(r => r.year),
        d.dressing_yield.map(r => r.dressing_yield * 100),
-       'Dressing yield (%) — measured, not estimated', '#1F7A46');
+       'Dressing yield (%) — measured, not estimated', CH.measured);
 }
 
 // ---- seasons
@@ -1419,10 +1504,10 @@ const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 
 // A verdict is a claim about evidence, so it gets a colour that says how much
 // to trust it -- never one that just looks nice.
-const SEASON_COLOUR = {
-  cycle: '#1F7A46', weak: '#4B3A8F', trend: '#1D5FBF',
-  spike: '#C2413B', noise: '#9A948A', insufficient: '#7E7869',
-};
+const SEASON_COLOUR = () => ({
+  cycle: CH.measured, weak: CH.stamp, trend: CH.study,
+  spike: CH.bad, noise: CH.grey2, insufficient: CH.grey,
+});
 
 async function initSeason() {
   const d = await api('/api/seasonality');
@@ -1432,7 +1517,7 @@ async function initSeason() {
   if (nat) {
     Plotly.newPlot('se-national', [{
       x: MONTHS_SHORT, y: nat.values, mode: 'lines+markers',
-      line: { color: '#4B3A8F', width: 2 },
+      line: { color: CH.stamp, width: 2 },
       hovertemplate: '%{x}: %{y:.2f} lb<extra></extra>',
     }], Object.assign({}, PLOT, {
       title: {
@@ -1454,13 +1539,13 @@ async function initSeason() {
     x: MONTHS_SHORT, y: counts, type: 'bar',
     marker: {
       color: MONTHS_SHORT.map((_, i) =>
-        window.includes(i + 1) ? '#1F7A46' : '#C6BFAF'),
+        window.includes(i + 1) ? CH.measured : CH.barRecede),
     },
     hovertemplate: '%{y} states peak in %{x}<extra></extra>',
   }, {
     x: MONTHS_SHORT,
     y: MONTHS_SHORT.map(() => d.regions.length / 12),
-    mode: 'lines', line: { color: '#C2413B', width: 1, dash: 'dot' },
+    mode: 'lines', line: { color: CH.bad, width: 1, dash: 'dot' },
     name: 'if the peak month were random',
     hovertemplate: 'expected by chance: %{y:.1f}<extra></extra>',
   }], Object.assign({}, PLOT, {
@@ -1487,7 +1572,7 @@ async function initSeason() {
       <td class="num">${(r.persistence * 100).toFixed(0)}%</td>
       <td>${r.peak_month_name}</td>
       <td title="${r.explanation.replace(/"/g, '&quot;')}"
-          style="color:${SEASON_COLOUR[r.verdict] || '#9A948A'}">
+          style="color:${SEASON_COLOUR()[r.verdict] || CH.grey2}">
         ${r.verdict}</td>
     </tr>`).join('') + '</table>';
 
@@ -1527,8 +1612,8 @@ async function initSize() {
   Plotly.newPlot('size-chart', [{
     type: 'bar', x: reg.map(r => r.region), y: reg.map(r => r.avg_size),
     marker: {
-      color: reg.map(r => r.avg_size >= 7.2 ? '#E0A93E'
-                        : r.avg_size >= 5.5 ? '#d97706' : '#7c2d12'),
+      color: reg.map(r => r.avg_size >= 7.2 ? CH.amberBright
+                        : r.avg_size >= 5.5 ? CH.amber2 : CH.brown),
     },
     hovertemplate: '%{x}<br>%{y} lb live weight<extra></extra>',
   }], Object.assign({}, PLOT, {
@@ -1538,7 +1623,7 @@ async function initSize() {
     shapes: d.national_avg ? [{
       type: 'line', x0: -0.5, x1: reg.length - 0.5,
       y0: d.national_avg, y1: d.national_avg,
-      line: { color: '#8A8478', dash: 'dot', width: 1 },
+      line: { color: CH.faint, dash: 'dot', width: 1 },
     }] : [],
   }), CFG);
 
@@ -1549,7 +1634,7 @@ async function initSize() {
     type: 'bar', orientation: 'h',
     x: def.map(x => x.prevalence_pct_mode), y: def.map(x => x.label),
     marker: { color: def.map(x => x.affected_part === 'wing'
-                                ? '#1D5FBF' : '#C2413B') },
+                                ? CH.study : CH.bad) },
     customdata: def.map(x => [x.affected_part, x.weight_association]),
     hovertemplate: '%{y}<br>%{x}% of fillets<br>' +
       'part: %{customdata[0]}<br>with weight: %{customdata[1]}<extra></extra>',
@@ -1600,11 +1685,11 @@ async function impact() {
   Plotly.newPlot('i-footprint', [
     { type: 'bar', name: 'charged to whole birds',
       x: m.map(x => x.label), y: m.map(x => x.naive_total),
-      marker: { color: '#B3AC9D' },
+      marker: { color: CH.barMuted },
       hovertemplate: '%{x}<br>%{y:.2f}<extra>naive</extra>' },
     { type: 'bar', name: 'this product’s share',
       x: m.map(x => x.label), y: m.map(x => x.allocated_total),
-      marker: { color: '#4B3A8F' },
+      marker: { color: CH.stamp },
       hovertemplate: '%{x}<br>%{y:.2f}<extra>allocated</extra>' },
   ], Object.assign({}, PLOT, {
     barmode: 'group', showlegend: true,
