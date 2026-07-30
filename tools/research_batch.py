@@ -459,7 +459,12 @@ def trial_build(files: list[Path]) -> tuple[bool, str]:
     from counting_chicken_wings import audit as audit_mod
     from counting_chicken_wings import build as build_mod
 
-    with tempfile.TemporaryDirectory() as tmp:
+    # ignore_cleanup_errors because the audit's verdict is computed INSIDE this
+    # block, so a teardown failure would discard a result that was already
+    # correctly arrived at. build() and audit() both close their connections;
+    # Windows can still fail to unlink trial.db transiently, and losing the
+    # gate's answer to that is strictly worse than leaving a temp dir behind.
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         tmpdir = Path(tmp)
         shutil.copytree(DATA, tmpdir / "data",
                         ignore=shutil.ignore_patterns("exports"))

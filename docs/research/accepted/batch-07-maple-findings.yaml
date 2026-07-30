@@ -1,0 +1,62 @@
+batch: batch-07-maple
+subject: maple
+findings:
+- field: sap_to_syrup_ratio
+  value_lo: null
+  value_mode: 40
+  value_hi: null
+  unit: gallons sap per gallon syrup
+  confidence: industry
+  document: inbox/maple/https-nysmaple-com-how-much-sap-can-one-tree-pro.txt
+  quote: It takes approximately 40 gallons of sap to produce just one delicious gallon
+    of fresh maple syrup!
+  agreement: 2/2
+  verified_by: null
+- field: sap_sugar_content
+  value_lo: 1
+  value_mode: 2
+  value_hi: 5
+  unit: percent
+  confidence: industry
+  document: inbox/maple/https-nysmaple-com-how-much-sap-can-one-tree-pro.txt
+  quote: We should point out, however, that the sugar concentration of the sap can
+    vary from 1 percent to as high as 5 percent, and this will drastically impact
+    how much sap it takes to produce a gallon of syrup. For example, 2 percent sap
+    takes 40 gallons to make one gallon of syrup – but you seldom get a tree that
+    makes that.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+- field: sap_per_tap_per_season
+  value_lo: 10
+  value_mode: 20
+  value_hi: null
+  unit: gallons of sap per tap per season
+  confidence: industry
+  document: inbox/maple/https-nysmaple-com-how-much-sap-can-one-tree-pro.txt
+  quote: On average, a tapped maple will produce 10 to 20 gallons of sap per tap.
+  agreement: '1/2 disagree: 20 vs None'
+  verified_by: null
+- field: taps_per_tree
+  value_lo: 1
+  value_mode: 2
+  value_hi: 2
+  unit: taps per mature tree (by diameter class)
+  confidence: industry
+  document: inbox/maple/https-nysmaple-com-how-much-sap-can-one-tree-pro.txt
+  quote: Most trees today have only one tap; only those with an 80-inch or greater
+    circumference generally get two taps.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+- field: season_length
+  value_lo: null
+  value_mode: null
+  value_hi: null
+  unit: weeks/days of the tapping season
+  confidence: estimate
+  document: inbox/maple/https-extension-umaine-edu-publications-7036e.txt
+  quote: These cycles of about 40℉ or warmer during the day and freezing at night
+    typically occur from mid-February to early April in Southern Maine and mid-March
+    to late April in Northern Maine.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+proposed_sources: []

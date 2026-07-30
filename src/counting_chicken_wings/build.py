@@ -34,7 +34,10 @@ def load(name: str):
     p = DATA / name
     if not p.exists():
         raise BuildError(f"missing data file: {p}")
-    with p.open() as fh:
+    # encoding is explicit because Windows defaults to cp1252, and the corpus
+    # legitimately contains non-ASCII (degree signs, en dashes) in quotes.
+    # YAML is UTF-8 by spec, so this is the correct read everywhere.
+    with p.open(encoding="utf-8") as fh:
         return yaml.safe_load(fh)
 
 
@@ -686,7 +689,7 @@ def build(db_path: Path = DEFAULT_DB) -> Path:
         db_path.unlink()
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA foreign_keys = ON")
-    conn.executescript(SCHEMA.read_text())
+    conn.executescript(SCHEMA.read_text(encoding="utf-8"))
 
     b = Builder(conn)
     try:
