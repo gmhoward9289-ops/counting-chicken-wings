@@ -23,6 +23,7 @@ import textwrap
 
 from . import __version__
 from . import db as dbm
+from . import seasonality as seas
 from .brand import banner
 from .model import run
 
@@ -339,6 +340,61 @@ def cmd_states(args) -> int:
     return 0
 
 
+def cmd_seasonality(args) -> int:
+    c = colour(sys.stdout.isatty() and not args.no_colour)
+    conn = dbm.connect(args.db)
+    raw = dbm.monthly_size_series(conn, year=args.year)
+    if not raw:
+        print(f"  no monthly data for {args.year}")
+        conn.close()
+        return 1
+
+    national_raw = raw.pop("United States", None)
+    national = (
+        seas.analyse("United States", args.year, national_raw["values"],
+                     unit=national_raw["unit"])
+        if national_raw else None
+    )
+    regions = [
+        seas.analyse(n, args.year, v["values"], unit=v["unit"])
+        for n, v in raw.items()
+    ]
+
+    print()
+    print(f"  {c(f'BROILER LIVE WEIGHT BY MONTH, {args.year}', BOLD)}")
+    print(f"  {DIM}USDA NASS. J F M A M J J A S O N D{RESET}")
+    print()
+    if national:
+        print(f"  {c('United States'.ljust(16), BOLD)} "
+              f"{seas.sparkline(national.values)}  "
+              f"{national.lo:.2f}-{national.hi:.2f} lb  "
+              f"{national.swing_pct:>4.1f}%  {national.verdict}")
+        print()
+    for s in seas.rank(regions):
+        mark = "*" if s.is_seasonal else " "
+        print(f"  {s.region:<16} {seas.sparkline(s.values)}  "
+              f"{s.lo:.2f}-{s.hi:.2f} lb  {s.swing_pct:>4.1f}%  "
+              f"{DIM}{s.verdict:<12}{RESET}{mark}")
+    print()
+
+    for kind in ("peak", "trough"):
+        co = seas.concordance(regions, kind)
+        print(f"  {c(kind.upper() + ' AGREEMENT', BOLD)}  {co.verdict}")
+        for line in textwrap.wrap(co.explanation, 68):
+            print(f"  {line}")
+        print()
+
+    print(f"  {DIM}A swing is only a season if it is large next to the "
+          f"month-to-month{RESET}")
+    print(f"  {DIM}jitter. Most of these are not, and the count does not "
+          f"move either way:{RESET}")
+    print(f"  {DIM}a chicken has two wings in every month of the year."
+          f"{RESET}")
+    print()
+    conn.close()
+    return 0
+
+
 def cmd_sources(args) -> int:
     c = colour(sys.stdout.isatty() and not args.no_colour)
     conn = dbm.connect(args.db)
@@ -454,6 +510,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     add("states", help="average bird size by state") \
         .set_defaults(func=cmd_states)
+    se = add("seasonality", help="does bird weight have a season?")
+    se.add_argument("--year", type=int, default=2025)
+    se.set_defaults(func=cmd_seasonality)
+
     add("sources", help="every citation") \
         .set_defaults(func=cmd_sources)
     e = add("export", help="write the dataset as .txt and .csv")

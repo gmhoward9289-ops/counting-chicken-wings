@@ -231,6 +231,7 @@
   <button data-v="size">Is fatter better?</button>
   <button data-v="impact">Nutrition &amp; impact</button>
   <button data-v="trends">Trends</button>
+  <button data-v="season">Seasons</button>
   <button data-v="facts">Chicken facts</button>
   <button data-v="sources">Sources</button>
 </nav>
@@ -590,6 +591,34 @@
       <div id="t-fcr" style="height:280px"></div>
       <div id="t-yield" style="height:280px"></div>
     </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ seasons -->
+<section class="view" id="v-season">
+  <div class="panel">
+    <h3>Does bird weight have a season?</h3>
+    <p class="muted" id="se-summary"></p>
+    <div class="grid2">
+      <div id="se-national" style="height:300px"></div>
+      <div id="se-peaks" style="height:300px"></div>
+    </div>
+    <p class="note" id="se-concordance"></p>
+  </div>
+
+  <div class="panel">
+    <h3>Every state, and whether its swing means anything</h3>
+    <p class="muted">
+      Sorted by how much the shape of the year can be trusted, not by the size
+      of the swing — because sorting by size puts the least trustworthy states
+      first. Hover a verdict for the reasoning.
+    </p>
+    <div id="se-table"></div>
+  </div>
+
+  <div class="panel">
+    <h3>What this does <em>not</em> say</h3>
+    <ul class="note" id="se-notmodelled"></ul>
   </div>
 </section>
 
@@ -1330,6 +1359,93 @@ async function initTrends() {
        'Dressing yield (%) — measured, not estimated', '#4ade80');
 }
 
+// ---- seasons
+//
+// Two charts, and the second is the point. The national line shows how little
+// the year moves; the peak-month histogram shows the states agreeing anyway.
+// Showing only the line would understate the finding, and showing only the
+// histogram would overstate it.
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// A verdict is a claim about evidence, so it gets a colour that says how much
+// to trust it -- never one that just looks nice.
+const SEASON_COLOUR = {
+  cycle: '#4ade80', weak: '#f59e0b', trend: '#60a5fa',
+  spike: '#fb7185', noise: '#94a3b8', insufficient: '#64748b',
+};
+
+async function initSeason() {
+  const d = await api('/api/seasonality');
+  $('#se-summary').textContent = d.verdict.summary;
+
+  const nat = d.national;
+  if (nat) {
+    Plotly.newPlot('se-national', [{
+      x: MONTHS_SHORT, y: nat.values, mode: 'lines+markers',
+      line: { color: '#f59e0b', width: 2 },
+      hovertemplate: '%{x}: %{y:.2f} lb<extra></extra>',
+    }], Object.assign({}, PLOT, {
+      title: {
+        text: `United States — ${nat.swing_pct.toFixed(1)}% across the year `
+            + `(${nat.verdict})`,
+        font: { size: 13 },
+      },
+      // Zero-based would flatten a 2.7% swing into a straight line and imply
+      // there is nothing there; a tight axis would imply drama. Pad the real
+      // range instead and let the axis labels carry the scale.
+      yaxis: { title: 'lb live weight', range: [nat.lo - 0.25, nat.hi + 0.25] },
+    }), CFG);
+  }
+
+  const counts = MONTHS_SHORT.map((_, i) =>
+    d.regions.filter(r => r.peak_month === i + 1).length);
+  const window = d.concordance.peak.window || [];
+  Plotly.newPlot('se-peaks', [{
+    x: MONTHS_SHORT, y: counts, type: 'bar',
+    marker: {
+      color: MONTHS_SHORT.map((_, i) =>
+        window.includes(i + 1) ? '#4ade80' : '#475569'),
+    },
+    hovertemplate: '%{y} states peak in %{x}<extra></extra>',
+  }, {
+    x: MONTHS_SHORT,
+    y: MONTHS_SHORT.map(() => d.regions.length / 12),
+    mode: 'lines', line: { color: '#fb7185', width: 1, dash: 'dot' },
+    name: 'if the peak month were random',
+    hovertemplate: 'expected by chance: %{y:.1f}<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    title: { text: 'Which month each state peaks in', font: { size: 13 } },
+    yaxis: { title: 'states' },
+    showlegend: false,
+  }), CFG);
+
+  const co = d.concordance;
+  $('#se-concordance').innerHTML =
+    `<strong>Peak:</strong> ${co.peak.explanation}
+     <strong>Trough:</strong> ${co.trough.explanation}
+     <br><br>` + co.peak.caveats.map(c => `— ${c}`).join('<br>');
+
+  $('#se-table').innerHTML = `<table><tr><th>State</th>
+    <th class="num">Range (lb)</th><th class="num">Swing</th>
+    <th class="num">Signal</th><th class="num">Survives smoothing</th>
+    <th>Peak</th><th>Verdict</th></tr>` +
+    d.regions.map(r => `<tr>
+      <td>${r.region}</td>
+      <td class="num">${r.lo.toFixed(2)}–${r.hi.toFixed(2)}</td>
+      <td class="num">${r.swing_pct.toFixed(1)}%</td>
+      <td class="num">${r.signal_ratio.toFixed(1)}×</td>
+      <td class="num">${(r.persistence * 100).toFixed(0)}%</td>
+      <td>${r.peak_month_name}</td>
+      <td title="${r.explanation.replace(/"/g, '&quot;')}"
+          style="color:${SEASON_COLOUR[r.verdict] || '#94a3b8'}">
+        ${r.verdict}</td>
+    </tr>`).join('') + '</table>';
+
+  $('#se-notmodelled').innerHTML =
+    d.not_modelled.map(n => `<li>${n}</li>`).join('');
+}
+
 // ---- is fatter better
 async function initSize() {
   const d = await api('/api/bird-size');
@@ -1612,7 +1728,7 @@ async function load(v) {
   const init = { sci: initSci, mix: initMix, states: initStates,
                  country: initCountry,
                  size: initSize, impact: initImpact,
-                 trends: initTrends, facts: initFacts,
+                 trends: initTrends, season: initSeason, facts: initFacts,
                  sources: initSources }[v];
   if (!init) return;
   try {

@@ -696,3 +696,58 @@ facts:
     source: ou-kosher-shechita
     placement: learning
     surprise: 4
+
+  - slug: season-states-agree-none-is-seasonal
+    headline: No state's bird weight is seasonal, and the states agree on the season
+    body: >-
+      Broiler live weight moves 2.7% across the year nationally, from 6.55 lb
+      in March to 6.73 lb in September. Judged on its own that swing is
+      indistinguishable from twelve noisy numbers - and so is every single
+      state's, all 22 of them.
+
+      Then look across the states instead of at any one of them. Thirteen of
+      the 22 peak in August, September or October, where about five would be
+      expected if the peak month were random, and twelve trough in February to
+      April. Agreement between series that were surveyed separately is a
+      different kind of evidence from the size of any one series' range, and it
+      is much harder to explain away. The season is real, it is small, and no
+      single state is evidence for it.
+    source: nass-poultry-slaughter-2025
+    placement: both
+    surprise: 5
+
+  - slug: season-texas-one-bad-june
+    headline: One odd month looks exactly like a season if you only measure the range
+    body: >-
+      Texas's monthly weights swing 7.3%, and the swing is 5.4 times the
+      typical month-to-month movement - which on that test alone reads as
+      seasonal. It is one June. Smooth the series across neighbouring months
+      and less than half the swing survives, where a real annual cycle keeps
+      about 90% of it and a single odd month keeps about a third.
+
+      This is the shape of a whole category of wrong answer. A range is trivial
+      to compute and says nothing about whether the year has a shape, so
+      Kentucky's 12.3% swing - the largest of any serious broiler state - is
+      one August and nothing else, while Alabama's 3.6% is spread across the
+      year and means more.
+    source: nass-poultry-slaughter-2025
+    placement: learning
+    surprise: 4
+
+  - slug: season-february-is-not-heavier
+    headline: The Super Bowl does not show up in the birds
+    body: >-
+      Wing demand spikes in the first week of February, so it would be
+      reasonable to expect February birds to be bigger. They are not: February
+      is the third-lightest month in the national series, and the peak is five
+      months earlier in September.
+
+      That is not a mystery, it is a lead time. A bird slaughtered in early
+      February was placed as a chick before Christmas, and a grower cannot
+      decide in January to have grown a heavier bird. Whatever absorbs the
+      spike - frozen inventory, imports, or grade mix - is not bird size, and
+      none of those three series is in this corpus, so this project can show
+      you that the weight does not move and cannot yet tell you what does.
+    source: nass-poultry-slaughter-2025
+    placement: both
+    surprise: 4

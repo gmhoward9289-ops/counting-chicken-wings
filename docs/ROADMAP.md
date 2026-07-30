@@ -18,24 +18,24 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done ·
 
 ## Where we are now
 
-Verified 2026-07-29 against the working tree, not carried forward from the last
+Verified 2026-07-30 against the working tree, not carried forward from the last
 edit of this file.
 
 | | |
 |---|---|
-| Released | **v1.4.0**, 2026-07-29 — five releases in one day, see [CHANGELOG](../CHANGELOG.md) |
+| Released | **v1.7.0**, 2026-07-30 — seasonality. Seven releases in two days, and v1.5.0/v1.6.0 the same day were a concurrent session's Israel work; see [CHANGELOG](../CHANGELOG.md) |
 | Deployed | https://counting-chicken-wings.onrender.com/ — auto-deploys `master`, so the site is normally *ahead* of the latest tag. Ask `GET /api/version` |
 | Cold start | ~21s after ~15 min idle. `/healthz` exists for an external keep-warm cron; the only real fixes are `plan: starter` ($7/mo) or Fly.io |
 | Render CPU | **11–13× slower than the laptop.** Not architecture — the app boots in 0.28s. Scientific mode's Monte Carlo default dropped to 2,000 iterations because of it |
-| Tests | 338 collected |
-| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of v1.4.0: 48 sources, 52 facts |
+| Tests | 368 collected |
+| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of v1.7.0: 49 sources, 55 facts |
 | Loss factors | **21**, of which **11 are unsourced estimates (52%)** and **8 affect the count**. Worse than the 8-of-14 this file used to claim — the ratio got worse as eggs and saffron were added, which is what a new domain with no federal survey behind it does |
 | Mixing stages | 21 |
 | States with data | 23 broiler (22 slaughter + Florida from production); 34 egg (union across two years) |
 | Species | broiler, layer hen, saffron crocus. Turkey seeded `active: 0` |
 | Products | whole wing, boneless wing, table egg, saffron stigma, saffron gram |
 | Countries | USA and **Israel**, both with data. Israel: CBS output, value, a flock series to 1960, 47 districts, plus an `industry`-grade head count. `min_confidence=measured` gives the government-only reading |
-| GUI views | 7 tabs including scientific mode |
+| GUI views | 11 tabs, including scientific mode, By country and Seasons |
 | Exports | `wings export` → .txt/.csv into `data/exports/` |
 | Research pipeline | COOPER work-orders under `docs/research/` — batch 01 saffron run; 02 vanilla, 03 wagyu, 04 honey and 05 Israel-Hebrew drafted. Source library at `docs/research/library/` |
 
@@ -108,12 +108,42 @@ data, not code.
   them.** Needs its own loss chain, or an explicit refusal to model them.
   Sources: USDA FAS import data, ABPA for Brazil.
 
-- [ ] **Seasonality.** We already load month-by-month NASS live weights for all
-  22 states and currently only surface annual averages. Summer heat raises both
-  DOA and condemnation; the Super Bowl tightens wing supply enough to change
-  grade mix and import share. The monthly data is sitting in
-  `regional_size_stat` unused — this is the cheapest unexploited data in the
-  project.
+- [x] **Seasonality of bird weight.** *Shipped in v1.7.0.* It was the cheapest
+  unexploited data in the project and it paid off as a **negative result with a
+  second-order positive one behind it**: the swing is 2.7% nationally and no
+  single series — not one of the 22 states, not the national one — can be told
+  apart from twelve noisy numbers. But 13 of 22 states peak in August–October
+  against 5.5 expected by chance, so the states agree even though none of them
+  is evidence on its own.
+
+  Two lessons worth keeping. **A range over twelve numbers is not a season**,
+  and finding out required three tests rather than one: Texas shipped as "the
+  one seasonal state" on the strength of a single June, because a flat year with
+  one dip scores *exactly* the ideal-cycle score on amplitude over jitter. And
+  **the thresholds are ours, not a source's**, so the classification is graded
+  `estimate` while the weights it reads are `measured`.
+
+  Seasonality is deliberately not wired into the count — see the item below for
+  what that would take.
+
+- [ ] **Monthly volume, condemnation and DOA — what seasonality actually needs
+  to move the count.** *Opened by v1.7.0, which could only do weight.* Weight
+  seasonality does not touch the answer: a chicken has two wings in every month.
+  The count-affecting seasonal factors are condemnation and dead-on-arrival,
+  both plausibly worse in summer heat, and the corpus holds annual figures only.
+
+  The sources exist and are the ones already parsed. NASS *Poultry Slaughter*
+  publishes **monthly** national tables — head slaughtered, pounds, and
+  post-mortem condemnation — and `tools/parse_nass.py` reads the annual pages of
+  that same document. This is a parser pointing job, not a new source hunt, and
+  it is the cheapest remaining count-affecting data in the project now that
+  weight is done.
+
+  It would also answer the Super Bowl question v1.7.0 had to leave open:
+  February is the third-lightest month, so the demand spike is absorbed by
+  something that is not bird size. Monthly head slaughtered would say whether
+  it is throughput; imports (above) and fresh-vs-frozen (M1.5) are the other two
+  candidates.
 
 ---
 
