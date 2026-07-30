@@ -4,49 +4,75 @@
 Israel. The roadmap put international work after v1.0; this supersedes that
 for Israel specifically. Everything else international stays post-1.0.
 
-**Status, 2026-07-29: data landed, and the denominator did not.** Three CBS
+**Status, 2026-07-29: Israel answers the question, at two different grades.**
+Three CBS
 tables from Statistical Abstract chapter 21 are loaded and cited — broiler
 output in tonnes and shekels 2000–2024, an end-of-year flock series back to
 1960, and broiler marketing for 47 districts and regional councils. Served at
 `GET /api/output/ISR`, with coverage per country at `GET /api/countries`.
 
-**What is still not answerable, and it is Priority 1 below:** CBS publishes no
-head-slaughtered series anywhere in chapter 21. That is the denominator this
-document calls "the denominator for everything", so Israel can currently answer
-*scale* — tonnage, value, districts — and cannot answer *how many chickens*
-from Israeli sources alone. Deriving it needs an Israeli average bird weight,
-which CBS does not publish either; borrowing the US 6.62 lb would turn an
-American assumption into an Israeli fact, which the rules at the foot of this
-document forbid.
+**The denominator, resolved at industry grade — and both readings kept.** CBS
+publishes no head-slaughtered series anywhere in chapter 21. A second pass found
+one outside CBS: **~260 million broilers a year**, attributed to Moti Elkabetz,
+secretary of the Poultry Breeders Association, in the Times of Israel
+(2025-09-07). Loaded at `industry`, never `measured`, because nobody enumerated
+it.
+
+Neither reading is imposed on the reader:
+
+| Call | What Israel answers |
+|---|---|
+| `GET /api/output/ISR` | scale **and** count. 260M birds, and ~2.31 kg a bird derived against CBS tonnage |
+| `GET /api/output/ISR?min_confidence=measured` | scale only. No bird count, and the response names the row it dropped |
+
+**The cross-check is what makes the industry figure worth having.** 600,072
+tonnes (CBS, measured) ÷ 260 million birds (industry) = **2.31 kg a bird**, which
+is what a 40-day broiler weighs — and the 40 days comes from the same interview.
+Two sources that were not derived from each other, agreeing. It lives in
+`v_output_derived_weight`, carries the *weaker* parent's grade, and reports its
+`year_gap` of 1 rather than implying a same-year measurement.
+
+Still refused: deriving head from tonnage using the **US** 6.62 lb. That would
+turn an American assumption into an Israeli fact, which the rules at the foot of
+this document forbid, and it is now unnecessary.
 
 This document is written to be handed to a research agent. Each item states
 the exact question, where to look, and what "done" means.
 
 ---
 
-## The headline the demo should lead with
+## The headline the demo should NOT lead with
 
-Israel is, or has recently been, **the highest per-capita chicken consumer in
-the world**. That is a genuinely strong hook for an Israeli audience and it
-is the first thing to nail down.
+Israel is, or has recently been, the highest per-capita chicken consumer in the
+world. It is the obvious hook for an Israeli audience, and after two research
+passes it is the one claim in this document that **still cannot be sourced**.
 
-**But there is already a conflict in the sources, and it must be resolved
-before anything ships:**
+Five figures, all claiming the same rank:
 
-| Figure | Source | Year |
-|---|---|---|
-| 58.2 kg/person | OECD-FAO Agricultural Outlook, via trade press | unclear |
-| 57.7 kg/person | trade press, "ranked first in the world" | unclear |
-| Kuwait 65.43 kg — *ahead of Israel* | separate trade-press dataset | 2023 |
+| Figure | Source | Year | Reachable? |
+|---|---|---|---|
+| 58.2 kg/person | OECD-FAO Outlook, via Euromeatnews | unclear | **No — 404** |
+| 57.7 kg/person | trade press, "ranked first in the world" | unclear | No |
+| 64.9 kg/person | circulating without clear provenance | 2026 | n/a |
+| **70.83 kg/person** | World Population Review, citing FAOSTAT food balances | 2022 | Yes |
+| Kuwait 65.43 kg — *ahead of Israel* | separate trade-press dataset | 2023 | No |
 
-So "Israel is #1" may be **out of date**. Resolve before the demo — claiming
-a #1 that a guest can disprove on their phone is worse than claiming an
-honest #2. The likely cause is definition drift: *poultry meat* vs *chicken
-meat*, carcass weight vs retail weight, and different years.
+**A 20% spread across sources that all claim first place is not a citation, it
+is a warning.** The likely cause is definition drift — poultry meat versus
+chicken meat, carcass versus retail weight, different years — and the primary
+series that would settle it are both closed: FAOSTAT's API and bulk downloads
+return 401/403/521, and the OECD-FAO annex PDF extracts as font-encoded
+gibberish.
 
-**Done means:** one primary series (OECD-FAO or FAOSTAT), one definition
-stated explicitly, the year named, and Israel's rank as of that year — even
-if the answer is "second".
+So `country.population` stays NULL, `/api/countries` reports
+`per_capita: false`, and a test fails if any of these numbers turns up in a
+fact. **Lead the demo on the mangal instead** — chicken wings on the Yom
+Ha'atzmaut grill is sourced, twice, and cannot be disproved on a phone.
+
+**Done means:** one primary series, one definition stated explicitly, the year
+named, and Israel's rank as of that year — even if the answer is "second".
+`batch-05-israel-hebrew.md` item 5 carries this, and says not to ship one
+otherwise.
 
 ---
 
@@ -57,8 +83,8 @@ for Israel rather than just decorate a slide.
 
 | Field | Why the model needs it | Status 2026-07-29 |
 |---|---|---|
-| Broilers slaughtered per year (head) | The denominator for everything | **STILL MISSING.** In none of the three CBS tables. The Israeli Poultry Board (Hebrew) or the Ministry of Agriculture is the remaining route |
-| Average live weight (kg) | Drives wing size, mirrors our US state data | **STILL MISSING.** CBS publishes no per-bird weight. With this *or* head, the other follows from tonnage |
+| Broilers slaughtered per year (head) | The denominator for everything | **LOADED at `industry`.** ~260 million/yr, named official via Times of Israel. A government figure is still wanted — see `batch-05-israel-hebrew.md` items 1–2 |
+| Average live weight (kg) | Drives wing size, mirrors our US state data | **DERIVED at `industry`.** 2.31 kg/bird from CBS tonnage ÷ the industry head count, consistent with the 40-day grow-out the same source gives. CBS publishes no per-bird weight directly |
 | Total chicken meat production (tonnes) | Cross-check against head × weight | **LOADED.** 600,072 t for 2024 (provisional), back to 2000. `cbs-st21-11-output-2025` |
 | Standing flock (head) | Not throughput, but the only head figure that exists | **LOADED.** 37,895 thousand at end of 2024, series back to 1960. `cbs-st21-08-livestock-2025` |
 | Output value (NIS) | Scale in the local currency, uncconverted | **LOADED.** NIS 5,367.6m for 2024 |
@@ -66,10 +92,11 @@ for Israel rather than just decorate a slide.
 | Per-capita consumption (kg) | The headline | **UNSOURCEABLE for now** — see below. Population is deliberately NULL |
 | Self-sufficiency / import share | Israel is reported as a **net surplus** producer, which is unusual and interesting | Not attempted |
 
-The trade-press lead of **~260 million broilers/year** is neither confirmed nor
-refuted by what landed: a flock of 37.9 million turning over five to seven times
-a year is consistent with it, which is precisely why an inventory figure cannot
-substitute for a throughput one.
+The **~260 million broilers/year** figure is now loaded, and the inventory series
+supports rather than substitutes for it: a flock of 37.9 million turning over
+five to seven times a year is consistent with 260 million, which is why the two
+are separate measures (`inventory_eoy` and `head_slaughtered`) and a test asserts
+the throughput figure exceeds the flock several times over.
 
 **Two figures a demo can use honestly today:** 600,072 tonnes of broiler output
 in 2024, and Lakhish as the largest regional council at 72,354 tonnes. Both are
@@ -238,8 +265,9 @@ Still open:
    **Blocked, not forgotten:** the only citation 404s, so population stays NULL
    and `/api/countries` reports `per_capita: false` rather than rendering a
    claim we cannot back.
-2. [~] Israel broiler **production** loaded from CBS, cited, passing the audit.
-   Head and live weight are still missing and are the whole of what is left.
+2. [x] Israel broiler **production** loaded from CBS, cited, passing the audit —
+   plus a head count and a derived bird weight at `industry` grade. A
+   *government* head count is still wanted and is batch-05 items 1-2.
 3. [~] A country selector. The **data and API** are in place —
    `/api/countries` reports what each country can answer, `/api/output/{iso3}`
    serves the figures in native units. The **UI** is not built yet, and it
@@ -247,12 +275,23 @@ Still open:
    selector on the calculator would have to either hide the count answer or
    compute it from US assumptions. Recommend a comparison *panel* — scale,
    districts, value — rather than switching the calculator's country.
-4. [ ] At least one Israel-specific loss stage (kosher inspection) with an
-   honest confidence grade. Untouched, and still the strongest content here.
-5. [ ] Two or three Israel facts in the learning centre, surprise-ranked. Now
-   cheap: three cited sources are loaded, and "Israel's broiler flock turns over
-   five to seven times a year, so its 37.9-million-bird flock is not 37.9
-   million birds a year" is exactly the kind of fact the deck wants.
+4. [!] At least one Israel-specific loss stage (kosher inspection). **Blocked
+   on evidence, not on effort.** Two kosher certification agencies describe
+   bedikah in detail - for poultry it inspects lungs, intestines and tendon
+   junctions, and a mashgiach pulls blemished birds off the line - and neither
+   publishes a rejection RATE. Certification agencies have no reason to. So the
+   stage is described in the learning centre and deliberately not quantified;
+   putting a number on it would mean inventing one, in a country where
+   essentially all commercial slaughter is kosher and the number would move the
+   headline answer. batch-05 item 4 tries the Hebrew sources and says to return
+   an absence rather than an estimate.
+5. [x] Two or three Israel facts in the learning centre, surprise-ranked. **Six
+   shipped**, and the lead one is better than any production statistic: chicken
+   wings are on the Yom Ha'atzmaut mangal alongside pargiyot, while falafel and
+   shawarma barely feature. The others: pargiyot means "baby chickens" and no
+   longer does; the 2023 output dip explained by Newcastle disease and the war;
+   NIS 6.5/kg at the farm against ~NIS 20/kg at retail; nobody officially counts
+   Israel's chickens; and kosher inspection having no FSIS analogue.
 
 ## What to explicitly NOT do
 

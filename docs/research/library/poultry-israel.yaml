@@ -212,3 +212,202 @@
     resolves. WATTAgNet's equivalent ranking piece returns 403. The headline
     currently has no reachable source at all, which settles whether to lead a
     demo with it.
+
+# ------------------------------------------------- second pass, 2026-07-29
+#
+# CBS answers scale and nothing else, so this pass went after everything else
+# Israel needs: the head count, the reason 2023 dipped, and the cultural
+# material a demo actually lands with. Non-government by necessity - graded
+# accordingly, and every URL below was checked with curl on the date shown.
+
+- url: https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
+  title: >-
+    Poultry producers warn first-ever imports of chickens will destroy local
+    farms
+  publisher: The Times of Israel
+  kind: trade_press
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 385488
+  subjects: [poultry, israel, industry_structure]
+  covers:
+    - head_slaughtered_per_year      # ~260 million broilers, THE missing one
+    - farm_count                     # ~600 large farms
+    - slaughterhouse_count           # 20 kosher plants
+    - farmgate_and_retail_price      # NIS 6.5/kg vs ~NIS 20/kg
+    - industry_turnover              # NIS 10 billion
+    - grow_out_days                  # 40 days
+    - frozen_share                   # ~30%
+  does_not_cover:
+    - per_capita_consumption         # quotes it, but sourced to a dead 404
+    - average_bird_weight            # implied only, via CBS tonnage
+  confidence_ceiling: industry
+  notes: >-
+    By Sue Surkes, 2025-09-07. Figures attributed to a NAMED official - Moti
+    Elkabetz, secretary of the Poultry Breeders Association - which is what
+    separates this from an anonymous industry claim and the only reason it is
+    usable.
+
+    This is the source that unlocks the count question for Israel. CBS
+    publishes no bird count; 600,072 tonnes divided by 260 million gives about
+    2.3 kg a bird, which is what a 40-day broiler weighs. Two sources not
+    derived from each other, agreeing.
+
+    The 58.2 kg per-capita figure it quotes traces to Euromeatnews, which
+    404s. A live article citing a dead one does not revive the citation.
+
+- url: https://www.poultryworld.net/the-industrymarkets/market-trends-analysis-the-industrymarkets-2/israel-poultry-industry-hit-by-war-and-labour-shortage/
+  title: Israel poultry industry hit by war and labour shortage
+  publisher: Poultry World (Misset)
+  kind: trade_press
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 389901
+  subjects: [poultry, israel, disease, labour]
+  covers:
+    - newcastle_disease_losses_2023  # 16 million head, Q4 2023
+    - wartime_plant_closures
+  does_not_cover:
+    - head_slaughtered_per_year
+    - plant_market_shares            # present but THIRD-HAND, see notes
+  confidence_ceiling: industry
+  notes: >-
+    By Vladislav Vorotnikov, 2024-03-04. Explains a hole already visible in the
+    CBS series: output of 553,068 tonnes for 2023 sits below 2020, and 16
+    million head were lost to Newcastle disease in Q4 2023 on top of wartime
+    closures and a labour shortage.
+
+    REACHABILITY TRAP: returns 403 to some automated fetchers and 200 to an
+    ordinary browser user-agent. It is alive. Do not retire it on one 403 --
+    curl with a normal UA and it serves fine.
+
+    Of HaGalil at ~15% of national slaughter and Of Oz at ~5% are Poultry World
+    citing TheMarker citing unnamed industry sources. Not loaded. Both plants
+    sit in districts our own data covers, so the claim is checkable against a
+    Hebrew original if someone finds it.
+
+- url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
+  title: Going up in smoke, Sabra style
+  publisher: The Jewish Chronicle
+  kind: trade_press
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 287670
+  subjects: [israel, culture, wings]
+  covers:
+    - yom_haatzmaut_mangal_menu      # names chicken WINGS and pargiyot
+    - pargiyot_definition
+  does_not_cover: [statistics]
+  confidence_ceiling: industry
+  notes: >-
+    The best demo hook found anywhere in this research: chicken wings are on
+    the Israeli Independence Day grill, alongside pargiyot - deboned thighs,
+    cubed and skewered - with the day built on small cuts and many salads.
+    Falafel, shawarma and schnitzel barely feature. Undated page, so
+    published_on stays NULL.
+
+- url: https://www.jewishfoodsociety.org/stories/the-grilling-tradition-of-israels-independence-day
+  title: The Grilling Tradition of Israel's Independence Day
+  publisher: Jewish Food Society
+  kind: trade_press
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 45244
+  subjects: [israel, culture]
+  covers: [yom_haatzmaut_mangal_ubiquity]
+  does_not_cover: [statistics]
+  confidence_ceiling: industry
+  notes: >-
+    Corroborates the JC on the mangal being near-universal rather than a niche
+    custom. Two independent sources is why the cultural fact ships.
+
+- url: https://oukosher.org/blog/consumer-kosher/shechita/
+  title: 'Shechita: All About Kosher Ritual Slaughter'
+  publisher: Orthodox Union (OU Kosher)
+  kind: trade_body
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 102294
+  subjects: [kosher, slaughter, loss_chain]
+  covers:
+    - bedikah_procedure_poultry      # lungs, intestines, tendon junctions
+    - shochet_and_mashgiach_roles
+  does_not_cover:
+    - bedikah_rejection_rate         # THE gap. Not published anywhere reached
+  confidence_ceiling: industry
+  notes: >-
+    A certification agency describing its own procedure: authoritative on what
+    happens, silent on how often. Establishes that kosher poultry slaughter
+    carries an inspection stage with no FSIS analogue, and that no rejection
+    rate is published - so the stage can be described and not quantified. A
+    number here would be ours, not theirs.
+
+- url: https://www.star-k.org/articles/kashrus-kurrents/17946/chullin-daf-yomi-review/
+  title: 'Chullin Daf Yomi Review: A Halachic Overview of Shechita, Nikkur and Melicha'
+  publisher: STAR-K Kosher Certification
+  kind: trade_body
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 47449
+  subjects: [kosher, slaughter]
+  covers: [shechita_nikkur_melicha_definitions]
+  does_not_cover: [bedikah_rejection_rate, poultry_specific_rates]
+  confidence_ceiling: industry
+  notes: >-
+    Second kosher source, held for the melichah (salting) step. Melichah is a
+    MASS-loss step, not a count step, so by the project's own applies_to rules
+    it must not move the count answer - which makes it a useful test of whether
+    that discipline holds in a new context.
+
+# ------------------------------------------------ dead ends, second pass
+
+- url: https://www.gov.il/en/departments/ministry_of_agriculture
+  title: Israel Ministry of Agriculture and Food Security
+  publisher: State of Israel
+  kind: government
+  verified_on: '2026-07-29'
+  http_status: 403
+  subjects: [israel, agriculture]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    403 to every automated fetcher tried, including plain curl - an Akamai bot
+    filter, and moag.gov.il behaves identically with an identical 5,481-byte
+    body. This is the likeliest home of an official head-slaughtered figure, so
+    it is the highest-value target left. It needs a human with a browser, or
+    COOPER driving a real browser rather than a fetch.
+
+- url: https://www.ofek-poultry.org.il/
+  title: Ofek poultry (guessed Poultry Board domain)
+  publisher: unknown
+  kind: unknown
+  verified_on: '2026-07-29'
+  http_status: 000
+  subjects: [israel, poultry]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    Does not resolve. Recorded so the next person does not guess the same
+    domain. The Poultry Board (מועצת הלול) has no domain we have confirmed;
+    finding it is a Hebrew-language search task, which is what batch-05 is for.
+
+- url: https://worldpopulationreview.com/country-rankings/chicken-consumption-by-country
+  title: Chicken Consumption by Country 2026
+  publisher: World Population Review
+  kind: aggregator
+  verified_on: '2026-07-29'
+  http_status: 200
+  bytes: 769417
+  subjects: [per_capita, international]
+  covers: []
+  does_not_cover:
+    - citable_per_capita_figure      # aggregator, and it disagrees with others
+  confidence_ceiling: industry
+  notes: >-
+    Reachable, and NOT loaded. It puts Israel at 70.83 kg per person for 2022
+    citing FAOSTAT food balances, against OECD-FAO's 58.2 kg and a 64.9 kg
+    figure circulating elsewhere. Three "world's highest" numbers spanning
+    20% is not a citation, it is a warning: the spread is almost certainly
+    definition drift - poultry versus chicken, carcass versus retail weight,
+    different years - and it must be resolved from a primary series before any
+    per-capita claim ships. FAOSTAT itself is currently closed off.

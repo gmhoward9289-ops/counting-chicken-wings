@@ -576,3 +576,120 @@ facts:
     source: ams-shell-egg-grades
     placement: learning
     surprise: 4
+
+  # ---- Israel -------------------------------------------------------------
+  # The first non-US facts in the deck. Each one is either checkable against
+  # our own loaded figures or explicitly labelled as an industry claim.
+
+  - slug: israel-wings-on-the-mangal
+    headline: Israel has a national holiday whose menu includes chicken wings
+    body: >-
+      On Yom Ha'atzmaut, Israel's Independence Day, the mangal - the
+      barbecue - is treated as about as essential to the day as the
+      president's speech. And what goes on it is not large joints of meat but
+      small cuts: pargiyot, deboned chicken thighs cubed and skewered, and
+      chicken wings, eaten with a great many salads.
+
+      Falafel, shawarma and schnitzel - the dishes outsiders name first when
+      they think of Israeli food - barely feature. So the one product this
+      whole project is built around is part of a national holiday in the
+      country with the highest chicken consumption per person on earth.
+    source: jc-israeli-mangal
+    placement: both
+    surprise: 5
+
+  - slug: israel-pargiyot-baby-chickens
+    headline: "'Pargiyot' means baby chickens, and it no longer does"
+    body: >-
+      Pargiyot is the Israeli grill staple, and the name is a fossil. It
+      means "baby chickens" in Hebrew, after the young birds that were once
+      the cut of choice. Today the same word is used for cubed and marinated
+      chicken thigh or breast from an ordinary broiler.
+
+      Worth noticing because this project counts birds, not menu items. A
+      name that used to describe a whole small bird now describes a portion
+      of a large one - the same drift that makes "a dozen wings" ambiguous
+      between twelve whole wings and twelve fried pieces.
+    source: jc-israeli-mangal
+    placement: learning
+    surprise: 3
+
+  - slug: israel-2023-newcastle-dip
+    headline: A disease outbreak and a war are visible in Israel's own statistics
+    body: >-
+      Israel's Central Bureau of Statistics reports broiler output of 553,068
+      tonnes for 2023 - below its 2020 figure of 578,164 tonnes, and 8% below
+      the 600,072 tonnes of 2024. Output going backwards for a year is unusual
+      in a growing industry, and the reason is documented: some 16 million head
+      of poultry were lost in Newcastle disease outbreaks in the fourth quarter
+      of 2023, poultry houses in the north and south were shut for the war, and
+      foreign workers left, leaving slaughterhouses short-staffed enough to
+      move to a six-day week.
+
+      The standing flock tells the same story: 34,121 thousand birds at the end
+      of 2023 against 38,239 thousand at the end of 2020.
+
+      This is what a corpus is for. The dip was already in the government data
+      we loaded; the explanation came from a trade publication, and neither
+      would have meant much alone.
+    source: poultryworld-israel-war-2024
+    placement: both
+    surprise: 5
+
+  - slug: israel-farmer-vs-retail-price
+    headline: An Israeli chicken triples in price between the farm and the shelf
+    body: >-
+      A named industry figure - the secretary of Israel's Poultry Breeders
+      Association - puts the price paid to the farmer at about NIS 6.5 a kilo
+      against roughly NIS 20 a kilo at the retail chains, on a production cost
+      of about NIS 6 over a 40-day grow-out. That is a farmer's margin of
+      roughly half a shekel and a chain's margin of about eight.
+
+      Graded 'industry', not 'measured': it is a working figure from inside the
+      trade rather than something a statistical agency enumerated. It is here
+      because it answers the question people actually ask after "how many
+      chickens" - which is "so where does the money go".
+    source: toi-poultry-imports-2025
+    placement: learning
+    surprise: 4
+
+  - slug: israel-head-count-is-not-measured
+    headline: Nobody officially counts Israel's chickens
+    body: >-
+      The US Department of Agriculture enumerates broilers slaughtered and
+      publishes the number: 9,579,797,000 for 2025. Israel's Central Bureau of
+      Statistics publishes broiler output in tonnes, a standing flock at
+      year-end, and a district breakdown - and no bird count anywhere.
+
+      So the Israeli answer to "how many chickens" rests on a figure from a
+      trade-press interview: about 260 million birds a year. Divide the 600,072
+      tonnes CBS did measure by that 260 million and you get about 2.3 kg a
+      bird, which is what a 40-day broiler weighs - two sources that were not
+      derived from each other, agreeing.
+
+      That agreement is the best evidence available, and it is still weaker
+      than a government count. Both readings stay available: ask for measured
+      figures only and Israel answers scale without a bird count; include
+      industry figures and it answers the question.
+    source: toi-poultry-imports-2025
+    placement: both
+    surprise: 4
+
+  - slug: israel-kosher-inspection-no-us-analogue
+    headline: Kosher slaughter adds an inspection step the US model has no room for
+    body: >-
+      After a bird is slaughtered under shechita, bedikah inspects the lungs,
+      intestines and tendon junctions, and any bird with a blemish is pulled
+      off the line for a rabbi to rule on. There is no FSIS equivalent: a US
+      plant's post-mortem check is looking for different things and rejects on
+      different grounds.
+
+      That is a loss stage with no American counterpart, and it should push the
+      birds-required number up in a country where essentially all commercial
+      slaughter is kosher. It is not in the model, and it is not in the model
+      for an honest reason: no rejection rate is published anywhere we can
+      reach. Describing the step costs nothing; putting a number on it would
+      mean inventing one.
+    source: ou-kosher-shechita
+    placement: learning
+    surprise: 4

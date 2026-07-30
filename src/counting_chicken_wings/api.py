@@ -503,6 +503,20 @@ def countries():
                       (SELECT COUNT(*) FROM slaughter_stat_year s
                         WHERE s.country_id = c.id
                           AND s.head_slaughtered IS NOT NULL) AS head_years,
+                      -- A head count may also arrive as an output_stat_year
+                      -- row at a weaker grade, which is how Israel has one at
+                      -- all. Report the best grade available, never a bare
+                      -- yes: "we have a bird count" means something different
+                      -- when a federal agency enumerated it than when a trade
+                      -- association secretary said it in an interview.
+                      (SELECT o.confidence FROM output_stat_year o
+                        WHERE o.country_id = c.id
+                          AND o.measure = 'head_slaughtered'
+                        ORDER BY CASE o.confidence
+                                   WHEN 'measured' THEN 1 WHEN 'derived' THEN 2
+                                   WHEN 'study' THEN 3 WHEN 'industry' THEN 4
+                                   ELSE 5 END
+                        LIMIT 1) AS head_grade,
                       -- The view, not the shared table: regional_size_stat
                       -- holds broiler and layer rows together, and reading it
                       -- raw is what the egg work forbade for that reason.
@@ -532,7 +546,23 @@ def countries():
                 "population_year": r["population_year"],
                 "answers": {
                     # The count question needs birds, not tonnes.
-                    "head_slaughtered": r["head_years"] > 0,
+                    "head_slaughtered": bool(
+                        r["head_years"] or r["head_grade"]
+                    ),
+                    # ...and the grade is what a caller needs to decide whether
+                    # to show the count answer, so it travels with the boolean
+                    # rather than being looked up separately.
+                    "head_slaughtered_grade": (
+                        "measured" if r["head_years"] else r["head_grade"]
+                    ),
+                    # True only if the count survives a government-only view.
+                    # This is the "both options" split made queryable: Israel
+                    # answers the count question on industry evidence and not
+                    # on measured evidence, and a caller can render either.
+                    "head_slaughtered_measured": bool(
+                        r["head_years"]
+                        or r["head_grade"] in ("measured", "derived")
+                    ),
                     "subnational": subnational > 0,
                     "national_output": r["national_rows"] > 0,
                     "per_capita": r["population"] is not None,
@@ -548,13 +578,31 @@ def countries():
 
 
 @app.get("/api/output/{iso3}")
-def output(iso3: str, species: str = "broiler"):
+def output(
+    iso3: str,
+    species: str = "broiler",
+    min_confidence: str | None = Query(None, pattern="|".join(CONFIDENCE_RANK)),
+):
     """Output, value and inventory for one country, in its own units.
 
     Units are returned per row and nothing is converted. Israel reports
     kilograms and shekels against the project's pounds and dollars, and a
     comparison that forgets is wrong by 2.2x while still looking plausible --
     so the conversion is the caller's explicit decision, never a default.
+
+    `min_confidence` is how a reader chooses between the two honest pictures of
+    Israel rather than having one chosen for them:
+
+      min_confidence=measured  government figures only. Tonnage, value, a
+                               year-end flock and districts -- and NO bird
+                               count, so no answer to "how many chickens".
+      (omitted)                everything, including the industry head count
+                               of ~260 million birds a year from a named trade
+                               official. The count question becomes answerable
+                               at industry grade.
+
+    `excluded` names what the filter dropped, because a filtered answer that
+    does not say what it filtered is just a different number.
     """
     conn = dbm.connect()
     try:
@@ -567,7 +615,7 @@ def output(iso3: str, species: str = "broiler"):
 
         rows = conn.execute(
             """SELECT o.region, o.year, o.measure, o.value, o.unit,
-                      o.provisional, o.suppressed, o.notes,
+                      o.confidence, o.provisional, o.suppressed, o.notes,
                       s.slug AS source_slug
                FROM output_stat_year o
                JOIN source s ON s.id = o.source_id
@@ -581,8 +629,27 @@ def output(iso3: str, species: str = "broiler"):
                 404, f"no output data for {country['iso3']} / {species}"
             )
 
-        national = [dict(r) for r in rows if r["region"] is None]
-        regional = [dict(r) for r in rows if r["region"] is not None]
+        kept, excluded = [], []
+        for r in rows:
+            (kept if meets_confidence(r["confidence"], min_confidence)
+             else excluded).append(dict(r))
+
+        national = [r for r in kept if r["region"] is None]
+        regional = [r for r in kept if r["region"] is not None]
+
+        # The cross-check that makes the industry head count believable, and
+        # the reason it is a view: derived from the two figures, never stored,
+        # so it cannot drift from them. Dropped when the filter drops its
+        # weaker parent, which is the correct behaviour rather than a gap.
+        weight = conn.execute(
+            """SELECT head_year, output_year, year_gap, output_tonnes,
+                      head_thousands, kg_per_head, confidence
+               FROM v_output_derived_weight
+               WHERE iso3 = ? AND species = ?""",
+            (country["iso3"].upper(), species),
+        ).fetchall()
+        weight = [dict(w) for w in weight
+                  if meets_confidence(w["confidence"], min_confidence)]
 
         return {
             "country": {
@@ -592,8 +659,15 @@ def output(iso3: str, species: str = "broiler"):
                 "native_currency": country["native_currency"],
             },
             "species": species,
+            "min_confidence": min_confidence,
             "national": national,
             "regional": regional,
+            "derived_weight": weight,
+            "excluded": [
+                {"measure": r["measure"], "year": r["year"],
+                 "confidence": r["confidence"], "source": r["source_slug"]}
+                for r in excluded
+            ],
             # Stated rather than left for the caller to notice. A suppressed
             # row is presence without volume and must not be read as zero.
             "suppressed_regions": sum(

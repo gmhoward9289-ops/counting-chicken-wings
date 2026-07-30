@@ -539,34 +539,24 @@ class Builder:
             sp = self.species[t["species"]]
             cid = self.ctry(t.get("country"), f"{path.name} country")
 
-            nat = t.get("national", {})
-            nat_source = nat.get("source")
-            for measure in ("meat_output", "output_value"):
-                block = nat.get(measure)
-                if not block:
-                    continue
+            # One shape for every national measure, each block carrying its own
+            # unit, source and confidence. The confidence is per block because
+            # this table stopped being government-only the day Israel's head
+            # count arrived from a trade-press interview rather than from CBS.
+            for block in t.get("national", []):
+                measure = block["measure"]
                 for r in block["years"]:
                     self.ins(
                         "output_stat_year",
                         species_id=sp, country_id=cid, region=None,
                         year=r["year"], measure=measure,
                         value=r.get("value"), unit=block["unit"],
+                        confidence=block.get("confidence", "measured"),
                         provisional=r.get("provisional", 0),
                         suppressed=0,
-                        source_id=self.src(nat_source, f"{path.name} {measure}"),
-                    )
-
-            inv = t.get("inventory")
-            if inv:
-                for r in inv["years"]:
-                    self.ins(
-                        "output_stat_year",
-                        species_id=sp, country_id=cid, region=None,
-                        year=r["year"], measure="inventory_eoy",
-                        value=r.get("value"), unit=inv["unit"],
-                        provisional=r.get("provisional", 0), suppressed=0,
-                        source_id=self.src(inv["source"],
-                                           f"{path.name} inventory"),
+                        source_id=self.src(block["source"],
+                                           f"{path.name} {measure}"),
+                        notes=block.get("notes"),
                     )
 
             d = t.get("districts")
@@ -583,7 +573,9 @@ class Builder:
                         # not reconcile and why they are not the same measure.
                         measure="marketed",
                         value=None if supp else r.get("value"),
-                        unit=d["unit"], provisional=0, suppressed=supp,
+                        unit=d["unit"],
+                        confidence=d.get("confidence", "measured"),
+                        provisional=0, suppressed=supp,
                         source_id=sid,
                         notes=(f"{r['level']}"
                                + (f" in {r['parent']}" if r.get("parent")

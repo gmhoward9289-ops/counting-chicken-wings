@@ -311,9 +311,18 @@ def test_countries_report_coverage_not_just_names(client):
     assert {"USA", "ISR"} <= set(by)
 
     assert by["USA"]["answers"]["head_slaughtered"] is True
-    # The whole point of the Israeli data pass: CBS publishes no head figure,
-    # so the count question cannot be answered from Israeli sources.
-    assert by["ISR"]["answers"]["head_slaughtered"] is False
+    assert by["USA"]["answers"]["head_slaughtered_grade"] == "measured"
+
+    # Israel answers the count question, but only on industry evidence: CBS
+    # publishes no head figure, so the 260 million comes from a named trade
+    # official via the press. Both facts have to be visible at once, which is
+    # why the grade travels with the boolean.
+    assert by["ISR"]["answers"]["head_slaughtered"] is True
+    assert by["ISR"]["answers"]["head_slaughtered_grade"] == "industry"
+    # ...and the government-only reading still cannot count birds.
+    assert by["ISR"]["answers"]["head_slaughtered_measured"] is False
+    assert by["USA"]["answers"]["head_slaughtered_measured"] is True
+
     assert by["ISR"]["answers"]["subnational"] is True
     assert by["ISR"]["native_mass_unit"] == "kg"
 
@@ -394,3 +403,49 @@ def test_cli_and_api_agree_on_the_ceiling():
         a = c.get("/api/calculate",
                   params={"count": 1, "product": "saffron_gram"}).json()["answer"]
     assert a["ceiling"] == pytest.approx(res.distinct_ceiling)
+
+
+def test_min_confidence_offers_the_government_only_reading(client):
+    """Both pictures of Israel must be reachable, not one chosen for the reader.
+
+    Without the filter, Israel answers "how many chickens" on a trade-press
+    figure. With min_confidence=measured, it answers scale and admits it cannot
+    count birds -- and says which row it dropped to get there.
+    """
+    everything = get(client, "/api/output/ISR")
+    gov = get(client, "/api/output/ISR", min_confidence="measured")
+
+    head = [r for r in everything["national"]
+            if r["measure"] == "head_slaughtered"]
+    assert head and head[0]["confidence"] == "industry"
+    assert not [r for r in gov["national"] if r["measure"] == "head_slaughtered"]
+
+    # A filtered answer that does not say what it filtered is just a different
+    # number, so the dropped row is named.
+    assert [e["measure"] for e in gov["excluded"]] == ["head_slaughtered"]
+    assert gov["excluded"][0]["source"] == "toi-poultry-imports-2025"
+    assert everything["excluded"] == []
+
+
+def test_derived_weight_is_the_cross_check_and_drops_with_its_parent(client):
+    """~2.3 kg a bird is what makes the industry figure believable.
+
+    It is derived from an industry figure, so it is industry-grade and must
+    disappear from a government-only view along with its parent.
+    """
+    everything = get(client, "/api/output/ISR")
+    w = everything["derived_weight"]
+    assert len(w) == 1
+    assert 2.0 < w[0]["kg_per_head"] < 2.7
+    assert w[0]["confidence"] == "industry"
+    # The years do not line up and the payload says so rather than implying a
+    # same-year measurement.
+    assert w[0]["year_gap"] == 1
+
+    gov = get(client, "/api/output/ISR", min_confidence="measured")
+    assert gov["derived_weight"] == []
+
+
+def test_unknown_confidence_level_is_rejected(client):
+    assert client.get("/api/output/ISR",
+                      params={"min_confidence": "vibes"}).status_code == 422
