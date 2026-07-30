@@ -1,6 +1,72 @@
 # Changelog
 
-## Unreleased
+## v1.9.0 — 2026-07-30
+
+Maple syrup: the third domain, and the first individual that survives being
+harvested.
+
+### A tree is not consumed, and that is the point
+
+A chicken is killed, a flower is picked, a hen at least stays put. A sugar
+maple is tapped, runs for about six weeks, and does it again next spring for
+upwards of a century — the longest-lived individual in this corpus by two
+orders of magnitude.
+
+That made it the right subject to be the first real use of `yield_period_days`
+for a period that is **not a year**. Eggs grew the field; maple proves the
+period is data rather than an assumption, because reading maple's season as a
+year would overstate a tree's output about eightfold.
+
+**About a quart of syrup per tree per season**, so one gallon represents
+roughly 2 to 9 tapped trees working through a spring — and about 430 gallons of
+sap boiled away.
+
+### The band is the sugar content, not measurement error
+
+The famous "40 gallons of sap to a gallon of syrup" is a special case, and
+storing it alone would have hidden the variable that produces it. UVM's Jones
+Rule of 86 gives the real relationship: gallons of sap = 86 ÷ the sap's sugar
+concentration in °Brix. Sap runs anywhere from 1% to 5%:
+
+```
+1 Brix -> 86 gal sap per gal syrup     5 Brix -> 17 gal sap per gal syrup
+2 Brix -> 43 gal  (this is the "40")
+```
+
+A five-fold spread in which every value is correct, for a different tree on a
+different day. So the corpus cites the rule, not the constant.
+
+### Boiling cannot make trees fewer
+
+`maple_syrup_gallon` already states gallons of **syrup**, so the boil is priced
+in; applying the 40:1 concentration again would divide the answer a second
+time. Boiling is therefore recorded as `applies_to: mass`, and
+`affects_count()` refuses to let a mass stage move a count.
+
+This is the third unrelated process — frying a wing, drying a stigma, boiling
+sap — caught by one rule that has never needed modifying. Saffron's own file
+warns about the identical trap in its own terms.
+
+### Honest about the grade
+
+Every figure is `industry` and the combination is our arithmetic; nothing here
+is measured. The per-tap yields disagree between two extension services (UMaine
+5–15 gal, NY State Maple 10–20) and that disagreement is kept as a range rather
+than averaged away. The whole subject rests on one modal assumption — NY State
+Maple's "most trees today have only one tap" — which is what lets a per-tap
+figure stand as a per-tree figure without an invented multiplier. If that
+sentence stops being true these numbers need redoing, not adjusting.
+
+USDA NASS does publish a Maple Syrup report with state production and tap
+counts. Loading it is the obvious way to put a measured floor under this, and
+is the single most valuable next source for the subject.
+
+Provenance: `docs/research/accepted/batch-07-maple-REVIEW.md`. Note that COOPER
+returned the folk 40:1 with the Rule of 86 retrieved and in front of it — the
+preference for the round number was the model's, not a retrieval failure, and
+the promotion here deliberately reverses that choice.
+
+### Also in this release
 
 - `WINGS_DB` environment variable overrides where the SQLite database is built
   and read. Previously the path derived from `__file__`, which is correct only

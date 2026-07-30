@@ -1,0 +1,144 @@
+# Maple syrup. Merged with taxonomy.yaml at build time.
+#
+# The project's third domain, and the first product that is neither a part of
+# an individual nor a thing an individual lays. A tree is not consumed, not
+# butchered, and not even harmed: it is tapped, it runs, and it does it again
+# next spring. That is what makes this the right test of `recurring`.
+#
+# WHY MAPLE, AFTER EGGS
+# ---------------------
+# Eggs introduced production-over-time and the schema grew `yield_period_days`
+# to hold it. Maple is the first subject to use that field for a period that
+# is NOT a year, and the difference is not cosmetic:
+#
+#   a hen lays over a 365-day cycle
+#   a maple runs for about six weeks, once, in late winter
+#
+# Treating maple's season as a year would overstate a tree's output by roughly
+# eight times. The period had to be data rather than an assumption, and this
+# subject is what proves it is.
+#
+# WHAT COUNTS AS THE INDIVIDUAL
+# -----------------------------
+# The TREE. Unlike saffron, where flower-versus-plant was a genuine judgement
+# call, here the honest answer is easy - a tree is the organism and the thing
+# a person would picture. The awkwardness is one layer down: every yield
+# figure in the literature is quoted per TAP, not per tree.
+#
+# New York State Maple resolves it in one sentence: "Most trees today have
+# only one tap; only those with an 80-inch or greater circumference generally
+# get two taps." So for the modal tree, taps per tree is 1, and a per-tap
+# figure IS a per-tree figure. That is the whole reason this subject can be
+# stated per tree without inventing a multiplier, and if that sentence ever
+# stops being true the numbers below need redoing rather than adjusting.
+#
+# UMaine's tapping guidance gives the fuller picture and is stricter than
+# older literature: one tap below 18 inches diameter, a second at 18 to 25,
+# a third only on very healthy trees over 25. Big old trees do carry more.
+#
+# THE TRAP, WHICH IS SAFFRON'S TRAP EXACTLY
+# -----------------------------------------
+# units_per_individual below is GALLONS OF SYRUP per tree per season - the
+# boil is already priced in. Applying the 40:1 concentration again as a loss
+# stage would divide the answer a second time and make a tree look forty
+# times less productive than it is.
+#
+# This is the same shape as saffron's drying (150 flowers per gram is a DRIED
+# figure; applying the 80% drying loss on top gives 750 and is wrong by five
+# times) and the same shape as cook loss on a wing. And it is caught by the
+# same mechanism, with nobody having to remember it: boiling is recorded in
+# loss_chain_maple.yaml as `applies_to: mass`, and model.affects_count()
+# refuses to let a mass stage move a count. Boiling makes sap denser, not
+# trees fewer.
+#
+# Three subjects now, three unrelated processes - frying, drying, boiling -
+# and one rule has held for all of them without modification.
+
+domains:
+  - slug: forestry
+    label: Forestry
+    description: >-
+      Trees tapped or harvested for food. Third domain, and the first whose
+      individuals survive the harvest and produce again the following year.
+    active: 1
+
+species:
+  - slug: sugar_maple
+    domain: forestry
+    common_name: Sugar maple
+    scientific_name: Acer saccharum
+    individual_noun: tree
+    individual_plural: trees
+    # Deliberately NULL, like saffron. USDA NASS DOES publish a Maple Syrup
+    # report with state production and tap counts, so unlike saffron this
+    # absence is a gap in our corpus rather than a gap in the world. Loading
+    # it would let several figures here rise from 'industry' toward
+    # 'measured', and it is the single most valuable next source for maple.
+    stat_category: null
+    active: 1
+    notes: >-
+      Other maples run - red, black, silver - and so do birch and walnut, at
+      lower sugar concentrations that make the boil longer. Sugar maple is
+      named here because it is what the sources describe and what the
+      industry means by "maple". A red maple's sap is thinner, so every ratio
+      below would move.
+
+products:
+  - slug: maple_syrup_gallon
+    species: sugar_maple
+    label: Gallon of maple syrup
+    label_plural: Gallons of maple syrup
+    yield_mode: recurring
+    # GALLONS OF SYRUP PER TREE PER SEASON, boil included. See the trap note
+    # at the top of this file before adding any concentration factor to this.
+    #
+    # Built from three figures, each verified against its own document in
+    # batch-07-maple, and one modal assumption:
+    #
+    #   sap per tap per season   5-15 gal   (UMaine, "average full season
+    #                                        yield for a taphole")
+    #                           10-20 gal   (NY State Maple, "on average")
+    #   taps per modal tree      1          (NY State Maple)
+    #   sap : syrup              86 / Brix  (UVM Jones Rule; 43 at 2 Brix)
+    #
+    #   lo   5 gal sap / 43  = 0.116  - UMaine's floor at average sugar
+    #   mode 10 gal sap / 43 = 0.233  - where the two sources overlap
+    #   hi   20 gal sap / 40 = 0.500  - NY's ceiling at the folk ratio
+    #
+    # So a tree yields something like a quart of syrup in a season, and the
+    # band spans four times, which is honest: it is two extension services
+    # disagreeing about sap flow, multiplied by a ratio that moves with sugar
+    # content, and neither disagreement is ours to resolve.
+    units_per_individual_lo: 0.116
+    units_per_individual_mode: 0.233
+    units_per_individual_hi: 0.500
+    # Roughly six weeks. The sources give calendar windows rather than a
+    # duration - "mid-February to early April in Southern Maine", "mid-March
+    # to late April in Northern Maine" - so this is OUR reading of theirs,
+    # and it is why the figure above is graded no better than industry.
+    yield_period_days: 45
+    unit_name: gallon
+    source_part: sap
+    named_part: sap
+    named_part_content: 1.0
+    # A tree has no fixed number of gallons in it the way a chicken has two
+    # wings. Sap flow is weather, and a warm winter simply produces less.
+    is_anatomical_constant: 0
+    source: uvm-jones-rule-86
+    notes: >-
+      The headline: about a quart of syrup per tree per season, so a single
+      gallon of syrup represents roughly 2 to 9 tapped trees working through
+      one spring - and about 430 gallons of sap boiled away.
+
+      Every input is 'industry' and the combination is our arithmetic, so
+      nothing here should be read as measured. USDA NASS publishes a Maple
+      Syrup report with state production and tap counts; loading it is the
+      obvious way to put a real floor under this.
+
+      Note what the season does to the question. For wings the answer is
+      fixed the moment the bird is killed. For maple, "how many trees" is
+      inseparable from "over how long" - the same tree answers differently
+      for one season than for ten, and unlike a hen it will still be
+      answering in a century. A sugar maple is commonly tapped for well over
+      a hundred years, which is the longest-running individual in this corpus
+      by two orders of magnitude.

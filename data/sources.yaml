@@ -949,3 +949,67 @@
     docs/research/README.md that a source disagreement is reported and not
     adjudicated, and because promoting this to a stated basis is a human
     judgement about provenance.
+
+- slug: uvm-jones-rule-86
+  title: The "Jones Rule of 86" Revisited
+  publisher: University of Vermont Extension, Proctor Maple Research Center
+  url: https://www.uvm.edu/extension/agriculture/maple/bizmodules/sites/default/files/imce/uploads/1013jonesruleof86.pdf
+  published_on: '2013-10-01'
+  retrieved_on: '2026-07-30'
+  source_type: trade_body
+  notes: >-
+    The strongest maple source in the corpus and the only one that gives a
+    RULE rather than a constant: divide 86 by the sap sugar concentration in
+    degrees Brix to get gallons of sap per gallon of syrup. Devised by C.H.
+    Jones at UVM in 1946.
+
+    Preferred over the folk "40 gallons" wherever both would serve, because
+    40:1 is only true near 2 Brix and this document says so in the same
+    breath: an average 2 Brix sap "would require 43 gallons of sap to produce
+    1 gallon of syrup, or a sap:syrup ratio of close to 40:1".
+
+    Worth recording that COOPER read this document and quoted the weaker
+    source anyway in batch-07-maple. The passage was retrieved and in front of
+    the model - a single chunk, returned by best_chunks - so the preference
+    for the round number was the model's, not a retrieval failure. See
+    docs/research/accepted/batch-07-maple-REVIEW.md.
+
+    Also note the document's own caveat: the rule degrades at the high sugar
+    concentrations reverse osmosis now produces, so it is a field rule, not a
+    physical law.
+
+- slug: umaine-7036e-maple
+  title: 'Bulletin #7036: How to Tap Maple Trees and Make Maple Syrup'
+  publisher: University of Maine Cooperative Extension
+  url: https://extension.umaine.edu/publications/7036e/
+  published_on: '2019-01-01'
+  retrieved_on: '2026-07-30'
+  source_type: trade_body
+  notes: >-
+    Source for taps-per-tree by trunk diameter and for the conservative end of
+    the per-tap seasonal yield. Its tapping guidance is stricter than older
+    literature - one tap below 18 inches, a second only at 18 to 25 inches, a
+    third only on very healthy trees over 25 inches - which is the direction
+    the whole industry has moved for tree health.
+
+    Its season is given as calendar windows rather than a duration
+    ("mid-February to early April in Southern Maine"), which is why
+    season_length came back from COOPER with a quote and no number. That was
+    the correct behaviour: subtracting two dates would have been our
+    arithmetic, not the source's.
+
+- slug: nysmaple-sap-per-tree
+  title: How Much Sap Can One Tree Produce?
+  publisher: New York State Maple Producers Association
+  url: https://nysmaple.com/how-much-sap-can-one-tree-produce/
+  retrieved_on: '2026-07-30'
+  source_type: trade_body
+  notes: >-
+    A producers' association page, and the most quotable of the three - which
+    is exactly why it needs watching. It supplies the modal "most trees today
+    have only one tap", which is load-bearing here: it is what lets a per-TAP
+    yield stand in for a per-TREE yield without inventing a multiplier.
+
+    It also states the bare "approximately 40 gallons of sap" that COOPER
+    preferred over UVM's rule. Kept as a source because the one-tap figure is
+    genuinely useful, cited for the ratio nowhere.
