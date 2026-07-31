@@ -1,11 +1,26 @@
 # Batch 08 — silk
 
-> **SCOUTED 2026-07-30.** Candidate URLs below were fetched and confirmed 200
-> with the figure present on this date. Two cautions carried from the scout:
-> (1) the per-garment counts rest on craft/education sites with **no survey**
-> behind them — grade `industry`/`estimate` and say so; (2) sourced filament
-> length is **300–900 m**, lower than commonly-repeated "1,000–1,600 m" — use the
-> sourced figure and note the spread.
+> **RE-SCOUTED 2026-07-31 with `scout`, after two failed runs.** Every quote
+> below was confirmed present in what **this project's own fetcher** retrieves —
+> not in what a browser renders. That distinction is what killed the first two
+> runs and it is now the only standard this spec accepts.
+>
+> Three cautions:
+> (1) the per-garment counts rest on craft/education/museum pages with **no
+> survey** behind them — grade `industry`/`estimate` and say so;
+> (2) sourced filament length is **300–900 m**, lower than commonly-repeated
+> "1,000–1,600 m" — use the sourced figure, in **metres**, and note the spread;
+> (3) `cocoons_per_worm` has been **removed from this batch** — see
+> "Withdrawn from COOPER" at the end. It is not a COOPER item.
+>
+> **Changes since the 2026-07-30 spec:**
+> - `cocoons_per_tie`: bows-n-ties **dropped**. Its article body is truncated by
+>   JavaScript and the fetch ends mid-word at "The average wor"; it contains
+>   neither 120 nor 130. Two fetchable replacements substituted, and they
+>   disagree — report that, do not resolve it.
+> - `cocoons_per_shirt`: the quote in the old spec was a **paraphrase** and
+>   appeared in no document. Corrected to the page's actual words.
+> - `cocoons_per_worm`: withdrawn (below).
 
 **Archetype:** `how-many`
 
@@ -37,32 +52,7 @@ NOT constants and must not be graded as if they were.
 
 ## Items
 
-### Item 1 — cocoons_per_worm
-
-| | |
-|---|---|
-| `target_table` | `product` |
-| `required_fields` | `units_per_individual_lo/mode/hi`, `is_anatomical_constant` |
-| `unit` | cocoons per silkworm |
-| `archetype` | `how-many` |
-
-**Question:** How many cocoons does one silkworm spin?
-
-**Candidate URLs (confirmed 200, 2026-07-30):**
-
-- https://www.newworldencyclopedia.org/entry/Silkworm — describes each larva
-  enclosing itself in "a cocoon of raw silk" (one per worm through the lifecycle).
-
-**Done means:** the figure **1**, lo = mode = hi = 1, `is_anatomical_constant: 1`,
-with a quote. The degenerate constant, like vanilla's one-flower-one-bean.
-
-**Watch for:** the source *implies* one cocoon per worm through the lifecycle
-rather than stating "exactly one" — flag it `needs_human` if a stricter phrasing
-is wanted. *Bombyx mori* only; do not merge with wild/tussah silk.
-
----
-
-### Item 2 — filament_length_per_cocoon
+### Item 1 — filament_length_per_cocoon
 
 | | |
 |---|---|
@@ -85,10 +75,17 @@ the higher range.
 
 **Watch for:** total filament vs usable reelable length — this subject's
 fresh-vs-cured trap. State which the source means (NWE says the whole thread).
+**The unit is METRES.** The quote gives the same length twice, "300 to 900
+meters (1000 to 3000 feet)"; those are one measurement in two units, not a
+range from 300 to 3000. Report `value_lo: 300`, `value_hi: 900`,
+`unit: metres of filament per cocoon`. The previous run returned the *feet*
+pair and then invented a third number, `hi: 9000`, that appears in no silk
+document anywhere. Do not compute, extrapolate or round a bound: `value_lo` and
+`value_hi` must each be a number you can see inside the sentence you quoted.
 
 ---
 
-### Item 3 — cocoons_per_pound_raw_silk
+### Item 2 — cocoons_per_pound_raw_silk
 
 | | |
 |---|---|
@@ -113,7 +110,7 @@ different denominators.
 
 ---
 
-### Item 4 — cocoons_per_tie
+### Item 3 — cocoons_per_tie
 
 | | |
 |---|---|
@@ -124,19 +121,32 @@ different denominators.
 
 **Question:** How many cocoons go into one silk necktie?
 
-**Candidate URLs (confirmed 200, 2026-07-30):**
+**Candidate URLs (re-scouted 2026-07-31; quotes confirmed present in what this
+project's fetcher retrieves, not merely in a browser):**
 
-- https://www.bows-n-ties.com/mens-fashion-tips/how-much-silk-is-needed-to-make-a-necktie/
-  — Quote: "a single tie requires about 120 to 130 cocoons."
+- https://afbeducation.org/silkworm-eggs/ — Quote: "Depending on the thread
+  count it would take about 120 to 130 cocoons or the equivalent of 180,000 –
+  325,000 feet of silk thread to produce a single necktie."
+- https://festival.si.edu/2002/the-silk-road/the-silk-road-connecting-peoples-and-cultures/smithsonian
+  — Quote: "about 150 cocoons are needed for a necktie."
 
-**Done means:** the count (~120–130) with the quote. Single-source trade lore —
-ship flagged `industry`, and note a second source was not found.
+**Done means:** a count with **one** verbatim quote from **one** of these two
+pages. Prefer the AFB sentence, because it states a range (120–130) inside a
+single sentence and so supports `value_lo` and `value_hi` honestly. Ship
+flagged `industry`.
 
-**Watch for:** tie vs scarf vs "square" — different garments, different masses.
+**Watch for:** **the two sources disagree — 120–130 against 150 — and you must
+NOT resolve it.** Do not average them, and above all do not build a band out of
+two different documents: `value_lo` and `value_hi` have to come from the *same*
+sentence you quote, or the row is a splice of two sources wearing one citation.
+Answer from one page, then say in `notes:` that the other gives a different
+figure. Also: tie vs scarf vs "square" are different garments with different
+masses — the AFB page's other numbers (180,000–325,000 feet) are thread length,
+not a cocoon count, so do not let them into a value field.
 
 ---
 
-### Item 5 — cocoons_per_shirt
+### Item 4 — cocoons_per_shirt
 
 | | |
 |---|---|
@@ -150,15 +160,25 @@ ship flagged `industry`, and note a second source was not found.
 **Candidate URLs (confirmed 200, 2026-07-30):**
 
 - https://www.suekayton.com/Silkworms/cloth.htm — education page. Quote:
-  "it takes about 1000 cocoons to make a silk shirt" (~1,000 cocoons).
+  "or about 1,000 cocoons for a silk shirt".
 
-**Done means:** the count (~1,000) with the quote.
+**Done means:** `value_lo`, `value_mode` and `value_hi` all **1000**, with that
+quote. The page gives the shirt exactly one number and no range.
 
-**Watch for:** the wide spread across sources — keep lo/hi, not a false point.
+**Watch for:** **this is the trap that beat the last run, and it beat it because
+every number involved really is in the quote.** The full sentence reads "It
+takes 1700 to 2000 cocoons to make one silk dress (or about 1,000 cocoons for a
+silk shirt)." — it answers **two** questions at once. 1700 and 2000 are the
+**dress**. 1,000 is the **shirt**, and the shirt is what this item asks about.
+The previous run stored 1700/1800/2000 here and no automatic check could catch
+it, because those figures are genuinely in the sentence; they are simply about
+the other garment. Read the clause your number sits in, not just the sentence.
+If you return anything other than 1000 for a shirt you have answered the wrong
+question.
 
 ---
 
-### Item 6 — cocoons_per_dress
+### Item 5 — cocoons_per_dress
 
 | | |
 |---|---|
@@ -177,10 +197,13 @@ ship flagged `industry`, and note a second source was not found.
 **Done means:** the count (~1,700–2,000) with the quote.
 
 **Watch for:** dress vs kimono (~9,000) — very different garments; do not blur.
+The same sentence also carries the **shirt** figure (~1,000) in a trailing
+parenthesis; that one belongs to the previous item, not this one. Here the
+answer is the 1700–2000 pair.
 
 ---
 
-### Item 7 — reeling_cocoons_per_thread
+### Item 6 — reeling_cocoons_per_thread
 
 | | |
 |---|---|
@@ -209,7 +232,9 @@ cascade.
 | Figure | Source | Year | Definition used |
 |---|---|---|---|
 | filament length | New World Encyclopedia | — | 300–900 m (vs folk 1,000–1,600) |
-| cocoons/garment | craft/education sites | — | vary widely, no survey |
+| cocoons per necktie | AFB Education | — | 120–130 |
+| cocoons per necktie | Smithsonian Folklife Festival | 2002 | 150 |
+| cocoons/garment | craft/education/museum pages | — | vary widely, no survey |
 
 ## What to explicitly NOT do
 
@@ -219,13 +244,52 @@ cascade.
   withdrawal applies; a human promotes.
 - Do not merge *Bombyx mori* with wild/tussah/eri silk.
 - Do not silently upgrade the sourced 300–900 m filament to the folk higher range.
+- Do not answer `cocoons_per_worm`. It is not an item in this batch.
+- Do not build a lo/hi band out of two different documents. A band is one
+  source's claim, so both bounds live in the one sentence you quote.
 
 ## Acceptance
 
 - [ ] Every row carries a verbatim quote in a returned document
 - [ ] No row claims `measured`/`derived`/`study`
 - [ ] Per-garment figures graded `industry`/`estimate` with the softness noted
-- [ ] `cocoons_per_worm` = 1 with `is_anatomical_constant: 1` (flagged if implied)
-- [ ] Filament length uses the sourced 300–900 m, spread noted
+- [ ] Filament length uses the sourced 300–900 m **in metres**, spread noted
+- [ ] Shirt = 1000; the 1700/2000 pair belongs to the dress
+- [ ] Necktie answered from one page, with the other's figure reported as a conflict
 - [ ] New sources in `proposed_sources:`, not `data/sources.yaml`
 - [ ] `build` + `audit` pass on COOPER's self-check
+
+## Withdrawn from COOPER — cocoons_per_worm
+
+**This is deliberately not an item, and its heading deliberately does not begin
+`### Item`, so the parser will not pick it up.** Its URL is written inline
+rather than as a list bullet for the same reason: a bulleted URL under a
+non-item heading is still swept into the preceding item's URL list.
+
+One cocoon per silkworm is the anatomical constant this whole subject rests on,
+and it is the one figure COOPER cannot return. Both models declined it twice,
+and **they were right to**. The gate requires the figure to appear in the quoted
+sentence, and no fetchable source states it as a number. Sericulture writers
+treat it as too obvious to count: they write "the larvae enclose themselves in a
+cocoon", which contains no number word at all, so an honest answer of `1` could
+never ground against it.
+
+A 35-URL sweep on 2026-07-31 — FAO, Wikipedia, Britannica, Saint Louis Zoo,
+Carolina Biological, extension PDFs — found exactly one page that states the
+one-to-one relation in a single fetchable sentence, PubMed 38061509
+(`https://pubmed.ncbi.nlm.nih.gov/38061509/`):
+
+> A normal silkworm cocoon (NSC) with a unique nonwoven structure is usually
+> spun by a single silkworm larva.
+
+That says "a single silkworm larva", not "one cocoon", so the number `1` is in
+the *meaning* and not in the *characters* — `value_in_quote` would reject it,
+correctly, since it does not know that "single" is a number word here.
+
+Reading `1` out of that sentence is a human judgement about what a source means,
+which is precisely the class of call the README reserves for a human. So it is
+recorded as one, by a human, in the review record — not laundered through COOPER
+by renaming the field to one the band check does not read. Note also that the
+same abstract supplies the exception: a *multi-silkworm cocoon* strain in which
+three or more larvae spin one cocoon collectively, which is why the honest
+grade here is not `measured` and the constant carries a caveat.

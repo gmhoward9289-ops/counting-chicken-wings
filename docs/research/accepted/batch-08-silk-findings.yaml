@@ -1,0 +1,58 @@
+batch: batch-08-silk
+subject: silk
+findings:
+- field: cocoons_per_pound_raw_silk
+  value_lo: 2000
+  value_mode: null
+  value_hi: 3000
+  unit: cocoons per pound of silk
+  confidence: industry
+  document: inbox/silk/https-www-newworldencyclopedia-org-entry-silkwor-892d0b75.txt
+  quote: About 2,000 to 3,000 cocoons are required to make a pound of silk, or roughly
+    1,000 miles of filament (Palmer 1949).
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+- field: cocoons_per_tie
+  value_lo: 150
+  value_mode: 150
+  value_hi: 150
+  unit: cocoons per silk necktie
+  confidence: industry
+  document: inbox/silk/https-festival-si-edu-2002-the-silk-road-the-sil-48d6edde.txt
+  quote: About 150 cocoons are needed for a necktie.
+  agreement: 2/2
+  verified_by: null
+- field: cocoons_per_shirt
+  value_lo: 1000
+  value_mode: 1000
+  value_hi: 1000
+  unit: cocoons per silk shirt/blouse
+  confidence: industry
+  document: inbox/silk/https-www-suekayton-com-silkworms-cloth-htm-d4adcfc2.txt
+  quote: It takes 1700 to 2000 cocoons to make one silk dress (or about 1,000 cocoons
+    for a silk shirt).
+  agreement: 1/1 (second model returned nothing)
+  verified_by: null
+- field: cocoons_per_dress
+  value_lo: 1700
+  value_mode: 1850
+  value_hi: 2000
+  unit: cocoons per silk dress
+  confidence: industry
+  document: inbox/silk/https-www-suekayton-com-silkworms-cloth-htm-d4adcfc2.txt
+  quote: It takes 1700 to 2000 cocoons to make one silk dress (or about 1,000 cocoons
+    for a silk shirt).
+  agreement: '1/2 disagree: 1850 vs None'
+  verified_by: null
+- field: reeling_cocoons_per_thread
+  value_lo: 5
+  value_mode: 5
+  value_hi: 5
+  unit: cocoons combined into one reeled thread
+  confidence: industry
+  document: inbox/silk/https-www-suekayton-com-silkworms-cloth-htm-d4adcfc2.txt
+  quote: Then a machine unrolls the cocoon, winding the silk from five cocoons together
+    to make one silk thread.
+  agreement: 2/2
+  verified_by: null
+proposed_sources: []

@@ -1110,3 +1110,116 @@
     percent dressing percent, 75 percent of the carcass is 47 percent of live
     weight, not 40. SDSU's 65 percent does reconcile. Both bounds are kept and
     neither is averaged away.
+# --- silk (batch-08-silk, accepted 2026-07-31) ------------------------------
+#
+# The thinnest-sourced subject in the corpus, and labelled as such throughout.
+# No government agency counts silkworms anywhere, because commercial
+# sericulture is Chinese and Indian and no US series touches it. Every silk
+# figure is therefore `industry` at best, which is the ceiling COOPER can
+# assign anyway, and the audit prints that mix on every build.
+
+- slug: nwe-silkworm
+  title: Silkworm
+  publisher: New World Encyclopedia
+  url: https://www.newworldencyclopedia.org/entry/Silkworm
+  retrieved_on: '2026-07-31'
+  source_type: trade_press
+  notes: >-
+    A tertiary reference work - an encyclopedia entry, not a survey and not a
+    study. Graded and cited as what it is.
+
+    Carried because it is the only silk source we hold that names a primary
+    reference for its central figure: the cocoons-per-pound claim is attributed
+    to Palmer 1949, which we have NOT seen. The citation in this corpus is
+    therefore to the encyclopedia that carries the number, not to Palmer, on
+    the principle that citing a paper through a source you have read is how a
+    rumour acquires a footnote.
+
+    It is also the source of the sourced filament length, 300-900 m, which sits
+    well below the commonly repeated "1,000-1,600 m". The lower sourced figure
+    is the one to keep; the folk range has no source we could find.
+
+- slug: suekayton-silk-thread-and-cloth
+  title: Silk Thread and Cloth
+  publisher: Sue Kayton (silkworms.com educational pages)
+  url: https://www.suekayton.com/Silkworms/cloth.htm
+  retrieved_on: '2026-07-31'
+  source_type: trade_press
+  notes: >-
+    A schoolteacher's silkworm-rearing page for classroom use. The weakest
+    provenance of anything cited in this corpus, and it is cited anyway for two
+    figures because no better source states them and pretending otherwise would
+    be worse than saying so plainly.
+
+    What it is good for: the FIVE-cocoons-per-thread reeling figure, which is
+    the only mixing pool size in the entire project backed by a citation rather
+    than by our own estimate. Both COOPER models returned it independently.
+
+    What to watch: its per-garment sentence answers two questions at once -
+    "It takes 1700 to 2000 cocoons to make one silk dress (or about 1,000
+    cocoons for a silk shirt)." A previous research run stored the DRESS
+    numbers in the SHIRT row and passed every automatic check, because every
+    figure involved genuinely appears in the quote. Anyone re-reading this
+    source should read the clause, not the sentence.
+
+    Historical footnote: this page is also where the entity-decoding bug was
+    found. It carries 47 non-breaking spaces, and until fetch_url() learned to
+    call html.unescape() they survived into the inbox and made an honest quote
+    from it impossible to verify.
+
+- slug: smithsonian-silk-road-2002
+  title: The Silk Road - Connecting Peoples and Cultures
+  publisher: Smithsonian Center for Folklife and Cultural Heritage
+  url: https://festival.si.edu/2002/the-silk-road/the-silk-road-connecting-peoples-and-cultures/smithsonian
+  published_on: '2002-01-01'
+  source_type: trade_press
+  retrieved_on: '2026-07-31'
+  notes: >-
+    A museum festival programme essay. The best provenance available for a
+    cocoons-per-necktie figure, which says more about the state of that figure
+    than about the Smithsonian.
+
+    It gives 150 cocoons per necktie. Two other figures circulate - 120-130 at
+    AFB Education, and 110 across several retail and content-farm pages, all
+    reproducing one unattributed sentence verbatim. This source is preferred on
+    provenance alone, NOT on any evidence it is more accurate, and the conflict
+    is recorded on the product row rather than resolved. No survey exists
+    behind any of the three.
+
+    It replaced bows-n-ties, which carries the 120-130 figure in a browser and
+    serves an article body that JavaScript truncates mid-word. To the project's
+    fetcher that page contains neither 120 nor 130, so two research runs
+    correctly returned nothing and read as model weakness for a week.
+
+- slug: pubmed-multi-silkworm-cocoon
+  title: >-
+    Multi-silkworm cocoon: structure, properties and the collective spinning
+    behaviour behind it (Int J Biol Macromol, PMID 38061509)
+  publisher: PubMed / Elsevier
+  url: https://pubmed.ncbi.nlm.nih.gov/38061509/
+  published_on: '2023-12-01'
+  retrieved_on: '2026-07-31'
+  source_type: peer_reviewed
+  notes: >-
+    Cited for ONE sentence and graded deliberately below what its source_type
+    would suggest: "A normal silkworm cocoon (NSC) with a unique nonwoven
+    structure is usually spun by a single silkworm larva."
+
+    THE PAPER IS PEER-REVIEWED AND THAT SENTENCE IS NOT ITS FINDING. It is
+    uncited scene-setting in a materials-science study about cocoon structure,
+    so the figure it supports is graded `industry`, not `study`. This is
+    exactly the distinction the research README draws using Jaganathan & Mandal
+    on honey, and it is the reason `study` is a human-only grade: a model that
+    sees a journal header cannot tell a paper's result from its first sentence.
+
+    Cited because it is the ONLY fetchable source found, across a 35-URL sweep
+    covering FAO, Britannica, Wikipedia, Saint Louis Zoo, Carolina Biological
+    and several extension PDFs, that states the one-cocoon-per-silkworm
+    relation in a single sentence at all. Sericulture writers treat it as too
+    obvious to count and write "the larvae enclose themselves in a cocoon",
+    which contains no number and cannot ground a figure of 1.
+
+    It also supplies its own exception, which is kept rather than trimmed:
+    three or more larvae sometimes spin one cocoon collectively in a particular
+    Bombyx mori genetic resource. So the constant is one-to-one for commercial
+    silk and is not a law of nature.

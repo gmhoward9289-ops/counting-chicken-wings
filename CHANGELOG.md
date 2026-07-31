@@ -233,6 +233,58 @@ Three quotes were corrected by hand and the values left untouched: one true
 quote that failed the gate on tidied punctuation, and two that passed the gate
 while being unreviewable — a bare parenthetical and a bare numeric span. Short
 and verbatim is not the same as checkable.
+### Silk: a fifth domain, and a garment-level product
+
+`batch-08-silk` had failed `verify` twice and was recorded as a negative
+result. The headline cause was ours, not the models': `fetch_url()` never
+called `html.unescape()`, so `&nbsp;` survived into the inbox that `verify`
+matches quotes against, and an honest quote spanning one could never match.
+That fix landed separately; this is the re-run it enables.
+
+Five figures verified and promoted, plus one recorded as a human judgement.
+
+- **A third hard anatomical constant.** One silkworm spins one cocoon — the
+  degenerate one-to-one form of two wings per chicken. It is load-bearing:
+  every per-garment figure in the subject is a cocoon count, and a cocoon count
+  is only an animal count because the constant holds.
+- **The corpus's first garment-level product.** A necktie is about 150
+  silkworms, a shirt about 1,000, a dress 1,700–2,000. Measured in garments,
+  not in pieces or mass, and the first product here that is worn rather than
+  eaten.
+- **The first sourced mixing pool in the project.** Every other mixing stage in
+  the corpus cites our own estimate, because nobody in any trade measures pool
+  size. Reeling is the exception: five cocoons are combined into one thread,
+  stated outright and returned independently by both models.
+
+Three things this run got right by being told about them, and they are worth
+recording because each was a prior failure:
+
+- **The semantic hole the gate cannot see.** The previous run stored the
+  *dress* numbers in the *shirt* row, from a sentence answering two questions
+  at once. Every figure was genuinely in the quote, so no automatic check could
+  object. The spec now names the trap; the row now reads 1,000.
+- **A source that only exists in a browser.** The cited necktie page serves its
+  article body through JavaScript, so to this project's fetcher it contains
+  neither of its own figures — two runs read as model weakness for a week. It
+  is replaced by two sources that survive a no-JS fetch, and they disagree
+  (150 against 120–130), which is reported on the product row rather than
+  averaged away.
+- **A figure no machine could produce.** Cocoons-per-worm was withdrawn from
+  the batch rather than coerced. No fetchable source states it numerically, and
+  reading `1` out of "spun by a single silkworm larva" is a judgement about
+  what a source means. It is recorded as a human judgement, with the paper's
+  own "usually" and its multi-larva counterexample intact, and graded
+  `industry` rather than `study` even though the paper is peer-reviewed —
+  the sentence is uncited scene-setting, not the finding.
+
+Rearing mortality is deliberately **not** modelled. The only honest band is
+0.70–0.97, which spans an order of magnitude and would look like a measurement
+to everything downstream.
+
+The unsourced-estimate share of loss factors rises from 46% to 48%, and the
+README says so. That is the audit working: silk is the thinnest-sourced subject
+in the corpus and the thinness stays visible instead of being laundered by
+proximity to well-sourced poultry figures.
 
 ### Tags that are not releases
 

@@ -757,3 +757,49 @@ facts:
     source: nass-poultry-slaughter-2025
     placement: both
     surprise: 4
+
+  - slug: silk-pupa-killed-for-an-unbroken-thread
+    headline: The count is exact because the animal's whole life's work is taken at once
+    body: >-
+      A silkworm spins one cocoon, from one continuous filament three hundred
+      to nine hundred metres long, and then it is killed inside it - baked,
+      steamed or boiled before the moth can emerge.
+
+      That is not cruelty for its own sake and it is not a detail. A moth that
+      emerges dissolves a hole through the wall and cuts the single thread into
+      short useless lengths, so the cocoon has to be taken whole or not at all.
+      The economics and the arithmetic point the same way: one animal, one
+      cocoon, one unbroken thread, all of it or none.
+
+      It is why "about 150 silkworms per necktie" is a headcount rather than an
+      average. Everywhere else in this project a number of animals is inferred
+      from a mass or a yield that varies. Here each worm contributes its entire
+      lifetime output exactly once, and the reason the figure is exact is the
+      same reason the pupa does not survive.
+    source: nwe-silkworm
+    placement: both
+    surprise: 5
+
+  - slug: silk-nobody-writes-down-one-cocoon-per-worm
+    headline: The hardest silk figure to source is the most obvious one
+    body: >-
+      One silkworm spins one cocoon. Every per-garment figure in this corpus is
+      a cocoon count, and a cocoon count only becomes an animal count because
+      that holds - so it is the load-bearing number of the whole subject.
+
+      It is also the one number that could not be extracted automatically. Two
+      runs of two different models declined to answer it, and they were right
+      to: sericulture writers never state it numerically. They write "the
+      larvae enclose themselves in a cocoon", which contains no number at all,
+      so an honest answer of 1 has nothing to verify against. A sweep of
+      thirty-five sources - the FAO, Britannica, Wikipedia, zoos, university
+      extension PDFs - turned up exactly one fetchable sentence stating the
+      relation, and it states it sideways.
+
+      Things everybody knows are not written down. That is a general hazard for
+      any project that builds a corpus by reading documents, and it is worth
+      knowing that the gap tends to sit under the foundations rather than out
+      at the edges.
+    source: pubmed-multi-silkworm-cocoon
+    placement: learning
+    surprise: 4

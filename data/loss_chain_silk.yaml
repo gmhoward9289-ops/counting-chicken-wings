@@ -1,0 +1,109 @@
+# The silk loss chain. Merged with loss_chain.yaml at build time.
+#
+# Short, and short on purpose - shorter even than saffron's. Every stage here
+# is UNSOURCED and every stage is therefore OFF by default, so the default silk
+# answer rests entirely on cited figures. That is the standard saffron set and
+# it is worth holding to in a subject where the sourcing is thinner still.
+#
+# WHY THE LOSS CHAIN IS NEARLY EMPTY, AND WHY THAT IS HONEST
+# -----------------------------------------------------------
+# Because the garment figures already have the losses baked in. "About 150
+# cocoons per necktie" is a count of cocoons CONSUMED to produce a finished
+# tie, not a count of cocoons whose silk ends up in one. Reeling waste,
+# degumming loss, weaving waste and cutting waste are all already inside that
+# number, exactly the way the 150-flowers-per-gram saffron figure already has
+# drying priced in.
+#
+# Adding a reeling-waste stage on top would therefore double-count, and it
+# would double-count in the direction that makes the project's headline figure
+# more impressive - which is precisely the class of error nobody catches
+# because nobody wants to. Saffron's 80%-drying trap is the same trap and this
+# file is deliberately built to avoid re-digging it.
+#
+# THE STAGE THAT WOULD ACTUALLY MOVE THE ANSWER, AND CANNOT BE SOURCED
+# ---------------------------------------------------------------------
+# Breeding stock. Some cocoons are never reeled at all: they are set aside and
+# the moth is allowed to emerge, which chews through the filament and destroys
+# the cocoon as a textile object but produces the next generation's eggs. Those
+# silkworms are real animals raised for silk whose cocoons yield none.
+#
+# So "how many silkworms did this tie cost" and "how many silkworms had to be
+# reared for this tie to exist" are two different questions, in exactly the way
+# "how many wings" and "how many chickens had to be grown" are. It is modelled
+# below, off by default, with an honest band and the unsourced-estimate
+# citation. Nobody publishes the ratio.
+#
+# WHAT IS NOT A LOSS STAGE, THOUGH IT LOOKS LIKE THE BIGGEST ONE
+# ---------------------------------------------------------------
+# The death of the pupa. Every commercial cocoon is stifled - baked or steamed
+# or boiled - with the pupa alive inside it, and the animal dies. That is a
+# 100% mortality rate and it belongs nowhere in this file, because it removes
+# no silk. It is the opposite: killing the pupa is what PRESERVES the filament
+# whole, since a moth allowed to emerge would cut it into useless lengths.
+#
+# The count is exact BECAUSE the lifetime product must be taken whole. That is
+# the striking fact of the subject and it is recorded in facts.yaml, not here.
+# A loss chain measures what is lost; nothing is lost at stifling.
+
+stages:
+  - slug: silk_breeding_stock
+    domain: sericulture
+    label: Cocoons kept for breeding
+    sequence: 10
+    phase: harvest
+    applies_to: individual
+    optional: 1
+    default_enabled: 0
+    description: >-
+      Cocoons set aside and allowed to hatch so the moths can lay the next
+      generation's eggs. The emerging moth chews through the filament, so the
+      cocoon is destroyed as silk even though the silkworm was reared for silk
+      production. These animals do not appear in any per-garment cocoon count.
+    notes: >-
+      OFF by default, for the same reason saffron's field loss and the poultry
+      chain's grow-out mortality are off: a cocoon nobody reeled did not
+      contribute the thread in your hand. Turn it on to ask "how many silkworms
+      had to be REARED for this garment", which is the farm's question rather
+      than the wearer's.
+
+      UNSOURCED. The 0.90-0.98 band is our reasoning and is flagged as such.
+      The logic is only that a moth lays hundreds of eggs, so sustaining a
+      population needs a small fraction of cocoons held back - but the actual
+      commercial ratio depends on whether a filature breeds its own stock or
+      buys disease-free layings from a grainage, and that varies by country and
+      by scale. No agency publishes it.
+
+      This is the most valuable missing number in the subject: it is the only
+      stage that would move the count if switched on.
+    factors:
+      - species: silkworm
+        survive_lo: 0.90
+        survive_mode: 0.95
+        survive_hi: 0.98
+        confidence: estimate
+        source: project-estimate-unsourced
+
+# REARING MORTALITY IS DELIBERATELY NOT MODELLED
+# -----------------------------------------------
+# It is real and it belongs in this chain conceptually. Larvae die before
+# spinning - pebrine, flacherie, grasserie, muscardine - and a larva that died
+# in the fourth instar spun no cocoon and is in no necktie. Like the breeding
+# stock above, it changes how many worms were REARED and never how many are in
+# the garment.
+#
+# It is left out because the only band we could honestly write is 0.70 to 0.97,
+# and that is not a band. Pasteur's work on pebrine exists because the disease
+# was destroying the entire French industry; modern well-run rearing loses a
+# small fraction. A range spanning an order of magnitude in mortality carries
+# no information, and dressing an admission of ignorance as a lo/mode/hi makes
+# it look like a measurement to every downstream consumer of this file.
+#
+# The distinction from silk_breeding_stock is worth being explicit about, since
+# both are unsourced: breeding stock has a NARROW plausible range for a
+# structural reason - a moth lays hundreds of eggs, so sustaining a population
+# needs only a small fraction of cocoons held back, whatever the country or the
+# scale. Mortality has no such anchor. One is a reasoned estimate; the other
+# would be a guess wearing the same clothes.
+#
+# Recorded here as an open research lead. A sourced figure would be worth
+# having, and until there is one this stays prose rather than data.

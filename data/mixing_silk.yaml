@@ -1,0 +1,146 @@
+# Silk mixing cascade. Merged with mixing.yaml at build time.
+#
+# A supply chain is REQUIRED, not optional decoration. db.default_supply_chain
+# has no cross-species fallback by design, so a species with no chain of its
+# own raises rather than quietly inheriting somebody else's - the bug that let
+# eggs walk a cut-up line and a fryer basket and narrate all of it.
+#
+# THE ONE MIXING POOL IN THIS PROJECT THAT IS ACTUALLY SOURCED
+# ------------------------------------------------------------
+# Every other mixing stage in the corpus - poultry, eggs, saffron, maple -
+# cites project-estimate-mixing, because pool size is not a thing anyone in any
+# trade measures and nobody publishes it. Silk is the exception, and it is
+# worth flagging as one: reeling combines a stated FIVE cocoons into a single
+# thread, and a schoolteacher's silkworm page states it outright.
+#
+#   "Then a machine unrolls the cocoon, winding the silk from five cocoons
+#    together to make one silk thread."
+#
+# Both COOPER models returned 5 from that sentence independently. It is the
+# only pool figure in the project with a citation that is not our own estimate,
+# and silk_reeling below is graded `industry` rather than `estimate` for that
+# reason alone. The two stages after it are guesses like everyone else's.
+#
+# THIS IS A HONEST MIXING STEP THAT DOES NOT DOMINATE, WHICH IS THE POINT
+# -----------------------------------------------------------------------
+# The batch spec asked for this figure specifically as a contrast with ground
+# beef, where mixing is the entire story. Here it is real and small. Five
+# cocoons per thread sounds like it should matter, and it does not move the
+# garment answer at all, because the garment answer is already a division: 150
+# cocoons go into a tie whether they were reeled five at a time or fifty.
+#
+# What reeling actually does is guarantee there are no repeats. A thread is a
+# blend, so the shares in your necktie cannot have come from the same worm
+# twice, and floor and ceiling coincide at 150. Compare wings, where mixing is
+# what decides where in the 6-to-12 band you land. Same mechanism, and it
+# changes the character of the answer completely because of where it sits.
+
+stages:
+  - slug: silk_reeling
+    domain: sericulture
+    label: Reeling
+    sequence: 10
+    # In COCOONS combined. The only sourced pool in the corpus - and note it is
+    # a point value with no band, because the source gives one number and
+    # widening it would invent a spread we were not given.
+    pool_lo: 5
+    pool_mode: 5
+    pool_hi: 5
+    mixing_kind: random
+    confidence: industry
+    source: suekayton-silk-thread-and-cloth
+    description: >-
+      Cocoons are softened in hot water and unwound, and the filaments from
+      about five of them are wound together to make one usable silk thread. A
+      single filament is roughly ten micrometres across and far too fine to
+      weave alone, so combining is not an economy - it is the only way to get a
+      thread at all. This is silk's cut-up line, and it happens before the
+      material is a textile in any sense.
+
+  - slug: silk_skein
+    domain: sericulture
+    label: Skein and throwing
+    sequence: 20
+    # In COCOONS represented. Threads from many reeling heads are wound into
+    # skeins and twisted (thrown) into yarn. A filature runs many basins at
+    # once and the skein is where their output meets.
+    pool_lo: 500
+    pool_mode: 5000
+    pool_hi: 50000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Reeled threads are wound into skeins and twisted into yarn. Output from
+      many reeling basins combines here, so the pool grows by roughly the size
+      of the filature rather than by anything intrinsic to the silk.
+
+  - slug: silk_weaving_warp
+    domain: sericulture
+    label: Weaving warp
+    sequence: 30
+    # In COCOONS represented. A warp is thousands of ends, each metres long,
+    # all dressed onto one beam and woven off as a single piece from which many
+    # garments are cut.
+    pool_lo: 20000
+    pool_mode: 500000
+    pool_hi: 5000000
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Yarn is dressed onto a loom beam as a warp and woven into a bolt of
+      cloth. This is the largest pooling event in the chain by a wide margin -
+      a bolt yields many garments, and every garment cut from it draws on every
+      worm that went into the beam.
+
+supply_chains:
+  - slug: commodity_silk
+    domain: sericulture
+    species: silkworm
+    label: Commodity silk trade
+    is_default: 1
+    description: >-
+      The route essentially all silk takes: cocoons stifled and reeled at a
+      filature, thrown into yarn, woven into bolts, and cut into garments.
+      Every mixing stage applies and the pool is large at every step after the
+      first.
+    stages:
+      - silk_reeling
+      - silk_skein
+      - silk_weaving_warp
+    floor_note: >-
+      The answer sits exactly at the floor, and unusually there is nowhere else
+      for it to sit. Silk thread is a blend from the first operation onwards -
+      five cocoons are combined before the material is even a thread - so by
+      the time cloth exists, no two shares of it plausibly come from the same
+      worm. Floor and ceiling therefore coincide: a necktie is about 150
+      silkworms, not "between 150 and something larger".
+
+      This is the opposite of wings, where the six-to-twelve band is the whole
+      interesting result, and it is the same shape as saffron for the same
+      reason - the pool is enormous relative to the draw.
+
+  - slug: handreeled_silk
+    domain: sericulture
+    species: silkworm
+    label: Hand-reeled and handwoven
+    is_default: 0
+    description: >-
+      Village and artisan production: cocoons reeled by hand or on a simple
+      frame, and woven on a handloom in short warps. Still the normal route for
+      a large share of world silk, particularly in India.
+    floor_note: >-
+      The one route where the pool is small enough to be worth stating. A
+      handloom warp is metres rather than hundreds of metres, so a scarf's
+      worth of cloth draws on thousands of worms instead of millions. The
+      ANSWER does not change - it is still a division, and still lands at the
+      floor - but the claim "your tie contains silk from this village's
+      season" becomes true here and is false for mill cloth.
+    stages:
+      - silk_reeling
+      - slug: silk_weaving_warp
+        # Overridden hard. A handloom warp is a different order of thing from a
+        # power-loom beam, and leaving the commodity figure in place would have
+        # the artisan route quietly claim half a million worms per warp.
+        pool_override: 20000

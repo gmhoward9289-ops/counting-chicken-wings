@@ -1,0 +1,315 @@
+# Silk. Merged with taxonomy.yaml at build time.
+#
+# The project's fifth domain, and the first product measured in GARMENTS
+# rather than in pieces or in mass. "How many silkworms are in a silk tie" is
+# the same question as "how many chickens are in a dozen wings", asked about an
+# object nobody thinks of as having come from animals at all.
+#
+# WHY SILK EARNS A SUBJECT
+# ------------------------
+# One reason, and it is the same reason saffron earned one: a THIRD hard
+# anatomical constant, and only the third in the whole corpus.
+#
+#   a chicken has 2 wings          -> 12 wings need at least 6 chickens
+#   a flower has 3 stigmas         -> 12 stigmas need at least 4 flowers
+#   a silkworm spins 1 cocoon      -> 150 cocoons need at least 150 silkworms
+#
+# Silk's constant is the degenerate case, one-to-one, and that is exactly what
+# makes it useful. Every per-garment figure in this file is a cocoon count, and
+# a cocoon count is a silkworm count only because the constant holds. Remove it
+# and "150 cocoons per tie" says nothing about how many animals died.
+#
+# THE CONSTANT IS THE WEAKEST-SOURCED FIGURE HERE, WHICH IS BACKWARDS
+# -------------------------------------------------------------------
+# Two runs of COOPER's models declined to answer "how many cocoons does one
+# silkworm spin", and they were right to. Sericulture writers never state it as
+# a number -- they write "the larvae enclose themselves in a cocoon", which
+# contains no number word, so an honest answer of 1 has nothing to ground
+# against. A 35-URL sweep across FAO, Britannica, Wikipedia, extension PDFs and
+# museum pages on 2026-07-31 found exactly one fetchable sentence stating the
+# relation, and it states it sideways.
+#
+# So the one figure the whole subject rests on is the one figure no machine
+# could extract, and it is recorded here as a human judgement with its hedge
+# intact. See the notes on silkworm_cocoon. Do not "tidy" that hedge away.
+#
+# THE GARMENT COUNTS ARE TRADE LORE AND ARE LABELLED AS SUCH
+# ----------------------------------------------------------
+# 150 cocoons per necktie, 1,000 per shirt, 1,700-2,000 per dress. No survey
+# stands behind any of them. They come from a museum festival programme and a
+# schoolteacher's silkworm page, they are repeated verbatim across the web, and
+# the sources that carry them disagree -- the necktie figure alone runs 110,
+# 120-130 and 150 depending on who you ask. Every one of them is graded
+# `industry`, none is a constant, and the disagreement is recorded in the notes
+# rather than averaged away.
+#
+# WHY EVERY GARMENT IS `continuous` AND NOT `countable`
+# -----------------------------------------------------
+# A necktie is obviously one object, so `countable` looks right and is wrong.
+# `countable` means discrete units PER INDIVIDUAL -- two wings per chicken --
+# and a silkworm does not produce a fraction of a tie the way a chicken
+# produces a wing. It produces a share of the thread that becomes one.
+#
+# That is the saffron shape exactly: 150 flowers each contribute a sliver of a
+# gram, 150 silkworms each contribute a sliver of a tie. So the yield figure is
+# GARMENTS PER SILKWORM, a small fraction, and the floor comes out by division.
+# It also means floor and ceiling coincide -- silk thread is blended, so no two
+# shares in your tie can have come from the same worm, and there is no band for
+# mixing to move the answer within. Wings have 2x of headroom between floor and
+# ceiling; a garment has none.
+#
+# THE RECIPROCALS ARE ROUNDED **UP**, AND THAT DIRECTION IS LOAD-BEARING
+# -----------------------------------------------------------------------
+# Every yield figure below is 1/n for a whole number n of cocoons, and the
+# answer is recovered by dividing back: floor = quantity / yield, then ceil().
+# So the rounding of these constants decides whether the headline integer is
+# right, and it has to go one specific way.
+#
+# Round 1/n DOWN and the division lands just ABOVE n, which ceil() then pushes
+# to n+1. Measured, not reasoned: 1/1850 written as 0.0005405405 returns a
+# dress of 1851 silkworms, and 1/1700 written to eighteen digits instead of
+# nineteen returns 1701. One worm of pure arithmetic noise, sitting in the
+# headline figure, in the one project whose whole product is that its numbers
+# can be trusted.
+#
+# Round UP and the division lands just BELOW n, and ceil() lands exactly on it.
+# That is why saffron carries 0.0066666667 rather than 0.0066666666, and every
+# value here follows the same rule.
+#
+# But rounding up ALONE is not enough, and this is the part that is easy to get
+# half right. 1/150 as 0.0067 is rounded up and does ceil to 150 - while making
+# the floor read 149.2537, so the audit trail says "a hard minimum of 149.25".
+# False precision in exactly the number the project asks people to trust. Each
+# value therefore carries enough digits that 1/value returns its own n to
+# display precision AND is not a hair over it: eighteen digits for 150,
+# nineteen for 1700 and 1850, twenty for 3000, and exact short decimals for
+# 1000, 2000 and 2500.
+#
+# Saffron documents this trap on its single per-gram figure. It is re-stated
+# here at length because silk has five reciprocals, four of them non-repeating,
+# and every one of them is a headline number.
+
+domains:
+  - slug: sericulture
+    label: Sericulture
+    description: >-
+      Silk farming. The fifth domain, and the first whose product is worn
+      rather than eaten - which is the point of including it, since the
+      question "how many animals is this" is asked of food almost exclusively.
+    active: 1
+
+species:
+  - slug: silkworm
+    domain: sericulture
+    common_name: Silkworm
+    scientific_name: Bombyx mori
+    individual_noun: silkworm
+    individual_plural: silkworms
+    # NULL, like saffron and for a harder version of the same reason. No US
+    # agency counts silkworms because there is essentially no US sericulture;
+    # the industry is Chinese and Indian and has been for millennia. Every
+    # figure in this subject therefore tops out at 'industry', and the poultry
+    # corpus resting on enumerated national surveys remains the exception.
+    stat_category: null
+    active: 1
+    notes: >-
+      Bombyx mori is fully domesticated and no longer exists in the wild. The
+      adult moth cannot fly and the larva cannot forage; the species depends on
+      humans completely, which is unusual enough to be worth stating alongside
+      any figure about it.
+
+      DELIBERATELY NOT MERGED with wild or tussah silk. Wild cocoons are
+      gathered after the moth has already chewed its way out, so the single
+      thread is broken into short lengths and none of the per-cocoon filament
+      figures in this file apply. Different animal, different arithmetic.
+
+products:
+  - slug: silkworm_cocoon
+    species: silkworm
+    label: Silkworm cocoon
+    label_plural: Silkworm cocoons
+    yield_mode: countable
+    # ONE. The structural twin of two wings per chicken and three stigmas per
+    # flower, and the reason this subject is in the corpus at all.
+    units_per_individual_lo: 1
+    units_per_individual_mode: 1
+    units_per_individual_hi: 1
+    unit_name: cocoon
+    source_part: cocoon
+    named_part: cocoon
+    named_part_content: 1.0
+    is_anatomical_constant: 1
+    source: pubmed-multi-silkworm-cocoon
+    notes: >-
+      A HUMAN JUDGEMENT, recorded as one. This figure was withdrawn from the
+      COOPER batch because no fetchable source states it numerically, and
+      reading "1" out of a sentence that says "a single silkworm larva" is a
+      decision about what a source MEANS - the class of call the research
+      pipeline reserves for a person. It is written down here rather than
+      laundered through the extractor by renaming the field to one the band
+      check does not read.
+
+      The source: "A normal silkworm cocoon (NSC) with a unique nonwoven
+      structure is usually spun by a single silkworm larva."
+
+      Three hedges kept on purpose. First, "usually" is the paper's word, not
+      ours. Second, the same abstract supplies the exception - a Bombyx mori
+      genetic resource in which three or more mature larvae spin one cocoon
+      collectively, named the "multi-silkworm cocoon" - so the relation is
+      one-to-one for commercial silk and not for all silk. Third, the grade is
+      `industry` and NOT `study`, even though the paper is peer-reviewed,
+      because the one-cocoon-per-larva relation is uncited scene-setting in a
+      materials-science paper about cocoon structure. That is the honey trap
+      the research README names: a document being peer-reviewed says nothing
+      about whether the sentence you took from it was reviewed.
+
+      It is nonetheless a genuine constant in the sense the project cares
+      about. A commercial cocoon is one larva's entire lifetime output, taken
+      whole, and there is no second one - which is precisely why the pupa is
+      killed inside it.
+
+  - slug: silk_necktie
+    species: silkworm
+    label: Silk necktie
+    label_plural: Silk neckties
+    yield_mode: continuous
+    # NECKTIES PER SILKWORM -- the reciprocal of 150 cocoons per tie, which is
+    # how the source states it, and a cocoon count is a silkworm count because
+    # of silkworm_cocoon above.
+    #
+    # No band. The Smithsonian gives one round number with no spread, and
+    # manufacturing a lo/hi around it would be inventing precision nobody
+    # supplied. The real spread is between SOURCES, not within one, and that
+    # belongs in the notes where a reader can see the disagreement rather than
+    # in a band that hides it inside an average.
+    units_per_individual_lo: 0.006666666666666667
+    units_per_individual_mode: 0.006666666666666667
+    units_per_individual_hi: 0.006666666666666667
+    unit_name: necktie
+    source_part: cocoon
+    named_part: cocoon
+    named_part_content: 1.0
+    is_anatomical_constant: 0
+    source: smithsonian-silk-road-2002
+    notes: >-
+      "It takes about 2,000-3,000 cocoons to make a pound of silk needed for a
+      dress; about 150 cocoons are needed for a necktie."
+
+      A CONFLICT, REPORTED AND NOT RESOLVED. Three per-tie figures circulate
+      and they do not agree:
+
+        150      Smithsonian Folklife Festival (used here)
+        120-130  AFB Education, https://afbeducation.org/silkworm-eggs/
+        110      several retail and content-farm pages, all reproducing one
+                 unattributed original sentence verbatim
+
+      The Smithsonian figure is used because it has the best provenance of the
+      three, not because it is more likely to be right. Nothing here is a
+      survey. The honest reading is "roughly a hundred and something", and a
+      reader who needs the number to be better than that does not have a
+      source, they have a preference.
+
+      Both COOPER models returned 150 from this sentence independently (2/2).
+
+  - slug: silk_shirt
+    species: silkworm
+    label: Silk shirt
+    label_plural: Silk shirts
+    yield_mode: continuous
+    # SHIRTS PER SILKWORM: 1/1000. One number, no range given.
+    units_per_individual_lo: 0.001
+    units_per_individual_mode: 0.001
+    units_per_individual_hi: 0.001
+    unit_name: shirt
+    source_part: cocoon
+    named_part: cocoon
+    named_part_content: 1.0
+    is_anatomical_constant: 0
+    source: suekayton-silk-thread-and-cloth
+    notes: >-
+      "It takes 1700 to 2000 cocoons to make one silk dress (or about 1,000
+      cocoons for a silk shirt)."
+
+      THE FIGURE FOR THIS ROW IS THE 1,000 IN THE PARENTHESIS. Worth stating
+      because the previous research run stored 1700/1800/2000 here - the DRESS
+      numbers, from the same sentence - and no automatic check could catch it.
+      The quote was verbatim, the document was right, and every figure in the
+      row genuinely appeared in the quoted text. They were simply about the
+      other garment. One sentence answering two questions is the trap, and the
+      only defence is reading the clause rather than the sentence.
+
+  - slug: silk_dress
+    species: silkworm
+    label: Silk dress
+    label_plural: Silk dresses
+    yield_mode: continuous
+    # DRESSES PER SILKWORM. Note the inversion: the source's LOW cocoon count
+    # (1700) is this column's HIGH yield, because these are reciprocals.
+    #   lo   1/2000 = 0.0005
+    #   mode 1/1850 = 0.0005405405405405405   (midpoint of the quoted range)
+    #   hi   1/1700 = 0.0005882352941176471
+    units_per_individual_lo: 0.0005
+    units_per_individual_mode: 0.0005405405405405405
+    units_per_individual_hi: 0.0005882352941176471
+    unit_name: dress
+    source_part: cocoon
+    named_part: cocoon
+    named_part_content: 1.0
+    is_anatomical_constant: 0
+    source: suekayton-silk-thread-and-cloth
+    notes: >-
+      "It takes 1700 to 2000 cocoons to make one silk dress (or about 1,000
+      cocoons for a silk shirt)."
+
+      The mode is the midpoint of the quoted range, interpolated rather than
+      stated - the source gives bounds and no central figure. The two COOPER
+      models disagreed here (one returned 1850, the other declined), so the row
+      arrived flagged for human review and was reviewed.
+
+      A dress is not a kimono. Kimono figures around 9,000 cocoons circulate
+      and describe a garment with several times the fabric; do not blur them
+      together.
+
+      Cross-check worth knowing, and it does not fully work: the Smithsonian
+      says 2,000-3,000 cocoons make "a pound of silk needed for a dress",
+      implying a dress is about one pound and about 2,500 cocoons. Sue Kayton
+      says 1,700-2,000. The ranges touch at 2,000 and no more than touch. Two
+      unsurveyed sources landing within a quarter of each other is weak
+      corroboration, and it is recorded as weak.
+
+  - slug: silk_pound_raw
+    species: silkworm
+    label: Pound of raw silk
+    label_plural: Pounds of raw silk
+    yield_mode: continuous
+    # POUNDS OF RAW SILK PER SILKWORM, reciprocal of 2,000-3,000 cocoons per
+    # pound. Reciprocals again invert the bounds:
+    #   lo   1/3000 = 0.0003333333333333333
+    #   mode 1/2500 = 0.0004         (midpoint; the source states no mode)
+    #   hi   1/2000 = 0.0005
+    units_per_individual_lo: 0.0003333333333333333
+    units_per_individual_mode: 0.0004
+    units_per_individual_hi: 0.0005
+    unit_name: pound
+    source_part: cocoon
+    named_part: cocoon
+    named_part_content: 1.0
+    is_anatomical_constant: 0
+    source: nwe-silkworm
+    notes: >-
+      "About 2,000 to 3,000 cocoons are required to make a pound of silk, or
+      roughly 1,000 miles of filament (Palmer 1949)."
+
+      The mass-basis row, and the most useful one for anybody wanting to
+      convert a garment weight into a headcount themselves. It implies roughly
+      0.15 to 0.23 grams of raw silk per cocoon.
+
+      This is the only figure in the subject that names a primary reference -
+      Palmer 1949, which we have not seen. It is graded `industry` on the
+      encyclopedia that carries it, not on the 1949 paper, because citing a
+      source you have not read through a source you have is how a rumour
+      acquires a footnote.
+
+      RAW REELED SILK, not finished fabric. Fabric involves further loss in
+      degumming and weaving, so a cocoons-per-pound-of-cloth figure would be
+      larger and is a different denominator.
