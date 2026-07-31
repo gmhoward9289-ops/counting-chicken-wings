@@ -156,36 +156,60 @@ pytest -q
 
 COOPER runs 3.14, so its self-check is a pre-filter. Acceptance happens here.
 
-## `scout`, and the two ways a URL lies
+## Walls, truncation, and where each is caught
 
-`scout` runs before `send` and checks every URL in a spec **twice: once from
-this Mac and once from COOPER**, using the same `runner.fetch_once` the real
-run uses. It fails the spec rather than warning, because a bad URL costs a
-whole run.
-
-It checks two independent things, and neither one substitutes for the other:
+A fetch can lie in two ways, and they need two different checks.
 
 | Failure | Looks like | Caught by |
 |---|---|---|
-| Bot wall | short, host-dependent — PMC gave the Mac 41,579 chars of Gross 2023 and COOPER 167 chars of reCAPTCHA, HTTP 200 both times | the cross-host size comparison |
-| JS truncation | long, host-INDEPENDENT — bows-n-ties came back at 7,195 chars on both hosts, ending mid-word, with the cited figure absent | the quote-presence check |
+| Bot wall | short, HTTP 200 — PMC gave the Mac 41,579 chars of Gross 2023 and COOPER 167 chars of reCAPTCHA | `document_is_a_wall`, in `verify` |
+| JS truncation | long, byte-identical everywhere — bows-n-ties came back at 7,195 chars on both hosts, ending mid-word, with the cited figure absent | the verbatim quote check |
 
-A document can fetch identically on every machine and still be useless, and it
-can fetch perfectly here and be a doorman there. A fetch fails the host
-comparison when COOPER returns under a quarter of what the Mac does (measured:
+**The wall is per-request, not per-host.** batch-06 fetched that same PMC URL
+from COOPER and got 82,331 characters of the real article, hours after
+batch-05 got 167 characters of reCAPTCHA from the same machine with the same
+fetcher. So no pre-flight check can promise anything about the fetch the run
+will make ten minutes later, and the defence has to live where the documents
+actually arrive:
+
+- **`verify` fails any row whose document is an interstitial** — a body under
+  1,500 characters carrying reCAPTCHA / Cloudflare / "enable JavaScript"
+  wording. It reports the wall by name, so the failure does not read as the
+  model having made its quote up.
+- **`fetch` prints the same list** as the documents land, because a walled
+  document usually explains an item that returned *nothing*, and a row that
+  returned nothing never reaches the gate. batch-05 read as "the models
+  declined" when one of them had been handed 167 characters of doorman.
+
+`scout` still runs before `send`, checks every URL from this Mac **and from
+COOPER** through the same `runner.fetch_once`, and compares the two character
+counts. Treat it as a **smoke test for a persistent wall, not a guarantee**: a
+URL fails when COOPER returns under a quarter of what the Mac does (measured:
 eleven of twelve cross-host pairs agreed exactly or within five characters, and
-the one wall collapsed to 0.4%, so the threshold sits in a very wide empty gap).
-Bodies under 1,500 characters are additionally matched against known
-interstitial wording — reCAPTCHA, Cloudflare, "enable JavaScript".
+the one wall collapsed to 0.4%, so the threshold sits in a wide empty gap). A
+green scout is one sample of an intermittent behaviour.
 
 Compare **characters, not bytes**: COOPER writes CRLF, so every document's byte
 count differs across the two hosts by exactly its line count.
 
-Exit codes: `0` clean · `1` the spec has a problem · **`2` the COOPER half did
-not run**. Two is not a pass. batch-05-milk was cleared to send by a Mac-only
-scout and then lost its best source to a wall COOPER alone was served; a check
-that reports success when it never ran is the failure this project keeps paying
-for.
+Scout exit codes: `0` clean · `1` the spec has a problem · **`2` the COOPER
+smoke test did not run**. Two is not a pass — batch-05 was cleared to send by a
+Mac-only scout that printed "Safe to send".
+
+## Quotes that verify and still say nothing
+
+Two checks warn `[needs_human]` rather than failing, because both have honest
+counter-examples and a gate that cries wolf gets ignored:
+
+- **A bare table row.** `"Eggs, 5.1, 1.3%"` (batch-09, a share of total
+  food-loss calories read as an egg loss rate, wrong by ~20×) and `"Fluid milk
+  109 13 12 22 20 35 32"` (batch-05, severed from the header that said which
+  column was retail and which consumer). Fires on at least two numbers against
+  no more than two words, or on numbers with no words at all (`"150 -185"`).
+- **A quote that is not a sentence.** Ending punctuation is no longer taken as
+  proof of completeness: `"(60 pounds versus 2,000 pounds)"` is balanced,
+  complete and unreviewable, and used to pass because its last character was a
+  bracket.
 
 ## SSH, and two traps that have already cost time
 

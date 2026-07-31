@@ -806,3 +806,94 @@ def test_remote_fetch_reports_rather_than_raises_when_ssh_is_missing(
     results, err = rb.remote_fetch(["https://example.org/a"], "batch-44-scout")
     assert results == {}
     assert err and "ssh" in err
+
+
+# ---------------------------------------------------------------------------
+# document_is_a_wall -- the primary defence, at the point of USE
+#
+# The scout-time comparison cannot be the primary defence and must not be
+# described as one: batch-06 fetched the same PMC URL from COOPER and got
+# 82,331 characters of the real article, hours after batch-05 got 167
+# characters of reCAPTCHA from that machine. The wall is per-request. Only a
+# check on the document that actually arrived survives that.
+# ---------------------------------------------------------------------------
+
+def test_a_walled_document_fails_verify(tmp_path, monkeypatch):
+    """A quote can never be honest against a reCAPTCHA page, and the failure
+    must name the wall rather than blame the model for the quote."""
+    out = tmp_path / "outbox" / "b"
+    out.mkdir(parents=True)
+    doc = tmp_path / "inbox" / "pmc.txt"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(PMC_WALL)
+    (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
+        "field": "milk_yield_per_cow_day", "value_mode": 123.61,
+        "unit": "litres", "confidence": "industry",
+        "document": "inbox/pmc.txt",
+        "quote": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov",
+    }]}))
+    monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
+    monkeypatch.setattr(rb, "RESEARCH", tmp_path)
+    monkeypatch.setattr(rb, "trial_build", lambda files: (True, "skipped"))
+
+    assert rb.verify("b") == 1
+    assert not (out / ".verified").exists()
+
+
+def test_the_wall_check_names_the_wall_not_the_quote(tmp_path):
+    doc = tmp_path / "pmc.txt"
+    doc.write_text(PMC_WALL)
+    walled, why = rb.document_is_a_wall(doc)
+    assert walled
+    assert "not a document" in why
+
+
+def test_a_real_document_is_not_a_wall(tmp_path):
+    doc = tmp_path / "d.txt"
+    doc.write_text(GOOD_BODY)
+    assert not rb.document_is_a_wall(doc)[0]
+
+
+def test_a_missing_document_is_not_reported_as_a_wall(tmp_path):
+    """quote_in_document already reports that, and one problem should produce
+    one message."""
+    assert not rb.document_is_a_wall(tmp_path / "gone.txt")[0]
+
+
+def test_walled_documents_finds_the_wall_among_real_sources(tmp_path):
+    (tmp_path / "a.txt").write_text(GOOD_BODY)
+    (tmp_path / "b.txt").write_text(PMC_WALL)
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "c.txt").write_text(GOOD_BODY)
+    found = rb.walled_documents(tmp_path)
+    assert [p.name for p, _ in found] == ["b.txt"]
+
+
+# ---------------------------------------------------------------------------
+# quote_looks_truncated -- closing punctuation is not proof of a sentence
+# ---------------------------------------------------------------------------
+
+def test_a_parenthetical_aside_is_flagged():
+    """batch-06 returned "(60 pounds versus 2,000 pounds)" and the old check
+    passed it, because it tested only the last character and that character was
+    a bracket. Balanced, complete, and unreviewable."""
+    trunc, why = rb.quote_looks_truncated("(60 pounds versus 2,000 pounds)")
+    assert trunc
+    assert "parenthetical" in why
+
+
+def test_a_bare_span_is_flagged():
+    """batch-06's "150 -185": two numbers, no noun, no basis."""
+    assert rb.quote_looks_truncated("150 -185")[0]
+    assert rb.quote_lacks_basis("150 -185")[0]
+
+
+def test_a_sentence_ending_in_a_closing_quote_is_still_complete():
+    """Stripping closers must not turn honest quotes into warnings."""
+    assert not rb.quote_looks_truncated(
+        'The report calls it "the maximum observed yield."')[0]
+
+
+def test_a_sentence_with_a_trailing_parenthetical_is_complete():
+    assert not rb.quote_looks_truncated(
+        "Yield averaged 20,501 pounds (rolling herd average).")[0]

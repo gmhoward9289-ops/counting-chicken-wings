@@ -331,18 +331,33 @@ def unit_matches_field(field: str, unit: str) -> tuple[bool, str]:
 
 
 def quote_looks_truncated(quote: str) -> tuple[bool, str]:
-    """Warn when a quote stops mid-sentence.
+    """Warn when a quote stops mid-sentence, or is never a sentence at all.
 
     A fragment ending "an annual yield of 8" may have had its figure cut off,
     which makes it unreviewable even when it matches the document. A warning
     rather than a failure: plenty of legitimate quotes are clause fragments.
+
+    Closing punctuation used to end the check outright -- `q[-1] in ".!?\"')"`
+    returned "not truncated" for anything ending in a bracket. batch-06 then
+    passed `"(60 pounds versus 2,000 pounds)"`, which is complete, balanced,
+    unreviewable, and reads as finished only because of its last character. So
+    closers are now stripped and the sentence underneath is judged, and a quote
+    that is ENTIRELY a parenthetical is flagged on its own account: an aside
+    lifted out of the sentence that framed it has lost the thing that said what
+    it was an aside about.
     """
     q = quote.strip()
     if not q:
         return False, ""
-    if q[-1] in ".!?\"')":
+    if q.startswith("(") and q.endswith(")"):
+        return True, ("quote is a parenthetical aside, without the sentence "
+                      "that says what it qualifies")
+    core = q.rstrip("\"')]").strip()
+    if not core:
         return False, ""
-    if re.search(r"[\d]$|\b(and|or|to|of|per|from|with|about|the|a|an)$", q,
+    if core[-1] in ".!?":
+        return False, ""
+    if re.search(r"[\d]$|\b(and|or|to|of|per|from|with|about|the|a|an)$", core,
                  re.I):
         return True, "quote appears to stop mid-sentence"
     return False, ""
@@ -366,8 +381,10 @@ def quote_lacks_basis(quote: str) -> tuple[bool, str]:
     the numbers are OF.
 
     The rule is deliberately narrow -- at most two word-like tokens alongside
-    at least two numeric ones. "Fluid milk 109 13 12 22 20 35 32" has two words
-    and seven numbers; "Eggs, 5.1, 1.3%" has one and two. A real sentence
+    at least two numeric ones, or no words at all (batch-06 returned the bare
+    span `"150 -185"`, which names nothing whatsoever). "Fluid milk 109 13 12
+    22 20 35 32" has two words and seven numbers; "Eggs, 5.1, 1.3%" has one and
+    two. A real sentence
     carrying a figure ("123.61 litres in 24 hours", "about 170 flowers per
     gram") has three or more words and stays quiet. A warning rather than a
     failure, for the same reason `quote_looks_truncated` is one: a gate that
@@ -378,16 +395,58 @@ def quote_lacks_basis(quote: str) -> tuple[bool, str]:
     if not q:
         return False, ""
     tokens = q.split()
-    if len(tokens) < 3:
-        return False, ""
-    numeric = [t for t in tokens if re.fullmatch(r"[\d][\d.,%$/()\[\]:;-]*", t)]
+    numeric = [t for t in tokens
+               if re.fullmatch(r"[(\[]?[\d][\d.,%$/()\[\]:;-]*", t)]
     words = [t for t in tokens
              if re.search(r"[A-Za-z]{2,}", t) and t not in numeric]
+    if numeric and not words:
+        return True, ("quote is numbers and nothing else, so it names neither "
+                      "the quantity nor its basis")
+    if len(tokens) < 3:
+        return False, ""
     if len(numeric) >= 2 and len(words) <= 2:
         return True, ("quote reads as a bare table row: "
                       f"{len(numeric)} number(s) against {len(words)} word(s), "
                       "so the basis of the figure cannot be read off the quote")
     return False, ""
+
+
+def document_is_a_wall(document: Path) -> tuple[bool, str]:
+    """Reject a document that is a doorman rather than the source it claims.
+
+    THIS is the primary defence, and it is here -- at the point where a
+    document is actually used as evidence -- rather than at scout time, for a
+    measured reason. PMC served COOPER 167 characters of reCAPTCHA during
+    batch-05 and 82,331 characters of the real article during batch-06, from
+    the same host with the same fetcher, hours apart. The wall is per-request,
+    not per-host, so NO pre-flight check can promise anything about the fetch
+    the run will make minutes later. What can be checked with certainty is the
+    document the model was actually handed, which is the artifact sitting in
+    inbox/ when the gate runs.
+
+    A failure, not a warning: a walled document cannot support any quote, and
+    the batch-05 damage was not a missing number but a surviving one that had
+    lost its counterweight.
+    """
+    if not document.exists():
+        return False, ""                    # quote_in_document reports this
+    text = document.read_text(encoding="utf-8", errors="replace")
+    walled, why = looks_like_interstitial(text)
+    if walled:
+        return True, f"{document.name} is not a document -- {why}"
+    return False, ""
+
+
+def walled_documents(inbox: Path) -> list[tuple[Path, str]]:
+    """Every document under `inbox` that is an interstitial rather than a source."""
+    out: list[tuple[Path, str]] = []
+    if not inbox.exists():
+        return out
+    for p in sorted(inbox.rglob("*.txt")):
+        walled, why = document_is_a_wall(p)
+        if walled:
+            out.append((p, why))
+    return out
 
 
 def quote_in_document(quote: str, document: Path) -> tuple[bool, str]:
@@ -476,6 +535,14 @@ def verify(batch: str) -> int:
             docref = row.get("document")
             if not docref:
                 failures.append(f"{label}: quote with no document reference")
+                continue
+
+            # Is the evidence a document at all? Checked before the quote, so
+            # a walled fetch says "this is a reCAPTCHA page" rather than the
+            # much less useful "quote does not appear in the document".
+            walled, why = document_is_a_wall(RESEARCH / docref)
+            if walled:
+                failures.append(f"{label}: {why}")
                 continue
 
             ok, why = quote_in_document(row["quote"], RESEARCH / docref)
@@ -613,6 +680,19 @@ def fetch(batch: str) -> int:
     # a quote against and the gate is theatre.
     scp(f"{HOST}:{REMOTE_ROOT}/inbox/*", str(INBOX))
     print(f"fetched {batch} results and source documents")
+
+    # Say it here as well as in verify. A walled document usually explains an
+    # item that returned NOTHING, and a row that returned nothing never reaches
+    # the gate -- batch-05 read as "the models declined" when the truth was
+    # that one of them had been handed 167 characters of reCAPTCHA.
+    walls = walled_documents(INBOX)
+    if walls:
+        print(f"\n  {len(walls)} fetched document(s) are interstitials, not "
+              f"sources:")
+        for p, why in walls:
+            print(f"  [WALLED] {why}")
+        print("  Any item resting on one of these came back empty for a "
+              "plumbing reason, not a source one.")
     return 0
 
 
@@ -876,33 +956,44 @@ def scout(batch: str) -> int:
             Mac     41,579 chars -- Gross 2023
             COOPER     167 chars -- "Checking your browser - reCAPTCHA"
 
-    Six of the seven other HTML fetches in that batch matched across the two
-    hosts to within five characters, so this was one host-dependent bot wall
-    rather than noise. Bot-walling keys on address and reputation, which belong
-    to the host. The scout therefore fetches every URL ON COOPER and compares
-    the result with a local fetch.
+    So the scout fetches every URL ON COOPER as well as here, and compares the
+    two character counts.
 
-    TWO DIFFERENT FAILURES, AND NEITHER CHECK SUBSTITUTES FOR THE OTHER:
+    WHAT THAT COMPARISON IS, EXACTLY -- AND WHAT IT IS NOT. It is a smoke test
+    for a PERSISTENT wall. It is not a guarantee about the fetch the real run
+    will make ten minutes later, and it cannot be made into one. batch-06
+    fetched that same PMC URL from COOPER and got 82,331 characters of the real
+    article, hours after batch-05 got 167 characters of reCAPTCHA from the same
+    machine with the same fetcher. The wall is per-request, not per-host. A
+    green scout is one sample of an intermittent behaviour, and treating it as
+    a promise would be the same kind of lie as the sentence it replaced.
 
-      - A BOT WALL is short and host-dependent. Only the cross-host comparison
-        sees it: 41,579 vs 167 is a ratio of 0.004, and the collapse is the
-        signal. A quote check would also miss the figure here, but it could not
-        tell "walled" from "the source never said it".
+    The check that actually holds is `document_is_a_wall`, applied by `verify`
+    (and reported by `fetch`) to the documents that really arrived. That one
+    inspects the evidence the model was handed rather than a prediction about
+    it, so intermittency cannot get past it.
+
+    THREE FAILURES, AND NO CHECK SUBSTITUTES FOR ANOTHER:
+
+      - A BOT WALL is short. At scout time only the cross-host comparison
+        suggests it -- 41,579 vs 167 is a ratio of 0.004. At run time
+        `document_is_a_wall` catches it outright, including on the runs where
+        the scout happened to see nothing wrong.
       - JS TRUNCATION is long and host-INDEPENDENT. batch-08's bows-n-ties page
         came back at 7,195 characters on both machines, ending mid-word at
         "The average wor", with the cited "120 to 130 cocoons" nowhere in it.
         The cross-host comparison is perfectly happy with it -- both hosts got
         the same bytes -- and only the quote-presence check catches it.
+      - A DEAD URL is neither, and the local fetch reports it.
 
     So a document can be long, fetch identically everywhere, and still be
-    useless; and it can fetch fine here and be a doorman there. Both checks
-    run, and a spec has to survive both.
+    useless; it can be a doorman on one request and the article on the next.
+    Every check runs, and none stands in for another.
 
-    Exit codes: 0 clean, 1 the spec has a problem, 2 the COOPER half of the
-    check DID NOT RUN. 2 is not a pass. If COOPER is unreachable this reports
-    what it could not do rather than reporting success, because a check that
-    claims to have run when it did not is the failure mode that produced
-    batch-05 in the first place.
+    Exit codes: 0 clean, 1 the spec has a problem, 2 the COOPER smoke test DID
+    NOT RUN. 2 is not a pass. If COOPER is unreachable this reports what it
+    could not do rather than reporting success, because a check that claims to
+    have run when it did not is the failure mode that produced batch-05.
     """
     spec = BATCHES / f"{batch}.md"
     if not spec.exists():
@@ -984,7 +1075,7 @@ def scout(batch: str) -> int:
             walled.append((url, f"local fetch: {why}"))
 
     # --- the COOPER half -------------------------------------------------
-    print(f"\nfetching the same {len(seen)} URL(s) on {HOST} "
+    print(f"\nsmoke-testing the same {len(seen)} URL(s) on {HOST} "
           f"(the host that will do the real run)...")
     results, err = remote_fetch(list(seen), batch)
 
@@ -996,8 +1087,8 @@ def scout(batch: str) -> int:
         for url, why in walled:
             print(f"  [WALLED]   {url}\n             {why}")
         print("\nThis is NOT a pass. batch-05-milk was cleared by a Mac-only "
-              f"scout and then lost its best source to a reCAPTCHA served only "
-              f"to {HOST}. Bring {HOST} up and re-scout before sending.")
+              f"scout and then lost its best source to a reCAPTCHA served to "
+              f"{HOST}. Bring {HOST} up and re-scout before sending.")
         return 2
 
     for url in seen:
@@ -1030,7 +1121,10 @@ def scout(batch: str) -> int:
               "doorman with a 200 on it and is logged as a successful fetch.")
         return 1
     print(f"\nEvery URL reachable from this Mac AND from {HOST}, sizes agree, "
-          "and every claimed quote is present. Safe to send.")
+          "and every claimed quote is present.\nSafe to send -- as far as one "
+          f"sample can say. The wall is per-request ({HOST} was served PMC's "
+          "reCAPTCHA\nin batch-05 and the real article in batch-06), so verify "
+          "re-checks every document that\nactually arrives.")
     return 0
 
 
