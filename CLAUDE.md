@@ -10,7 +10,7 @@ every published number traces to a real source.
 pip install -e ".[dev,gui]"          # gui extras are required — the API tests import the FastAPI app
 python -m counting_chicken_wings.build   # compile the YAML corpus into SQLite
 python -m counting_chicken_wings.audit   # every statistic must cite a source in sources.yaml
-pytest -q                            # 430 tests
+pytest -q                            # 468 tests
 wings 12                             # CLI: a dozen wings
 wings gui                            # serve the web UI
 ```

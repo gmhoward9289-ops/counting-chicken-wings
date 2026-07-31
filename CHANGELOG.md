@@ -37,7 +37,8 @@ and no `Vary: Cookie` — that header existed because two pages shared one URL.
 instead of per arm; its fixtures still follow `/static/` links, so a rule that
 lives in `app.css` is still checked. Only the two A/B-specific tests are gone —
 the token placeholder and the shared-instrument check — along with
-`test_experiment.py` and `test_abcheck.py`. 430 tests pass.
+`test_experiment.py` and `test_abcheck.py`, 60 tests in all. The suite is
+green.
 
 No collected event data was deleted. There is none in the repo; any
 `metrics.db` on the deployed host is untouched, and its Docker volume is now
