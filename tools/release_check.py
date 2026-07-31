@@ -88,7 +88,12 @@ def sh(*args: str, cwd: Path | None = None, env: dict | None = None) -> str:
 
 
 def latest_tag() -> str:
-    return sh("git", "describe", "--tags", "--abbrev=0", cwd=ROOT)
+    # --match/--exclude, because `describe --tags` takes the newest tag of ANY
+    # shape. A marker tag (`snapshot/...`) sitting after the last release would
+    # otherwise become the base, and the diff would be measured from a commit
+    # nobody released -- wrongly, and without saying so.
+    return sh("git", "describe", "--tags", "--abbrev=0",
+              "--match", "v[0-9]*", "--exclude", "*-*", cwd=ROOT)
 
 
 def version_of(ref: str | None = None) -> str:

@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased
+
+### Tags that are not releases
+
+Since #37 the merge cuts the release, so a tag is no longer how you publish one.
+What was left over was a tag still firing the entire pipeline. `ci.yml` now
+triggers on `v[0-9]*` instead of `v*`, and the test and citation jobs skip tag
+refs: a tag names a commit that already passed on master, so re-running them
+proved nothing and made tagging feel expensive enough to avoid. Only
+`version-consistency` runs, and only for a tag someone typed by hand -- a tag
+the workflow pushes with the default token raises no event at all.
+
+Anything not matching `v[0-9]*` is now a marker tag -- `snapshot/...`,
+`checkpoint/...` -- which starts no run and claims no number. Making those cheap
+exposed a latent bug: `git describe --tags` returns the newest tag of any shape,
+so a marker sitting after the last release would have become the base of the
+bump check, in `release.yml` and `release_check.py` both, measuring the diff
+from a commit nobody released and saying nothing about it. Both call sites now
+match version tags only, with tests that fail without the fix.
+
+The bump step inside `version-consistency` is gone rather than fixed. It checked
+out without `fetch-depth: 0`, so `git describe` found no tags, and it had been
+taking its "no previous tag" branch and exiting 0 on every tag it ever ran on.
+`release.yml` runs the real check before the tag exists.
+
+`docs/VERSIONING.md` still told you to tag and release by hand, which #37 had
+already taken away.
+
 ## v1.11.0 — 2026-07-31
 
 ### Variant B becomes a real design

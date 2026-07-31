@@ -6,6 +6,7 @@ cover the decision logic directly, without the ~90s corpus builds the real
 script does, so the rule itself is cheap to keep honest.
 """
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -210,3 +211,48 @@ def test_every_moved_product_is_named():
         {"a": "1", "b": "2", "c": "3"},
         {"a": "1", "b": "9", "c": "8"})
     assert moved == ["b", "c"]
+
+
+# ---------------------------------------------------------------------------
+# latest_tag() must see releases only
+#
+# `git describe --tags` returns the newest tag of ANY shape. Marker tags
+# (`snapshot/...`) are deliberately cheap and expected to accumulate, and one
+# sitting after the last release used to become the base for the whole bump
+# check -- measuring the diff from a commit nobody released, and saying
+# nothing about having done so.
+# ---------------------------------------------------------------------------
+
+def _git(repo, *args):
+    subprocess.run(["git", *args], cwd=repo, check=True,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+@pytest.fixture
+def repo(tmp_path):
+    _git(tmp_path, "init", "-q", ".")
+    _git(tmp_path, "config", "user.email", "t@example.invalid")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "f").write_text("one")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "one")
+    _git(tmp_path, "tag", "-a", "v1.11.0", "-m", "release")
+    return tmp_path
+
+
+def test_latest_tag_ignores_a_marker_tag(repo, monkeypatch):
+    (repo / "f").write_text("two")
+    _git(repo, "commit", "-qam", "work after the release")
+    _git(repo, "tag", "snapshot/demo")          # newer than v1.11.0
+
+    monkeypatch.setattr(rc, "ROOT", repo)
+    assert rc.latest_tag() == "v1.11.0"
+
+
+def test_latest_tag_ignores_a_prerelease_tag(repo, monkeypatch):
+    (repo / "f").write_text("three")
+    _git(repo, "commit", "-qam", "more work")
+    _git(repo, "tag", "-a", "v1.12.0-rc.1", "-m", "preview")
+
+    monkeypatch.setattr(rc, "ROOT", repo)
+    assert rc.latest_tag() == "v1.11.0"

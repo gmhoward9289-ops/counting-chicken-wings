@@ -3,11 +3,18 @@ name: CI
 on:
   push:
     branches: [master, main]
-    tags: ['v*']
+    # Only version tags. Anything else -- `snapshot/...`, `checkpoint/...` --
+    # is a marker that points at a commit and publishes nothing, so it starts
+    # no run at all. See "Tags that are not releases" in docs/VERSIONING.md.
+    tags: ['v[0-9]*']
   pull_request:
 
 jobs:
+  # A tag names a commit that already went through master, where these two jobs
+  # ran on this exact tree. Re-running them proves nothing and makes tagging
+  # feel expensive enough to avoid, so tags skip to version-consistency.
   build-and-test:
+    if: "!startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +40,7 @@ jobs:
         run: pytest -q
 
   citations:
+    if: "!startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,6 +115,12 @@ jobs:
             python tools/release_check.py --explain
           fi
 
+  # The only job a tag runs, and it exists for HAND-pushed tags alone.
+  #
+  # release.yml cuts the normal tag from `pyproject.toml`, so a bot tag cannot
+  # disagree with it -- and could not be checked here anyway, because GitHub
+  # raises no workflow event for a push made with the default GITHUB_TOKEN.
+  # A tag someone types is the unguarded case, and it is the one this catches.
   version-consistency:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -131,19 +145,13 @@ jobs:
           fi
           echo "versions agree"
 
-      # Enforcing here, advisory everywhere else. At tag time the comparison
-      # has to be against the PREVIOUS tag: release_check defaults to the
-      # latest tag, which at this point is the one being cut, and a tag
-      # compared with itself has no diff and would always pass.
-      - name: Bump must match what changed
-        run: |
-          prev="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
-          if [ -z "$prev" ]; then
-            echo "no previous tag; nothing to compare against"
-            exit 0
-          fi
-          echo "comparing against $prev"
-          python tools/release_check.py --base "$prev"
+      # The bump check used to run here and no longer does. It was enforcing
+      # nothing: `actions/checkout@v4` without `fetch-depth: 0`/`fetch-tags`
+      # leaves no tags in the clone, so `git describe` found none, the step
+      # took its "no previous tag" branch and exited 0 on every tag it ever
+      # ran on. release.yml now runs the real check BEFORE cutting the tag,
+      # against the latest existing one -- which is the right moment for it,
+      # since a release is easier to prevent than to retract.
 
       - name: Changelog must mention this version
         run: |

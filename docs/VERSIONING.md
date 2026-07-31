@@ -181,13 +181,23 @@ Immediately before merging:
    `git tag --list 'v*'`. Releases announce themselves in the subject.
 4. In one commit: rename `## Unreleased` to `## vX.Y.Z — YYYY-MM-DD` and set
    `version` in `pyproject.toml` to match.
-5. Tag: `git tag -a vX.Y.Z -m "..."` — the tag is `v`-prefixed, the
-   `pyproject.toml` value is not.
-6. `git push --follow-tags`.
-7. `gh release create vX.Y.Z --notes-file CHANGELOG.md --verify-tag`
+Then merge. **There is no step 5.**
 
-CI enforces step 4 against step 5: pushing a tag whose version disagrees with
-`pyproject.toml` fails the build rather than publishing a mislabelled release.
+`.github/workflows/release.yml` fires on every push to master: if
+`pyproject.toml` declares a version the remote has no tag for, it runs the gates,
+cuts the annotated tag and publishes the GitHub release. The tag is `v`-prefixed,
+the `pyproject.toml` value is not — the workflow adds the `v`.
+
+Do not tag or release by hand. Releasing was the one manual step left and it
+became the step that did not happen: v1.2.0 through v1.7.0 sat untagged until
+six were backfilled in a batch, and v1.9.1 and v1.10.0 were merged, bumped and
+never tagged at all. The number and the changelog are what you owe; the tag is
+not yours to type.
+
+The gates run *before* the tag exists, because a release is easier to prevent
+than to retract, and because a tag the workflow pushes with the default
+`GITHUB_TOKEN` raises no workflow event — checks hung on `refs/tags/v*` would
+never run at all.
 
 ### Why the number is picked last
 
@@ -206,8 +216,8 @@ collide, because the heading carries no number to collide with.
 
 Step 3 is not optional and `git fetch` is the point of it. A working tree that
 has not fetched cannot see the release that took your number — the collision is
-invisible locally, and the CI gate that would catch it only runs on
-`refs/tags/v*`, which is to say after you have already pushed.
+invisible locally, and the gate that would catch it runs in `release.yml` on
+push to master, which is to say after you have already merged.
 
 Rebase conflicts from concurrent releases are predictable and narrow: only
 `CHANGELOG.md` and the generated README stats block. Never hand-merge the README
@@ -216,6 +226,39 @@ regenerates it from the database. For `CHANGELOG.md`, if both sides used the
 same heading text git auto-merges the *heading* and conflicts only the bodies,
 which quietly files your prose under someone else's version. Check which body
 sits under which heading after resolving.
+
+## Tags that are not releases
+
+A version tag is a claim: it names a number, and `release.yml` publishes a
+GitHub release against it. Sometimes you want to mark a commit without claiming
+anything — a demo, a checkpoint before a risky rebase, the tree a measurement
+was taken on. That is a **marker tag**, and it is a different kind of object.
+
+| pattern | means | CI |
+|---|---|---|
+| `vX.Y.Z` | a release. Cut by `release.yml` from `pyproject.toml` | the release flow |
+| `snapshot/<slug>`, `checkpoint/<slug>`, any tag not matching `v[0-9]*` | a pointer. Publishes nothing, claims no number | **nothing** |
+
+Markers are free. `ci.yml` triggers on `tags: ['v[0-9]*']`, so a tag that does
+not start `v` followed by a digit starts no run at all. Push as many as you like.
+
+Two things make this safe, and neither was true before:
+
+- **`git describe --tags` takes the newest tag of any shape.** A marker sitting
+  after the last release would have become the base for the bump check, in
+  `release.yml` and in `release_check.py` both — measuring the diff from a
+  commit nobody released, and saying nothing about it. Both call sites now pass
+  `--match 'v[0-9]*' --exclude '*-*'`.
+- **A hand-pushed version tag no longer re-runs the suite.** It names a commit
+  that already passed on master; only `version-consistency` runs, which is the
+  one check a typed tag actually needs.
+
+There is no alpha or release-candidate tag, and adding one is not a naming
+decision. `release.yml` cuts a release for whatever version master declares, so
+a prerelease number on master would simply be *released*; a real prerelease
+would have to be built from a branch, which the workflow does not watch. It also
+needs `actual_bump()` taught to parse a suffix — today `int(x)` raises
+`ValueError` on `1.12.0a1`. Worth doing only if previews are actually wanted.
 
 ## What is deployed is not necessarily what is tagged
 
