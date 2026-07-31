@@ -452,3 +452,39 @@ a consumer ordering **a dozen wings** is not affected at all.
 - [ ] Sodium, saturated fat, and cholesterol for both wing preparations —
       currently only kcal / protein / fat / carbohydrate are populated
 - [ ] Whether myopathy rates justify a boneless-specific downgrade loss stage
+
+## 13. Open research items — silk
+
+Landed 2026-07-31 from `batch-08-silk`. The thinnest-sourced subject in the
+corpus; these are the gaps, in the order they would improve it.
+
+- [ ] **One cocoon per silkworm, stated numerically by a sericulture source.**
+      The load-bearing constant of the whole subject, and the only figure in
+      the corpus no automated extraction could produce. Two COOPER runs
+      declined it and were right to: writers say "the larvae enclose themselves
+      in a cocoon", which contains no number, so an honest `1` cannot ground.
+      A 35-URL sweep (FAO, Britannica, Wikipedia, zoos, extension PDFs) found
+      one fetchable sentence and it says "spun by a single silkworm larva" -
+      cited, but sideways. A sericulture extension publication stating it as a
+      count would let this stop being a human judgement.
+- [ ] **Cocoons per necktie, from anything resembling a survey.** Three figures
+      circulate and disagree: 150 (Smithsonian, used), 120-130 (AFB Education),
+      110 (several retail pages all copying one unattributed sentence). None is
+      a measurement. The honest reading is "roughly a hundred and something".
+- [ ] **Rearing mortality for *Bombyx mori*.** Deliberately NOT modelled: the
+      only band we could write honestly is 0.70-0.97, which spans an order of
+      magnitude and would look like a measurement to everything downstream. See
+      the header of `data/loss_chain_silk.yaml`.
+- [ ] **Fraction of cocoons held back as breeding stock.** The one silk loss
+      stage that exists, unsourced and default-off, and the only one that would
+      move the count if switched on. Varies by whether a filature breeds its
+      own or buys disease-free layings from a grainage.
+- [ ] **Filament length per cocoon.** Sourced at 300-900 m (New World
+      Encyclopedia), well below the commonly repeated 1,000-1,600 m, which we
+      could not source at all. COOPER declined this item on the re-run even
+      with the right document in front of it, so it is carried as prose and not
+      as a row. A second independent source would settle the spread.
+- [ ] **Degumming loss (sericin removal).** Raw silk is roughly a quarter
+      sericin by mass, so raw-weight and finished-cloth figures differ by a
+      large factor. Not currently modelled, and the per-garment counts already
+      have it baked in - which is exactly why adding it later needs care.
