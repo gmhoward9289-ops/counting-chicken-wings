@@ -331,21 +331,122 @@ def unit_matches_field(field: str, unit: str) -> tuple[bool, str]:
 
 
 def quote_looks_truncated(quote: str) -> tuple[bool, str]:
-    """Warn when a quote stops mid-sentence.
+    """Warn when a quote stops mid-sentence, or is never a sentence at all.
 
     A fragment ending "an annual yield of 8" may have had its figure cut off,
     which makes it unreviewable even when it matches the document. A warning
     rather than a failure: plenty of legitimate quotes are clause fragments.
+
+    Closing punctuation used to end the check outright -- `q[-1] in ".!?\"')"`
+    returned "not truncated" for anything ending in a bracket. batch-06 then
+    passed `"(60 pounds versus 2,000 pounds)"`, which is complete, balanced,
+    unreviewable, and reads as finished only because of its last character. So
+    closers are now stripped and the sentence underneath is judged, and a quote
+    that is ENTIRELY a parenthetical is flagged on its own account: an aside
+    lifted out of the sentence that framed it has lost the thing that said what
+    it was an aside about.
     """
     q = quote.strip()
     if not q:
         return False, ""
-    if q[-1] in ".!?\"')":
+    if q.startswith("(") and q.endswith(")"):
+        return True, ("quote is a parenthetical aside, without the sentence "
+                      "that says what it qualifies")
+    core = q.rstrip("\"')]").strip()
+    if not core:
         return False, ""
-    if re.search(r"[\d]$|\b(and|or|to|of|per|from|with|about|the|a|an)$", q,
+    if core[-1] in ".!?":
+        return False, ""
+    if re.search(r"[\d]$|\b(and|or|to|of|per|from|with|about|the|a|an)$", core,
                  re.I):
         return True, "quote appears to stop mid-sentence"
     return False, ""
+
+
+def quote_lacks_basis(quote: str) -> tuple[bool, str]:
+    """Warn when a quote is a bare table row -- numbers with no column label.
+
+    Two batches have now been lost to a figure whose basis cannot be read off
+    its own quote, both of them verbatim, both correctly located:
+
+      - batch-09: `"Eggs, 5.1, 1.3%"` -- a share of total food-loss calories,
+        stored as an egg loss rate. Wrong by roughly 20x.
+      - batch-05-milk: `"Fluid milk 109 13 12 22 20 35 32"` -- one row of an
+        ERS loss table, severed from the header eleven lines above that said
+        which column was retail and which was consumer. Two sequential stages
+        were stored as a single lo/hi band.
+
+    Neither is catchable by quote matching: both sentences exist, and the
+    numbers claimed are in them. What is missing is the prose that says what
+    the numbers are OF.
+
+    The rule is deliberately narrow -- at most two word-like tokens alongside
+    at least two numeric ones, or no words at all (batch-06 returned the bare
+    span `"150 -185"`, which names nothing whatsoever). "Fluid milk 109 13 12
+    22 20 35 32" has two words and seven numbers; "Eggs, 5.1, 1.3%" has one and
+    two. A real sentence
+    carrying a figure ("123.61 litres in 24 hours", "about 170 flowers per
+    gram") has three or more words and stays quiet. A warning rather than a
+    failure, for the same reason `quote_looks_truncated` is one: a gate that
+    cries wolf gets ignored, and some legitimate figures really do live in
+    tables. A human decides whether the basis is legible.
+    """
+    q = quote.strip()
+    if not q:
+        return False, ""
+    tokens = q.split()
+    numeric = [t for t in tokens
+               if re.fullmatch(r"[(\[]?[\d][\d.,%$/()\[\]:;-]*", t)]
+    words = [t for t in tokens
+             if re.search(r"[A-Za-z]{2,}", t) and t not in numeric]
+    if numeric and not words:
+        return True, ("quote is numbers and nothing else, so it names neither "
+                      "the quantity nor its basis")
+    if len(tokens) < 3:
+        return False, ""
+    if len(numeric) >= 2 and len(words) <= 2:
+        return True, ("quote reads as a bare table row: "
+                      f"{len(numeric)} number(s) against {len(words)} word(s), "
+                      "so the basis of the figure cannot be read off the quote")
+    return False, ""
+
+
+def document_is_a_wall(document: Path) -> tuple[bool, str]:
+    """Reject a document that is a doorman rather than the source it claims.
+
+    THIS is the primary defence, and it is here -- at the point where a
+    document is actually used as evidence -- rather than at scout time, for a
+    measured reason. PMC served COOPER 167 characters of reCAPTCHA during
+    batch-05 and 82,331 characters of the real article during batch-06, from
+    the same host with the same fetcher, hours apart. The wall is per-request,
+    not per-host, so NO pre-flight check can promise anything about the fetch
+    the run will make minutes later. What can be checked with certainty is the
+    document the model was actually handed, which is the artifact sitting in
+    inbox/ when the gate runs.
+
+    A failure, not a warning: a walled document cannot support any quote, and
+    the batch-05 damage was not a missing number but a surviving one that had
+    lost its counterweight.
+    """
+    if not document.exists():
+        return False, ""                    # quote_in_document reports this
+    text = document.read_text(encoding="utf-8", errors="replace")
+    walled, why = looks_like_interstitial(text)
+    if walled:
+        return True, f"{document.name} is not a document -- {why}"
+    return False, ""
+
+
+def walled_documents(inbox: Path) -> list[tuple[Path, str]]:
+    """Every document under `inbox` that is an interstitial rather than a source."""
+    out: list[tuple[Path, str]] = []
+    if not inbox.exists():
+        return out
+    for p in sorted(inbox.rglob("*.txt")):
+        walled, why = document_is_a_wall(p)
+        if walled:
+            out.append((p, why))
+    return out
 
 
 def quote_in_document(quote: str, document: Path) -> tuple[bool, str]:
@@ -436,6 +537,14 @@ def verify(batch: str) -> int:
                 failures.append(f"{label}: quote with no document reference")
                 continue
 
+            # Is the evidence a document at all? Checked before the quote, so
+            # a walled fetch says "this is a reCAPTCHA page" rather than the
+            # much less useful "quote does not appear in the document".
+            walled, why = document_is_a_wall(RESEARCH / docref)
+            if walled:
+                failures.append(f"{label}: {why}")
+                continue
+
             ok, why = quote_in_document(row["quote"], RESEARCH / docref)
             if not ok:
                 failures.append(f"{label}: {why}")
@@ -460,6 +569,11 @@ def verify(batch: str) -> int:
 
             trunc, why = quote_looks_truncated(row["quote"])
             if trunc:
+                flagged += 1
+                print(f"  [needs_human] {label}: {why}")
+
+            bare, why = quote_lacks_basis(row["quote"])
+            if bare:
                 flagged += 1
                 print(f"  [needs_human] {label}: {why}")
 
@@ -566,6 +680,19 @@ def fetch(batch: str) -> int:
     # a quote against and the gate is theatre.
     scp(f"{HOST}:{REMOTE_ROOT}/inbox/*", str(INBOX))
     print(f"fetched {batch} results and source documents")
+
+    # Say it here as well as in verify. A walled document usually explains an
+    # item that returned NOTHING, and a row that returned nothing never reaches
+    # the gate -- batch-05 read as "the models declined" when the truth was
+    # that one of them had been handed 167 characters of reCAPTCHA.
+    walls = walled_documents(INBOX)
+    if walls:
+        print(f"\n  {len(walls)} fetched document(s) are interstitials, not "
+              f"sources:")
+        for p, why in walls:
+            print(f"  [WALLED] {why}")
+        print("  Any item resting on one of these came back empty for a "
+              "plumbing reason, not a source one.")
     return 0
 
 
@@ -626,6 +753,182 @@ def accept(batch: str) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Bot walls: what a fetch looks like when the answer is 200 and the body is a
+# doorman
+# ---------------------------------------------------------------------------
+
+# Phrases that appear in an interstitial and essentially nowhere in a document
+# that is actually about a subject. Matched only against SHORT bodies, because
+# a real page may carry <noscript>Please enable JavaScript</noscript> in its
+# chrome and still contain the whole article underneath.
+INTERSTITIAL_MARKERS = (
+    "recaptcha",
+    "checking your browser",
+    "enable javascript",
+    "javascript is disabled",
+    "cf-browser-verification",
+    "cloudflare",
+    "just a moment...",
+    "attention required!",
+    "verify you are human",
+    "are you a robot",
+    "access denied",
+    "request unsuccessful",
+    "ddos protection",
+)
+
+# A body under this many characters is too small to be the document a spec
+# cites, so an interstitial marker inside it is the whole page rather than a
+# fragment of one. PMC's wall was 167 characters; the smallest real document
+# in batch-05 was 2,039.
+INTERSTITIAL_MAX_CHARS = 1500
+
+# Remote-over-local ratio below which the two hosts are not being served the
+# same thing. Measured evidence sets this very loosely on purpose: across
+# batch-05 and batch-08 eleven of twelve cross-host pairs agreed exactly or to
+# within five characters, and the one wall collapsed 41,579 -> 167, a ratio of
+# 0.004. Anything between 0.004 and ~1.0 is unobserved, so the threshold sits
+# in a wide empty gap and fires on order-of-magnitude collapse rather than on
+# the small differences a dynamic page legitimately produces.
+COLLAPSE_RATIO = 0.25
+
+# Below this, ratios stop meaning anything -- a 300-character local fetch is
+# already too small to matter and its ratio is noise.
+COLLAPSE_MIN_LOCAL_CHARS = 1000
+
+
+def looks_like_interstitial(text: str,
+                            total_chars: int | None = None) -> tuple[bool, str]:
+    """True when a fetch is a doorman rather than a document.
+
+    The dangerous case is not an error: FSIS 403s to COOPER and the runner says
+    so. PMC returned HTTP 200 and 167 characters of "Checking your browser -
+    reCAPTCHA", which every layer downstream treated as a successful fetch of
+    Gross 2023.
+    """
+    n = len(text) if total_chars is None else total_chars
+    if n > INTERSTITIAL_MAX_CHARS:
+        return False, ""
+    low = text.lower()
+    for m in INTERSTITIAL_MARKERS:
+        if m in low:
+            return True, (f"body is {n} chars and contains {m!r} -- this is an "
+                          f"interstitial, not the document")
+    return False, ""
+
+
+def host_delta_verdict(local_chars: int | None,
+                       remote_chars: int | None) -> tuple[str, str]:
+    """Compare one URL's local and remote fetch. Returns (verdict, why).
+
+    Verdicts: "ok", "fail". A fetch that failed outright on COOPER is a
+    failure, and so is one whose body collapses relative to the Mac's.
+    """
+    if remote_chars is None:
+        return "fail", "COOPER could not fetch this URL at all"
+    if local_chars is None:
+        # The local side already reported this as dead; nothing to compare.
+        return "ok", ""
+    if (local_chars >= COLLAPSE_MIN_LOCAL_CHARS
+            and remote_chars < COLLAPSE_RATIO * local_chars):
+        pct = 100.0 * remote_chars / max(local_chars, 1)
+        return "fail", (f"COOPER got {remote_chars:,} chars where this Mac got "
+                        f"{local_chars:,} ({pct:.1f}%) -- the two hosts are not "
+                        f"being served the same document")
+    return "ok", ""
+
+
+# The probe runs ON COOPER, importing the same runner.py the real run uses, so
+# the fetch under test is the fetch that will happen. It prints one JSON object
+# after a marker line; anything PowerShell or the console adds before that is
+# ignored.
+_PROBE_SOURCE = '''\
+import json, sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[1])
+import runner
+
+urls = [u.strip() for u in
+        Path(sys.argv[2]).read_text(encoding="utf-8").splitlines() if u.strip()]
+doc_dir = Path(sys.argv[3])
+out = {}
+for u in urls:
+    try:
+        p = runner.fetch_once(u, doc_dir)
+    except Exception as e:
+        out[u] = {"chars": None, "head": "", "error": repr(e)}
+        continue
+    if p is None or not p.exists():
+        out[u] = {"chars": None, "head": "", "error": "fetch returned nothing"}
+        continue
+    # Read as TEXT, and fold CRLF. COOPER writes Windows line endings, so a
+    # byte count differs from the Mac's by exactly the line count on every
+    # single document -- comparing bytes would flag everything.
+    t = p.read_text(encoding="utf-8", errors="replace").replace("\\r\\n", "\\n")
+    out[u] = {"chars": len(t), "head": t[:2000], "error": None}
+print("---SCOUT-JSON---")
+print(json.dumps(out))
+'''
+
+
+def remote_fetch(urls: list[str], batch: str,
+                 timeout: int = 900) -> tuple[dict[str, dict], str | None]:
+    """Fetch every URL ON COOPER with the same runner the real run uses.
+
+    Returns (results, error). `error` is not None when the remote check could
+    not be performed at all, and in that case the caller must report the check
+    as NOT RUN. Reporting a check that never ran as a pass is the exact failure
+    this whole file exists to prevent.
+
+    Transport is the one `send` already uses: scp `tools/cooper/` to
+    COOPER, then run PowerShell through `ps()` so no quoting can mangle
+    anything.
+    """
+    if shutil.which("ssh") is None or shutil.which("scp") is None:
+        return {}, "ssh/scp not available on this machine"
+
+    remote_dir = f"{REMOTE_ROOT}/_scout/{batch}"
+    try:
+        r = ps(f'New-Item -ItemType Directory -Force -Path "{remote_dir}" '
+               f'| Out-Null; Write-Output ok', timeout=120)
+    except (subprocess.SubprocessError, OSError) as e:
+        return {}, f"{type(e).__name__}: {e}"
+    if r.returncode != 0:
+        return {}, f"could not reach {HOST}: {(r.stderr or '').strip()}"
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        (tmp / "probe.py").write_text(_PROBE_SOURCE, encoding="utf-8")
+        (tmp / "urls.txt").write_text("\n".join(urls) + "\n", encoding="utf-8")
+        try:
+            scp(str(ROOT / "tools" / "cooper"), f"{HOST}:{REMOTE_ROOT}/",
+                timeout=300)
+            scp(str(tmp / "probe.py"), f"{HOST}:{remote_dir}/", timeout=120)
+            scp(str(tmp / "urls.txt"), f"{HOST}:{remote_dir}/", timeout=120)
+        except (SystemExit, subprocess.SubprocessError, OSError) as e:
+            return {}, f"could not stage the probe on {HOST}: {e}"
+
+    cmd = (f'python "{remote_dir}/probe.py" "{REMOTE_ROOT}/cooper" '
+           f'"{remote_dir}/urls.txt" "{remote_dir}/docs"')
+    try:
+        r = ps(cmd, timeout=timeout)
+    except (subprocess.SubprocessError, OSError) as e:
+        return {}, f"probe did not complete on {HOST}: {type(e).__name__}: {e}"
+    out = r.stdout or ""
+    if "---SCOUT-JSON---" not in out:
+        why = (r.stderr or out or "").strip().splitlines()
+        return {}, ("probe produced no result on "
+                    f"{HOST}: {why[-1] if why else 'no output'}")
+    try:
+        import json                                  # noqa: PLC0415
+        results = json.loads(out.split("---SCOUT-JSON---", 1)[1].strip())
+    except ValueError as e:
+        return {}, f"probe output was not JSON: {e}"
+    return results, None
+
+
 def scout(batch: str) -> int:
     """Check every URL in a spec is reachable AND still carries its quote.
 
@@ -644,9 +947,53 @@ def scout(batch: str) -> int:
     has to look for the figure, not just a 200. A spec's `Quote:` lines are
     exactly the claim being made, so they are what gets verified.
 
-    Reachability is a property of the fetcher and its user agent, not of the
-    host running it, so this is faithful from either machine -- but running it
-    on COOPER removes the last doubt.
+    An earlier version of this docstring claimed reachability "is a property of
+    the fetcher and its user agent, not of the host running it, so this is
+    faithful from either machine". batch-05-milk measured that and it is false.
+    Same code, same user agent, minutes apart:
+
+        pmc.ncbi.nlm.nih.gov/articles/PMC10289513/
+            Mac     41,579 chars -- Gross 2023
+            COOPER     167 chars -- "Checking your browser - reCAPTCHA"
+
+    So the scout fetches every URL ON COOPER as well as here, and compares the
+    two character counts.
+
+    WHAT THAT COMPARISON IS, EXACTLY -- AND WHAT IT IS NOT. It is a smoke test
+    for a PERSISTENT wall. It is not a guarantee about the fetch the real run
+    will make ten minutes later, and it cannot be made into one. batch-06
+    fetched that same PMC URL from COOPER and got 82,331 characters of the real
+    article, hours after batch-05 got 167 characters of reCAPTCHA from the same
+    machine with the same fetcher. The wall is per-request, not per-host. A
+    green scout is one sample of an intermittent behaviour, and treating it as
+    a promise would be the same kind of lie as the sentence it replaced.
+
+    The check that actually holds is `document_is_a_wall`, applied by `verify`
+    (and reported by `fetch`) to the documents that really arrived. That one
+    inspects the evidence the model was handed rather than a prediction about
+    it, so intermittency cannot get past it.
+
+    THREE FAILURES, AND NO CHECK SUBSTITUTES FOR ANOTHER:
+
+      - A BOT WALL is short. At scout time only the cross-host comparison
+        suggests it -- 41,579 vs 167 is a ratio of 0.004. At run time
+        `document_is_a_wall` catches it outright, including on the runs where
+        the scout happened to see nothing wrong.
+      - JS TRUNCATION is long and host-INDEPENDENT. batch-08's bows-n-ties page
+        came back at 7,195 characters on both machines, ending mid-word at
+        "The average wor", with the cited "120 to 130 cocoons" nowhere in it.
+        The cross-host comparison is perfectly happy with it -- both hosts got
+        the same bytes -- and only the quote-presence check catches it.
+      - A DEAD URL is neither, and the local fetch reports it.
+
+    So a document can be long, fetch identically everywhere, and still be
+    useless; it can be a doorman on one request and the article on the next.
+    Every check runs, and none stands in for another.
+
+    Exit codes: 0 clean, 1 the spec has a problem, 2 the COOPER smoke test DID
+    NOT RUN. 2 is not a pass. If COOPER is unreachable this reports what it
+    could not do rather than reporting success, because a check that claims to
+    have run when it did not is the failure mode that produced batch-05.
     """
     spec = BATCHES / f"{batch}.md"
     if not spec.exists():
@@ -708,7 +1055,7 @@ def scout(batch: str) -> int:
                 unquoted.append((it["field"], probe,
                                  ", ".join(u for u, _b in bodies)))
 
-    print(f"\nscouted {batch}: {len(seen)} distinct URL(s), "
+    print(f"\nscouted {batch} locally: {len(seen)} distinct URL(s), "
           f"{ok} reachable, {len(dead)} dead")
     for field, url in dead:
         print(f"  [DEAD]     {field}: {url}")
@@ -716,12 +1063,68 @@ def scout(batch: str) -> int:
         print(f"  [NO-QUOTE] {field}: {q!r}...")
         print(f"             not in what the fetcher retrieves from {url}")
 
-    if dead or unquoted:
+    walled: list[tuple[str, str]] = []
+
+    # A wall can also be served to THIS machine. Cheap to check, and it makes
+    # the local half of the scout honest on its own terms.
+    for url, body in seen.items():
+        if body is None:
+            continue
+        inter, why = looks_like_interstitial(body)
+        if inter:
+            walled.append((url, f"local fetch: {why}"))
+
+    # --- the COOPER half -------------------------------------------------
+    print(f"\nsmoke-testing the same {len(seen)} URL(s) on {HOST} "
+          f"(the host that will do the real run)...")
+    results, err = remote_fetch(list(seen), batch)
+
+    if err is not None:
+        print(f"\n  REMOTE CHECK DID NOT RUN: {err}")
+        print(f"\n{batch}: the local half is "
+              f"{'CLEAN' if not (dead or unquoted or walled) else 'NOT clean'}, "
+              f"and the {HOST} half was not performed.")
+        for url, why in walled:
+            print(f"  [WALLED]   {url}\n             {why}")
+        print("\nThis is NOT a pass. batch-05-milk was cleared by a Mac-only "
+              f"scout and then lost its best source to a reCAPTCHA served to "
+              f"{HOST}. Bring {HOST} up and re-scout before sending.")
+        return 2
+
+    for url in seen:
+        r = results.get(url)
+        if r is None:
+            walled.append((url, f"{HOST} returned no result for this URL"))
+            continue
+        local_chars = len(seen[url]) if seen[url] is not None else None
+        remote_chars = r.get("chars")
+        head = r.get("head") or ""
+        lc = f"{local_chars:,}" if local_chars is not None else "dead"
+        rc = f"{remote_chars:,}" if remote_chars is not None else "dead"
+        print(f"  {lc:>10} local  {rc:>10} {HOST}   {url}")
+
+        inter, why = looks_like_interstitial(head, remote_chars)
+        if inter:
+            walled.append((url, f"{HOST} fetch: {why}"))
+            continue
+        verdict, why = host_delta_verdict(local_chars, remote_chars)
+        if verdict == "fail":
+            walled.append((url, why))
+
+    for url, why in walled:
+        print(f"  [WALLED]   {url}\n             {why}")
+
+    if dead or unquoted or walled:
         print("\nFix the spec before sending. A dead URL wastes a run; a URL "
               "whose quote is absent invites a confident answer from the "
-              "wrong sentence.")
+              f"wrong sentence; a URL that collapses on {HOST} returns a "
+              "doorman with a 200 on it and is logged as a successful fetch.")
         return 1
-    print("\nEvery URL reachable and every claimed quote present. Safe to send.")
+    print(f"\nEvery URL reachable from this Mac AND from {HOST}, sizes agree, "
+          "and every claimed quote is present.\nSafe to send -- as far as one "
+          f"sample can say. The wall is per-request ({HOST} was served PMC's "
+          "reCAPTCHA\nin batch-05 and the real article in batch-06), so verify "
+          "re-checks every document that\nactually arrives.")
     return 0
 
 

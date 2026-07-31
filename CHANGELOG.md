@@ -44,6 +44,60 @@ No collected event data was deleted. There is none in the repo; any
 `metrics.db` on the deployed host is untouched, and its Docker volume is now
 simply unreferenced rather than removed.
 
+### A walled fetch now fails where the document arrives, not only in pre-flight
+
+batch-05-milk lost its best source to a reCAPTCHA page served to COOPER with an
+HTTP 200 and 167 characters, logged as a successful fetch of a 41,579-character
+journal article. The scout's docstring claimed reachability was a property of
+the fetcher rather than the host, "so this is faithful from either machine".
+That sentence is gone; it was measured and it is false.
+
+**The primary defence is `document_is_a_wall`, applied by `verify` to the
+documents that actually arrived**, and printed by `fetch` as they land. A body
+under 1,500 characters carrying reCAPTCHA, Cloudflare or "enable JavaScript"
+wording is an interstitial and fails the row, naming the wall rather than
+blaming the model for a quote that could never have matched. `fetch` reports
+the same list because a walled document usually explains an item that returned
+*nothing*, and a row that returned nothing never reaches the gate — batch-05
+read as "the models declined" when one of them had been handed a doorman.
+
+It is deliberately not a pre-flight check, because a pre-flight check cannot
+hold. **The wall is per-request, not per-host:** batch-06 fetched that same PMC
+URL from COOPER and got 82,331 characters of the real article, hours after
+batch-05 got 167 characters of reCAPTCHA from the same machine with the same
+fetcher. Anything promising a clean run from a clean pre-flight would be the
+same kind of claim as the sentence deleted above.
+
+`scout` does now fetch every URL on COOPER as well as here, through the same
+`runner.fetch_once` the run uses, and fails a URL whose remote body falls under
+a quarter of the local one. It is documented as a **smoke test for a persistent
+wall, not a guarantee** — one sample of an intermittent behaviour. The
+threshold is loose because the evidence is: eleven of twelve measured
+cross-host pairs agreed exactly or within five characters, and the one wall
+collapsed to 0.4%. Characters, not bytes — COOPER writes CRLF, so a byte
+comparison flags every document. `scout` exits `2` when COOPER cannot be
+reached and says the remote half did not run; it is deliberately not `0`,
+because batch-05 was cleared to send by a Mac-only scout that printed "Safe to
+send".
+
+None of this replaces the verbatim quote check, and the docstring now says why.
+A bot wall is short; batch-08's JS-truncated page was 7,195 characters on both
+hosts, ending mid-word at "The average wor" with the cited figure absent —
+identical everywhere, invisible to any host comparison, and caught only by
+looking for the quote.
+
+Two new `[needs_human]` warnings for a figure whose basis cannot be read off
+its own quote, which has now cost three batches. A **bare table row** — at
+least two numbers against no more than two words, or numbers with no words at
+all: `"Eggs, 5.1, 1.3%"` (batch-09, a share of total food-loss calories read as
+an egg loss rate, wrong by ~20×), `"Fluid milk 109 13 12 22 20 35 32"`
+(batch-05, severed from its header) and `"150 -185"` (batch-06). And a quote
+that is **not a sentence**: `quote_looks_truncated` tested only the final
+character, so `"(60 pounds versus 2,000 pounds)"` read as complete because it
+ended in a bracket. Closers are now stripped before the sentence underneath is
+judged, and a quote that is entirely a parenthetical aside is flagged on its
+own account.
+
 ### batch-05-milk: a negative result, and the scout's promise disproved
 
 Milk ran on COOPER and `verify` failed. Nothing was promoted; the review record
