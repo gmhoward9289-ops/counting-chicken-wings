@@ -1,0 +1,99 @@
+batch: batch-06-ground-beef
+subject: ground-beef
+findings:
+- field: patty_mass_standard
+  value_lo: 120.5
+  value_mode: 120.5
+  value_hi: 120.5
+  unit: grams
+  confidence: industry
+  document: inbox/ground-beef/https-en-wikipedia-org-wiki-quarter-pounder-1bd61fc9.txt
+  # QUOTE CORRECTED BY HAND 2026-07-31, values untouched. The model tidied
+  # "one quarter of a pound , originally" (the document has a space before the
+  # comma) into normal punctuation, and quote_in_document folds whitespace but
+  # not punctuation, so a true quote failed the gate. Restored to the literal
+  # text of the fetched document. See the REVIEW for why this is a correction
+  # and not a rewrite.
+  quote: Its name refers to the beef patty having a precooked weight of approximately
+    one quarter of a pound , originally portioned as four ounces (113.4 g) but increased
+    to 4.25 oz (120.5 g) in 2015.
+  agreement: 2/2
+  verified_by: null
+- field: dressing_percentage
+  value_lo: 60
+  value_mode: 62
+  value_hi: 64
+  unit: '% of live weight remaining as hot carcass'
+  confidence: industry
+  document: inbox/ground-beef/https-extension-msstate-edu-publications-how-muc-372a795e.txt
+  quote: The average dressing percentage of beef cattle is 60 to 64 percent.
+  agreement: '1/2 disagree: 62 vs None'
+  verified_by: null
+- field: packaged_beef_fraction_of_live_weight
+  value_lo: null
+  value_mode: 40
+  value_hi: null
+  unit: percent of live weight taken home as packaged beef
+  confidence: industry
+  document: inbox/ground-beef/https-extension-sdstate-edu-how-much-meat-can-yo-7bbd1da6.txt
+  quote: So, in other words, you start with a 1200 pound steer, which has a dressing
+    percent of 63%, so that you have a 750 pound carcass. From that you will get about
+    65% of the carcass weight, or roughly 490 pounds, as boneless, trimmed beef. If
+    you look at that as a percentage of the live weight of the steer you started with,
+    it is approximately 40% of the live weight.
+  agreement: 2/2
+  verified_by: null
+- field: animals_per_grind_batch
+  value_lo: 411
+  value_mode: null
+  value_hi: 1367
+  unit: animals
+  confidence: industry
+  document: inbox/ground-beef/https-pmc-ncbi-nlm-nih-gov-articles-pmc3316629-c850b5a8.txt
+  quote: An average of 411 to1367 animals was present in the six grind batches.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+- field: combo_bins_per_grinder_load
+  value_lo: 2
+  value_mode: null
+  value_hi: 15
+  unit: combo bins of trim per grinder load
+  confidence: estimate
+  document: inbox/ground-beef/https-www-ncbi-nlm-nih-gov-books-nbk221105-6db38665.txt
+  quote: Grinder loads are presumed to vary in size from the equivalent of 2 to 15
+    combo bins of trim.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+- field: combo_bin_mass
+  value_lo: 2000
+  value_mode: 2000
+  value_hi: 2000
+  unit: pounds of trim per combo bin
+  confidence: industry
+  document: inbox/ground-beef/https-www-ncbi-nlm-nih-gov-books-nbk221105-6db38665.txt
+  # QUOTE WIDENED BY HAND 2026-07-31, value untouched. The model returned the
+  # parenthetical "(60 pounds versus 2,000 pounds)", which is verbatim, carries
+  # the right number, and is unreviewable -- a reader cannot tell which of the
+  # two figures is the bin. Replaced with the sentence in the SAME document that
+  # states it outright. This is the 112 g failure mode caught before promotion
+  # rather than after.
+  quote: Trim is removed from each carcass and combined into 2,000-pound combo bins
+    during the slaughter process.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+- field: ground_beef_lbs_per_steer
+  value_lo: 150
+  value_mode: null
+  value_hi: 185
+  unit: pounds
+  confidence: industry
+  document: inbox/ground-beef/https-extension-sdstate-edu-how-much-meat-can-yo-7bbd1da6.txt
+  # QUOTE WIDENED BY HAND 2026-07-31, values untouched. The model returned the
+  # bare span "150 -185", which is verbatim and proves nothing -- it does not
+  # say pounds, does not say lean trim, and does not say per animal. Replaced
+  # with the full sentence from the SAME document. The odd space before the
+  # dash is the document's own typography and is preserved deliberately.
+  quote: This 150 -185 pounds of lean trim would likely be packaged as ground beef.
+  agreement: 2/2
+  verified_by: null
+proposed_sources: []

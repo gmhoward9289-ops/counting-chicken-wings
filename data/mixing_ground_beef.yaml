@@ -1,0 +1,140 @@
+# Ground beef mixing cascade. Merged with mixing.yaml at build time.
+#
+# THE FIRST MIXING POOL IN THIS PROJECT WITH A MEASURED SOURCE
+# -----------------------------------------------------------
+# Every other cascade in this corpus - poultry, eggs, saffron, maple - cites
+# `project-estimate-mixing`, because pool size is not a thing anyone in those
+# trades measures. The audit prints that mix on every build and it has always
+# been the softest part of the model.
+#
+# Ground beef is the exception, and it is the reason this subject was worth the
+# second attempt. Hu et al. (PLoS ONE, 2012) profiled DNA markers in six
+# commercial grind batches and estimated animal abundance by mark-recapture:
+#
+#   "An average of 411 to1367 animals was present in the six grind batches."
+#
+# That is a POOL SIZE, counted. Not asserted by a manufacturer, not reasoned
+# out by us, not a trade rule of thumb - measured in the product itself, by the
+# only method that can see through a grinder. It is the strongest evidence this
+# project holds that the commingling model describes something real.
+#
+# WHY THE PATTY ANSWER IS STILL 1, AND WHY THAT IS CONSISTENT
+# -----------------------------------------------------------
+# A reader who sees 411-1,367 here and then asks the model for one patty gets
+# "about 1 animal", and the two are not in conflict. The pool is what the patty
+# was drawn FROM; the answer is what a single draw can resolve. A patty is one
+# share of a homogenate, so the draw model has one draw to work with and
+# correctly reports that one animal could account for it. See the header of
+# taxonomy_ground_beef.yaml for why inventing a parcels-per-patty figure to
+# make that number bigger is exactly what this project must not do.
+#
+# GRINDING IS THE MOST TOTAL MIXER IN THE CORPUS
+# ----------------------------------------------
+# Wing size grading separates; egg packing commingles; saffron grading does
+# both. Grinding does something none of them do: it destroys the individual.
+# After the grinder there is no piece of meat that belongs to one animal, and
+# the only way anyone has ever recovered the head count is by reading the DNA.
+
+stages:
+  - slug: beef_combo_bin
+    domain: livestock
+    label: Combo bin of trim
+    sequence: 10
+    # In ANIMALS represented per 2,000-pound combo bin.
+    #
+    # Nobody publishes this directly, so it is bracketed between two figures
+    # that are published, and it is graded `estimate` accordingly:
+    #
+    #   lo   411 animals in the smallest measured batch, over the largest
+    #        grinder load (15 bins)  ->  ~27 animals per bin
+    #   hi   1,367 animals in the largest measured batch, over the smallest
+    #        grinder load (2 bins)   ->  ~684 animals per bin
+    #   mode a mid-batch over a mid-load, ~105, and it is our interpolation
+    #
+    # A sanity check from the other direction, which is why the band is not
+    # tightened: 2,000 lb of trim over 150-185 lb of trim per animal is only
+    # 11-13 animals if a carcass's trim stayed together. It does not - the
+    # National Academies note a carcass contributes to several bins depending
+    # on fat sorting - so 11-13 is a floor the real number sits well above,
+    # and the DNA-bracketed band is the better estimate.
+    pool_lo: 27
+    pool_mode: 105
+    pool_hi: 684
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Trim is stripped from every carcass on the line and combined into
+      2,000-pound combo bins - large cardboard boxes lined with plastic. This
+      is ground beef's cut-up line: the first commingling event, and it happens
+      on the slaughter floor rather than anywhere near a kitchen.
+
+  - slug: beef_grind_batch
+    domain: livestock
+    label: Grind batch
+    sequence: 20
+    # MEASURED. 411 to 1,367 animals, by DNA marker mark-recapture, across six
+    # commercial batches from one manufacturer on one production line during a
+    # single shift.
+    #
+    # The mode is the midpoint of the reported range and is OURS - the paper
+    # reports a range across six batches and its own point is the VARIANCE
+    # between them, not a central value. Anyone quoting 889 should quote the
+    # range instead.
+    pool_lo: 411
+    pool_mode: 889
+    pool_hi: 1367
+    mixing_kind: random
+    confidence: study
+    source: plos-hu-2012-grind-batch
+    description: >-
+      Several combo bins of trim are emptied into a grinder together, along
+      with lean finely textured beef and rework, and ground into one batch. The
+      National Academies' review of the FSIS risk assessment models a grinder
+      load as 2 to 15 combo bins; Hu et al. counted 411 to 1,367 distinct
+      animals in six real ones.
+
+supply_chains:
+  - slug: commodity_ground_beef
+    domain: livestock
+    species: beef_cattle
+    label: Commodity ground beef
+    is_default: 1
+    description: >-
+      The route almost all ground beef takes: trim from every carcass on the
+      shift into 2,000-pound combo bins, several bins into one grinder load,
+      and out into retail packages. Both mixing stages apply and the pool is
+      large at each.
+    stages:
+      - beef_combo_bin
+      - beef_grind_batch
+    floor_note: >-
+      The floor is 1 and it means something different here than anywhere else
+      in this corpus. For wings the floor is anatomy - six chickens, no
+      argument. For a patty the floor is only the observation that one animal
+      is physically enough, and reaching it requires that no commingling happen
+      at all, which on this route never happens even once.
+
+      What the evidence bounds is the POOL, not the patty: the batch your patty
+      came out of held somewhere between 411 and 1,367 animals, counted by DNA.
+      How many of them are in your particular quarter pound is not a question
+      anyone has measured, and this project will not guess at it.
+
+  - slug: home_ground_beef
+    domain: livestock
+    species: beef_cattle
+    label: Home-ground, single animal
+    is_default: 0
+    description: >-
+      Your own animal, or a whole or half beef from one farm, ground by a
+      custom-exempt butcher who keeps it separate. No combo bin, no grinder
+      load, no other carcass.
+    # No stages at all, deliberately. This is the exact analogue of
+    # whole_bird_home: the one route on which the answer is the floor, because
+    # nothing commingles. resolve_pool handles the empty case and says so.
+    floor_note: >-
+      The floor, reached. One animal, one grinder, one freezer - so the patty
+      contains exactly one animal and the answer to the project's question is
+      1. This is the counterpart of buying a whole chicken to get two wings
+      from one bird, and it is the only way a hamburger has a knowable
+      provenance at all.
