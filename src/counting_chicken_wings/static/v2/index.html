@@ -4,7 +4,14 @@
      identical the first run is an A/A test, which measures the noise
      floor. Any later difference smaller than what this run showed is
      not a difference. Redesign work goes in this file; leave
-     ../index.html alone so the control stays a control. -->
+     ../index.html alone so the control stays a control.
+
+     WHILE THIS IS STILL A SEED COPY, edits to ../index.html must be
+     mirrored here, or the A/A run is comparing two different pages
+     and calls the difference noise. v1.9.1 landed a copy edit on the
+     control while this branch was open and did exactly that. Once
+     real redesign work starts the two are meant to diverge, and this
+     note stops applying. -->
 <html lang="en" data-variant="b">
 <head>
 <meta charset="utf-8">
@@ -575,9 +582,9 @@ try {
      Countries here are complementary rather than comparable, and the coverage
      is not symmetrical: the US enumerates head slaughtered and publishes no
      national output series, Israel the inverse. So this view leads with what
-     each country can and cannot answer, and it reads every one of those claims
-     FROM THE API rather than stating them here. An earlier draft hardcoded
-     "Israel cannot answer how many chickens", which was true when written and
+     each country's statistics answer, and it reads every one of those claims
+     FROM THE API rather than stating them here. An earlier draft hardcoded a
+     coverage claim about Israel's bird count that was true when written and
      false hours later once an industry-grade figure was sourced. Coverage
      changes; prose about coverage rots. -->
 
@@ -585,10 +592,11 @@ try {
   <div class="panel">
     <h3>Production by country</h3>
     <p class="muted">
-      Different countries publish different things, and the gaps are not
-      symmetrical. Pick one to see what its own statistics can and cannot
-      answer — including, where it applies, that they cannot answer this
-      project's headline question.
+      Different statistical systems measure different things — one country
+      enumerates birds, another runs decades of output series in tonnes and
+      value. Pick one to see what its own statistics answer, on its own
+      terms, and how the corpus reports the questions its publishers chose
+      not to measure.
     </p>
     <div id="c-picker" class="chips"></div>
   </div>
@@ -1243,12 +1251,12 @@ async function initStates() {
 // ---- by country
 //
 // The capability labels are keyed off the API's `answers` map rather than
-// written here, so a country can never be shown a question its statistics
-// cannot answer. That is the whole point of the view: Israel publishes tonnage,
-// value and 55 districts, and cannot say how many chickens -- head slaughtered
-// is in none of the CBS tables and no Israeli average bird weight is published
-// either, so there is no denominator. Naming the gap is more honest than
-// filling it with a US figure.
+// written here, so a country is only ever shown the questions its statistics
+// answer. That is the whole point of the view: CBS gives Israel tonnage,
+// value and 55 districts, and head slaughtered is not one of its published
+// measures -- nor is an average bird weight, so there is no denominator to
+// derive one from. Reporting what the sources state is more honest than
+// filling in with a US figure.
 const CAN_LABEL = {
   head_slaughtered: 'how many chickens',
   national_output:  'national output',
@@ -1326,11 +1334,11 @@ async function showCountry(iso3) {
     if (!String(err.message || '').includes('404')) throw err;
   }
 
-  // ---- what this country can and cannot answer
+  // ---- what this country's statistics answer
   //
   // Every word here is derived from the API's `answers` map. Nothing is
-  // asserted, deliberately: an earlier draft of this view hardcoded "Israel
-  // cannot answer how many chickens", which was true when it was typed and
+  // asserted, deliberately: an earlier draft of this view hardcoded a claim
+  // about Israel's bird count that was true when it was typed and
   // false a few hours later once an industry-grade head figure was sourced.
   // A UI that states a coverage fact in prose will eventually contradict the
   // corpus it is describing.
@@ -1353,16 +1361,17 @@ async function showCountry(iso3) {
   let calcNote = '';
   if (C_GRADE === 'measured' && a.head_slaughtered
       && !a.head_slaughtered_measured) {
-    calcNote = `<p class="note warn">On government figures alone ${meta.name}
-      cannot answer this project's headline question. It has a bird count, but
-      not one anybody enumerated — switch back to all evidence to see it, and
-      read it as what it is.</p>`;
+    calcNote = `<p class="note warn">${meta.name}'s government statistics
+      answer scale in the measures they publish, and its bird count is
+      industry-reported rather than enumerated — switch back to all evidence
+      to see it, graded as what it is.</p>`;
   } else if (!a.head_slaughtered) {
-    calcNote = `<p class="note warn">${meta.name} cannot answer this project's
-      headline question from its own statistics. Head slaughtered per year is
-      not published, and without it or an average bird weight there is no way
-      to turn tonnes into birds. Borrowing another country's figure would dress
-      a foreign assumption up as a local one.</p>`;
+    calcNote = `<p class="note warn">${meta.name}'s statistics answer other
+      questions than this project's headline one: head slaughtered per year is
+      not among its published measures — a definitional choice many national
+      statistical systems make — and this corpus does not derive a count its
+      sources never stated. Borrowing another country's average bird weight
+      would dress a foreign assumption up as a local one.</p>`;
   } else if (!a.head_slaughtered_measured) {
     calcNote = `<p class="note warn">${meta.name} answers the count question on
       <strong>${a.head_slaughtered_grade || 'weaker'}</strong> evidence rather
@@ -1373,9 +1382,9 @@ async function showCountry(iso3) {
 
   // The count answer itself, and the weight it implies. Under the
   // government-only filter these disappear along with the figure they rest
-  // on, which is the honest result rather than a gap: without an industry
-  // head count Israel can say how much chicken it produced and not how many
-  // chickens that took.
+  // on, which is the honest result rather than a gap: on CBS figures alone
+  // Israel answers how much chicken it produced, and the birds-per-year
+  // reading rides on the industry count.
   const head = (d.national || []).find(r => r.measure === 'head_slaughtered');
   const w = (d.derived_weight || [])[0];
   const cards = (head || w) ? `<div class="grid2" style="margin-top:14px">` +

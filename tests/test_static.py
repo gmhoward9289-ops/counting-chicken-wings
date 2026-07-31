@@ -192,6 +192,32 @@ def test_every_variant_carries_the_measurement_hooks(html):
     assert "/static/ab.js" in html, "ab.js is not included"
 
 
+def test_a_seeded_variant_stays_identical_to_its_control():
+    """While `b` is still a seed copy, a change to `a` must be mirrored.
+
+    An A/A run compares two arms that are supposed to be the same page. If
+    the control moves and the copy does not, the run measures that drift and
+    reports it as the noise floor -- which then licenses ignoring a real
+    difference of the same size later.
+
+    This is not hypothetical: v1.9.1 landed a copy edit on the control while
+    the A/B branch was open, and the two pages silently diverged.
+
+    **Delete this test the moment the redesign genuinely begins.** Divergence
+    is the point then, and the invariants above are what still apply to both.
+    """
+    a = (exp.STATIC / exp.VARIANTS["a"]).read_text()
+    b = (exp.STATIC / exp.VARIANTS["b"]).read_text()
+
+    seeded = re.sub(r"<!-- VARIANT B.*?-->\n", "", b, flags=re.S).replace(
+        '<html lang="en" data-variant="b">', '<html lang="en">')
+    if seeded != a:
+        pytest.fail(
+            "variant b has drifted from variant a. Either mirror the change "
+            "into v2/index.html, or -- if the redesign has started for real "
+            "-- delete this test, because divergence is now the point.")
+
+
 def test_no_variant_ships_its_own_copy_of_the_instrument(html):
     """One instrument, shared verbatim.
 
