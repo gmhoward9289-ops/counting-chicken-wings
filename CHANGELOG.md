@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+### batch-05-milk: a negative result, and the scout's promise disproved
+
+Milk ran on COOPER and `verify` failed. Nothing was promoted; the review record
+is `docs/research/accepted/batch-05-milk-REVIEW.md`. Four rows came back across
+seven items, one failed the gate on a non-numeric value, and all three that
+passed are unusable — an annual per-herd figure from a fictional worked example
+stored in a per-day field, a Guinness record aimed at `max_units_per_day`, and a
+loss table row stripped of the header that said which column was retail and
+which was consumer.
+
+The finding worth carrying forward is about the pipeline, not the dairy. `scout`
+claims in its docstring that reachability "is a property of the fetcher and its
+user agent, not of the host running it, so this is faithful from either machine".
+It is not. Scouted from the Mac, PMC returned 41,579 characters of Gross 2023;
+fetched from COOPER minutes later, the same URL returned 167 characters of
+reCAPTCHA interstitial, logged as a successful fetch. Bot-walling keys on address
+and reputation, which the host owns and the fetcher does not. Six of the seven
+HTML fetches matched between the two machines to within five characters, so this
+is one host-dependent source rather than general flakiness — and it was the
+source the spec called the strongest in the batch, carrying the one sentence that
+declines to define a maximum daily yield. Its absence left the record standing
+without the counterweight that existed to stop it being read as a ceiling.
+
+Also the second batch running to ground on a figure whose basis cannot be read
+off its own quote — `"Fluid milk 109 13 12 22 20 35 32"`, after batch-09's
+`"Eggs, 5.1, 1.3%"`. Both verbatim, both from the right document, both
+meaningless without the header. On two instances that rule should stop being
+advice in a spec and become a check.
+
 ### Tags that are not releases
 
 Since #37 the merge cuts the release, so a tag is no longer how you publish one.
