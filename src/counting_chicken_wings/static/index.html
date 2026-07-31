@@ -84,7 +84,13 @@ try {
       <div id="window-wrap" hidden>
         <label>Gathered over</label>
         <select id="window-days">
-          <option value="1" selected>1 day (one carton)</option>
+          <!-- Empty value means "do not send window_days", so the product's
+               own default applies: a day for a carton of eggs, a whole
+               season for maple. A fixed "1 day" default here asked how many
+               maples could be tapped and boiled between breakfast and
+               supper. -->
+          <option value="" selected>the product's own window</option>
+          <option value="1">1 day (one carton)</option>
           <option value="7">1 week</option>
           <option value="15">15 days</option>
           <option value="30">1 month</option>

@@ -156,10 +156,11 @@ def calculate(
     """The main calculation, with a full per-stage audit trail.
 
     `window_days` applies only to recurring products such as eggs, where the
-    per-individual yield is a rate and means nothing without a window.
-    Defaults to one day: a hen lays at most one egg a day, so twelve same-day
-    eggs came from twelve different hens, and no supply chain arrangement can
-    reduce that. Ignored for wings, which need no clock.
+    per-individual yield is a rate and means nothing without a window. Left
+    unset it comes from the product: one day for eggs, because a hen lays at
+    most one egg a day and twelve same-day eggs came from twelve different
+    hens; a whole 45-day season for maple syrup, because a tree is tapped for
+    a spring rather than an afternoon. Ignored for wings, which need no clock.
     """
     conn = dbm.connect()
     try:
@@ -202,7 +203,7 @@ def calculate(
             mixing_stages=mixing,
             iterations=iterations,
             recurring=recurring,
-            aggregate_units=prod["yield_mode"] == "continuous",
+            # Derived inside run() from the figures -- see unit_is_aggregate.
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
         )
@@ -255,6 +256,13 @@ def calculate(
                 "window_days": res.window_days,
                 "rate_per_day": res.rate_per_day,
                 "cap_per_individual": res.cap_per_individual,
+                # What this species calls its rate, and why its ceiling is
+                # physiology -- both out of the row. The pages hardcoded
+                # "laying rate" and "a hen lays at most one egg a day", so a
+                # maple was narrated as a bird. Same bug as floor_note,
+                # third copy.
+                "rate_label": prod["rate_label"],
+                "cap_note": prod["cap_note"],
                 "yield_mode": prod["yield_mode"],
             },
             "trace": [
@@ -354,7 +362,7 @@ def scientific(
             iterations=iterations, seed=seed,
             confidence_level=confidence_level,
             min_confidence=min_confidence, keep_samples=True,
-            aggregate_units=prod["yield_mode"] == "continuous",
+            # Derived inside run() from the figures -- see unit_is_aggregate.
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
         )

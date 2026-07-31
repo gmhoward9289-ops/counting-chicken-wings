@@ -518,6 +518,15 @@ or two and still says something true about the subject or about us.
   rather than each caller recomputing it, and `aggregate_units` is threaded from
   `yield_mode` through CLI and API.
 
+  **Superseded.** Threading it from `yield_mode` was the wrong condition and it
+  shipped: maple is `recurring`, so all three call sites read a gallon of syrup
+  as one tree's discrete part and printed a floor of 194 against a ceiling of 1.
+  Whether a unit is a blend is a fact about the figures — one individual's whole
+  natural output against one whole unit — and it is now derived inside `run()`
+  where no caller can hold a copy of it. The lesson generalises past this flag:
+  a condition duplicated across CLI, API and analysis route cannot be caught by
+  disagreement, because all three copies are wrong together.
+
 - [x] **"Anatomical floor" is not always anatomical.** Two wings per chicken and
   three stigmas per flower are anatomy, and the trace may fairly grade them
   `measured`. "About 150 flowers per gram" is an extension service's rule of

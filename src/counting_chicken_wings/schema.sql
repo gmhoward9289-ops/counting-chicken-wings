@@ -160,6 +160,31 @@ CREATE TABLE product (
     max_units_per_day   REAL    CHECK (max_units_per_day IS NULL
                                        OR max_units_per_day > 0),
 
+    -- The window to answer in when the question does not name one. NULL
+    -- means "the product's own yield_period_days", which is the honest
+    -- default for anything seasonal.
+    --
+    -- This column exists because a single global default was wrong the
+    -- moment a second recurring product landed. One day is right for eggs --
+    -- "a dozen eggs" means a carton gathered together -- and absurd for
+    -- maple, whose sap runs for about six weeks a year: a one-day window
+    -- asked how many trees could be tapped, boiled and bottled between
+    -- breakfast and supper, and answered 194.
+    default_window_days REAL    CHECK (default_window_days IS NULL
+                                       OR default_window_days > 0),
+
+    -- What to call this product's rate in prose: 'laying rate', 'sap flow'.
+    -- The floor_note lesson again. The CLI and both front ends said "at the
+    -- real LAYING rate" for every recurring product, so asking about maple
+    -- syrup got a sentence about a tree's laying rate. Data cannot narrate
+    -- the wrong species.
+    rate_label          TEXT,
+
+    -- Why the per-day ceiling is physiology rather than estimation, in this
+    -- species' own words. Only meaningful where max_units_per_day is set,
+    -- and the schema enforces that rather than trusting prose to notice.
+    cap_note            TEXT,
+
     unit_name           TEXT    NOT NULL,          -- 'wing', 'gallon', 'lb'
 
     -- Which part of the individual this product actually comes from.
@@ -200,7 +225,19 @@ CREATE TABLE product (
     -- assuming it.
     CHECK (yield_mode != 'recurring'
            OR (yield_period_days IS NOT NULL AND yield_period_days > 0)),
-    CHECK (yield_mode = 'recurring' OR max_units_per_day IS NULL)
+    CHECK (yield_mode = 'recurring' OR max_units_per_day IS NULL),
+
+    -- A window and a rate noun only mean anything for a product produced
+    -- over time, and a recurring product must carry a rate noun or the
+    -- prose falls back to somebody else's biology.
+    CHECK (yield_mode = 'recurring' OR default_window_days IS NULL),
+    CHECK (yield_mode != 'recurring' OR rate_label IS NOT NULL),
+    CHECK (yield_mode = 'recurring' OR rate_label IS NULL),
+
+    -- A cap_note explains a cap. Without one there is nothing to explain,
+    -- and a note claiming a ceiling the data does not record would be the
+    -- model stating what it cannot support.
+    CHECK (cap_note IS NULL OR max_units_per_day IS NOT NULL)
 );
 
 -- Sub-parts of a countable product: drumette / flat / tip of a wing.

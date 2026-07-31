@@ -99,13 +99,16 @@ class RecurringYield:
         return self.max_units_per_day * self.window_days
 
 
-def recurring_floor(units: float, ry: RecurringYield) -> tuple[float, float]:
+def recurring_floor(
+    units: float, ry: RecurringYield
+) -> tuple[float | None, float]:
     """Return (hard_floor, expected_individuals) for a recurring product.
 
     Two genuinely different numbers, and conflating them is the whole trap:
 
       hard_floor            fewest individuals physically capable of it,
                             from the per-day ceiling. Cannot be beaten.
+                            None when the product records no ceiling.
       expected_individuals  how many you actually need at the real
                             production rate, which is always more, because
                             hens do not lay every single day.
@@ -113,11 +116,55 @@ def recurring_floor(units: float, ry: RecurringYield) -> tuple[float, float]:
     For a dozen eggs at 288 eggs/hen/year with a 1/day ceiling:
       window 1 day   -> hard 12,  expected 15.2
       window 15 days -> hard 0.8, expected 1.01
+
+    A HARD FLOOR IS A CLAIM, and it needs a cap to stand on. This used to
+    return `expected` in place of the missing floor, which read on every
+    surface as "at least N trees, and that part is physiology, not
+    estimation" -- for a figure that is an average of two extension services
+    disagreeing about sap flow. A maple has no daily ceiling because nothing
+    in the corpus records one, so the honest return is None and the surfaces
+    say nothing rather than something unsupported.
     """
     expected = units / ry.units_per_individual
     cap = ry.cap_per_individual
-    hard = units / cap if cap else expected
+    hard = units / cap if cap else None
     return hard, expected
+
+
+def unit_is_aggregate(
+    units_per_individual: float,
+    recurring: "RecurringYield | None" = None,
+) -> bool:
+    """Is one unit of this product a BLEND of many individuals' output?
+
+    THE test, and it is a fact about the product, not about its yield mode.
+    One individual's ENTIRE natural output -- everything it makes, over its
+    whole production period -- is less than one whole unit. If a sugar maple
+    turns out about a quart of syrup in a season, then a gallon of syrup is
+    necessarily several trees blended, in exactly the way a gram of saffron
+    is 150 flowers blended.
+
+      whole wing      2 wings per chicken           -> False
+      boneless wing   34.5 pieces per chicken       -> False
+      saffron stigma  3 stigmas per flower          -> False
+      saffron gram    0.0067 g per flower           -> True
+      table egg       288 eggs per hen per year     -> False
+      maple gallon    0.233 gallons per tree/season -> True
+
+    Note the window is deliberately NOT consulted. A hen yields 0.79 of an
+    egg in a day, which is below one and says nothing at all about whether an
+    egg is a blend -- it is not, an egg comes from exactly one hen. The
+    natural period is what carries the physical meaning, so a recurring
+    product is judged on `units_per_period`.
+
+    This replaced `yield_mode == "continuous"`, copied into three call sites.
+    Maple is `recurring`, so all three read its gallon as one tree's discrete
+    part and the mixing formula collapsed a 194-tree floor to "about 1 tree"
+    in the same paragraph.
+    """
+    natural = (recurring.units_per_period if recurring is not None
+               else units_per_individual)
+    return natural < 1.0
 
 
 def _ratio_choose(total: int, removed: int, drawn: int) -> float:
@@ -563,7 +610,7 @@ def run(
     min_confidence: str | None = None,
     keep_samples: bool = False,
     recurring: RecurringYield | None = None,
-    aggregate_units: bool = False,
+    aggregate_units: bool | None = None,
     anatomical: bool = True,
     floor_source: str | None = None,
 ) -> Result:
@@ -585,12 +632,22 @@ def run(
     the given level, which answers "what does the answer look like using
     only figures we could actually source?".
 
-    `aggregate_units` is for CONTINUOUS products, where one unit is a blend
-    of many individuals' output rather than one individual's discrete part.
-    Pass it when yield_mode is 'continuous'. Countable and recurring products
-    must leave it False: a wing came from exactly one chicken and an egg from
-    exactly one hen, so their unit count IS their draw count.
+    `aggregate_units` says one unit is a blend of many individuals' output
+    rather than one individual's discrete part. LEAVE IT NONE: it is derived
+    from the figures via `unit_is_aggregate`, which is the only reason the
+    CLI, the API and the analysis endpoint cannot disagree about it. They
+    each held their own copy of the condition, all three said
+    `yield_mode == "continuous"`, and all three were wrong about maple on
+    the same day.
+
+    Pass it explicitly only to test the branch itself.
     """
+    # Derived from the data before the window rewrites anything, because the
+    # question "is a unit a blend?" is about the product's natural output,
+    # not about how long the asker is willing to wait.
+    if aggregate_units is None:
+        aggregate_units = unit_is_aggregate(units_per_individual, recurring)
+
     excluded = [s.slug for s in loss_stages
                 if not meets_confidence(s.confidence, min_confidence)]
     if excluded:
@@ -627,21 +684,28 @@ def run(
         # formula's assumption holds again. Nothing about the mixing maths
         # changes; only the unit it is asked in.
         shares = max(1, ceil(floor))
-        container, distinct_in_container, notes = resolve_pool(
-            mixing_stages, shares, 1.0
-        )
-        distinct = expected_distinct_general(
-            shares, container, distinct_in_container
-        )
+        draw_units, draw_upi = shares, 1.0
         drawn_label = f"{shares:,} individual-shares"
     else:
-        container, distinct_in_container, notes = resolve_pool(
-            mixing_stages, units_requested, units_per_individual
-        )
-        distinct = expected_distinct_general(
-            int(units_requested), container, distinct_in_container
-        )
+        draw_units, draw_upi = units_requested, units_per_individual
         drawn_label = f"{units_requested} units"
+
+    def _draw(stages):
+        """One pass of the mixing cascade, in whatever unit the question is
+        being asked in.
+
+        A closure rather than two call sites, because there WERE two: the
+        deterministic pass below re-expressed an aggregate unit in
+        individual-shares and the Monte Carlo pass at the bottom of this
+        function did not, so `wings count 12 --product saffron_gram
+        --iterations 2000` and `/api/scientific` reported 12 flowers for a
+        floor of 1,800 -- the same contradiction the shares fix exists to
+        remove, surviving in the path nobody re-ran.
+        """
+        c, d, n = resolve_pool(stages, draw_units, draw_upi)
+        return c, d, n, expected_distinct_general(int(draw_units), c, d)
+
+    container, distinct_in_container, notes, distinct = _draw(mixing_stages)
 
     trace.append(StepTrace(
         sequence=len(trace),
@@ -702,25 +766,17 @@ def run(
             # Resample the mixing cascade too. Pool sizes are among the
             # softest numbers in the model, so holding them fixed would
             # understate the spread on the headline figure.
-            if mixing_stages:
-                jittered = []
-                for m in mixing_stages:
-                    lo, mode, hi = m.band()
-                    p = max(1, int(_triangular(lo, mode, hi, rng)))
-                    jittered.append(MixingStage(
-                        slug=m.slug, label=m.label, pool=p,
-                        mixing_kind=m.mixing_kind,
-                    ))
-                c, d, _ = resolve_pool(
-                    jittered, units_requested, units_per_individual
-                )
-            else:
-                c, d, _ = resolve_pool(
-                    [], units_requested, units_per_individual
-                )
-            dist_s.append(
-                expected_distinct_general(int(units_requested), c, d)
-            )
+            jittered = []
+            for m in mixing_stages:
+                lo, mode, hi = m.band()
+                p = max(1, int(_triangular(lo, mode, hi, rng)))
+                jittered.append(MixingStage(
+                    slug=m.slug, label=m.label, pool=p,
+                    mixing_kind=m.mixing_kind,
+                ))
+            # Same draw as the deterministic pass, aggregate handling and
+            # all. It is the same function precisely so it cannot differ.
+            dist_s.append(_draw(jittered)[3])
 
         req_s.sort()
         dist_s.sort()

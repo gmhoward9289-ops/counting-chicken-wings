@@ -141,7 +141,8 @@ async function calc() {
   // Only meaningful for recurring products, and the server ignores it for
   // the rest -- but sending it regardless would put a misleading window in
   // the query string for wings.
-  if (!$('#window-wrap').hidden) q.set('window_days', $('#window-days').value);
+  if (!$('#window-wrap').hidden && $('#window-days').value)
+    q.set('window_days', $('#window-days').value);
   const d = await api('/api/calculate?' + q);
   if (mine !== calcSeq) return;     // superseded by a newer request
   const a = d.answer, plural = d.question.individual_plural;
@@ -174,21 +175,33 @@ async function calc() {
     : 'ceiling ' + (+a.ceiling.toFixed(2));
 
   let fl;
+  // What this species calls its rate, and why its ceiling is physiology,
+  // both out of the corpus. Hardcoded here as 'laying rate' and 'a hen lays
+  // at most one egg a day', they described a maple tree as a bird.
+  const rateLabel = a.rate_label || 'production rate';
+  const w = a.window_days;
+  const when = w === 1 ? 'in a single day' : `over ${w} days`;
   if (a.hard_floor != null) {
     // Recurring products carry two floors and quoting one alone misleads.
     // hard_floor is physiology; floor is what you actually need, because a
     // hen does not lay every day.
-    const w = a.window_days;
-    const when = w === 1 ? 'in a single day' : `over ${w} days`;
     const birds = Math.ceil(a.hard_floor - 1e-9);
     fl = `Gathered ${when}, that took <b>at least ${birds}
-      ${birds === 1 ? d.question.individual_noun : plural}</b> — a hen lays at
-      most one egg a day, so that part is physiology, not estimation.`;
+      ${birds === 1 ? d.question.individual_noun : plural}</b>`;
+    fl += a.cap_note ? ` — ${a.cap_note}.` : '.';
     fl += a.floor >= 1
-      ? ` At the real laying rate you would need about
+      ? ` At the real ${rateLabel} you would need about
           <b>${a.floor.toFixed(2)}</b> ${plural} to count on it.`
       : ` That is about <b>${(a.floor * 100).toFixed(0)}%</b> of one
           ${d.question.individual_noun}'s output over that window.`;
+  } else if (w != null) {
+    // Recurring with no per-day ceiling recorded — a maple. One floor, and
+    // it is a yield floor: what the average individual turns out, never a
+    // physiological limit. Claiming the harder one is what this replaced.
+    fl = `Gathered ${when}, that took <b>at least
+      ${+a.floor.toFixed(2)} ${plural}</b> — that is a ${rateLabel} floor,
+      not a physiological one: no per-day ceiling is recorded for a
+      ${d.question.individual_noun}.`;
   } else {
     fl = `It took <b>at least ${+a.floor.toFixed(2)} ${plural}</b> — that
       part is arithmetic, not estimation.`;
