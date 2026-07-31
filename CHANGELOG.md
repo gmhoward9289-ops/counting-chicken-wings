@@ -44,6 +44,45 @@ No collected event data was deleted. There is none in the repo; any
 `metrics.db` on the deployed host is untouched, and its Docker volume is now
 simply unreferenced rather than removed.
 
+### `scout` now fetches from COOPER, and a bare table row reaches a human
+
+The scout's docstring claimed reachability was a property of the fetcher rather
+than of the host, "so this is faithful from either machine". batch-05-milk
+measured that claim and it is false; the sentence is gone, replaced by the
+numbers that disproved it. `scout` now fetches every URL **on COOPER**, through
+the same `runner.fetch_once` the real run uses and the same scp/PowerShell
+transport `send` uses, and compares the character count with a local fetch.
+
+A URL fails when COOPER returns under a quarter of what the Mac does. The
+threshold is loose on purpose: across batches 05 and 08, eleven of twelve
+cross-host pairs agreed exactly or to within five characters, and the one wall
+collapsed 41,579 → 167, a ratio of 0.004. Nothing has ever been observed in
+between. Short bodies are also matched against interstitial wording — reCAPTCHA,
+Cloudflare, "enable JavaScript" — because that failure arrives as HTTP 200 and
+is otherwise indistinguishable from a successful fetch. Counts are compared as
+characters and not bytes: COOPER writes CRLF, so every document's byte count
+differs across hosts by exactly its line count, and a byte comparison would
+flag all of them.
+
+The host comparison does **not** replace the quote-presence check, and the
+docstring now says why with both worked examples. A bot wall is short and
+host-dependent, so only the size comparison sees it. batch-08's JS-truncated
+page was 7,195 characters on both hosts, ending mid-word at "The average wor"
+with the cited figure absent — identical everywhere, invisible to any
+cross-host comparison, and caught only by looking for the quote.
+
+`scout` exits `2` when COOPER cannot be reached, and says the remote half did
+not run. It is deliberately not `0`: batch-05 was cleared to send by a Mac-only
+scout that reported success.
+
+Also new, as a `[needs_human]` warning rather than a failure: a quote that is a
+bare table row — at least two numbers against no more than two words. Both
+`"Eggs, 5.1, 1.3%"` (batch-09, a share of total food-loss calories read as an
+egg loss rate, wrong by ~20×) and `"Fluid milk 109 13 12 22 20 35 32"`
+(batch-05, a row severed from the header that said which column was retail and
+which consumer) are verbatim, correctly located, and unreadable. A figure whose
+basis cannot be read off its own quote has now cost two batches.
+
 ### batch-05-milk: a negative result, and the scout's promise disproved
 
 Milk ran on COOPER and `verify` failed. Nothing was promoted; the review record

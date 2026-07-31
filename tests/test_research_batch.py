@@ -556,3 +556,253 @@ def test_distinct_urls_get_distinct_document_names(tmp_path, monkeypatch):
     assert len(seen) == len(urls)
     assert len({p.name for p in seen}) == len(urls), (
         f"filenames collided: {[p.name for p in seen]}")
+
+
+# ---------------------------------------------------------------------------
+# Bot walls -- a 200 with a doorman behind it
+#
+# Every number below is measured, not invented. PMC's interstitial is quoted
+# from batch-05-milk; the matched pairs are from batch-05 (Mac vs COOPER) and
+# batch-08 (silk, four sources, zero delta on all four).
+# ---------------------------------------------------------------------------
+
+PMC_WALL = (
+    "Checking your browser - reCAPTCHA Checking your browser before accessing "
+    "pmc.ncbi.nlm.nih.gov ... Click here if you are not automatically "
+    "redirected after 5 seconds."
+)
+
+
+def test_the_pmc_interstitial_is_recognised():
+    """167 characters, HTTP 200, logged by the runner as a successful fetch of
+    a 41,579-character journal article."""
+    walled, why = rb.looks_like_interstitial(PMC_WALL)
+    assert walled
+    assert "recaptcha" in why
+
+
+def test_a_long_document_mentioning_javascript_is_not_an_interstitial():
+    """Real pages carry <noscript>Please enable JavaScript</noscript> in their
+    chrome with the whole article underneath. Flagging those would make the
+    check noise, and noise gets ignored."""
+    body = "Please enable JavaScript. " + ("Fluid milk production rose. " * 400)
+    assert len(body) > rb.INTERSTITIAL_MAX_CHARS
+    assert not rb.looks_like_interstitial(body)[0]
+
+
+def test_a_short_body_with_no_marker_is_not_flagged_as_an_interstitial():
+    """batch-05's AMS Class III worksheet was 2,039 chars of real content."""
+    assert not rb.looks_like_interstitial("Class III price factors: 17.34")[0]
+
+
+def test_the_measured_pmc_collapse_is_a_failure():
+    verdict, why = rb.host_delta_verdict(41579, 167)
+    assert verdict == "fail"
+    assert "41,579" in why and "167" in why
+
+
+@pytest.mark.parametrize("local,remote", [
+    (12947, 12947), (62520, 62520), (3194, 3194), (30469, 30469),
+    (39883, 39883), (34661, 34656),          # batch-05, six of seven HTML
+    (16299, 16299), (49272, 49272), (6849, 6849), (1479, 1479),   # batch-08
+])
+def test_measured_matching_pairs_stay_quiet(local, remote):
+    """Eleven real cross-host pairs. If any of these fires, the threshold is
+    wrong and the check will be ignored within a week."""
+    assert rb.host_delta_verdict(local, remote)[0] == "ok"
+
+
+def test_a_remote_fetch_that_failed_outright_is_a_failure():
+    assert rb.host_delta_verdict(41579, None)[0] == "fail"
+
+
+def test_ratios_are_not_computed_for_tiny_local_documents():
+    """A 300-character local fetch is already too small for its ratio to mean
+    anything; the local half reports on it separately."""
+    assert rb.host_delta_verdict(300, 60)[0] == "ok"
+
+
+def test_a_url_dead_on_both_hosts_is_left_to_the_dead_list():
+    """Not a wall -- a wall is a DIFFERENCE between the hosts. Double-reporting
+    one broken URL as two problems teaches people to skim the output."""
+    assert rb.host_delta_verdict(None, 167)[0] == "ok"
+
+
+# ---------------------------------------------------------------------------
+# scout -- must fetch on COOPER, and must never claim to have done so when it
+# did not
+# ---------------------------------------------------------------------------
+
+SCOUT_SPEC = """# Batch 44 — scout
+
+### Item 1 — walled_field
+
+| | |
+|---|---|
+| `unit` | pounds |
+
+**Question:** How much?
+
+Quote: "the daily maximum is not defined by physiology alone"
+
+**Candidate URLs:**
+
+- https://pmc.example.org/articles/PMC10289513/
+"""
+
+GOOD_BODY = ("Gross 2023. " * 300 +
+             "the daily maximum is not defined by physiology alone. " +
+             "More text. " * 300)
+
+
+def _scout_env(tmp_path, monkeypatch, remote):
+    """Wire scout to a one-URL spec, a local fetch that succeeds, and whatever
+    COOPER is being made to do this time."""
+    import runner
+
+    batches = tmp_path / "batches"
+    batches.mkdir()
+    (batches / "batch-44-scout.md").write_text(SCOUT_SPEC)
+    monkeypatch.setattr(rb, "BATCHES", batches)
+    monkeypatch.setattr(rb, "RESEARCH", tmp_path)
+
+    def fake_fetch_once(url, doc_dir):
+        doc_dir.mkdir(parents=True, exist_ok=True)
+        p = doc_dir / "doc.txt"
+        p.write_text(GOOD_BODY, encoding="utf-8")
+        return p
+
+    monkeypatch.setattr(runner, "fetch_once", fake_fetch_once)
+    monkeypatch.setattr(rb, "remote_fetch", remote)
+    return "batch-44-scout"
+
+
+def test_scout_fails_when_cooper_serves_a_wall(tmp_path, monkeypatch):
+    """The batch-05 case end to end: reachable and quoted from the Mac, 167
+    characters of reCAPTCHA from COOPER. The old scout printed "Safe to send"."""
+    batch = _scout_env(
+        tmp_path, monkeypatch,
+        lambda urls, b, **kw: ({u: {"chars": len(PMC_WALL), "head": PMC_WALL,
+                                    "error": None} for u in urls}, None))
+    assert rb.scout(batch) == 1
+
+
+def test_scout_fails_on_a_size_collapse_with_no_known_marker(tmp_path,
+                                                             monkeypatch):
+    """A wall that says nothing recognisable is still a wall. The delta is the
+    signal, and it does not depend on knowing the vendor's wording."""
+    body = "Please sign in to continue." * 5
+    batch = _scout_env(
+        tmp_path, monkeypatch,
+        lambda urls, b, **kw: ({u: {"chars": len(body), "head": body,
+                                    "error": None} for u in urls}, None))
+    assert rb.scout(batch) == 1
+
+
+def test_scout_does_not_pass_when_cooper_is_unreachable(tmp_path, monkeypatch):
+    """The single most important assertion in this file's newest section.
+
+    A check that reports success when it never ran is how batch-05 was cleared
+    to send. Exit 2 says "did not run"; it is deliberately not 0.
+    """
+    batch = _scout_env(tmp_path, monkeypatch,
+                       lambda urls, b, **kw: ({}, "ssh: connect: timed out"))
+    assert rb.scout(batch) == 2
+
+
+def test_scout_passes_when_both_hosts_agree(tmp_path, monkeypatch):
+    batch = _scout_env(
+        tmp_path, monkeypatch,
+        lambda urls, b, **kw: ({u: {"chars": len(GOOD_BODY),
+                                    "head": GOOD_BODY[:2000], "error": None}
+                                for u in urls}, None))
+    assert rb.scout(batch) == 0
+
+
+def test_scout_still_fails_a_missing_quote_when_the_hosts_agree(tmp_path,
+                                                               monkeypatch):
+    """batch-08's bows-n-ties page fetched to 7,195 chars on BOTH hosts, ending
+    mid-word, with the cited figure absent. The cross-host comparison is happy
+    with it. The host check must not be allowed to short-circuit the quote
+    check -- the two catch different failures."""
+    import runner
+    truncated = "Silkworms are reared on mulberry. " * 30 + "The average wor"
+    batch = _scout_env(
+        tmp_path, monkeypatch,
+        lambda urls, b, **kw: ({u: {"chars": len(truncated),
+                                    "head": truncated, "error": None}
+                                for u in urls}, None))
+    def fetch_truncated(url, doc_dir):
+        doc_dir.mkdir(parents=True, exist_ok=True)
+        p = doc_dir / "doc.txt"
+        p.write_text(truncated, encoding="utf-8")
+        return p
+
+    monkeypatch.setattr(runner, "fetch_once", fetch_truncated)
+    assert rb.scout(batch) == 1
+
+
+# ---------------------------------------------------------------------------
+# quote_lacks_basis -- a figure whose basis cannot be read off its own quote
+# ---------------------------------------------------------------------------
+
+def test_the_batch_09_egg_row_is_flagged():
+    """"Eggs, 5.1, 1.3%" was a share of total food-loss calories, stored as an
+    egg loss rate. Verbatim, correctly located, wrong by about 20x."""
+    bare, why = rb.quote_lacks_basis("Eggs, 5.1, 1.3%")
+    assert bare
+    assert "table row" in why
+
+
+def test_the_batch_05_milk_table_row_is_flagged():
+    """One ERS row severed from the header that said which column was retail
+    and which was consumer. Two stages were stored as one band."""
+    assert rb.quote_lacks_basis("Fluid milk 109 13 12 22 20 35 32")[0]
+
+
+@pytest.mark.parametrize("quote", [
+    "For example, Joe Dairyman has a herd of 110 Holstein cows in South "
+    "Carolina with a rolling herd average for milk of 20,501 pounds.",
+    "Each blossom yields only three stigmas, which must be picked by hand.",
+    "about 170 flowers per gram of dried saffron",
+    "123.61 litres in 24 hours",
+    "U.S. farmers had 9.3 million milk cows at",
+    "Approximately 150 to 200 flowers are required",
+])
+def test_legitimate_quotes_are_not_flagged_as_bare_table_rows(quote):
+    """A gate that cries wolf gets ignored, which is the disease this check is
+    supposed to cure rather than spread."""
+    assert not rb.quote_lacks_basis(quote)[0]
+
+
+def test_a_bare_row_is_a_warning_and_not_a_failure(tmp_path, monkeypatch):
+    """It must reach a human, not stop the batch: some legitimate figures do
+    live in tables, and quote_looks_truncated set this precedent."""
+    out = tmp_path / "outbox" / "b"
+    out.mkdir(parents=True)
+    doc = tmp_path / "inbox" / "d.txt"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("Dairy products 367 34 9 75 21 109 30\n"
+                   "Fluid milk 109 13 12 22 20 35 32\n")
+    (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
+        "field": "chain_loss", "value_lo": 12, "value_mode": 20,
+        "unit": "percent", "confidence": "industry",
+        "document": "inbox/d.txt",
+        "quote": "Fluid milk 109 13 12 22 20 35 32",
+    }]}))
+    monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
+    monkeypatch.setattr(rb, "RESEARCH", tmp_path)
+    monkeypatch.setattr(rb, "trial_build", lambda files: (True, "skipped"))
+
+    assert rb.verify("b") == 0
+    assert (out / ".verified").exists()
+
+
+def test_remote_fetch_reports_rather_than_raises_when_ssh_is_missing(
+        monkeypatch):
+    """Degrading honestly is the whole contract: an empty result plus a reason,
+    never an empty result that reads like agreement."""
+    monkeypatch.setattr(rb.shutil, "which", lambda name: None)
+    results, err = rb.remote_fetch(["https://example.org/a"], "batch-44-scout")
+    assert results == {}
+    assert err and "ssh" in err
