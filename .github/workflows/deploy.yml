@@ -31,9 +31,19 @@ concurrency:
   group: deploy-swamplink
   cancel-in-progress: false
 
+# The deploy credentials live on the `production` environment, not on the repo.
+# A repo secret is readable by a workflow on *any* branch; an environment secret
+# is readable only by a job that names the environment, and the environment's
+# branch policy admits protected branches only. This repo is public, so the
+# difference is the whole ballgame: it means adding a workflow file cannot be a
+# way to read the key.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/checkout@v4
         with:
