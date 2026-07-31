@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
 
 `scout` already refuses a bot wall it can see from either host, and `verify`
