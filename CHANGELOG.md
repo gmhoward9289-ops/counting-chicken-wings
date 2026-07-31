@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## v1.12.0 — 2026-07-31
 ### A gallon of syrup is not one tree — a correctness fix to shipped output
 
 `wings count 1 --product maple_syrup_gallon` published a self-contradiction:
