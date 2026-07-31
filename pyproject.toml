@@ -19,6 +19,22 @@ dev = [
     # Floor matches starlette's own httpx2>=2.0.0. A looser bound lets a
     # resolver pick an early httpx2 that lacks the API testclient calls.
     "httpx2>=2.0",
+    # A CA bundle for the research fetcher. `runner._ca_context()` uses certifi
+    # when it can import it and falls back to the interpreter's own trust store
+    # when it cannot -- so whether it is installed silently changes which URLs
+    # are reachable, and an SSL failure reads downstream as a model declining to
+    # answer (batch-04-honey lost five of seventeen documents that way).
+    #
+    # It belongs here rather than in the runtime deps because COOPER installs
+    # nothing from this file, and it belongs in `dev` specifically because the
+    # worktree setup and CI both install `.[dev,gui]` -- so this is the only
+    # group that guarantees every contributor tree has it.
+    #
+    # The sharper reason: `scout` fetches each URL from BOTH the Mac and COOPER
+    # and compares the two. COOPER has certifi; without this line the Mac did
+    # not, so the two halves of that comparison used different trust stores and
+    # could disagree for a reason that has nothing to do with the URL.
+    "certifi>=2024.2.2",
 ]
 
 [project.scripts]
