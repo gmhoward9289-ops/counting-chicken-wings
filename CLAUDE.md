@@ -53,6 +53,40 @@ a bug, because it bypasses the citation audit.
 - `tools/` — one-off source fetchers (`fetch_census_states.py`,
   `parse_production_value.py`). Extend these rather than writing new scrapers.
 
+## The frontend A/B test
+
+Two pages, one URL. `static/index.html` is variant `a` (shipped, the control);
+`static/v2/index.html` is variant `b` (the redesign). **Do the redesign work in
+`v2/`** — editing `index.html` destroys the control.
+
+```bash
+WINGS_AB_SPLIT=50 wings gui          # 50% of new visitors get the redesign
+open 'http://localhost:8000/?ui=b'   # force a variant by hand, and pin it
+curl localhost:8000/api/experiment   # which am I on, and why
+curl localhost:8000/api/metrics/summary?hours=24
+```
+
+- **The split defaults to 0.** Deploying does not silently start serving a
+  second site; the experiment is on only when `WINGS_AB_SPLIT` says so.
+- Assignment is deterministic from a random visitor cookie, so a reload does
+  not reassign. A design cannot be measured through a page that flickers.
+- **Metrics live in `metrics.db`, never `chickens.db`** (`WINGS_METRICS_DB`
+  overrides; `metrics.connect()` refuses the corpus path outright). `build`
+  recreates the corpus DB, and the citation audit reasons about it — a
+  measurement is not a cited figure and must not be able to look like one.
+- `static/ab.js` is included **identically** by both pages and hooks the page
+  from outside. Do not fork it per variant: an instrument that differs
+  between the arms is measuring itself.
+- `v2/index.html` starts as an exact copy of `index.html`. That first run is an
+  **A/A test** — it tells you the noise floor, and any later difference
+  smaller than it is not a difference.
+- `test_static.py` runs every structural invariant against both pages. The
+  redesign has to clear the same bar (dark mode, no hardcoded corpus prose,
+  focus visibility, headline scaling), or it wins the test for a reason that
+  has nothing to do with design.
+- The summary is descriptive. It computes no significance test, and a few
+  dozen sessions will differ by chance alone.
+
 ## Two questions, never conflated
 
 1. **How many birds' worth of wing did this consume?** A supply-chain question — 6 plus

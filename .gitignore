@@ -10,6 +10,9 @@ dist/
 *.db
 *.sqlite
 *.sqlite3
+# metrics.db runs in WAL mode, and *.db does not match its sidecars
+*.db-wal
+*.db-shm
 
 # Cached source documents
 data/cache/

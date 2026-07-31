@@ -7,13 +7,16 @@ without having the source available to render beside it.
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import db as dbm
+from . import experiment as exp
+from . import metrics
 from . import seasonality as seas
 from .model import (
     CONFIDENCE_RANK,
@@ -1378,9 +1381,108 @@ def meta():
         conn.close()
 
 
+@app.get("/api/experiment")
+def experiment_state(request: Request, ui: str | None = None):
+    """What this browser is being served, and why.
+
+    Exists because "why am I still on the old page" was otherwise only
+    answerable by reading cookies by hand -- and because a screenshot in a
+    bug report needs a way to say which design it is of.
+    """
+    variant, sid, reason = exp.resolve(
+        ui, request.cookies.get(exp.UI_COOKIE),
+        request.cookies.get(exp.SID_COOKIE))
+    return {
+        "variant": variant,
+        "reason": reason,
+        "split_percent_to_b": exp.split_percent(),
+        "variants": sorted(exp.VARIANTS),
+        "control": exp.CONTROL,
+        "session_assigned": bool(request.cookies.get(exp.SID_COOKIE)),
+        # Not the id itself: no reason to hand a page an identifier it
+        # already has in a cookie, and every reason not to log one.
+        "session_known": bool(sid),
+    }
+
+
+@app.post("/api/metrics")
+async def post_metrics(request: Request):
+    """Collect frontend events. Unauthenticated, and therefore strict.
+
+    Accepts only the closed set of names in `metrics.EVENTS`, caps the batch,
+    and timestamps from the server clock.
+
+    **The variant comes from the body, the session from the cookie.** The
+    body is the page telling us which design it actually was, captured when
+    it loaded. Re-deriving it from the cookie at POST time looks safer and is
+    measurably wrong: the `dwell` beacon fires during unload, so a visitor
+    switching variants has the outgoing page's time recorded against the
+    incoming page's cookie. That was not hypothetical -- it credited 32
+    seconds of variant b to variant a the first time this was exercised in a
+    browser, and it is the one event the experiment most needs to be right.
+
+    This does mean a hand-written client can post events naming any arm. That
+    is not a defence worth having: the endpoint is public, so anyone wanting
+    to stuff the experiment can simply request `?ui=b` and post honestly.
+    The real limits are the closed event set, the batch cap, and knowing that
+    these numbers are a design aid and not an audited figure.
+    """
+    sid = request.cookies.get(exp.SID_COOKIE)
+    if not sid:
+        return {"accepted": 0, "reason": "no session cookie"}
+    try:
+        body = await request.json()
+    except Exception:
+        return {"accepted": 0, "reason": "unreadable"}
+    if not isinstance(body, dict):
+        return {"accepted": 0, "reason": "unreadable"}
+
+    claimed = body.get("variant")
+    ui = claimed if claimed in exp.VARIANTS else request.cookies.get(
+        exp.UI_COOKIE)
+    if ui not in exp.VARIANTS:
+        return {"accepted": 0, "reason": "no variant"}
+
+    events = body.get("events") or []
+    if not isinstance(events, list):
+        return {"accepted": 0, "reason": "events must be a list"}
+    return {"accepted": metrics.record(sid, ui, events)}
+
+
+@app.get("/api/metrics/summary")
+def metrics_summary(hours: float | None = Query(None, gt=0)):
+    """Per-variant aggregates for comparing the two designs.
+
+    Aggregates only. Nothing per-session is returned, and nothing stored is
+    identifying to begin with.
+    """
+    since = (time.time() - hours * 3600) if hours else None
+    return metrics.summary(since=since)
+
+
 @app.get("/")
-def index():
-    return FileResponse(STATIC / "index.html")
+def index(request: Request, ui: str | None = None):
+    """Serve one of the two frontends, and remember which.
+
+    The cookies are set on every response, not only on first assignment, so
+    a `?ui=b` visit pins the choice and a returning visitor's 90-day window
+    keeps sliding rather than expiring mid-experiment.
+    """
+    variant, sid, _ = exp.resolve(
+        ui, request.cookies.get(exp.UI_COOKIE),
+        request.cookies.get(exp.SID_COOKIE))
+    resp = FileResponse(exp.path_for(variant))
+    for name, value in ((exp.SID_COOKIE, sid), (exp.UI_COOKIE, variant)):
+        resp.set_cookie(
+            name, value, max_age=exp.COOKIE_MAX_AGE,
+            httponly=False,        # ab.js reads both to label its events
+            samesite="lax",
+        )
+    # Two pages behind one URL: without this a shared cache could hand
+    # variant b to someone assigned a.
+    resp.headers["Vary"] = "Cookie"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 
 if STATIC.exists():

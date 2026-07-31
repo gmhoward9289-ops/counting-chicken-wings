@@ -1,5 +1,42 @@
 # Changelog
 
+## Unreleased
+
+### A/B harness for the frontend
+
+Two frontends can now be served from one URL, with measurement attached, so a
+redesign can be argued about with numbers instead of taste.
+
+- `experiment.py` assigns a variant per visitor and makes it **stick**. The
+  choice is deterministic from a random cookie id rather than a coin flip per
+  request, because a page that changes under the person being measured
+  measures nothing. `?ui=a` / `?ui=b` forces and pins a variant by hand.
+- **The split defaults to 0%** — everyone gets the shipped page until
+  `WINGS_AB_SPLIT` deliberately turns the experiment on. Deploying this
+  branch does not change what a visitor sees.
+- `metrics.py` stores events in **its own SQLite file** (`metrics.db`,
+  `WINGS_METRICS_DB`), and refuses to open `chickens.db`. `build` recreates
+  the corpus database, which would destroy the measurements; the corpus is
+  also what the citation audit reasons about, and an observation is not a
+  cited figure.
+- `static/ab.js` is shared verbatim by both variants — an instrument that
+  differs between the arms measures itself. It attaches from outside the page
+  (delegated listener, fetch wrapper), so neither design has to be edited to
+  be measured and the redesign cannot forget to instrument anything.
+- `GET /api/metrics/summary` compares the arms: load time, API latency,
+  dwell, time to first interaction, interaction rate, error rate, how much of
+  the UI got found. It reports no significance test, and says so.
+- `static/v2/index.html` is seeded as an **exact copy** of the shipped page,
+  so the first run is an A/A test that measures the noise floor. A later
+  difference smaller than that one is not a difference.
+- `test_static.py`'s structural invariants now run against **both** pages.
+  The redesign is a second page, not a second standard.
+
+Found by exercising it in a browser rather than only in tests: the `dwell`
+beacon fires during unload, so deriving the variant from the cookie at POST
+time credited 32 seconds of variant b to variant a. The page now states its
+own variant with each batch.
+
 ## v1.9.1 — 2026-07-30
 
 Wording only: the Israel-facing copy now leads with what Israel's sources

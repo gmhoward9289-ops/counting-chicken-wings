@@ -16,13 +16,25 @@ from pathlib import Path
 
 import pytest
 
+from counting_chicken_wings import experiment as exp
+
 STATIC = (Path(__file__).resolve().parents[1]
           / "src" / "counting_chicken_wings" / "static" / "index.html")
 
+# Every invariant below runs against **both** frontends. The redesign is a
+# second page, not a second standard: a variant that drops dark mode, or
+# retypes floor prose the data owns, is not a design to A/B against -- it is
+# a regression that would win or lose the test for the wrong reason.
+VARIANT_FILES = [
+    pytest.param(exp.STATIC / f, id=v)
+    for v, f in sorted(exp.VARIANTS.items())
+    if (exp.STATIC / f).exists()
+]
 
-@pytest.fixture(scope="module")
-def html():
-    return STATIC.read_text()
+
+@pytest.fixture(params=VARIANT_FILES, scope="module")
+def html(request):
+    return Path(request.param).read_text()
 
 
 @pytest.fixture(scope="module")
