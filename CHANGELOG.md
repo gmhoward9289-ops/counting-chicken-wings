@@ -2,6 +2,48 @@
 
 ## Unreleased
 
+### The frontend A/B test is retired with no result
+
+**No winner was measured, and none is claimed.** The A/A run that would have
+established the noise floor never happened, and the two arms have since
+diverged, so every number the experiment could report has nothing to be
+compared against. A difference with no baseline is not a finding. This is the
+project's own standard applied to its own instrumentation: an unsourced figure
+does not ship.
+
+**The surviving page was chosen on design merit, not on data.** Variant B is
+kept. It is three files split by concern — `index.html` (530 lines),
+`app.css` (408), `app.js` (1,316) — against variant A's single 2,116-line file
+with its CSS and JS interleaved, and its readout treats the floor..ceiling band
+as part of the answer rather than as decoration below it. That is an argument
+about how the page is built and what it says, and it is the only kind of
+argument available here.
+
+What retiring it buys: `static/index.html` was the frozen control, so **no UI
+work could touch the shipped page**, and a change of wording meant editing four
+files to keep the arms comparable. Both constraints are gone.
+
+Removed: `experiment.py`, `metrics.py`, `abcheck.py`, `static/ab.js`, the
+`wings ab` and `wings ab-clean` subcommands, `GET /api/experiment`,
+`POST /api/metrics`, `GET /api/metrics/summary`, and `WINGS_AB_SPLIT` /
+`WINGS_AB_SECRET` from `render.yaml` and `compose.yml` (with the metrics volume
+and the `/data` mount point in the Dockerfile, now that nothing writes state).
+`static/v2/` is promoted to `static/`.
+
+`GET /` sends one file. No token substitution, no `ccw_sid` / `ccw_ui` cookies,
+and no `Vary: Cookie` — that header existed because two pages shared one URL.
+
+`test_static.py` keeps every structural invariant and now runs them once
+instead of per arm; its fixtures still follow `/static/` links, so a rule that
+lives in `app.css` is still checked. Only the two A/B-specific tests are gone —
+the token placeholder and the shared-instrument check — along with
+`test_experiment.py` and `test_abcheck.py`, 60 tests in all. The suite is
+green.
+
+No collected event data was deleted. There is none in the repo; any
+`metrics.db` on the deployed host is untouched, and its Docker volume is now
+simply unreferenced rather than removed.
+
 ### batch-05-milk: a negative result, and the scout's promise disproved
 
 Milk ran on COOPER and `verify` failed. Nothing was promoted; the review record

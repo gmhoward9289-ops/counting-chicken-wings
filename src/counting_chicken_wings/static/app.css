@@ -33,8 +33,8 @@
 
   --field: #FFFFFF; --hatch: rgba(168,91,16,.14);
 
-  /* Warm series, untouched from variant A. The charts are the one place
-     this page is allowed to be warm. */
+  /* Warm series, carried over from the original page. The charts are the
+     one place this page is allowed to be warm. */
   --amber: #C58A2E; --amber2: #d97706; --amber-bright: #E0A93E;
   --scale-lo: #EFE7D6; --scale-hi: #54350F; --brown: #7c2d12;
   --bar-muted: #B3AC9D; --bar-recede: #C6BFAF;
@@ -174,8 +174,8 @@ select { min-width: 200px; font-family: 'Public Sans', system-ui, sans-serif; }
 .check input { accent-color: var(--stamp); }
 
 /* ------------------------------------------------------------- the readout
-   THE SIGNATURE ELEMENT. In variant A the answer was a big centred number
-   and the floor..ceiling band was a thin decoration parked below it. Here
+   THE SIGNATURE ELEMENT. On the page this replaced the answer was a big
+   centred number and the floor..ceiling band a thin decoration below it. Here
    they are one object, left-aligned against a ruled gutter, because the
    claim this project actually makes is not "12" — it is "12, and here is the
    span it had to fall inside". A number without its band is not the answer.  */

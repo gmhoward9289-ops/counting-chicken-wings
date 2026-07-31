@@ -20,7 +20,6 @@ import argparse
 import math
 import sys
 import textwrap
-import time
 
 from . import __version__
 from . import db as dbm
@@ -454,83 +453,6 @@ def cmd_gui(args) -> int:
     return 0
 
 
-def _ms(v) -> str:
-    return "—" if v is None else f"{v / 1000:.2f}s" if v >= 1000 else f"{v:.0f}ms"
-
-
-def cmd_ab(args) -> int:
-    """Compare the two frontends."""
-    from datetime import datetime, timezone
-
-    from . import metrics
-
-    since = (time.time() - args.hours * 3600) if args.hours else None
-    s = metrics.summary(since=since)
-    arms = s["variants"]
-
-    print(f"\n  {s['database']}")
-    if s["collecting_since"]:
-        began = datetime.fromtimestamp(s["collecting_since"], timezone.utc)
-        # Printed every time because the store can be on an ephemeral
-        # filesystem. A window that keeps resetting to minutes is the tell.
-        print(f"  collecting for {s['window_hours']:.1f}h "
-              f"(since {began:%Y-%m-%d %H:%M} UTC)")
-    if not arms:
-        print("\n  no events collected\n")
-        return 0
-
-    rows = [
-        ("sessions", lambda a: str(a["sessions"])),
-        ("load p50", lambda a: _ms(a["load_ms"]["p50"])),
-        ("load p95", lambda a: _ms(a["load_ms"]["p95"])),
-        ("API p50", lambda a: _ms(a["api_ms"]["p50"])),
-        ("dwell p50", lambda a: _ms(a["dwell_ms"]["p50"])),
-        ("time to 1st use", lambda a: _ms(
-            a["time_to_first_interaction_ms"]["p50"])),
-        ("used it", lambda a: f"{a['interaction_rate']:.0%}"),
-        ("hit an error", lambda a: f"{a['error_rate']:.0%}"),
-        ("views/session", lambda a: f"{a['views_per_session']:.1f}"),
-        ("views found", lambda a: str(a["distinct_views_found"])),
-    ]
-    names = sorted(arms)
-    print()
-    print(f"    {'':<18}" + "".join(f"{n:>12}" for n in names))
-    for label, fn in rows:
-        print(f"    {label:<18}" + "".join(f"{fn(arms[n]):>12}"
-                                          for n in names))
-    print()
-    # The comparison invites a conclusion it cannot support, so it says so
-    # every time rather than in documentation somebody read once.
-    print("  Descriptive only — no significance test. Small session counts")
-    print("  differ by chance alone.\n")
-    return 0
-
-
-def cmd_ab_clean(args) -> int:
-    """Validate the event store, and optionally remove what does not belong."""
-    from . import abcheck
-
-    since = (time.time() - args.hours * 3600) if args.hours else None
-    findings = abcheck.check(since=since, older_than_days=args.older_than)
-
-    print()
-    print(abcheck.format_report(findings))
-    if not args.clean:
-        cleanable = [f for f in findings if f.cleanable]
-        if cleanable:
-            print("\n  read-only. Re-run with --clean to remove the "
-                  "unstarred findings.\n")
-        else:
-            print()
-        return 0
-
-    result = abcheck.clean(findings)
-    print()
-    print(abcheck.format_report([], result))
-    print()
-    return 0
-
-
 def build_parser() -> argparse.ArgumentParser:
     # Shared flags, attached to every subcommand as well as the root, so
     # `wings 12 --no-colour` works as naturally as `wings --no-colour 12`.
@@ -606,18 +528,6 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("--port", type=int, default=8000)
     g.set_defaults(func=cmd_gui)
 
-    ab = add("ab", help="compare the two frontends")
-    ab.add_argument("--hours", type=float, default=None, metavar="N",
-                    help="only the last N hours")
-    ab.set_defaults(func=cmd_ab)
-
-    abc = add("ab-clean", help="validate the A/B event store")
-    abc.add_argument("--hours", type=float, default=None, metavar="N")
-    abc.add_argument("--older-than", type=float, default=None, metavar="DAYS",
-                     help="also flag events older than DAYS")
-    abc.add_argument("--clean", action="store_true",
-                     help="actually delete. Without it this only reports.")
-    abc.set_defaults(func=cmd_ab_clean)
 
     return p
 
