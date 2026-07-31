@@ -164,7 +164,8 @@ The floor is also why this check and the "pick the number last" rule below do
 not argue: the check tells you the smallest number the diff justifies, and you
 claim a number after running it. It cannot tell you the claim is *big* enough —
 a new endpoint is invisible to it — and it cannot tell you the number is still
-free. Step 3 of the release procedure is what covers that.
+free. Nobody claims one any more: `release.yml` computes it at merge, against
+master's tip, so "still free" is not a question anyone has to answer.
 
 ## Release procedure
 
@@ -174,19 +175,23 @@ While the work is in progress:
    including any figure whose value changed.
 2. Leave `pyproject.toml` alone. Do not pick a number yet.
 
-Immediately before merging:
+Then merge. **There is no step 3.** You never pick a number, never edit
+`pyproject.toml`, and never write a `## vX.Y.Z` heading.
 
-3. Check what has already been taken: `git fetch origin`, then
-   `git log --oneline origin/master` for a `(vX.Y.Z)` in a subject line and
-   `git tag --list 'v*'`. Releases announce themselves in the subject.
-4. In one commit: rename `## Unreleased` to `## vX.Y.Z — YYYY-MM-DD` and set
-   `version` in `pyproject.toml` to match.
-Then merge. **There is no step 5.**
+`.github/workflows/release.yml` fires on every push to master and does the rest:
 
-`.github/workflows/release.yml` fires on every push to master: if
-`pyproject.toml` declares a version the remote has no tag for, it runs the gates,
-cuts the annotated tag and publishes the GitHub release. The tag is `v`-prefixed,
-the `pyproject.toml` value is not — the workflow adds the `v`.
+1. **Syncs to the current tip of master**, not the SHA that triggered it.
+2. **Computes the number** with `tools/next_version.py` — the latest *version*
+   tag plus `release_check.py`'s verdict on what actually changed.
+3. **Runs the gates** — the release must be describable, and the bump must
+   match the diff.
+4. **Records the number on master through a pull request**: it writes the
+   heading and `pyproject.toml`, commits to `release/vX.Y.Z`, opens a PR,
+   and waits for it to squash-merge.
+5. **Tags the squash commit** and publishes the GitHub release against it.
+
+The tag is `v`-prefixed, the `pyproject.toml` value is not — the workflow adds
+the `v`.
 
 Do not tag or release by hand. Releasing was the one manual step left and it
 became the step that did not happen: v1.2.0 through v1.7.0 sat untagged until
@@ -198,6 +203,69 @@ The gates run *before* the tag exists, because a release is easier to prevent
 than to retract, and because a tag the workflow pushes with the default
 `GITHUB_TOKEN` raises no workflow event — checks hung on `refs/tags/v*` would
 never run at all.
+
+### Why the version commit goes through a pull request
+
+It used to `git push origin HEAD:master` directly. The `protect-master`
+ruleset, added 2026-07-30, rejects that:
+
+```
+remote: - Changes must be made through a pull request.
+remote: - 4 of 4 required status checks are expected.
+ ! [remote rejected] HEAD -> master (push declined due to repository rule violations)
+```
+
+Four consecutive merges failed on it — #44, #47, #48, #49 — and the v1.12.0
+that #44's own run computed was created inside the failed job and lost with it.
+
+Adding a bypass actor for the bot would have restored the push, but the
+ruleset is the part that is right: nothing should reach master unchecked, and
+the release commit is not an exception. So the job goes through the front door.
+It needs no PAT, no GitHub App and no new secret — the default `GITHUB_TOKEN`
+opens the PR, with `pull-requests: write` and `actions: write` added to the
+workflow's `permissions:` alongside `contents: write`.
+
+Three things about it are worth knowing, because each is load-bearing:
+
+- **The checks on that PR are dispatched explicitly.** GitHub raises no
+  workflow-triggering event for anything done with the default `GITHUB_TOKEN`
+  — the same rule that keeps bot-pushed tags from starting CI. So `ci.yml`'s
+  `pull_request` trigger does *not* fire for a PR the job opens, and its four
+  required checks would sit "Expected" forever. `ci.yml` therefore also
+  accepts `workflow_dispatch`, and the job asks for a run against the release
+  branch. The checks genuinely run, on the exact tree being merged; nothing is
+  stubbed or reported green on its behalf.
+- **The tag points at the squash commit, not at the branch commit.** Squashing
+  means the commit built on the release branch never becomes an ancestor of
+  master, so a tag on it would sit off-history where `git describe` cannot
+  reach it and `release_check --base` would resolve to a commit master never
+  saw. The squash commit is the first commit *on master* whose
+  `pyproject.toml` declares the version, which is exactly what a human tagging
+  by hand would pick and exactly what `version-consistency` asserts. The job
+  reads it back from the PR rather than taking master's tip, because another
+  merge may have landed on top in the meantime, and a tag one commit too far
+  forward would quietly fold somebody else's change into this release. It
+  verifies the target declares the version before tagging it.
+- **It waits, and it fails loudly.** The job does not fire the PR off and
+  exit. It polls until the PR merges; a conflict, a close, or 40 minutes
+  without a merge all fail the job with the PR URL in the error, and the tag
+  is not cut. A release job that exited 0 having recorded nothing is the
+  failure mode this whole file exists to prevent.
+
+Two merges landing together still cannot take the same number, and the
+mechanism is now two things rather than one. The `concurrency: release` group
+serialises the runs, and syncing to master's tip means the second run reads a
+tree that already contains the first run's version commit — so it finds no
+`## Unreleased` section, computes nothing, and correctly does nothing. This
+replaces the `git pull --rebase` the old push did, and it is strictly stronger:
+rebasing happened *after* the number was computed, so a run whose trigger SHA
+predated a landed release would rename an `## Unreleased` section still holding
+the previous release's prose and publish it a second time under a second
+number.
+
+If `release/vX.Y.Z` already exists the push fails and the job fails with it.
+That is deliberate: it means an earlier run for that number is still in flight
+or died half-done, and overwriting it would hide that.
 
 ### Why the number is picked last
 
@@ -214,10 +282,13 @@ entry), `docs/ROADMAP.md` (the status table plus every "*Shipped in*" marker),
 and `pyproject.toml`. Writing under `## Unreleased` costs nothing and cannot
 collide, because the heading carries no number to collide with.
 
-Step 3 is not optional and `git fetch` is the point of it. A working tree that
-has not fetched cannot see the release that took your number — the collision is
+This is why there is no longer a "check which numbers are taken" step. It used
+to depend on remembering to `git fetch`, and a working tree that has not
+fetched cannot see the release that took its number — the collision is
 invisible locally, and the gate that would catch it runs in `release.yml` on
-push to master, which is to say after you have already merged.
+push to master, which is to say after you have already merged. Computing the
+number at merge, from master's tip, removes the question rather than making it
+easier to answer.
 
 Rebase conflicts from concurrent releases are predictable and narrow: only
 `CHANGELOG.md` and the generated README stats block. Never hand-merge the README

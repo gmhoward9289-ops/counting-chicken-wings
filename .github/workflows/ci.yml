@@ -9,6 +9,15 @@ on:
     tags: ['v[0-9]*']
   pull_request:
 
+  # Asked for by name, against a branch. `release.yml` needs this: the PR it
+  # opens to record the version number is created with the default
+  # GITHUB_TOKEN, and GitHub deliberately raises no workflow-triggering event
+  # for anything that token does -- so the `pull_request` trigger above never
+  # fires for it and its four required checks would sit "Expected" forever.
+  # `workflow_dispatch` is the documented exception to that rule. The checks
+  # below then run for real, on the exact tree being merged.
+  workflow_dispatch:
+
 jobs:
   # A tag names a commit that already went through master, where these two jobs
   # ran on this exact tree. Re-running them proves nothing and makes tagging

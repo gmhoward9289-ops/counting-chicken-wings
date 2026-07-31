@@ -10,7 +10,7 @@ every published number traces to a real source.
 pip install -e ".[dev,gui]"          # gui extras are required — the API tests import the FastAPI app
 python -m counting_chicken_wings.build   # compile the YAML corpus into SQLite
 python -m counting_chicken_wings.audit   # every statistic must cite a source in sources.yaml
-pytest -q                            # 468 tests
+pytest -q                            # 721 tests
 wings 12                             # CLI: a dozen wings
 wings gui                            # serve the web UI
 ```
@@ -130,23 +130,33 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
 hand.** `.github/workflows/release.yml` fires on every push to master and, when
 `CHANGELOG.md` carries an `## Unreleased` section with content:
 
-1. computes the number from the latest version tag and `release_check.py`'s verdict;
-2. rewrites `## Unreleased` to `## vX.Y.Z — <date>` and sets `pyproject.toml`;
-3. commits that back to master, then tags and releases it.
+1. syncs to the current tip of master, not the SHA that triggered the run;
+2. computes the number from the latest version tag and `release_check.py`'s verdict;
+3. rewrites `## Unreleased` to `## vX.Y.Z — <date>` and sets `pyproject.toml`;
+4. **opens a pull request** with that commit and waits for it to squash-merge;
+5. tags the squash commit and publishes the GitHub release against it.
 
 So **the merge is the release**, and all you owe it is a written changelog section.
 A section that cannot be described fails the job rather than publishing an empty
 release.
 
-Two consequences worth knowing:
+Three consequences worth knowing:
 
 - **`pyproject.toml` is an output now, not an input.** It is written by the release
   job. Editing it on a branch just creates a conflict for the bot to resolve.
+- **The release commit goes through a PR like everyone else's.** It used to push
+  straight to master; the `protect-master` ruleset added 2026-07-30 rejects that,
+  and four consecutive merges failed on it before this was fixed. Expect to see a
+  short-lived `release/vX.Y.Z` branch and a `Release vX.Y.Z` PR after each merge —
+  they are the bot's, they auto-merge, and the branch deletes itself. If one is
+  sitting open and red, the release did not happen and the job failed saying so.
 - **The version checks moved earlier.** `ci.yml` gates them on tag refs, which cannot
   work for a bot-created tag: GitHub does not raise workflow-triggering events for
   pushes made with the default `GITHUB_TOKEN`, so a tag the workflow pushes starts
   nothing. `release.yml` therefore runs `release_check.py` itself, *before* tagging —
-  a bad release is easier to prevent than to retract.
+  a bad release is easier to prevent than to retract. That same rule is why `ci.yml`
+  carries a `workflow_dispatch` trigger: the bot's own PR gets no `pull_request`
+  event, so `release.yml` asks for its four required checks by name.
 
 Deploys track `branch: master`, not tags, so the deployed site is normally *ahead* of
 the latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version`
