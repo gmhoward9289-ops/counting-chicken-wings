@@ -263,9 +263,20 @@ predated a landed release would rename an `## Unreleased` section still holding
 the previous release's prose and publish it a second time under a second
 number.
 
-If `release/vX.Y.Z` already exists the push fails and the job fails with it.
-That is deliberate: it means an earlier run for that number is still in flight
-or died half-done, and overwriting it would hide that.
+**One repository setting is required**, and the mechanism cannot work without
+it: *Settings → Actions → General → Workflow permissions →* **"Allow GitHub
+Actions to create and approve pull requests"**. With it off, `gh pr create`
+fails with `GitHub Actions is not permitted to create or approve pull requests
+(createPullRequest)` — which is exactly how the first live run of this
+mechanism died. Nothing else about the repository needs changing; auto-merge
+is already on, and no bypass actor is wanted.
+
+A leftover `release/vX.Y.Z` branch is handled by which of two things it is. If
+it has an **open PR**, a release for that number is in flight or stuck and the
+job fails rather than touching it. If it has **no PR**, it is debris from a run
+that died between the push and the merge — nothing references it, its content
+is recomputed from scratch every run, so the job replaces it and carries on.
+Failing on both would mean one dead run wedges every release after it.
 
 ### Why the number is picked last
 

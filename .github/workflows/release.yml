@@ -218,10 +218,28 @@ jobs:
           write '## Unreleased' and never claim a number, so two merges landing
           together cannot take the same one."
 
-          # No --force. If this branch already exists the push fails and the
-          # job fails with it, which is the correct outcome: it means a
-          # previous run for this same number is still in flight or died
-          # half-done, and quietly overwriting it would hide that.
+          # An earlier run for this same number may have left the branch
+          # behind. Which of the two cases it is decides what to do, and
+          # getting it wrong either wedges every future release or stamps on
+          # work in flight:
+          #
+          #   branch + OPEN PR -- a run is still in progress, or one needs a
+          #     human (a conflict, a red check). Fail; do not touch it.
+          #   branch, NO PR    -- debris from a run that died between the push
+          #     and the merge. Nothing references it and its content is
+          #     recomputed from scratch each run, so clear it and carry on.
+          #     This is not hypothetical: the first live run of this mechanism
+          #     died exactly here, because "Allow GitHub Actions to create and
+          #     approve pull requests" was off.
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            open="$(gh pr list --head "$branch" --state open --json number --jq 'length')"
+            if [ "$open" != "0" ]; then
+              echo "::error::$branch already has an open PR. A release for v$VERSION is in flight or stuck; resolve it by hand."
+              exit 1
+            fi
+            echo "::warning::$branch left over from a failed run with no PR; replacing it"
+            git push origin --delete "$branch"
+          fi
           git push origin "$branch"
 
           {
