@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.11.0 — 2026-07-31
 
 ### Variant B becomes a real design
 
@@ -91,8 +91,8 @@ redesign can be argued about with numbers instead of taste.
   the UI got found. It reports no significance test, and says so.
 - `static/v2/index.html` was seeded as an **exact copy** of the shipped page,
   so the first run would be an A/A test measuring the noise floor. A later
-  difference smaller than that one is not a difference. (Superseded under Unreleased —
-  variant B carries a real design now, and that run never happened.)
+  difference smaller than that one is not a difference. (Superseded in
+  v1.11.0 — variant B carries a real design now, and that run never happened.)
 - `test_static.py`'s structural invariants now run against **both** pages.
   The redesign is a second page, not a second standard.
 
