@@ -117,6 +117,17 @@ products:
     # to late April in Northern Maine" - so this is OUR reading of theirs,
     # and it is why the figure above is graded no better than industry.
     yield_period_days: 45
+    # No default_window_days, so the season itself is the default. A tree is
+    # tapped for a season, not for an afternoon, and the one-day default this
+    # product inherited from eggs produced "gathered in a single day, 1
+    # gallon took at least 194 trees" -- arithmetic applied to a question
+    # nobody asked.
+    #
+    # Sap flow, not a laying rate. A tree does not lay.
+    rate_label: sap flow
+    # No cap_note: a maple has no per-day ceiling to explain. Sap flow is
+    # weather, and the corpus records no max_units_per_day precisely because
+    # no source states one.
     unit_name: gallon
     source_part: sap
     named_part: sap

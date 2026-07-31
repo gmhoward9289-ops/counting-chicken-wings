@@ -93,12 +93,21 @@ def test_floor_falls_monotonically_as_the_window_widens():
     assert floors[0] == pytest.approx(12.0)
 
 
-def test_without_a_ceiling_the_hard_floor_is_just_the_expected_count():
-    """No physiological cap means no hard floor to report -- say so, don't
-    invent one."""
+def test_without_a_ceiling_there_is_no_hard_floor_to_report():
+    """No physiological cap means no hard floor -- say so, don't invent one.
+
+    This test used to assert `hard == expected`, which is the docstring's own
+    rule broken by its own assertion: a hard floor is the claim that no
+    arrangement of the supply chain can beat it, and an average production
+    rate cannot support that claim. Reporting the average under the hard
+    floor's name is inventing one. Maple is the product where it showed --
+    the CLI printed "hard floor 193" for a figure derived from two extension
+    services disagreeing about sap flow -- and it was wrong here first.
+    """
     ry = RecurringYield(EGGS_PER_YEAR, 365, window_days=1)
     hard, expected = recurring_floor(12, ry)
-    assert hard == pytest.approx(expected)
+    assert hard is None
+    assert expected == pytest.approx(12 / (EGGS_PER_YEAR / 365))
 
 
 # ---------------------------------------------------------------------------
@@ -219,7 +228,40 @@ def test_recurring_without_a_period_is_rejected(tmp_path):
 def test_recurring_with_a_period_is_accepted(tmp_path):
     conn = _fresh_db(tmp_path)
     _insert_product(conn, "ok", yield_mode="recurring",
-                    yield_period_days=365, max_units_per_day=1.0)
+                    yield_period_days=365, max_units_per_day=1.0,
+                    rate_label="laying rate")
+
+
+def test_a_recurring_product_must_name_its_own_rate(tmp_path):
+    """Otherwise the prose borrows another species'. Every surface said "at
+    the real LAYING rate" for anything recurring, so maple syrup was reported
+    at a tree's laying rate. The constraint makes the omission impossible
+    rather than merely embarrassing."""
+    conn = _fresh_db(tmp_path)
+    with pytest.raises(sqlite3.IntegrityError):
+        _insert_product(conn, "noname", yield_mode="recurring",
+                        yield_period_days=365)
+
+
+def test_a_timeless_product_cannot_claim_a_rate_or_a_window(tmp_path):
+    """A wing has no rate to name and no window to default to."""
+    conn = _fresh_db(tmp_path)
+    with pytest.raises(sqlite3.IntegrityError):
+        _insert_product(conn, "r1", yield_mode="countable",
+                        rate_label="laying rate")
+    with pytest.raises(sqlite3.IntegrityError):
+        _insert_product(conn, "r2", yield_mode="countable",
+                        default_window_days=1)
+
+
+def test_a_cap_note_without_a_cap_is_refused(tmp_path):
+    """The note explains the ceiling. With no ceiling recorded it is the
+    model asserting physiology the corpus does not hold."""
+    conn = _fresh_db(tmp_path)
+    with pytest.raises(sqlite3.IntegrityError):
+        _insert_product(conn, "c1", yield_mode="recurring",
+                        yield_period_days=365, rate_label="laying rate",
+                        cap_note="lays at most one a day")
 
 
 def test_a_timeless_product_cannot_carry_a_per_day_cap(tmp_path):

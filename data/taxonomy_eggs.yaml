@@ -61,6 +61,17 @@ products:
     # wings". Double ovulation happens but is rare and usually yields a
     # double-yolk or a shell-less egg, so one a day is the working ceiling.
     max_units_per_day: 1.0
+    # One day, and not the 365 the rate is measured over. "A dozen eggs"
+    # colloquially means a carton gathered together, and it is also the case
+    # where the answer is hardest: a hen lays at most one egg a day, so
+    # twelve same-day eggs came from twelve different hens and no supply
+    # chain arrangement can reduce it. This used to be a module constant in
+    # db.py that every recurring product inherited.
+    default_window_days: 1
+    rate_label: laying rate
+    cap_note: >-
+      a hen lays at most one egg a day, so that part is physiology, not
+      estimation
     unit_name: egg
     source_part: egg
     named_part: egg

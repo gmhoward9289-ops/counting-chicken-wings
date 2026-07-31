@@ -120,16 +120,28 @@ def test_a_longer_window_never_needs_more_trees(window):
     assert longer <= shorter + 1e-12
 
 
-def test_a_tree_has_no_daily_ceiling_so_the_two_floors_coincide():
+def test_a_tree_has_no_daily_ceiling_so_there_is_no_hard_floor():
     """A hen's floor is hard because ovulation caps her at one egg a day.
     Sap flow is weather: there is no physiological per-day cap to record, so
-    the corpus records none and the hard floor collapses onto the expected
-    one rather than being invented."""
+    the corpus records none.
+
+    REVISED, deliberately. This test previously asserted that the hard floor
+    "collapses onto the expected one" -- `hard == expected` -- which pinned
+    what `recurring_floor` did rather than what it should. The consequence
+    reached the published output: `run()` reported a `hard_floor` for maple,
+    and the CLI and both web pages take that as licence to say "at least N
+    trees" and call it physiology, over a figure that is the average of two
+    extension services disagreeing about sap flow. A hard floor is a claim
+    the maple data does not support, so there is now no hard floor to
+    report and the surfaces say the softer thing instead. The physical fact
+    under test is unchanged; only the honest way to express it moved.
+    """
     ry = _syrup(SEASON_DAYS)
     assert ry.max_units_per_day is None
     assert ry.cap_per_individual is None
     hard, expected = recurring_floor(1, ry)
-    assert hard == pytest.approx(expected, rel=1e-12)
+    assert hard is None
+    assert expected == pytest.approx(1 / SYRUP_MODE, rel=1e-12)
 
 
 @pytest.mark.parametrize("window", [0, -1])

@@ -67,6 +67,16 @@ def fmt_count(value: float) -> str:
     return f"{value:.2g}"
 
 
+def fmt_rate(value: float) -> str:
+    """Format a per-day production rate without rounding it out of existence.
+
+    Two decimals is right for a hen at 0.79 eggs a day and wrong for a maple
+    at 0.00518 gallons, which printed as "0.01 gallon/tree/day" -- a figure
+    twice the real one, in the line that exists to show the working.
+    """
+    return f"{value:.2f}" if value >= 0.1 else f"{value:.3g}"
+
+
 def fmt_distinct(value: float, ceiling: float) -> str:
     """Format the distinct count without hiding how close to the ceiling it is.
 
@@ -133,8 +143,9 @@ def cmd_count(args) -> int:
         iterations=args.iterations,
         seed=args.seed,
         recurring=recurring,
-        # A gram of saffron is a blend, not one flower's part. See run().
-        aggregate_units=product["yield_mode"] == "continuous",
+        # No aggregate_units here on purpose. Whether a unit is a blend is
+        # derived from the figures inside run(); this was one of three copies
+        # of `yield_mode == "continuous"`, and copies drift. See run().
         anatomical=bool(product["is_anatomical_constant"]),
         floor_source=dbm.product_source_slug(conn, product["slug"]),
     )
@@ -163,13 +174,19 @@ def cmd_count(args) -> int:
 
     shown = fmt_distinct(res.distinct_mean, res.distinct_ceiling)
 
+    # What this product's rate is CALLED, out of the row. Hardcoding "laying
+    # rate" here made the program tell people about a tree's laying rate.
+    rate_label = product["rate_label"] or "production rate"
+    w = res.window_days
+    window_word = (None if w is None else
+                   "in a single day" if w == 1 else f"over {w:g} days")
+
     if res.hard_floor is not None:
         # Recurring products have TWO floors and quoting only one misleads.
         # hard_floor is physiology -- the fewest individuals capable of it.
         # floor is what you actually need, always higher, because a hen does
         # not lay every single day.
-        w = res.window_days
-        window_word = "in a single day" if w == 1 else f"over {w:g} days"
+        #
         # Ceil for the count claim. A hard floor of 0.8 means one hen could
         # cover it with room to spare -- but "at least 0.8 hens" is not a
         # sentence about animals. The unrounded value stays in the detail
@@ -184,7 +201,7 @@ def cmd_count(args) -> int:
             # it is the number that actually matters: physiology says 12 hens
             # could do it, but hens do not lay every day, so you need ~15.
             need = f"{fmt_count(res.floor)} {plural}"
-            print(f"  At the real laying rate you would need about "
+            print(f"  At the real {rate_label} you would need about "
                   f"{c(need, BOLD)} to count on it.")
         else:
             # Below one individual it is a ratio, not a headcount. "You would
@@ -193,6 +210,18 @@ def cmd_count(args) -> int:
             share = res.floor * 100
             print(f"  That is about {c(f'{share:.0f}% of one {noun}', BOLD)}"
                   f"'s output over that window.")
+    elif window_word is not None:
+        # Recurring, but with no per-day ceiling recorded -- a maple. There
+        # is exactly ONE floor to quote here, and it is a yield floor: what
+        # the average tree turns out, not what physiology forbids. Naming the
+        # window is what keeps it from reading as the harder claim, since the
+        # same tree answers differently for one season and for ten.
+        floor_line = (f"Gathered {window_word}, {units:g} {units_word} took "
+                      f"at least {fmt_count(res.floor)} {plural}.")
+        print(f"  {c(floor_line, BOLD)}")
+        print(f"  {DIM}That is a {rate_label} floor, not a physiological "
+              f"one: no per-day ceiling is recorded for a "
+              f"{noun}.{RESET}")
     else:
         floor_line = f"It took at least {fmt_count(res.floor)} {plural}."
         print(f"  {c(floor_line, BOLD)}")
@@ -204,7 +233,14 @@ def cmd_count(args) -> int:
     if res.hard_floor is not None:
         print(f"  {DIM}hard floor {fmt_count(res.hard_floor)}  ...  "
               f"ceiling {units:g}   window {res.window_days:g}d, "
-              f"{res.rate_per_day:.2f} {unit_word}/{plural[:-1]}/day   "
+              f"{fmt_rate(res.rate_per_day)} {unit_word}/{noun}/day   "
+              f"(supply chain: {chain}){RESET}")
+    elif res.window_days is not None:
+        # No hard floor to print, because none exists. Saying "hard floor"
+        # over the expected count is the claim this fix removed.
+        print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling "
+              f"{res.distinct_ceiling:g}   window {res.window_days:g}d, "
+              f"{fmt_rate(res.rate_per_day)} {unit_word}/{noun}/day   "
               f"(supply chain: {chain}){RESET}")
     else:
         print(f"  {DIM}floor {fmt_count(res.floor)}  ...  ceiling "

@@ -12,13 +12,12 @@ from pathlib import Path
 from .build import DEFAULT_DB, build
 from .model import LossStage, MixingStage, RecurringYield
 
-# A recurring product needs a window before it means anything, and one day is
-# the honest default: "a dozen eggs" colloquially means a carton gathered
-# together, not a dozen accumulated over a fortnight. It is also the case
-# where the answer is hardest -- a hen lays at most one egg a day, so twelve
-# same-day eggs came from twelve different hens and no arrangement of the
-# supply chain can reduce it.
-DEFAULT_WINDOW_DAYS = 1.0
+# A recurring product needs a window before it means anything, and the right
+# default is a property of the PRODUCT, not of the module. It lived here as a
+# flat 1.0 while eggs were the only recurring subject, and maple inherited it:
+# a tree whose sap runs for six weeks a year was asked how many of it fit into
+# one day, and answered 194. The default now comes from the row --
+# `default_window_days`, falling back to the product's own season.
 
 
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
@@ -67,12 +66,30 @@ def make_recurring(
             f"yield_period_days, so its rate has no meaning"
         )
 
+    # An unasked window falls to the product's own default, and from there to
+    # its production period. A season is the honest answer for anything
+    # seasonal: asking a maple for one day's worth is asking a question the
+    # tree does not answer.
+    default = _row_get(product, "default_window_days") or period
+
     return RecurringYield(
         units_per_period=product["units_per_individual_mode"],
         period_days=period,
-        window_days=window_days or DEFAULT_WINDOW_DAYS,
+        window_days=window_days or default,
         max_units_per_day=product["max_units_per_day"],
     )
+
+
+def _row_get(row, key, default=None):
+    """Column value, or `default` if the row does not carry that column.
+
+    Rows reach the model from several queries, not all of which select every
+    column. Tolerating that here beats each caller guarding it.
+    """
+    try:
+        return row[key]
+    except (IndexError, KeyError):
+        return default
 
 
 def list_products(conn) -> list[sqlite3.Row]:

@@ -2,6 +2,52 @@
 
 ## Unreleased
 
+### A gallon of syrup is not one tree — a correctness fix to shipped output
+
+`wings count 1 --product maple_syrup_gallon` published a self-contradiction:
+
+```
+Gathered in a single day, 1 gallon took at least 194 trees.
+At the real laying rate you would need about 193 trees to count on it.
+The gallon on your plate came from about 1 different trees.
+```
+
+A floor of 194 above a ceiling of 1, plus a laying rate for a tree, plus a
+"hard floor" over a figure that is two extension services disagreeing about sap
+flow. Four defects in five lines, and every published maple figure moves.
+
+- **Whether a unit is a blend is now read off the figures, not off the yield
+  mode.** The rule is physical: if one individual's entire natural output is
+  less than one whole unit, that unit must be several individuals blended. A
+  tree makes about a quart of syrup a season, so a gallon is several trees, in
+  exactly the way a gram of saffron is 150 flowers. The old condition asked
+  `yield_mode == "continuous"`; maple is `recurring`, so its gallon was read as
+  one tree's discrete part and the pooling formula collapsed it to 1.
+- **The condition is derived inside `run()` and the three call sites no longer
+  hold it.** `cli.py` and both API routes each carried their own copy, all three
+  said the same wrong thing, and no test could see the disagreement because
+  there was none — they were wrong in unison.
+- **Default windows come from the product**, `default_window_days` falling back
+  to the product's own season. A flat one-day default in `db.py` asked how many
+  maples could be tapped, boiled and bottled between breakfast and supper.
+  Eggs keep one day, and every egg figure is unchanged.
+- **`recurring_floor` returns `None` where no per-day ceiling is recorded**,
+  instead of returning the expected count under the hard floor's name. A hard
+  floor claims that no supply-chain arrangement can beat it; an average yield
+  cannot support that. Maple reports one floor now, and says it is a yield
+  floor. `hard_floor` in `/api/calculate` is null for maple.
+- **`rate_label` and `cap_note` join `floor_note` in the corpus.** "At the real
+  laying rate" and "a hen lays at most one egg a day" were hardcoded in
+  `cli.py` and both web pages, so a maple was narrated as a bird.
+- **Found in passing and fixed:** the Monte Carlo pass had its own copy of the
+  draw and skipped the aggregate re-expression, so `--iterations` and
+  `/api/scientific` reported 12 flowers for 12 grams of saffron against a floor
+  of 1,800. Shipped since saffron landed, unrelated to maple, same shape.
+
+The invariant is now enforced across the whole corpus rather than for saffron
+alone: `tests/test_aggregate_units.py` asserts floor ≤ distinct ≤ ceiling for
+every product on every route, deterministic and resampled.
+
 ### The frontend A/B test is retired with no result
 
 **No winner was measured, and none is claimed.** The A/A run that would have
