@@ -1,0 +1,140 @@
+name: Release
+
+# Cut the tag and the release when master carries a version that has neither.
+#
+# WHY THIS EXISTS. Releasing was the one step of this pipeline nobody
+# automated, and it quietly became the step that does not happen: v1.2.0
+# through v1.7.0 sat untagged until six releases were backfilled in one batch,
+# v1.9.0 was tagged by hand three hours after merging, and v1.9.1 and v1.10.0
+# were merged, version-bumped, and never tagged at all. Eight misses is not
+# forgetfulness, it is a missing job.
+#
+# It also fixes something worse than a late release. `ci.yml` gates BOTH of
+# its version checks on `refs/tags/v*`, so an untagged release means the tag
+# never runs them -- and `docs/VERSIONING.md`'s rules go back to being
+# enforced by memory on a repo where several sessions cut releases the same
+# day. See the gate steps below: they are those checks, moved earlier.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Releases are not a race. Two pushes landing together must not both decide
+# they are the one that owns this version number.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags, and enough history for release_check to diff the corpus
+          # against the previous tag. A shallow clone has neither.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # CI pins 3.12; a different one is a different result
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Does this version still need a tag or a release?
+        id: need
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(python -c "
+          import re,pathlib
+          print(re.search(r'^version\s*=\s*\"([^\"]+)\"',
+                pathlib.Path('pyproject.toml').read_text(), re.M).group(1))")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          # The tag and the release are tracked SEPARATELY, because half-done
+          # is a state this repo has actually been in: v1.2.0 through v1.7.0
+          # carried tags for hours with no release published against them.
+          # Keying only on the tag would make that state permanent -- the job
+          # would see a tag, decide there was nothing to do, and never publish
+          # the release. A crash between the two steps must be repairable by
+          # rerunning.
+          tag=no; rel=no
+          git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1 || tag=yes
+          gh release view "v$version" >/dev/null 2>&1 || rel=yes
+          echo "need_tag=$tag"     >> "$GITHUB_OUTPUT"
+          echo "need_release=$rel" >> "$GITHUB_OUTPUT"
+
+          if [ "$tag" = no ] && [ "$rel" = no ]; then
+            echo "v$version is tagged and released; nothing to do."
+            echo "go=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "v$version needs: tag=$tag release=$rel"
+            echo "go=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---------------------------------------------------------------------
+      # The gates, run BEFORE the tag exists.
+      #
+      # ci.yml runs these on tag push, which cannot work here: GitHub
+      # deliberately does not raise workflow-triggering events for pushes made
+      # with the default GITHUB_TOKEN, so a tag this job creates would never
+      # start CI and the checks would silently never run -- the exact failure
+      # this workflow was written to end, reintroduced one layer down.
+      #
+      # Checking first is better regardless. A release that should not have
+      # been cut is easier to prevent than to retract, and a tag is public the
+      # moment it is pushed.
+      # ---------------------------------------------------------------------
+
+      - name: The release must be describable
+        if: steps.need.outputs.go == 'yes'
+        run: |
+          python tools/release_notes.py --version "${{ steps.need.outputs.version }}" \
+            > /tmp/notes.md
+          python tools/release_notes.py --version "${{ steps.need.outputs.version }}" \
+            --title > /tmp/title.txt
+          echo "title: $(cat /tmp/title.txt)"
+
+      - name: The bump must match what changed
+        if: steps.need.outputs.go == 'yes'
+        run: |
+          # Against the latest EXISTING tag. The tag being cut does not exist
+          # yet, which is the whole reason this runs here rather than after.
+          prev="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [ -z "$prev" ]; then
+            echo "no previous tag; nothing to compare against"
+            exit 0
+          fi
+          echo "comparing against $prev"
+          python tools/release_check.py --base "$prev"
+
+      - name: Tag
+        if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
+        env:
+          VERSION: ${{ steps.need.outputs.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Annotated, because every tag this repo already carries is.
+          git tag -a "v$VERSION" -m "$(cat /tmp/title.txt)"
+          git push origin "refs/tags/v$VERSION"
+          echo "tagged v$VERSION"
+
+      - name: Release
+        if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_release == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.need.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "$(cat /tmp/title.txt)" \
+            --notes-file /tmp/notes.md
+          echo "released v$VERSION"

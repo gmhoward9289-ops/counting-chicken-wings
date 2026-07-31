@@ -194,9 +194,28 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
   taken while you are in review, and each renumber costs a rebase plus a sweep of the
   version string through three files.
 
-Render tracks `branch: master`, not tags, so the deployed site is normally *ahead* of the
-latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version` for the
-commit SHA.
+**Tagging and releasing are automatic — do not do them by hand.**
+`.github/workflows/release.yml` fires on every push to master: if `pyproject.toml`
+declares a version with no tag on the remote, it cuts the tag and the GitHub release,
+with notes taken from that version's `CHANGELOG.md` section. So the merge IS the
+release, and the only thing you owe it is a correct number and a written changelog
+section. A version with no section fails the job rather than publishing an empty
+release.
+
+Two consequences worth knowing:
+
+- **It only ever releases the version master currently declares.** Land two version
+  bumps before the workflow runs and the middle one is skipped for good — v1.9.1 was
+  lost that way and needs a manual backfill.
+- **The version checks moved earlier.** `ci.yml` gates them on `refs/tags/v*`, which
+  cannot work for a bot-created tag: GitHub does not raise workflow-triggering events
+  for pushes made with the default `GITHUB_TOKEN`, so a tag the workflow pushes starts
+  nothing. `release.yml` therefore runs `release_check.py` itself, *before* tagging —
+  a bad release is easier to prevent than to retract.
+
+Deploys track `branch: master`, not tags, so the deployed site is normally *ahead* of
+the latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version`
+for the commit SHA.
 
 ## Docs
 
