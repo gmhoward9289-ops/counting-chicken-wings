@@ -183,9 +183,11 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
   taken while you are in review, and each renumber costs a rebase plus a sweep of the
   version string through three files.
 
-Render tracks `branch: master`, not tags, so the deployed site is normally *ahead* of the
-latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version` for the
-commit SHA.
+The deploy tracks `master`, not tags — `.github/workflows/deploy.yml` fires on push to
+`master` and pushes to the bare repo at `/srv/git/wings.git` on swamplink, whose
+post-receive hook rebuilds and restarts the container. So the deployed site is normally
+*ahead* of the latest release. "Is v1.0 running?" is the wrong question — ask
+`GET /api/version` for the commit SHA.
 
 ## Docs
 

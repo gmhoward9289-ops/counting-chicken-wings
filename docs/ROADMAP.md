@@ -18,19 +18,20 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done ·
 
 ## Where we are now
 
-Verified 2026-07-30 against the working tree, not carried forward from the last
-edit of this file.
+Verified 2026-07-31 against `master` at 2bafe22 — tests run, corpus counted and
+both deployments probed, not carried forward from the last edit of this file.
 
 | | |
 |---|---|
-| Released | **v1.8.0**, 2026-07-30 — the rollup: bulletin restyle with dark mode and `quality_axis`, Israel's chick-placement head count, `release_check.py` in CI, three research batches run, dual license; see [CHANGELOG](../CHANGELOG.md) |
-| Deployed | https://counting-chicken-wings.onrender.com/ — auto-deploys `master`, so the site is normally *ahead* of the latest tag. Ask `GET /api/version` |
-| Cold start | ~21s after ~15 min idle. `/healthz` exists for an external keep-warm cron; the only real fixes are `plan: starter` ($7/mo) or Fly.io |
-| Render CPU | **11–13× slower than the laptop.** Not architecture — the app boots in 0.28s. Scientific mode's Monte Carlo default dropped to 2,000 iterations because of it |
-| Tests | 409 collected |
-| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of v1.8.0: 51 sources, 55 facts |
-| Loss factors | **21**, of which **11 are unsourced estimates (52%)** and **8 affect the count**. Worse than the 8-of-14 this file used to claim — the ratio got worse as eggs and saffron were added, which is what a new domain with no federal survey behind it does |
-| Mixing stages | 21 |
+| Released | latest **tag** is **v1.9.0**. `master` carries **1.10.0** in `pyproject.toml` (the A/B frontend harness) and is merged but **not yet tagged** — see [CHANGELOG](../CHANGELOG.md) |
+| Deployed | https://wings.swamplink.com/ — self-hosted, auto-deploys `master` on push, so the site is normally *ahead* of the latest tag. Ask `GET /api/version` |
+| Also deployed | https://counting-chicken-wings.onrender.com/ still exists and still tracks `master` — it serves the same commit. Kept as a fallback, not the canonical URL; `render.yaml` is its config. Retiring it is an open decision |
+| Cold start | **None on swamplink** — the box is always on. `/healthz` is now the container healthcheck in `compose.yml` rather than a hook for a keep-warm cron. The Render fallback still cold-starts (~22s measured 2026-07-31) |
+| CPU | 20,000-iteration scientific run, warm, wall clock incl. RTT: **laptop 0.47s · swamplink 1.85s (~4×) · Render 6.5s (~14×)**. The frontend's 2,000-iteration default was chosen for Render's CPU; swamplink is ~3.5× faster than Render, so that default is worth revisiting — tracked as its own question, not changed here |
+| Tests | 477 collected |
+| Corpus counts | **Do not hand-maintain these.** `python -m counting_chicken_wings.audit --stats` prints sources, facts, products and the estimate ratio, and the README block is generated from it. As of `master` 2bafe22: 54 sources, 55 facts |
+| Loss factors | **22**, of which **11 are unsourced estimates (50%)** and **8 affect the count**; the other 3 are mass-only and cannot move it. Worse than the 8-of-14 this file used to claim — the ratio got worse as eggs and saffron were added, which is what a new domain with no federal survey behind it does |
+| Mixing stages | 25 rows in `mixing_stage` |
 | States with data | 23 broiler (22 slaughter + Florida from production); 34 egg (union across two years) |
 | Species | broiler, layer hen, saffron crocus. Turkey seeded `active: 0` |
 | Products | whole wing, boneless wing, table egg, saffron stigma, saffron gram |
@@ -287,10 +288,11 @@ Where the project earns repeat visits rather than one look.
   M2 analysis pieces live, M3 identity done. Tag `v1.0.0`, write release
   notes, update README status.
 
-- [x] **Deployment hardening.** Currently ~23s cold start on Render free tier.
-  Options: accept it and add a loading state so it doesn't look broken;
-  external ping to keep warm; or paid tier. Recommend a loading state first —
-  cheapest, and honest about what is happening.
+- [x] **Deployment hardening.** Was ~23s cold start on Render's free tier.
+  Options considered: accept it and add a loading state; external ping to keep
+  warm; or paid tier. **Settled a fourth way** — self-hosting on swamplink,
+  which is always on, so the cold start and its keep-warm workaround both went
+  away rather than being managed.
 
 - [x] **Plotly is loaded from CDN.** Works, but a public deployment now depends
   on `cdn.plot.ly` staying up and on the client having network access to it.

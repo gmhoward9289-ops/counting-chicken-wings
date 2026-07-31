@@ -11,7 +11,7 @@ metadata:
 |---|---|
 | `counting_chicken_wings.__version__` | `importlib.metadata.version()` |
 | `wings --version` | `__version__` |
-| `GET /api/version` | `importlib.metadata.version()` + Render's commit SHA |
+| `GET /api/version` | `importlib.metadata.version()` + the deploy's commit SHA (`GIT_COMMIT`, falling back to `RENDER_GIT_COMMIT`) |
 
 Nothing hardcodes a version string a second time. That rule exists because
 the alternative fails quietly: two declarations drift, and a build starts
@@ -219,14 +219,15 @@ sits under which heading after resolving.
 
 ## What is deployed is not necessarily what is tagged
 
-`render.yaml` tracks `branch: master`, not tags. The deployed site is
-therefore whatever master last was — which is normally *ahead* of the latest
-release, not behind it.
+`.github/workflows/deploy.yml` fires `on: push: branches: [master]`, not on
+tags. The deployed site is therefore whatever master last was — which is
+normally *ahead* of the latest release, not behind it.
 
 This is a deliberate choice: the site is a live view of the corpus, and
 holding it back to the last tag would mean newly sourced data sat unpublished.
 The consequence is that "is v1.0 running?" is the wrong question to ask of the
 deployment. Ask `/api/version` for the commit SHA instead.
 
-To pin the deploy to releases instead, change `branch: master` to a tag or a
-release branch in `render.yaml`.
+To pin the deploy to releases instead, narrow that trigger to `tags:`. The
+Render fallback at `counting-chicken-wings.onrender.com` tracks `branch:
+master` in `render.yaml` and would need the same change separately.

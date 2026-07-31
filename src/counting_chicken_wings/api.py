@@ -50,12 +50,17 @@ def _source_payload(row) -> dict:
 def healthz():
     """Liveness check, deliberately cheap: no database, no imports.
 
-    Exists to be pinged. Render's free tier spins the service down after
-    idling, and the next visitor then waits ~20s for a cold start on the
-    HTML document itself -- which no amount of client-side loading UI can
-    disguise, because the browser has no page yet. An external cron hitting
-    this endpoint every few minutes is the only thing that actually fixes it
-    short of paying for an always-on instance.
+    Exists to be pinged. It is the container healthcheck in `compose.yml`,
+    which is what makes a bad deploy visible: the post-receive hook does not
+    report success until the new container answers here, so a container that
+    builds but cannot serve is caught rather than left running.
+
+    It was originally the hook for an external keep-warm cron, back when
+    Render's free tier spun the service down after idling and the next
+    visitor waited ~20s for a cold start on the HTML document itself. The
+    self-hosted box is always on, so that job is gone -- but the endpoint
+    earned a second one, and it is deliberately still free of database access
+    and payload building.
     """
     return {"ok": True}
 

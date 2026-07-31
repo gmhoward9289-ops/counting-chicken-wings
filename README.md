@@ -195,17 +195,17 @@ Latest release and what moved in it: [CHANGELOG.md](CHANGELOG.md). The version
 is not repeated here — it went stale twice, and `GET /api/version` is the only
 answer that is true of the deployment rather than of a file.
 
-Live at https://counting-chicken-wings.onrender.com/ (free tier; a first visit
-may wait ~20s for a cold start).
+Live at https://wings.swamplink.com/ — self-hosted, always on, so there is no
+cold start to warn about.
 
 Corpus figures are in [Honesty about the data](#honesty-about-the-data) above,
 generated from the audit. They are not repeated here — two hand-kept copies of
 the same count is how the last one went stale.
 
 Every page carries a build stamp in the footer — version, commit, and corpus
-counts, read from `/api/version`. Because Render tracks `master` rather than
-tags, the commit is the honest answer to "what am I looking at?"; the version
-alone is not.
+counts, read from `/api/version`. Because the deploy tracks `master` rather
+than tags, the commit is the honest answer to "what am I looking at?"; the
+version alone is not.
 
 Ongoing work, tracked in [docs/ROADMAP.md](docs/ROADMAP.md): replacing the
 estimate-grade loss factors with sourced ones, US regions, more producers and

@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased
+
+### The docs catch up with the move off Render
+
+#29 moved the site to `wings.swamplink.com` but left the docs pointing at
+`counting-chicken-wings.onrender.com`, still warning about a cold start that
+the always-on box does not have. Docs only — no behaviour changes.
+
+- **README, ROADMAP, VERSIONING and CLAUDE.md** now name swamplink and
+  describe the deploy as `deploy.yml` on push to `master`. The
+  branch-not-tags point was always the real content and it still holds; only
+  the host's name was wrong.
+- **`render.yaml` is kept, not deleted**, and says why in its header. The
+  Render service is still live and still auto-deploys `master` — verified
+  2026-07-31, both hosts answering `/api/version` with `2bafe22`. Deleting
+  the file would not stop the service, only leave it running unmanaged.
+- **`/healthz` documents its current job.** It was the hook for an external
+  keep-warm cron; that job is gone with the cold start, but it is now the
+  container healthcheck in `compose.yml`, which is what makes a deploy that
+  builds-but-cannot-serve visible.
+- **The ROADMAP's "where we are now" table was stale beyond the URL** —
+  v1.8.0 (tag is v1.9.0, master carries an untagged 1.10.0), 409 tests (477),
+  51 sources (54), 21 loss factors (22). Re-verified against a test run and
+  the built corpus rather than carried forward.
+- **The CPU row is re-measured rather than removed.** 20,000-iteration
+  scientific run, warm, wall clock: laptop 0.47s, swamplink 1.85s, Render
+  6.5s. The frontend's 2,000-iteration default was picked for Render's CPU
+  and swamplink is ~3.5× faster, so the default is **worth revisiting — left
+  unchanged here** and recorded as its own question, since changing a
+  published default is not a docs edit.
+
 ## v1.10.0 — 2026-07-30
 
 ### A/B harness for the frontend

@@ -1,6 +1,21 @@
 # Render blueprint. Connect the repo at https://dashboard.render.com/blueprints
 # and Render reads this file -- no dashboard configuration needed.
 #
+# THIS IS NO LONGER THE CANONICAL DEPLOYMENT. Since #29 the site people are
+# sent to is https://wings.swamplink.com/, deployed by
+# .github/workflows/deploy.yml pushing to a bare repo on that box. The Render
+# service still exists and still auto-deploys `master`, so it serves the same
+# commit -- it is a fallback, and it is why this file is still here rather
+# than deleted. Verified 2026-07-31: both hosts answered /api/version with
+# 2bafe22.
+#
+# The tradeoff it keeps: Render's free tier spins down when idle, so a first
+# visit costs a ~22s cold start (measured), and the A/B experiment cannot run
+# here at all (see WINGS_AB_SPLIT below). Retiring the service is an open
+# decision, not an oversight -- and note that deleting this file would NOT
+# stop it, since the service already exists in Render's dashboard. It would
+# only leave it running unmanaged.
+#
 # The database is a build artifact and is gitignored, so it MUST be rebuilt
 # during the build step. That is a feature, not a workaround: the deployed
 # site is regenerated from the YAML corpus on every push, so a data change
