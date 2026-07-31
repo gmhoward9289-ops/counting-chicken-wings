@@ -108,7 +108,10 @@ jobs:
         run: |
           # Against the latest EXISTING tag. The tag being cut does not exist
           # yet, which is the whole reason this runs here rather than after.
-          prev="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          # Version tags only: `--tags` alone would take a marker tag
+          # (`snapshot/...`) newer than the last release and measure the bump
+          # from a commit that was never released.
+          prev="$(git describe --tags --abbrev=0                     --match 'v[0-9]*' --exclude '*-*' 2>/dev/null || true)"
           if [ -z "$prev" ]; then
             echo "no previous tag; nothing to compare against"
             exit 0
