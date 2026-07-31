@@ -27,7 +27,9 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: write        # push the release branch, push the tag, cut the release
+  pull-requests: write   # open the version PR and enable auto-merge on it
+  actions: write         # dispatch ci.yml against the version PR -- see below
 
 jobs:
   release:
@@ -38,6 +40,27 @@ jobs:
           # Tags, and enough history for release_check to diff the corpus
           # against the previous tag. A shallow clone has neither.
           fetch-depth: 0
+
+      # Work from the CURRENT TIP of master, not from the SHA that triggered
+      # this run. This is the replacement for the `git pull --rebase` the old
+      # push-to-master step did, and it has to happen before anything reads
+      # the changelog rather than after.
+      #
+      # Two merges landing seconds apart queue on the `release` concurrency
+      # group above. The second one's trigger SHA does not contain the first
+      # one's version commit, so computing a number from that tree would
+      # rename an `## Unreleased` section that still holds the FIRST merge's
+      # prose -- publishing it a second time under a second number. Starting
+      # from master's tip collapses the pair correctly instead: whichever run
+      # goes first releases everything unreleased, and the second finds no
+      # `## Unreleased` section, computes nothing, and exits having done
+      # nothing because there is genuinely nothing left to do.
+      - name: Work from the current tip of master
+        run: |
+          git fetch --tags --force origin master
+          git checkout -B release-base FETCH_HEAD
+          echo "operating on $(git rev-parse HEAD)"
+          git log --oneline -1
 
       - uses: actions/setup-python@v5
         with:
@@ -149,42 +172,189 @@ jobs:
           echo "comparing against $prev"
           python tools/release_check.py --base "$prev"
 
-      # The computed number has to reach master BEFORE the tag is cut, because
-      # the tag must name a commit whose pyproject.toml agrees with it -- that
-      # agreement is exactly what `version-consistency` checks for anyone who
-      # tags by hand later. Pushing after tagging would leave the tag pointing
-      # at a commit that still said `## Unreleased`.
-      - name: Record the version on master
+      # ---------------------------------------------------------------------
+      # RECORDING THE NUMBER ON MASTER, THROUGH A PULL REQUEST.
+      #
+      # This step used to run `git push origin HEAD:master`. The
+      # `protect-master` ruleset added on 2026-07-30 rejects that outright:
+      #
+      #   remote: - Changes must be made through a pull request.
+      #   remote: - 4 of 4 required status checks are expected.
+      #    ! [remote rejected] HEAD -> master
+      #
+      # and it took four consecutive merges with it (#44, #47, #48, #49),
+      # losing the v1.12.0 that #44's own run computed. A bypass actor would
+      # have made the push work again, but the ruleset is the thing that is
+      # right here -- so the job goes through the front door like everyone
+      # else. No PAT, no App, no new secret: the default GITHUB_TOKEN opens
+      # the PR, and the branch is deleted on merge.
+      #
+      # The computed number still has to reach master BEFORE the tag is cut,
+      # because the tag must name a commit whose pyproject.toml agrees with
+      # it -- that agreement is exactly what `version-consistency` checks for
+      # anyone who tags by hand later. So this step WAITS for the merge; it
+      # does not fire and forget.
+      # ---------------------------------------------------------------------
+      - name: Open the pull request that records the version
+        id: pr
         if: steps.version.outputs.computed == 'yes'
         env:
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.next }}
         run: |
+          set -euo pipefail
+          branch="release/v$VERSION"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          # Explicit pathspecs. `--apply` writes these two files and nothing
+          # else, and a stray file swept into a release commit is not a thing
+          # anyone reviews.
           git add CHANGELOG.md pyproject.toml
-          git commit -m "Release v$VERSION
-
-          Number assigned at merge by .github/workflows/release.yml. Branches
+          git commit -m "Release v$VERSION" -m \
+            "Number assigned at merge by .github/workflows/release.yml. Branches
           write '## Unreleased' and never claim a number, so two merges landing
           together cannot take the same one."
-          # A human merge can land between this job starting and this push.
-          # Rebase rather than force: the other merge is somebody's work, and
-          # the version this computed is still correct relative to the tag.
-          git pull --rebase --quiet origin master
-          git push origin HEAD:master
-          echo "recorded v$VERSION on master"
+
+          # No --force. If this branch already exists the push fails and the
+          # job fails with it, which is the correct outcome: it means a
+          # previous run for this same number is still in flight or died
+          # half-done, and quietly overwriting it would hide that.
+          git push origin "$branch"
+
+          {
+            echo "\`pyproject.toml\` and \`CHANGELOG.md\`, carrying the number this"
+            echo "merge was assigned. Opened by \`.github/workflows/release.yml\`;"
+            echo "the tag and the GitHub release are cut once this lands."
+            echo
+            echo "Nothing here is hand-written — see \`docs/VERSIONING.md\`."
+          } > /tmp/pr-body.md
+
+          url="$(gh pr create --base master --head "$branch" \
+                   --title "Release v$VERSION" --body-file /tmp/pr-body.md)"
+          echo "opened $url"
+          num="${url##*/}"
+          echo "number=$num" >> "$GITHUB_OUTPUT"
+          echo "url=$url"    >> "$GITHUB_OUTPUT"
+
+          # GitHub raises no workflow-triggering event for anything done with
+          # the default GITHUB_TOKEN -- the same rule this file already cites
+          # for bot-pushed tags. That means the `pull_request` trigger in
+          # ci.yml does NOT fire for a PR this job opens, so its four required
+          # checks would sit "Expected" forever and auto-merge would never
+          # fire. `workflow_dispatch` is the documented exception, so ask for
+          # the run explicitly, against the PR's own head. The checks really
+          # run, on the exact tree being merged; nothing is stubbed or
+          # reported green on its behalf.
+          gh workflow run ci.yml --ref "$branch"
+          echo "dispatched ci.yml on $branch"
+
+          # Merge the moment the checks go green, with no window in which
+          # someone else's merge can slip in front. If auto-merge is switched
+          # off at the repo level this errors, which is not fatal -- the wait
+          # below merges it directly instead.
+          gh pr merge --auto --squash --delete-branch "$num" \
+            || echo "::warning::auto-merge unavailable; will merge directly once green"
+
+      - name: Wait for it to land
+        id: landed
+        if: steps.version.outputs.computed == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ steps.pr.outputs.number }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          set -euo pipefail
+          deadline=$(( SECONDS + 2400 ))   # 40 min; a full CI run is ~5
+
+          while :; do
+            read -r state status <<<"$(gh pr view "$PR" \
+              --json state,mergeStateStatus --jq '[.state, .mergeStateStatus] | @tsv')"
+            echo "pr #$PR: state=$state merge=$status"
+
+            case "$state" in
+              MERGED) break ;;
+              CLOSED)
+                echo "::error::PR #$PR was closed without merging. v$VERSION was not recorded."
+                exit 1 ;;
+            esac
+
+            case "$status" in
+              DIRTY)
+                # A conflict in CHANGELOG.md. Not resolvable here, and
+                # guessing at it would file someone's prose under the wrong
+                # heading -- the exact failure docs/VERSIONING.md warns about.
+                echo "::error::PR #$PR conflicts with master. Resolve it by hand; the tag was not cut."
+                exit 1 ;;
+              BEHIND)
+                # strict_required_status_checks_policy is on, so a merge that
+                # landed while this waited makes the PR stale. Restack and
+                # re-run the checks against the new head.
+                echo "master moved; updating the branch"
+                gh pr update-branch "$PR" || true
+                sleep 10
+                gh workflow run ci.yml --ref "$BRANCH" || true ;;
+              CLEAN)
+                # Checks green and mergeable. If --auto took, this merges
+                # itself in a moment; if it did not, do it here.
+                gh pr merge --squash --delete-branch "$PR" || true ;;
+            esac
+
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::PR #$PR did not merge within 40 minutes (state=$state, merge=$status)."
+              echo "::error::v$VERSION is NOT tagged or released. See ${{ steps.pr.outputs.url }}"
+              exit 1
+            fi
+            sleep 20
+          done
+
+          # The squash commit is the first commit ON MASTER whose
+          # pyproject.toml declares this version, which is where the tag
+          # belongs. Read it rather than taking master's tip: another merge
+          # may already have landed on top, and a tag one commit too far
+          # forward would silently fold somebody else's change into this
+          # release and make `version-consistency` a lie for the next person
+          # who checks it.
+          sha="$(gh pr view "$PR" --json mergeCommit --jq .mergeCommit.oid)"
+          if [ -z "$sha" ] || [ "$sha" = "null" ]; then
+            echo "::error::PR #$PR merged but reported no merge commit; refusing to guess where the tag goes."
+            exit 1
+          fi
+          echo "recorded as $sha on master"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Tag
         if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
         env:
           VERSION: ${{ steps.need.outputs.version }}
+          # Empty on the fallback path (no `## Unreleased`, nothing was
+          # recorded), where master already declares the version and its tip
+          # is the right place for the tag.
+          SHA: ${{ steps.landed.outputs.sha }}
         run: |
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --force origin master
+
+          target="${SHA:-$(git rev-parse FETCH_HEAD)}"
+          # Belt and braces: whatever we are about to name v$VERSION must
+          # actually say so. This is the invariant the whole PR dance exists
+          # to preserve, so assert it rather than assume it.
+          declared="$(git show "$target:pyproject.toml" \
+            | sed -n 's/^version *= *"\([^"]*\)".*/\1/p' | head -1)"
+          if [ "$declared" != "$VERSION" ]; then
+            echo "::error::$target declares version '$declared', not '$VERSION'. Not tagging."
+            exit 1
+          fi
+
           # Annotated, because every tag this repo already carries is.
-          git tag -a "v$VERSION" -m "$(cat /tmp/title.txt)"
+          git tag -a "v$VERSION" -m "$(cat /tmp/title.txt)" "$target"
           git push origin "refs/tags/v$VERSION"
-          echo "tagged v$VERSION"
+          echo "tagged v$VERSION at $target"
 
       - name: Release
         if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_release == 'yes'

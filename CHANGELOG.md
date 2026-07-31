@@ -318,7 +318,8 @@ A branch now writes `## Unreleased` and no number anywhere — not in the
 changelog heading, not in `pyproject.toml`. `tools/next_version.py` computes
 the number when the merge lands, from the latest version tag plus
 `release_check.py`'s verdict on what actually changed, then writes it into
-both files and commits it back to master ahead of the tag.
+both files and lands it on master ahead of the tag (through a pull request —
+see below).
 
 This closes two failures that were the same failure.
 
@@ -339,6 +340,65 @@ no number cannot lose a race for one.
 
 `pyproject.toml` is now an output of the release job rather than an input to
 it. Editing it on a branch only creates a conflict for the bot to resolve.
+
+### The release job stopped being able to push, and now opens a PR instead
+
+`release.yml` recorded the computed version by pushing straight to master. A
+`protect-master` ruleset added on 2026-07-30 rejects that:
+
+```
+remote: - Changes must be made through a pull request.
+remote: - 4 of 4 required status checks are expected.
+ ! [remote rejected] HEAD -> master (push declined due to repository rule violations)
+```
+
+Four consecutive merges failed on it — #44, #47, #48, #49 — and **v1.12.0 was
+computed by the first of them, created inside the failed job, and lost with
+it**: no tag, no release, five merges sitting unreleased on top of v1.11.0.
+The number was never the problem; the last step was.
+
+The job now goes through the front door. It commits to `release/vX.Y.Z`, opens
+a pull request, and waits for it to squash-merge. **No bypass actor, no PAT, no
+GitHub App, no new secret** — the default `GITHUB_TOKEN` is sufficient, given
+`pull-requests: write` and `actions: write` beside the existing
+`contents: write`.
+
+Four details are load-bearing:
+
+- **The PR's checks are dispatched by name.** GitHub raises no
+  workflow-triggering event for anything the default `GITHUB_TOKEN` does — the
+  rule this repo already knew about for bot-pushed tags. So `ci.yml`'s
+  `pull_request` trigger does not fire for the bot's own PR and its four
+  required checks would sit "Expected" forever. `ci.yml` now also accepts
+  `workflow_dispatch`, and the release job requests a run against the release
+  branch. The checks run for real, on the exact tree being merged; nothing is
+  reported green on their behalf.
+- **The tag moved to the squash commit.** Squashing means the commit built on
+  the release branch never becomes an ancestor of master, so a tag on it would
+  sit off-history where `git describe` cannot see it. The squash commit is the
+  first commit *on master* declaring the version — what a human would tag, and
+  what `version-consistency` asserts. It is read back from the PR rather than
+  taken from master's tip, since another merge may have landed on top, and the
+  job refuses to tag a commit whose `pyproject.toml` disagrees with the number.
+- **The job waits, and fails loudly.** It polls until the PR merges. A
+  conflict, a close, or forty minutes without a merge fails the job with the
+  PR URL in the error, and no tag is cut. A release job that exits 0 having
+  recorded nothing is precisely the failure this file keeps documenting.
+- **`git pull --rebase` is replaced by syncing to master's tip first.** The
+  run now reads master as it currently is, before computing anything, rather
+  than rebasing after. That is strictly stronger: rebasing happened *after* the
+  number was computed, so a run whose trigger SHA predated a landed release
+  would rename an `## Unreleased` section still holding the previous release's
+  prose and publish it again under a second number. Reading the tip first
+  collapses concurrent runs correctly — the first releases everything
+  unreleased, the second finds nothing to do and does nothing.
+
+Also fixed alongside it: `next_version.py`'s `latest_tag()` called
+`git describe --tags` unfiltered, so a marker tag (`snapshot/…`,
+`checkpoint/…`) pushed after the last release would silently become the base
+the next number counted from. `docs/VERSIONING.md` claimed every call site
+passed `--match 'v[0-9]*' --exclude '*-*'`; this third one, added later, did
+not. Two tests cover it.
 
 ## v1.11.0 — 2026-07-31
 

@@ -9,6 +9,7 @@ moved on. Executing the rule is the only version of it that holds.
 """
 
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -163,6 +164,40 @@ def test_the_levels_are_ordered_weakest_first():
     """`none` must sort below `third`; the floor rule depends on it."""
     assert nv.LEVELS.index("none") < nv.LEVELS.index("third") \
         < nv.LEVELS.index("second") < nv.LEVELS.index("major")
+
+
+def test_the_base_tag_is_looked_up_among_version_tags_only(monkeypatch):
+    """A marker tag must never become the base the next number counts from.
+
+    `git describe --tags` takes the newest tag of ANY shape, so a
+    `snapshot/...` or `checkpoint/...` pushed after the last release would be
+    picked up here and the bump measured from a commit nobody released --
+    silently, since `describe` reports no ambiguity. docs/VERSIONING.md
+    ("Tags that are not releases") says every call site passes the filter;
+    this one is the third and was added without it.
+    """
+    seen = {}
+
+    def fake_run(argv, **kw):
+        seen["argv"] = argv
+        return subprocess.CompletedProcess(argv, 0, stdout="v1.11.0\n", stderr="")
+
+    monkeypatch.setattr(nv.subprocess, "run", fake_run)
+    assert nv.latest_tag() == "v1.11.0"
+    assert "--match" in seen["argv"]
+    assert "v[0-9]*" in seen["argv"]
+    # Excludes prereleases too, for the same reason: `v1.12.0-rc1` sorts
+    # after v1.11.0 and is not a released number.
+    assert "--exclude" in seen["argv"]
+    assert "*-*" in seen["argv"]
+
+
+def test_no_tag_at_all_reads_as_none_rather_than_empty_string(monkeypatch):
+    """`--match` narrowing the set to nothing must look like "no tag"."""
+    monkeypatch.setattr(nv.subprocess, "run",
+                        lambda argv, **kw: subprocess.CompletedProcess(
+                            argv, 128, stdout="", stderr="fatal: No names found"))
+    assert nv.latest_tag() is None
 
 
 def test_every_version_in_the_real_changelog_parses_as_three_digits():

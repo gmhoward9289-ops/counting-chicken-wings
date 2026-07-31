@@ -85,9 +85,19 @@ def bump(version: str, level: str) -> str:
     raise ValueError(f"nothing to bump for level {level!r}")
 
 
+# Version tags only. `--tags` alone takes the newest tag of ANY shape, so a
+# marker tag (`snapshot/...`, `checkpoint/...`) pushed after the last release
+# would become the base this counts from -- bumping against a commit nobody
+# released, and saying nothing about it. docs/VERSIONING.md ("Tags that are
+# not releases") states that both other call sites pass this; this is the
+# third, added later, and it was the one that did not.
+VERSION_TAG_MATCH = ("--match", "v[0-9]*", "--exclude", "*-*")
+
+
 def latest_tag() -> str | None:
-    out = subprocess.run(["git", "describe", "--tags", "--abbrev=0"],
-                         capture_output=True, text=True, cwd=ROOT)
+    out = subprocess.run(
+        ["git", "describe", "--tags", "--abbrev=0", *VERSION_TAG_MATCH],
+        capture_output=True, text=True, cwd=ROOT)
     return out.stdout.strip() or None
 
 
