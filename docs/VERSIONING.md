@@ -174,19 +174,39 @@ While the work is in progress:
    including any figure whose value changed.
 2. Leave `pyproject.toml` alone. Do not pick a number yet.
 
-Immediately before merging:
+Then merge. **There is no step 3.** Do not pick a number, and do not touch
+`pyproject.toml` — a branch that names a number has to hope nobody takes it
+during review, and v1.5.0 and v1.6.0 were both taken out from under a branch on
+2026-07-30.
 
-3. Check what has already been taken: `git fetch origin`, then
-   `git log --oneline origin/master` for a `(vX.Y.Z)` in a subject line and
-   `git tag --list 'v*'`. Releases announce themselves in the subject.
-4. In one commit: rename `## Unreleased` to `## vX.Y.Z — YYYY-MM-DD` and set
-   `version` in `pyproject.toml` to match.
-Then merge. **There is no step 5.**
+`.github/workflows/release.yml` fires on every push to master. It computes the
+number from the newest release tag and the corpus diff, writes it into a commit
+of its own, tags that commit and publishes the release. Whichever merge lands
+first takes the next number; the second computes its own against a base that has
+already moved. The tag is `v`-prefixed, the `pyproject.toml` value is not — the
+workflow adds the `v`.
 
-`.github/workflows/release.yml` fires on every push to master: if
-`pyproject.toml` declares a version the remote has no tag for, it runs the gates,
-cuts the annotated tag and publishes the GitHub release. The tag is `v`-prefixed,
-the `pyproject.toml` value is not — the workflow adds the `v`.
+**The release commit is not on master, and this is deliberate.** The
+`protect-master` ruleset requires a pull request and four status checks, with no
+bypass actors, so the job cannot push the bump to the branch — it tried, and
+twelve commits went unreleased across five failed runs on 2026-07-31. Routing
+the bump through a bot-opened pull request does not work either: GitHub raises
+no workflow events for anything pushed with the default `GITHUB_TOKEN`, so the
+four required checks would never start and a human would have to close and
+reopen the PR to release. So the bump lives on a commit reachable only from the
+tag.
+
+Two consequences follow, and both are worth knowing before they surprise you:
+
+- **`pyproject.toml` on master stays at the last number a human wrote there.**
+  `deploy.yml` deploys master, so the running service under-reports its version.
+  The released artefact at the tag is correct. Adding GitHub Actions
+  (integration `15368`) to the ruleset's bypass actors would let the bump return
+  to master and close this gap.
+- **`## Unreleased` on master is never consumed**, so it accumulates every
+  entry ever written. `tools/prune_released.py` drops whatever the previous tag
+  already published before the number is applied, which is what keeps a release
+  from carrying its predecessor's notes.
 
 Do not tag or release by hand. Releasing was the one manual step left and it
 became the step that did not happen: v1.2.0 through v1.7.0 sat untagged until
@@ -244,11 +264,19 @@ not start `v` followed by a digit starts no run at all. Push as many as you like
 
 Two things make this safe, and neither was true before:
 
-- **`git describe --tags` takes the newest tag of any shape.** A marker sitting
-  after the last release would have become the base for the bump check, in
-  `release.yml` and in `release_check.py` both — measuring the diff from a
-  commit nobody released, and saying nothing about it. Both call sites now pass
-  `--match 'v[0-9]*' --exclude '*-*'`.
+- **The base is the newest *released version*, not the newest tag.** A marker
+  sitting after the last release would otherwise become the base for the bump
+  check, in `release.yml` and in `release_check.py` both — measuring the diff
+  from a commit nobody released, and saying nothing about it. Every call site now
+  reads `git tag --list 'v[0-9]*' --sort=-v:refname` and skips any tag carrying a
+  dash.
+
+  `git describe` is not used for this any more, and not only because of markers:
+  it answers "the nearest tag *reachable from HEAD*", and release tags no longer
+  sit on master (see the release procedure above). On master it would name the
+  last tag that predates the scheme, forever — so every release would recompute
+  the same number and the bump check would measure from a base several releases
+  stale.
 - **A hand-pushed version tag no longer re-runs the suite.** It names a commit
   that already passed on master; only `version-consistency` runs, which is the
   one check a typed tag actually needs.

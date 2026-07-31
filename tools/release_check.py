@@ -88,12 +88,30 @@ def sh(*args: str, cwd: Path | None = None, env: dict | None = None) -> str:
 
 
 def latest_tag() -> str:
-    # --match/--exclude, because `describe --tags` takes the newest tag of ANY
-    # shape. A marker tag (`snapshot/...`) sitting after the last release would
-    # otherwise become the base, and the diff would be measured from a commit
-    # nobody released -- wrongly, and without saying so.
-    return sh("git", "describe", "--tags", "--abbrev=0",
-              "--match", "v[0-9]*", "--exclude", "*-*", cwd=ROOT)
+    # The highest RELEASED version, by version order.
+    #
+    # Two things are being avoided, and they are separate. `--tags` alone takes
+    # the newest tag of ANY shape, so a marker tag (`snapshot/...`) after the
+    # last release would become the base and the diff would be measured from a
+    # commit nobody released. Hence the `v[0-9]*` filter and the dash exclusion.
+    #
+    # `git describe` is avoided for a second reason: it answers "the nearest tag
+    # REACHABLE from HEAD", and release tags are no longer reachable from
+    # `master`. release.yml commits the version bump and tags THAT commit
+    # without pushing it to the branch, because `protect-master` rejects the
+    # push. `describe` on master would keep naming the last tag that predates
+    # the scheme, so every bump check would measure from a base several releases
+    # stale. Version order does not care what is reachable.
+    tags = sh("git", "tag", "--list", "v[0-9]*", "--sort=-v:refname", cwd=ROOT)
+    for line in tags.splitlines():
+        tag = line.strip()
+        if tag and "-" not in tag:
+            return tag
+    raise SystemExit(
+        "no version tags in this clone. `actions/checkout` needs "
+        "`fetch-depth: 0` (or `fetch-tags: true`) for this check to mean "
+        "anything -- see the note in ci.yml about the bump check that passed "
+        "on every tag it ever ran on because the tags were not there.")
 
 
 def version_of(ref: str | None = None) -> str:

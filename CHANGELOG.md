@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### The release job stopped pushing to master, because master stopped letting it
+
+**Twelve commits went unreleased and nothing said so.** `release.yml` has failed
+on every merge since #44 — #47, #48, #49 and #51 among them — and each failure
+looked like a red tick on a workflow nobody was watching rather than like a
+release that did not happen.
+
+The cause is two correct changes that were never introduced to each other. The
+`protect-master` ruleset (2026-07-30) requires a pull request and four status
+checks and lists **no bypass actors**. The merge-time versioning scheme (#44,
+2026-07-31) ends with the job pushing its version bump straight to master. That
+push is rejected with `GH013`, and it sits *before* the tag step — so every run
+died having computed the right number, written the right changelog section, and
+published neither.
+
+- **The bump now lives on a commit reachable only from the tag.** The job
+  commits `CHANGELOG.md` and `pyproject.toml`, tags that commit, and pushes the
+  tag alone. Nothing is pushed to master. Routing the bump through a bot-opened
+  pull request was considered and does not work: GitHub raises no workflow
+  events for anything pushed with the default `GITHUB_TOKEN`, so the four
+  required checks would never start and a human would have to close and reopen
+  the PR to release — reinstating by hand the exact step this workflow exists to
+  delete.
+- **`latest_tag()` no longer uses `git describe`**, in `next_version.py` and
+  `release_check.py` both. `describe` answers "the nearest tag *reachable from
+  HEAD*", and the tags are no longer reachable from master; run there it would
+  have kept answering v1.11.0, so every release from here on would have computed
+  v1.12.0 and the bump check would have measured from a base going staler by the
+  release. Both now read `git tag --list 'v[0-9]*' --sort=-v:refname`, which
+  still ignores marker tags and no longer cares what is reachable.
+- **`tools/prune_released.py` is new, and is what stops the notes compounding.**
+  Master never learns that a release happened, so `## Unreleased` still holds
+  everything the last tag published; left alone, v1.13.0 would republish
+  v1.12.0's entries and v1.14.0 would carry both. The section is pruned against
+  the previous tag before the number is applied. Matching is by `###` heading
+  rather than by line, because this changelog runs to paragraphs and prose
+  honestly repeats — and because line-level differencing would shred an entry
+  whose middle sentence recurred, turning something considered into rubble.
+
+**One thing got worse and is not hidden.** `pyproject.toml` on master now stays
+at whatever a human last wrote there, and `deploy.yml` deploys master, so the
+running service under-reports its version. The released artefact at the tag is
+correct. Adding GitHub Actions (integration `15368`) to the ruleset's bypass
+actors would let the one-line push return and close the gap; that is a repository
+settings change, so it is recorded here rather than made.
+
+`docs/VERSIONING.md`'s release procedure is updated to match, including the two
+steps it still described by hand from before #44.
+
 ### A gallon of syrup is not one tree — a correctness fix to shipped output
 
 `wings count 1 --product maple_syrup_gallon` published a self-contradiction:

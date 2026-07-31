@@ -48,6 +48,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
+      # The tag every later step counts from, resolved once.
+      #
+      # NOT `git describe`, which finds the nearest tag REACHABLE from HEAD.
+      # Nothing this job tags is reachable from `master` any more -- see
+      # "Tag the release" below -- so `describe` would answer v1.11.0 forever.
+      - name: Which tag are we counting from?
+        id: prev
+        run: |
+          prev="$(git tag --list 'v[0-9]*' --sort=-v:refname                    | grep -v -- '-' | head -1)"
+          echo "tag=$prev" >> "$GITHUB_OUTPUT"
+          echo "counting from ${prev:-<no tag>}"
+
+      # `master` never learns that a release happened, so `## Unreleased` still
+      # holds everything the last tag published. Left alone, v1.13.0 would
+      # republish v1.12.0's entries and v1.14.0 would carry both. Drop what the
+      # previous tag already describes; what survives is genuinely new.
+      - name: Drop what the previous tag already published
+        if: steps.prev.outputs.tag != ''
+        run: python tools/prune_released.py --base "${{ steps.prev.outputs.tag }}"
+
       # THE NUMBER IS DECIDED HERE, not on the branch.
       #
       # Reading pyproject.toml only ever released the version master CURRENTLY
@@ -135,56 +155,73 @@ jobs:
 
       - name: The bump must match what changed
         if: steps.need.outputs.go == 'yes'
+        env:
+          PREV: ${{ steps.prev.outputs.tag }}
         run: |
           # Against the latest EXISTING tag. The tag being cut does not exist
           # yet, which is the whole reason this runs here rather than after.
-          # Version tags only: `--tags` alone would take a marker tag
-          # (`snapshot/...`) newer than the last release and measure the bump
-          # from a commit that was never released.
-          prev="$(git describe --tags --abbrev=0                     --match 'v[0-9]*' --exclude '*-*' 2>/dev/null || true)"
-          if [ -z "$prev" ]; then
+          if [ -z "$PREV" ]; then
             echo "no previous tag; nothing to compare against"
             exit 0
           fi
-          echo "comparing against $prev"
-          python tools/release_check.py --base "$prev"
+          echo "comparing against $PREV"
+          python tools/release_check.py --base "$PREV"
 
-      # The computed number has to reach master BEFORE the tag is cut, because
-      # the tag must name a commit whose pyproject.toml agrees with it -- that
-      # agreement is exactly what `version-consistency` checks for anyone who
-      # tags by hand later. Pushing after tagging would leave the tag pointing
-      # at a commit that still said `## Unreleased`.
-      - name: Record the version on master
-        if: steps.version.outputs.computed == 'yes'
-        env:
-          VERSION: ${{ steps.version.outputs.next }}
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md pyproject.toml
-          git commit -m "Release v$VERSION
-
-          Number assigned at merge by .github/workflows/release.yml. Branches
-          write '## Unreleased' and never claim a number, so two merges landing
-          together cannot take the same one."
-          # A human merge can land between this job starting and this push.
-          # Rebase rather than force: the other merge is somebody's work, and
-          # the version this computed is still correct relative to the tag.
-          git pull --rebase --quiet origin master
-          git push origin HEAD:master
-          echo "recorded v$VERSION on master"
-
-      - name: Tag
+      # ---------------------------------------------------------------------
+      # THE TAG IS THE RELEASE RECORD. `master` is never written to.
+      #
+      # This job used to push the version bump back to `master`, and that push
+      # is what broke. `protect-master` requires a pull request and four status
+      # checks, and its `bypass_actors` list is empty -- so the push is
+      # rejected with GH013 and the job dies BEFORE it tags anything. Twelve
+      # commits went unreleased across five runs on 2026-07-31 before anyone
+      # connected the ruleset (added 2026-07-30) to the merge-time versioning
+      # that landed on top of it (#44, 2026-07-31).
+      #
+      # Routing the bump through a pull request instead does not work either.
+      # GitHub deliberately raises no workflow-triggering events for anything
+      # pushed with the default GITHUB_TOKEN, so a bot-opened release PR would
+      # sit forever with four required checks that can never start, and a human
+      # would have to close and reopen it to release -- reinstating by hand the
+      # exact manual step this workflow exists to delete.
+      #
+      # So the bump is committed locally and the tag names THAT commit: a child
+      # of master carrying nothing but the number and the dated changelog
+      # section. The commit is never pushed as a branch, only as a tag.
+      #
+      # WHAT THIS COSTS, stated plainly rather than discovered later:
+      # `pyproject.toml` on `master` stays at whatever it last said, and
+      # `deploy.yml` deploys `master`, so the running service reports a stale
+      # version. The released artefact at the tag is correct; the deployed one
+      # under-reports. Adding GitHub Actions (integration 15368) to the
+      # ruleset's bypass actors would let the old one-line push return and
+      # close this gap.
+      # ---------------------------------------------------------------------
+      - name: Tag the release
         if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
         env:
           VERSION: ${{ steps.need.outputs.version }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Only when there was a number to write. A fallback run reading the
+          # version straight out of pyproject.toml has nothing to commit, and
+          # `git commit` on a clean tree exits non-zero.
+          if [ "${{ steps.version.outputs.computed }}" = "yes" ]; then
+            git add CHANGELOG.md pyproject.toml
+            git commit -q -m "Release v$VERSION
+
+          Number assigned at merge by .github/workflows/release.yml. Branches
+          write '## Unreleased' and never claim a number, so two merges landing
+          together cannot take the same one.
+
+          This commit is reachable only from the tag. See the comment above the
+          'Tag the release' step for why it is not on master."
+          fi
           # Annotated, because every tag this repo already carries is.
           git tag -a "v$VERSION" -m "$(cat /tmp/title.txt)"
           git push origin "refs/tags/v$VERSION"
-          echo "tagged v$VERSION"
+          echo "tagged v$VERSION at $(git rev-parse --short HEAD)"
 
       - name: Release
         if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_release == 'yes'

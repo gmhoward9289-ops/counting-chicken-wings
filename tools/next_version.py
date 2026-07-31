@@ -86,9 +86,26 @@ def bump(version: str, level: str) -> str:
 
 
 def latest_tag() -> str | None:
-    out = subprocess.run(["git", "describe", "--tags", "--abbrev=0"],
-                         capture_output=True, text=True, cwd=ROOT)
-    return out.stdout.strip() or None
+    """The highest version tag in the repo, by version order.
+
+    NOT `git describe`, which answers "the nearest tag REACHABLE from HEAD".
+    Release tags are no longer reachable from `master`: the version bump lives
+    on a commit the release job builds and tags without pushing it to the
+    branch, because `protect-master` rejects that push. `describe` run on
+    `master` would keep answering v1.11.0, and every release from here to the
+    end of time would compute v1.12.0.
+
+    Version tags only. `--tags` alone would take a marker tag (`snapshot/...`)
+    and count the next release from something that was never released.
+    """
+    out = subprocess.run(
+        ["git", "tag", "--list", "v[0-9]*", "--sort=-v:refname"],
+        capture_output=True, text=True, cwd=ROOT)
+    for line in out.stdout.splitlines():
+        tag = line.strip()
+        if tag and "-" not in tag:      # skip pre-release spellings
+            return tag
+    return None
 
 
 def required_level(base: str) -> tuple[str, list[str]]:

@@ -249,6 +249,40 @@ def test_latest_tag_ignores_a_marker_tag(repo, monkeypatch):
     assert rc.latest_tag() == "v1.11.0"
 
 
+def test_latest_tag_finds_a_tag_that_is_not_reachable_from_head(repo, monkeypatch):
+    """The shape release.yml now produces, and the one `describe` cannot see.
+
+    The release job commits the version bump and tags THAT commit without
+    pushing it to the branch -- `protect-master` rejects the push. So the tag
+    hangs off master rather than sitting on it. `git describe` answers "nearest
+    tag reachable from HEAD" and would say v1.11.0 here forever, which would
+    make every future release recompute the same number.
+    """
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo,
+                          capture_output=True, text=True, check=True).stdout.strip()
+    (repo / "f").write_text("release commit, never merged")
+    _git(repo, "commit", "-qam", "Release v1.12.0")
+    _git(repo, "tag", "-a", "v1.12.0", "-m", "release")
+    _git(repo, "reset", "-q", "--hard", head)   # the branch never took it
+
+    unreachable = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", "v1.12.0^{commit}", "HEAD"],
+        cwd=repo).returncode != 0
+    assert unreachable, "the fixture must reproduce an off-branch tag"
+
+    monkeypatch.setattr(rc, "ROOT", repo)
+    assert rc.latest_tag() == "v1.12.0"
+
+
+def test_latest_tag_orders_by_version_not_by_string(repo, monkeypatch):
+    """v1.9.0 must not outrank v1.11.0. Plain sorting says it does."""
+    for tag in ("v1.10.0", "v1.9.1"):       # v1.11.0 comes from the fixture
+        _git(repo, "tag", "-a", tag, "-m", "release")
+
+    monkeypatch.setattr(rc, "ROOT", repo)
+    assert rc.latest_tag() == "v1.11.0"
+
+
 def test_latest_tag_ignores_a_prerelease_tag(repo, monkeypatch):
     (repo / "f").write_text("three")
     _git(repo, "commit", "-qam", "more work")
