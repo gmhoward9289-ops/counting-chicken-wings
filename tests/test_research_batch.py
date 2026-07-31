@@ -870,6 +870,79 @@ def test_walled_documents_finds_the_wall_among_real_sources(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# The fetcher itself must say so, at fetch time
+#
+# Every check above runs on the Mac, after the run is over. The runner is the
+# only code present when the document actually lands on COOPER, and in
+# batch-05 it printed "fetched pmc-....txt (167 chars)" and moved on. The run
+# then reported ZERO fetch failures while having suffered one.
+# ---------------------------------------------------------------------------
+
+def _fetch_body(monkeypatch, tmp_path, body: bytes, url: str):
+    """Drive runner.fetch_url with a canned HTTP 200 body."""
+    import runner
+
+    class _Resp:
+        def read(self): return body
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    monkeypatch.setattr(runner, "WALLED_FETCHES", [])
+    monkeypatch.setattr(runner.urllib.request, "urlopen",
+                        lambda req, **kw: _Resp())
+    return runner, runner.fetch_url(url, tmp_path / "doc")
+
+
+PMC_URL = "https://pmc.ncbi.nlm.nih.gov/articles/PMC10289513/"
+
+
+def test_the_runner_flags_the_pmc_wall_at_fetch_time(tmp_path, monkeypatch,
+                                                     capsys):
+    """The batch-05 fetch, replayed. A 200 carrying 167 characters of
+    reCAPTCHA must not be logged as an ordinary success."""
+    runner, path = _fetch_body(monkeypatch, tmp_path,
+                               PMC_WALL.encode(), PMC_URL)
+    assert "[WALLED]" in capsys.readouterr().out
+    assert [u for u, _why in runner.WALLED_FETCHES] == [PMC_URL]
+
+
+def test_a_walled_fetch_still_keeps_the_document(tmp_path, monkeypatch):
+    """Flag, do not discard. `verify` re-checks the documents that arrive and
+    `fetch` reports the walls it finds -- both need the artifact on disk, and
+    deleting it here would only move the silence one layer down."""
+    _runner_mod, path = _fetch_body(monkeypatch, tmp_path,
+                                    PMC_WALL.encode(), PMC_URL)
+    assert path is not None and path.exists()
+    assert "reCAPTCHA" in path.read_text()
+
+
+def test_a_real_document_is_fetched_without_a_wall_warning(tmp_path,
+                                                           monkeypatch,
+                                                           capsys):
+    """The check must be quiet on the ordinary case or it becomes noise, and
+    noise gets ignored."""
+    runner, path = _fetch_body(monkeypatch, tmp_path, GOOD_BODY.encode(),
+                               "https://example.org/real")
+    assert "[WALLED]" not in capsys.readouterr().out
+    assert runner.WALLED_FETCHES == []
+
+
+def test_the_wall_definition_has_exactly_one_home():
+    """research_batch must not carry its own copy of the marker list.
+
+    Two copies drift, and the half that drifts is the half that goes quiet --
+    the scout would then be pre-flighting a fetcher it disagrees with about
+    what counts as a document. The canonical definition lives in the fetcher,
+    because tools/cooper/ is all that exists on COOPER.
+    """
+    import runner
+
+    assert rb.INTERSTITIAL_MARKERS is runner.INTERSTITIAL_MARKERS
+    assert rb.INTERSTITIAL_MAX_CHARS == runner.INTERSTITIAL_MAX_CHARS
+    assert rb.looks_like_interstitial is runner.looks_like_interstitial
+
+
+# ---------------------------------------------------------------------------
 # quote_looks_truncated -- closing punctuation is not proof of a sentence
 # ---------------------------------------------------------------------------
 
