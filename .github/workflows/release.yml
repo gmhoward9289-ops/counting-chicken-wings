@@ -48,19 +48,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Does this version still need a tag?
+      - name: Does this version still need a tag or a release?
         id: need
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version="$(python -c "
           import re,pathlib
           print(re.search(r'^version\s*=\s*\"([^\"]+)\"',
                 pathlib.Path('pyproject.toml').read_text(), re.M).group(1))")"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1; then
-            echo "v$version is already tagged; nothing to release."
+
+          # The tag and the release are tracked SEPARATELY, because half-done
+          # is a state this repo has actually been in: v1.2.0 through v1.7.0
+          # carried tags for hours with no release published against them.
+          # Keying only on the tag would make that state permanent -- the job
+          # would see a tag, decide there was nothing to do, and never publish
+          # the release. A crash between the two steps must be repairable by
+          # rerunning.
+          tag=no; rel=no
+          git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1 || tag=yes
+          gh release view "v$version" >/dev/null 2>&1 || rel=yes
+          echo "need_tag=$tag"     >> "$GITHUB_OUTPUT"
+          echo "need_release=$rel" >> "$GITHUB_OUTPUT"
+
+          if [ "$tag" = no ] && [ "$rel" = no ]; then
+            echo "v$version is tagged and released; nothing to do."
             echo "go=no" >> "$GITHUB_OUTPUT"
           else
-            echo "v$version has no tag."
+            echo "v$version needs: tag=$tag release=$rel"
             echo "go=yes" >> "$GITHUB_OUTPUT"
           fi
 
@@ -100,10 +116,9 @@ jobs:
           echo "comparing against $prev"
           python tools/release_check.py --base "$prev"
 
-      - name: Tag and release
-        if: steps.need.outputs.go == 'yes'
+      - name: Tag
+        if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
         env:
-          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.need.outputs.version }}
         run: |
           git config user.name  "github-actions[bot]"
@@ -111,6 +126,14 @@ jobs:
           # Annotated, because every tag this repo already carries is.
           git tag -a "v$VERSION" -m "$(cat /tmp/title.txt)"
           git push origin "refs/tags/v$VERSION"
+          echo "tagged v$VERSION"
+
+      - name: Release
+        if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_release == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.need.outputs.version }}
+        run: |
           gh release create "v$VERSION" \
             --title "$(cat /tmp/title.txt)" \
             --notes-file /tmp/notes.md
