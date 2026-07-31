@@ -1,0 +1,149 @@
+# Ground beef. Merged with taxonomy.yaml at build time.
+#
+# The project's third domain, and the first subject with NO ANATOMICAL FLOOR
+# AT ALL. That absence is the whole reason it is here.
+#
+#   a chicken has 2 wings  -> 12 wings need at least 6 chickens
+#   a flower has 3 stigmas -> 12 stigmas need at least 4 flowers
+#   a patty has ...        -> nothing. One animal can supply the whole patty.
+#
+# Wings and saffron both hand the model a floor for free, and the interesting
+# work is how far mixing pushes the answer above it. A hamburger patty hands
+# it nothing: grinding destroys the individual, and the count of cattle in a
+# patty is set entirely by industrial commingling. `is_anatomical_constant: 0`,
+# and the floor is 1 -- reachable only by hand, exactly the way `whole_bird_home`
+# is the one route where a wing count can touch six.
+#
+# WHAT THE MODEL CAN AND CANNOT SAY HERE -- READ THIS BEFORE "FIXING" IT
+# ---------------------------------------------------------------------
+# Ask this corpus for one patty and it answers ABOUT ONE ANIMAL. That is not a
+# bug and it is not the wrong answer to the question the engine is asking. It
+# is a limit worth stating plainly, because it is the most interesting thing
+# the subject turned up.
+#
+# The pooling formula counts distinct individuals among N DRAWS. A wing is a
+# draw: it belongs to exactly one bird. A gram of saffron is 150 draws, because
+# each flower contributes a definite 1/150th and `aggregate_units` re-expresses
+# the question in those shares. A patty is NEITHER. It is a sample of a
+# homogenate -- a spoonful of a mixture, not a handful of objects -- and the
+# number of animals in it is the number of distinguishable PARCELS of trim it
+# happens to contain.
+#
+# Nobody publishes parcels-per-patty. Inventing one would make the headline
+# number as large as we liked, which is precisely the temptation this project
+# exists to refuse. So the floor stands at 1, the honest answer to "how few
+# cattle could this patty be" is one, and everything larger is evidenced at the
+# BATCH level instead -- see mixing_ground_beef.yaml, where the pool figures are
+# measured rather than estimated for the first time anywhere in this corpus.
+#
+# The correct question to ask this subject is therefore not "how many cattle in
+# my patty" but "how many cattle in the batch my patty was drawn from", and the
+# answer to that one is 411 to 1,367, counted by DNA.
+#
+# WHY THE PATTY IS DEFINED AS A QUARTER POUND
+# -------------------------------------------
+# 0.25 lb exactly, which needs no citation because it is what the word means.
+# COOPER returned 120.5 g for the modern Quarter Pounder from Wikipedia, and
+# that figure is deliberately NOT used here: deciding Wikipedia is authoritative
+# is the judgement call the research pipeline routes around, and it is not
+# needed. Using the definition instead of a brand's current spec also keeps the
+# arithmetic below honest at both ends.
+#
+# The prior run's 112 g -- a laboratory patty-mould size, one gram from the real
+# quarter-pound and therefore invisible on review -- is documented in
+# docs/research/accepted/batch-06-ground-beef-REVIEW.md. It is not here either.
+
+domains:
+  - slug: livestock
+    label: Livestock
+    description: >-
+      Meat animals, where the product is a mass of tissue rather than a
+      countable part. Third domain implemented, and the first in which the
+      individual is destroyed by processing rather than merely separated
+      from its parts.
+    active: 1
+
+species:
+  - slug: beef_cattle
+    domain: livestock
+    common_name: Beef cattle
+    scientific_name: Bos taurus
+    individual_noun: animal
+    individual_plural: animals
+    # Deliberately NULL. NASS does publish cattle slaughter, but nothing in
+    # this project's stat pipeline consumes it yet, and pointing at a category
+    # we do not actually read would be decoration.
+    stat_category: null
+    active: 1
+    notes: >-
+      The individual is the animal, and unlike a chicken or a crocus flower it
+      does not survive its own processing in any recognisable form. A carcass
+      is broken into primals, the primals into cuts, and what is left is trim -
+      muscle and fat that goes into a 2,000-pound bin with the trim of every
+      other carcass on the line that shift.
+
+      One consequence is worth stating because it inverts the usual intuition:
+      a single animal's trim does not stay together either. The National
+      Academies' review notes that the number of combo bins a carcass
+      contributes to "depends on the number of trim 'sortings', which is based
+      on fat content." So one animal is spread across many bins, and one bin
+      holds many animals. Mixing runs in both directions here, which it does
+      not for wings.
+
+products:
+  - slug: ground_beef_patty
+    species: beef_cattle
+    label: Quarter-pound ground beef patty
+    label_plural: Quarter-pound ground beef patties
+    yield_mode: continuous
+    # PATTIES PER ANIMAL, from lean trim -- the stream that actually becomes
+    # ground beef, not total packaged beef.
+    #
+    # SDSU Extension, of a 1,200 lb fed steer at 63% dressing:
+    #   "This 150 -185 pounds of lean trim would likely be packaged as ground
+    #    beef."
+    # (the space before the dash is the document's own typography)
+    #
+    # At a quarter pound of raw trim per patty:
+    #   lo   150 lb / 0.25 = 600 patties
+    #   hi   185 lb / 0.25 = 740 patties
+    #   mode           the midpoint, 670, and it is an interpolation rather
+    #                  than anyone's figure -- SDSU gives a range and no
+    #                  central value, so pretending to one would be inventing
+    #                  precision.
+    #
+    # This is OUR arithmetic on an extension bulletin's range, which is why the
+    # product cites the bulletin and claims nothing stronger than the bulletin
+    # does. It is also an UPPER bound on how much of one animal could become
+    # patties: no cook loss, no fat adjustment, no imported lean trim blended
+    # in, no rework.
+    units_per_individual_lo: 600
+    units_per_individual_mode: 670
+    units_per_individual_hi: 740
+    unit_name: patty
+    source_part: trim
+    named_part: beef
+    named_part_content: 1.0
+    # ZERO, and this is the point of the subject. Contrast saffron_stigma,
+    # where three per flower is anatomy and licenses a real floor. There is no
+    # number of patties a steer must yield and no number of cattle a patty must
+    # contain. The floor is 1 because one animal is enough, not because one is
+    # typical.
+    is_anatomical_constant: 0
+    source: sdsu-ext-fed-steer-yield
+    notes: >-
+      "This 150 -185 pounds of lean trim would likely be packaged as ground
+      beef." - SDSU Extension, of a 1,200-pound fed steer with a 63 percent
+      dressing percent. Converted to patties at a quarter pound each, which is
+      what the word quarter-pounder means and needs no source.
+
+      LEAN TRIM, not total packaged beef. The same page puts total boneless
+      trimmed beef at "roughly 490 pounds", about 40 percent of live weight -
+      three times the ground-beef stream. The two must not be merged, and the
+      larger figure is recorded in loss_chain_ground_beef.yaml as a mass chain
+      rather than as a patty count.
+
+      The number here answers "how many patties could this animal make". It
+      does NOT answer "how many animals are in this patty", and no arrangement
+      of it will: those are the two questions this project keeps separate, and
+      grinding is the place where they come apart hardest.

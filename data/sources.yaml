@@ -1013,3 +1013,100 @@
     It also states the bare "approximately 40 gallons of sap" that COOPER
     preferred over UVM's rule. Kept as a source because the one-tap figure is
     genuinely useful, cited for the ratio nowhere.
+
+- slug: plos-hu-2012-grind-batch
+  title: Estimating Animal Abundance in Ground Beef Batches Assayed with Molecular Markers
+  publisher: Hu X-S, Simila J, Platz SS, Moore SS, Plastow G, Meghen CN; PLoS ONE 7(3):e34191
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC3316629/
+  published_on: '2012-03-30'
+  retrieved_on: '2026-07-31'
+  source_type: peer_reviewed
+  notes: >-
+    The most important source in the ground beef subject and the only measured
+    mixing pool anywhere in this corpus. DNA markers profiled in six commercial
+    grind batches, animal abundance estimated by mark-recapture: "An average of
+    411 to1367 animals was present in the six grind batches." (The missing space
+    is the document's own.)
+
+    Promoted to `study` by hand. COOPER graded it `industry` because it cannot
+    grade higher, and the promotion rests on a narrow point that the honey batch
+    taught: 411-1,367 is this paper's own primary result, not uncited
+    scene-setting borrowed from someone else. The same paper's "a single ground
+    beef batch may consist of many hundreds of animals" IS scene-setting, and is
+    deliberately not used as a figure anywhere.
+
+    Four things it is not, all easy to get wrong: not a per-patty count (a batch
+    is many bins); not a per-bin count; not a national figure (six batches, one
+    manufacturer, one line, one shift); and not a mean worth quoting on its own -
+    the paper's own point is the variance between batches.
+
+- slug: nrc-2002-ground-beef-risk
+  title: >-
+    Escherichia coli O157:H7 in Ground Beef - Review of a Draft Risk Assessment
+  publisher: National Research Council / Institute of Medicine, National Academies Press
+  url: https://www.ncbi.nlm.nih.gov/books/NBK221105/
+  published_on: '2002-01-01'
+  retrieved_on: '2026-07-31'
+  source_type: peer_reviewed
+  notes: >-
+    The structure of a ground beef lot, on a host the pipeline can actually
+    reach. "Trim is removed from each carcass and combined into 2,000-pound
+    combo bins during the slaughter process." "Grinder loads are presumed to
+    vary in size from the equivalent of 2 to 15 combo bins of trim." And, in the
+    Slaughter Module chapter (NBK221092): "Lot is defined in the draft as the
+    number of cattle necessary to fill one combo bin with trim; and a single lot
+    may take one or more truckloads of cattle."
+
+    HOW IT WAS FOUND, because the method generalises. The figures wanted here
+    live in an FSIS draft risk assessment, and fsis.usda.gov returns HTTP 403 to
+    this project's fetcher site-wide - verified against three paths on two
+    separate days. This volume is the National Academies REVIEWING that draft,
+    and it quotes the definitions at length. When an agency document is
+    unfetchable, look for the body that reviewed it: oversight literature quotes
+    what it reviews, and oversight publishers host differently.
+
+    Note "presumed" in the grinder-load sentence. It is a modelling assumption
+    inside a risk assessment, not an observation, which is why the combo-bin
+    pool derived from it is graded `estimate`.
+
+- slug: sdsu-ext-fed-steer-yield
+  title: How Much Meat Can You Expect from a Fed Steer?
+  publisher: South Dakota State University Extension
+  url: https://extension.sdstate.edu/how-much-meat-can-you-expect-fed-steer
+  published_on: '2022-07-13'
+  retrieved_on: '2026-07-31'
+  source_type: trade_body
+  notes: >-
+    The ground-beef-specific yield, which is the figure the subject actually
+    needs: "This 150 -185 pounds of lean trim would likely be packaged as ground
+    beef." The space before the dash is the page's own typography and is
+    preserved everywhere it is quoted - tidying it is what made a true quote fail
+    the gate on the Wikipedia row in this same batch.
+
+    Also carries the whole-chain arithmetic that reconciles: a 1,200 lb steer at
+    63 percent dressing gives a 750 lb carcass, "about 65% of the carcass weight,
+    or roughly 490 pounds, as boneless, trimmed beef", which is "approximately
+    40% of the live weight". That internal consistency is why the 65 percent
+    figure anchors the low end of the carcass-to-packaged band while MSU's 75
+    percent anchors the high end.
+
+    Lean trim is roughly a third of total packaged beef. The two must never be
+    merged; only the trim figure becomes patties.
+
+- slug: msstate-ext-beef-yield
+  title: How Much Meat to Expect from a Beef Animal (farm-direct beef)
+  publisher: Mississippi State University Extension Service
+  url: https://extension.msstate.edu/publications/how-much-meat-expect-beef-animal-farm-direct-beef
+  retrieved_on: '2026-07-31'
+  source_type: trade_body
+  notes: >-
+    "The average dressing percentage of beef cattle is 60 to 64 percent." Cited
+    for dressing, and for the upper bound of the carcass-to-packaged band.
+
+    Carries a conflict this project records rather than resolves. Its take-home
+    sentence gives two figures that do not reconcile with each other: "the
+    take-home weight of packaged beef will be approximately 40 percent of the
+    animal's live weight, or 75 percent of the hot carcass weight." At its own 63
+    percent dressing percent, 75 percent of the carcass is 47 percent of live
+    weight, not 40. SDSU's 65 percent does reconcile. Both bounds are kept and
+    neither is averaged away.

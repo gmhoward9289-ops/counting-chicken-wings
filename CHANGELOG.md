@@ -73,6 +73,67 @@ off its own quote — `"Fluid milk 109 13 12 22 20 35 32"`, after batch-09's
 meaningless without the header. On two instances that rule should stop being
 advice in a spec and become a check.
 
+### Ground beef: the subject with no anatomical floor
+
+A third domain, `livestock`, and the first product this project has ever
+described that hands the model **no floor at all**. A chicken has two wings, a
+crocus flower has three stigmas; a hamburger patty has nothing. One animal can
+supply the whole patty, so the floor is 1, and every number above it is
+industrial commingling and nothing else. `is_anatomical_constant: 0`, and that
+is the point rather than a gap.
+
+- **The first mixing pool in this corpus that anybody measured.** Every other
+  cascade — poultry, eggs, saffron, maple — cites `project-estimate-mixing`,
+  because pool size is not something those trades measure. Hu et al. (*PLoS ONE*,
+  2012) profiled DNA markers in six commercial grind batches and counted **411
+  to 1,367 distinct animals** in them. That is the strongest evidence the model
+  has that commingling describes something real, and it is the one mixing stage
+  in the project resting on a study rather than on our own reasoning. A test
+  pins it, because a silent revert to `estimate` would lose exactly that.
+- **The engine's limit, stated rather than papered over.** Ask for one patty and
+  the answer is about one animal, and that is honest: the pooling formula counts
+  distinct individuals among N *draws*, and a patty is not draws — it is a
+  sample of a homogenate. The count of cattle in it is the number of
+  distinguishable parcels of trim it happens to contain, which nobody publishes.
+  Inventing that number would make the headline figure as large as we liked. The
+  evidence bounds the **batch**, so the batch is where it is recorded.
+- `home_ground_beef` is the `whole_bird_home` analogue: no mixing stages at all,
+  and the one route where the answer is the floor.
+- Two mass-only loss stages, dressing (60–64%) and carcass-to-packaged (65–75%),
+  neither of which can move a head count — the same guard written so that frying
+  could not change a chicken count, now holding on a slaughter floor with no code
+  change.
+- A conflict recorded rather than resolved: MSU Extension's take-home yield is
+  given two ways in one sentence and the two do not reconcile with each other.
+  SDSU's does. Both bounds kept, neither averaged away.
+
+### batch-06-ground-beef passes on the second attempt
+
+The first run failed `verify` with nothing accepted. Two of its three failures
+could not be fixed by trying harder, and the fixes are worth naming:
+
+- An item whose answer had to be **counted out of prose** was deleted, not
+  reworded. The gate was right to refuse it and no warning makes it extractable.
+- A row that took a **laboratory patty-mould size** (112 g, one gram from the
+  real quarter-pound) was fixed by removing that document from the batch
+  entirely — `runner.run()` pools chunks across every document, so a document
+  cited by one item is reachable by all of them.
+- A hedged ceiling stored as a point value was fixed by **renaming the field to
+  what the sentence supports**. A field name travels with the row into the
+  corpus; a `Watch for` does not, and this was the second time one failed to
+  stop the thing it named.
+
+`fsis.usda.gov` still 403s the fetcher site-wide, and the lot/commingling
+figures were found anyway — in the National Academies' 2002 *review* of the FSIS
+draft risk assessment, which quotes the definitions at length and hosts
+somewhere reachable. **When an agency document is unfetchable, look for the body
+that reviewed it.**
+
+Three quotes were corrected by hand and the values left untouched: one true
+quote that failed the gate on tidied punctuation, and two that passed the gate
+while being unreviewable — a bare parenthetical and a bare numeric span. Short
+and verbatim is not the same as checkable.
+
 ### Tags that are not releases
 
 Since #37 the merge cuts the release, so a tag is no longer how you publish one.

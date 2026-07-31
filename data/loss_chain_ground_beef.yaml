@@ -1,0 +1,106 @@
+# The ground beef loss chain. Merged with loss_chain.yaml at build time.
+#
+# Both stages here are `applies_to: mass`, so NEITHER can move an animal count.
+# That is the same discipline built so that frying a wing could not change how
+# many chickens were involved, and so that an 80% drying loss on saffron could
+# not either. It transfers again, unchanged, into a domain with a mammal in it.
+#
+# These stages exist to EXPLAIN, not to calculate. A reader who wants to know
+# why a 1,200-pound steer does not produce 1,200 pounds of beef gets the two
+# figures with their citations; the head count does not move a millimetre.
+#
+# WHAT IS DELIBERATELY NOT MODELLED HERE
+# --------------------------------------
+# The lean-trim share - the fraction of a carcass that becomes ground beef
+# rather than steaks and roasts - is NOT a stage in this chain. It is already
+# priced into `units_per_individual` on ground_beef_patty, which is built from
+# SDSU's 150-185 pounds of lean trim per steer. Adding it here as well would
+# double-count it, in the direction that makes the project's numbers look more
+# impressive. Same trap as applying saffron's 80% drying loss on top of a
+# figure that already had drying in it.
+#
+# A CONFLICT RECORDED RATHER THAN RESOLVED
+# ----------------------------------------
+# MSU Extension gives the take-home yield two ways in one sentence:
+#
+#   "the take-home weight of packaged beef will be approximately 40 percent of
+#    the animal's live weight, or 75 percent of the hot carcass weight"
+#
+# Those do not reconcile. At the same page's own 63 percent dressing percent,
+# 75 percent of the carcass is 47 percent of live weight, not 40. SDSU's
+# version does reconcile: 65 percent of the carcass, which at 63 percent
+# dressing is 41 percent of live weight - and SDSU states the 40 percent
+# outright as a check on itself.
+#
+# So the carcass-to-packaged band below runs from SDSU's 65 percent to MSU's
+# 75 percent. Both bounds are things a source said. We are not picking the one
+# that makes the internal arithmetic tidy, and we are not averaging them.
+
+stages:
+  - slug: beef_dressing
+    domain: livestock
+    label: Dressing (live weight to hot carcass)
+    sequence: 10
+    phase: slaughter
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Hide, head, feet, blood and viscera are removed, leaving the hot carcass.
+      The surviving fraction is the dressing percentage, and for fed beef it
+      runs around 60 to 64 percent of live weight.
+    notes: >-
+      "The average dressing percentage of beef cattle is 60 to 64 percent." -
+      MSU Extension. SDSU Extension puts it at 62-64 percent on the same basis,
+      which is a genuine independent agreement rather than a restatement.
+
+      Recorded at confidence=industry, NOT measured. An extension bulletin
+      reporting a typical value is not a government agency's enumeration, and
+      the fact that this one happens to be very well established does not
+      change what the grade is a claim about.
+
+      A mass stage, so it cannot touch a head count - and the reason is not
+      bookkeeping. Removing the hide from a steer makes the carcass lighter; it
+      does not make the steer fractional.
+    factors:
+      - species: beef_cattle
+        survive_lo: 0.60
+        survive_mode: 0.62
+        survive_hi: 0.64
+        confidence: industry
+        source: msstate-ext-beef-yield
+
+  - slug: beef_carcass_to_packaged
+    domain: livestock
+    label: Carcass to packaged beef
+    sequence: 20
+    phase: processing
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Chilling shrink, bone, and fat trim come off the carcass, leaving the
+      boneless trimmed beef that actually goes home - steaks, roasts and the
+      lean trim that becomes ground beef.
+    notes: >-
+      The band is a live disagreement between two extension services, kept as a
+      band on purpose. See the header of this file.
+
+      SDSU: "From that you will get about 65% of the carcass weight, or roughly
+      490 pounds, as boneless, trimmed beef." MSU: the take-home weight is "75
+      percent of the hot carcass weight". Only SDSU's figure reproduces the
+      40-percent-of-live-weight rule of thumb that both pages also state.
+
+      Compounded with dressing at its mode, this chain puts take-home beef at
+      about 43 percent of live weight, which brackets the 40 percent both
+      services quote. That agreement is worth having explicitly: it is a
+      cross-check between two independent land-grant bulletins arriving at the
+      same place by different routes, which is the only kind of validation
+      available in a subject with no government enumeration in it.
+    factors:
+      - species: beef_cattle
+        survive_lo: 0.65
+        survive_mode: 0.70
+        survive_hi: 0.75
+        confidence: industry
+        source: sdsu-ext-fed-steer-yield
