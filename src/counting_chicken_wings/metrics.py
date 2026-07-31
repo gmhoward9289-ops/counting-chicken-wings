@@ -40,6 +40,13 @@ MAX_BATCH = 50          # events per POST
 MAX_META = 500          # characters of JSON meta per event
 MAX_SUMMARY_ROWS = 200_000
 
+# Ceiling on what one session can contribute, ever. A signed token proves
+# which arm a page belongs to; it does not stop that page from reporting a
+# million times, and every rate in the summary is per-session, so one
+# runaway session would drag an arm around on its own. A real visitor
+# generates a few dozen events.
+MAX_EVENTS_PER_SESSION = 2_000
+
 _ENV_METRICS_DB = os.environ.get("WINGS_METRICS_DB")
 DEFAULT_METRICS_DB = (
     Path(_ENV_METRICS_DB).expanduser() if _ENV_METRICS_DB
@@ -135,6 +142,13 @@ def record(session: str, variant: str, events: list[dict],
     conn = connect(path)
     try:
         with conn:
+            already = conn.execute(
+                "SELECT count(*) FROM event WHERE session = ?",
+                (session,)).fetchone()[0]
+            room = MAX_EVENTS_PER_SESSION - already
+            if room <= 0:
+                return 0
+            rows = rows[:room]
             conn.executemany(
                 "INSERT INTO event (ts, session, variant, name, value, meta) "
                 "VALUES (?, ?, ?, ?, ?, ?)", rows)
@@ -166,6 +180,8 @@ def summary(path: Path | None = None, since: float | None = None) -> dict:
         rows = conn.execute(
             f"SELECT session, variant, name, value, meta FROM event {where} "
             f"ORDER BY id LIMIT {MAX_SUMMARY_ROWS}", args).fetchall()
+        span = conn.execute(
+            "SELECT min(ts), max(ts) FROM event").fetchone()
     finally:
         conn.close()
 
@@ -222,9 +238,19 @@ def summary(path: Path | None = None, since: float | None = None) -> dict:
             "views_per_session": round(v["counts"].get("view", 0) / n, 2),
             "distinct_views_found": len([x for x in v["views"] if x]),
         }
+    first, last = (span or (None, None))
     return {
         "database": str(metrics_db() if path is None else path),
         "since": since,
+        # Reported so an emptied store is visible rather than inferred. The
+        # Render deployment has no disk -- the container filesystem is
+        # ephemeral, so a deploy or a wake from the free tier's idle
+        # spin-down starts the collection over. A window that keeps
+        # resetting to minutes long is that, not a quiet week.
+        "collecting_since": first,
+        "latest_event": last,
+        "window_hours": (round((last - first) / 3600, 2)
+                         if first and last else 0),
         "variants": out,
         # Stated rather than implied: these counts are not evidence of a
         # difference until there are enough of them, and the page reporting

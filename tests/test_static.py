@@ -176,6 +176,32 @@ def test_motion_respects_the_reduced_motion_preference(html):
     assert "prefers-reduced-motion" in html
 
 
+# ---------------------------------------------------------------------------
+# A page that cannot be measured cannot be A/B tested
+# ---------------------------------------------------------------------------
+
+
+def test_every_variant_carries_the_measurement_hooks(html):
+    """Dropping either one costs the whole arm, and costs it silently.
+
+    Without the token the server refuses the events; without ab.js none are
+    sent. Either way the variant reports nothing, which reads as "no data"
+    rather than as a broken page.
+    """
+    assert exp.TOKEN_PLACEHOLDER in html, "no A/B token placeholder"
+    assert "/static/ab.js" in html, "ab.js is not included"
+
+
+def test_no_variant_ships_its_own_copy_of_the_instrument(html):
+    """One instrument, shared verbatim.
+
+    A collector that differs between the arms measures itself as much as the
+    design under test.
+    """
+    assert "ccwTrack = " not in html, "a variant defines its own collector"
+    assert "sendBeacon" not in html, "a variant collects metrics inline"
+
+
 def test_headline_figures_scale_on_small_screens(html):
     """A fixed 58px headline overflowed a phone at seven significant digits."""
     headline = re.search(r"\.headline\s*\{(.*?)\}", html, re.S)

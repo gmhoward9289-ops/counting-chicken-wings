@@ -17,9 +17,14 @@ silently start serving a different site.
 from __future__ import annotations
 
 import hashlib
+import hmac
+import logging
 import os
 import secrets
+import time
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 STATIC = Path(__file__).parent / "static"
 
@@ -92,6 +97,86 @@ def _valid_sid(sid: str | None) -> bool:
         c in "0123456789abcdef" for c in sid)
 
 
+# ---------------------------------------------------------------------------
+# Signed variant tokens
+# ---------------------------------------------------------------------------
+#
+# The token is what a page uses to say "I am variant b" and be believed.
+#
+# It is baked into the HTML rather than handed over in a cookie, and that is
+# the whole point: a cookie describes the browser *now*, while a token
+# describes the page it was served with. The `dwell` beacon fires during
+# unload, after the next page has already replaced the cookie -- which is
+# exactly how variant b's time got credited to variant a before this existed.
+# A token travels with the page instance that earned the measurement.
+#
+# It also closes the tampering hole that the cookie never really closed: the
+# collection endpoint is public, so without a signature anyone could post
+# events naming whichever arm they wanted to win.
+
+TOKEN_TTL = 12 * 3600      # a page open longer than this stops reporting
+
+_FALLBACK_SECRET = secrets.token_hex(32)
+
+
+def secret() -> bytes:
+    """Signing key. Set `WINGS_AB_SECRET` for anything that restarts.
+
+    Without it each process invents its own key, so every token issued
+    before a restart is refused afterwards and those visitors' events are
+    dropped. On Render that is every deploy, plus every wake from the free
+    tier's idle spin-down -- which is most of them.
+
+    It is also why this must not be generated per worker: two processes with
+    two keys reject each other's tokens, and the loss looks like noise rather
+    than like a misconfiguration.
+    """
+    env = os.environ.get("WINGS_AB_SECRET")
+    if env:
+        return env.encode()
+    if split_percent() > 0:
+        log.warning(
+            "WINGS_AB_SECRET is not set: A/B tokens are signed with a "
+            "per-process key and will be refused after a restart. Set it "
+            "before trusting collected metrics.")
+    return _FALLBACK_SECRET.encode()
+
+
+def issue_token(session_id: str, variant: str, now: float | None = None) -> str:
+    """Bind a variant to a session and a moment, and sign the three."""
+    ts = int(now if now is not None else time.time())
+    payload = f"{session_id}.{variant}.{ts}"
+    sig = hmac.new(secret(), payload.encode(), hashlib.sha256).hexdigest()[:32]
+    return f"{payload}.{sig}"
+
+
+def read_token(token: str | None, session_id: str | None,
+               now: float | None = None) -> str | None:
+    """Return the variant a valid token attests to, else None.
+
+    Rejects a token whose session does not match the caller's cookie, so one
+    cannot be lifted from a page and replayed under another id.
+    """
+    if not token or token.count(".") != 3:
+        return None
+    sid, variant, ts, sig = token.split(".")
+    if variant not in VARIANTS or sid != session_id:
+        return None
+    expected = hmac.new(secret(), f"{sid}.{variant}.{ts}".encode(),
+                        hashlib.sha256).hexdigest()[:32]
+    # Constant time: a token check that leaks its progress through the
+    # signature is forgeable one byte at a time.
+    if not hmac.compare_digest(sig, expected):
+        return None
+    try:
+        age = (now if now is not None else time.time()) - int(ts)
+    except ValueError:
+        return None
+    if age < -300 or age > TOKEN_TTL:
+        return None
+    return variant
+
+
 def path_for(variant: str) -> Path:
     """File to serve, falling back to the control if the variant is missing.
 
@@ -100,3 +185,26 @@ def path_for(variant: str) -> Path:
     """
     p = STATIC / VARIANTS.get(variant, VARIANTS[CONTROL])
     return p if p.exists() else STATIC / VARIANTS[CONTROL]
+
+
+# The placeholder both pages carry, replaced per request with a fresh token.
+TOKEN_PLACEHOLDER = "__CCW_AB_TOKEN__"
+
+_page_cache: dict[Path, tuple[float, str]] = {}
+
+
+def render_page(path: Path, token: str) -> str:
+    """The page with its token in it.
+
+    Cached on mtime rather than re-read per request -- these files are ~90KB
+    and the only per-request difference is a 100-byte token. The mtime check
+    is what keeps `wings gui` honest while someone is editing the redesign;
+    serving a stale page to the person redesigning it would be its own kind
+    of bug.
+    """
+    stamp = path.stat().st_mtime
+    cached = _page_cache.get(path)
+    if not cached or cached[0] != stamp:
+        cached = (stamp, path.read_text())
+        _page_cache[path] = cached
+    return cached[1].replace(TOKEN_PLACEHOLDER, token)

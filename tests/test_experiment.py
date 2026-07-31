@@ -6,6 +6,8 @@ a client name its own arm, produces numbers that look fine and mean nothing.
 """
 
 import json
+import re
+import time
 
 import pytest
 from fastapi.testclient import TestClient
@@ -34,6 +36,25 @@ def store(tmp_path, monkeypatch):
 @pytest.fixture
 def split_50(monkeypatch):
     monkeypatch.setenv("WINGS_AB_SPLIT", "50")
+
+
+@pytest.fixture(autouse=True)
+def fixed_secret(monkeypatch):
+    """A stable signing key, so tests do not depend on process identity."""
+    monkeypatch.setenv("WINGS_AB_SECRET", "test-secret-not-a-real-one")
+
+
+def token_from(response) -> str:
+    """The signed variant token the server baked into the page."""
+    m = re.search(r'name="ccw-ab-token" content="([^"]+)"', response.text)
+    assert m, "page carries no A/B token"
+    return m.group(1)
+
+
+def send(client, response, events):
+    """Post a batch the way the page would: with its own page's token."""
+    return client.post("/api/metrics",
+                       json={"token": token_from(response), "events": events})
 
 
 # ---------------------------------------------------------------------------
@@ -121,28 +142,27 @@ def test_experiment_state_explains_the_assignment(client, split_50):
 # ---------------------------------------------------------------------------
 
 
-def test_events_are_recorded_against_the_cookie_variant(client, store):
-    client.get("/?ui=b")
-    r = client.post("/api/metrics", json={"events": [
+def test_events_are_recorded_against_the_variant_in_the_token(client, store):
+    page = client.get("/?ui=b")
+    r = send(client, page, [
         {"name": "pageview", "value": 812, "meta": {"w": 390}},
         {"name": "view", "meta": {"view": "season"}},
-    ]})
+    ])
     assert r.json()["accepted"] == 2
     assert metrics.summary()["variants"]["b"]["sessions"] == 1
 
 
 def test_a_late_beacon_is_credited_to_the_page_that_sent_it(client, store):
-    """The regression that made the body authoritative over the cookie.
+    """The regression the token exists for.
 
     `dwell` is sent by `sendBeacon` during unload, so on a variant switch it
     lands *after* the next page's cookie is set. Deriving the variant from
     the cookie at POST time recorded variant b's 32 seconds against variant
-    a -- silently, and on the one event the comparison most depends on.
+    a -- silently, and on the event the comparison most depends on.
     """
-    client.get("/?ui=b")
+    page_b = client.get("/?ui=b")
     client.get("/?ui=a")          # cookie is now `a`; the beacon is still b's
-    client.post("/api/metrics", json={
-        "variant": "b", "events": [{"name": "dwell", "value": 31824}]})
+    send(client, page_b, [{"name": "dwell", "value": 31824}])
 
     v = metrics.summary()["variants"]
     assert v["b"]["dwell_ms"]["p50"] == 31824, "dwell lost from its own arm"
@@ -150,38 +170,67 @@ def test_a_late_beacon_is_credited_to_the_page_that_sent_it(client, store):
         "dwell was credited to the wrong variant"
 
 
-def test_a_body_naming_an_unknown_variant_falls_back_to_the_cookie(
-        client, store):
-    """The body is trusted only to name one of the arms that exist."""
+def test_an_unsigned_claim_is_refused(client, store):
+    """Asserting a variant without the signature must not work.
+
+    This endpoint is public. If naming an arm were enough, anyone could
+    decide which design won.
+    """
     client.get("/?ui=a")
-    client.post("/api/metrics", json={
-        "variant": "../../etc/passwd",
-        "events": [{"name": "pageview", "value": 1}]})
-    v = metrics.summary()["variants"]
-    assert set(v) == {"a"}
+    r = client.post("/api/metrics", json={
+        "variant": "b", "events": [{"name": "interact", "value": 1}]})
+    assert r.json()["accepted"] == 0
+    assert metrics.summary()["variants"] == {}
 
 
-def test_a_session_id_cannot_be_chosen_by_the_client(client, store):
-    """Session still comes from the cookie: it is what bounds a rate."""
-    client.get("/?ui=a")
-    real = client.cookies[exp.SID_COOKIE]
-    client.post("/api/metrics", json={
-        "session": "f" * 32, "events": [{"name": "pageview", "value": 1}]})
-    conn = metrics.connect()
-    try:
-        got = {r[0] for r in conn.execute("SELECT session FROM event")}
-    finally:
-        conn.close()
-    assert got == {real}
+def test_a_forged_token_is_refused(client, store):
+    """Right shape, wrong signature."""
+    page = client.get("/?ui=a")
+    sid, variant, ts, sig = token_from(page).split(".")
+    for bad in (f"{sid}.b.{ts}.{sig}",              # variant swapped
+                f"{sid}.{variant}.{ts}.{'0' * 32}",  # signature invented
+                f"{'f' * 32}.{variant}.{ts}.{sig}"):  # someone else's session
+        r = client.post("/api/metrics",
+                        json={"token": bad,
+                              "events": [{"name": "pageview", "value": 1}]})
+        assert r.json()["accepted"] == 0, f"forged token accepted: {bad}"
+
+
+def test_a_token_from_another_session_cannot_be_replayed(client, store):
+    """Lifting a token out of a page must not let another browser use it."""
+    victim = TestClient(app)
+    stolen = token_from(victim.get("/?ui=b"))
+
+    attacker = TestClient(app)
+    attacker.get("/?ui=a")
+    r = attacker.post("/api/metrics", json={
+        "token": stolen, "events": [{"name": "interact", "value": 1}]})
+    assert r.json()["accepted"] == 0
+
+
+def test_an_expired_token_is_refused(store):
+    sid = "a" * 32
+    old = exp.issue_token(sid, "b", now=time.time() - exp.TOKEN_TTL - 60)
+    assert exp.read_token(old, sid) is None
+    fresh = exp.issue_token(sid, "b")
+    assert exp.read_token(fresh, sid) == "b"
+
+
+def test_a_token_signed_with_another_key_is_refused(monkeypatch, store):
+    """What a restart without WINGS_AB_SECRET looks like: dropped, not wrong."""
+    sid = "a" * 32
+    tok = exp.issue_token(sid, "b")
+    monkeypatch.setenv("WINGS_AB_SECRET", "a-different-key")
+    assert exp.read_token(tok, sid) is None
 
 
 def test_unknown_event_names_are_dropped(client, store):
-    client.get("/?ui=a")
-    r = client.post("/api/metrics", json={"events": [
+    page = client.get("/?ui=a")
+    r = send(client, page, [
         {"name": "pageview", "value": 100},
         {"name": "rm -rf", "value": 1},
         {"name": "purchase", "value": 999},
-    ]})
+    ])
     assert r.json()["accepted"] == 1
 
 
@@ -203,10 +252,20 @@ def test_malformed_bodies_never_fail_the_caller(client, store):
 
 
 def test_the_batch_is_capped(client, store):
-    client.get("/?ui=a")
-    r = client.post("/api/metrics", json={"events": [
-        {"name": "view", "meta": {"view": "calc"}} for _ in range(500)]})
+    page = client.get("/?ui=a")
+    r = send(client, page, [
+        {"name": "view", "meta": {"view": "calc"}} for _ in range(500)])
     assert r.json()["accepted"] == metrics.MAX_BATCH
+
+
+def test_one_session_cannot_flood_an_arm(client, store):
+    """Every rate in the summary is per-session, so one runaway drags an arm."""
+    page = client.get("/?ui=b")
+    for _ in range(50):
+        send(client, page, [{"name": "view", "meta": {"view": "calc"}}
+                            for _ in range(metrics.MAX_BATCH)])
+    assert (metrics.summary()["variants"]["b"]["events"]
+            == metrics.MAX_EVENTS_PER_SESSION)
 
 
 def test_impossible_durations_are_discarded_not_stored(store):
@@ -283,6 +342,39 @@ def test_error_rate_is_per_session_not_per_event(store):
 
 def test_summary_of_an_empty_store_is_not_an_error(store):
     assert metrics.summary()["variants"] == {}
+
+
+def test_the_summary_states_how_long_it_has_been_collecting(store):
+    """An emptied store must be visible, not inferred.
+
+    The Render container has no disk, so a deploy or a wake from the free
+    tier's spin-down restarts collection. A window that keeps resetting to
+    minutes is that -- not a quiet week.
+    """
+    metrics.record("a" * 16, "a", [{"name": "pageview", "value": 1}])
+    s = metrics.summary()
+    assert s["collecting_since"] and s["latest_event"]
+    assert s["window_hours"] >= 0
+
+    metrics.reset()
+    assert metrics.summary()["collecting_since"] is None
+
+
+def test_the_served_page_never_leaks_the_placeholder(client):
+    """A page serving the literal placeholder collects nothing, silently."""
+    for url in ("/?ui=a", "/?ui=b"):
+        assert exp.TOKEN_PLACEHOLDER not in client.get(url).text
+
+
+def test_editing_a_variant_is_picked_up_without_a_restart(client, tmp_path):
+    """`wings gui` must not serve a stale page to whoever is redesigning it."""
+    page = exp.path_for("b")
+    original = page.read_text()
+    try:
+        page.write_text(original.replace("</title>", " EDITED</title>", 1))
+        assert "EDITED" in client.get("/?ui=b").text
+    finally:
+        page.write_text(original)
 
 
 def test_reset_clears_the_comparison(store):

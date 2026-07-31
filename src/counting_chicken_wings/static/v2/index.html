@@ -319,6 +319,11 @@ try {
      is attached before the page's own script starts making API calls, and
      stays out of the critical path. Silent unless the server set the
      experiment cookies. -->
+<!-- The variant this page is, signed by the server. Baked into the
+     page rather than read from a cookie at report time: the dwell
+     beacon fires during unload, when the cookie already belongs to
+     the next page. Signed because /api/metrics is public. -->
+<meta name="ccw-ab-token" content="__CCW_AB_TOKEN__">
 <script src="/static/ab.js" defer></script>
 </head>
 <body>

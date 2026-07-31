@@ -36,3 +36,23 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: '3.12'
+
+      # Signing key for the A/B variant tokens. Render generates it once and
+      # keeps it across deploys, which is the point: a per-process key means
+      # every token issued before a restart is refused after one, and those
+      # visitors' events are dropped silently.
+      - key: WINGS_AB_SECRET
+        generateValue: true
+
+      # The experiment is OFF here. Serving a second design to real visitors
+      # is a decision to take deliberately, not one to inherit from a merge.
+      #
+      # Turning it on collects almost nothing as things stand: there is no
+      # disk on this service, so metrics.db lives on the container
+      # filesystem and is lost on every deploy and every wake from the free
+      # tier's idle spin-down. /api/metrics/summary reports
+      # `collecting_since` so that shows up as a window that keeps resetting
+      # rather than as a quiet week. Run the experiment somewhere with
+      # storage, or accept that this only ever measures the last few minutes.
+      - key: WINGS_AB_SPLIT
+        value: '0'

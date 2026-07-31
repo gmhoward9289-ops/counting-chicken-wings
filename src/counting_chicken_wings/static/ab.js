@@ -18,10 +18,18 @@
     return m ? decodeURIComponent(m[1]) : null;
   };
 
-  // The server owns both cookies; if it did not set them, it does not want
-  // this page measured, and we stay silent rather than inventing an id.
+  // The token is the page's own signed statement of which variant it is,
+  // baked in when it was served. Read once, here, and never re-derived: the
+  // cookie can change under this page (another tab, a ?ui= switch) and the
+  // dwell beacon is sent when it already has.
+  var meta = document.querySelector('meta[name="ccw-ab-token"]');
+  var TOKEN = meta && meta.getAttribute('content');
   var VARIANT = cookie('ccw_ui');
   var SESSION = cookie('ccw_sid');
+
+  // An un-substituted placeholder means this file was opened directly rather
+  // than served -- stay silent instead of posting events nothing can verify.
+  if (!TOKEN || TOKEN.indexOf('__CCW_AB') === 0) return;
   if (!VARIANT || !SESSION) return;
 
   var t0 = Date.now();
@@ -51,12 +59,10 @@
   function flush(beacon) {
     if (!queue.length) return;
     var batch = queue.splice(0, 50);
-    // VARIANT is read once, at load, and travels with every batch. The
-    // server prefers it over the current cookie because the dwell beacon
-    // arrives during unload -- by then a visitor who switched variants is
-    // already carrying the *next* page's cookie, and the time would be
-    // credited to the design that did not earn it.
-    post({ session: SESSION, variant: VARIANT, events: batch }, beacon);
+    // The token, not the cookie, is what the server believes about which
+    // variant these events belong to. It was issued with this page, so it
+    // stays correct even when the beacon lands after the cookie has moved on.
+    post({ token: TOKEN, events: batch }, beacon);
   }
 
   function track(name, value, meta) {

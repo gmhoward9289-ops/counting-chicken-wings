@@ -32,10 +32,43 @@ redesign can be argued about with numbers instead of taste.
 - `test_static.py`'s structural invariants now run against **both** pages.
   The redesign is a second page, not a second standard.
 
+### Which arm an event belongs to is signed
+
 Found by exercising it in a browser rather than only in tests: the `dwell`
 beacon fires during unload, so deriving the variant from the cookie at POST
-time credited 32 seconds of variant b to variant a. The page now states its
-own variant with each batch.
+time credited 32 seconds of variant b to variant a — silently, on the event
+the comparison most depends on.
+
+The page now carries a signed token naming its own variant, issued when it
+was served. A cookie describes the browser *now*; a token describes the page
+that earned the measurement. It is bound to the session cookie so it cannot
+be replayed under another id, and it expires after 12 hours. Letting the page
+simply assert its variant would have fixed the attribution and opened a
+different hole, since `/api/metrics` is public and unauthenticated.
+
+Consequences worth knowing:
+
+- **`WINGS_AB_SECRET` must be set** for anything that restarts, and must be
+  one value across processes. Otherwise tokens are signed with a per-process
+  key and refused after a restart, losing those events as what looks like
+  light traffic rather than as a misconfiguration. `render.yaml` now
+  generates one; a warning is logged if the experiment is on without it.
+- `/` is rendered rather than served as a file, to substitute the token.
+  Cached on mtime, so editing a variant is still picked up without a restart.
+- One session can contribute at most 2,000 events. A signature proves which
+  arm a page is; it does not stop that page reporting a million times, and
+  every rate in the summary is per-session.
+
+### The Render deployment cannot store what it collects
+
+Noted rather than fixed, because fixing it costs money. That service has no
+disk — deliberately, it is read-only at runtime — so `metrics.db` sits on the
+container filesystem and is lost on every deploy and every wake from the free
+tier's idle spin-down. `WINGS_AB_SPLIT` is pinned to `0` there.
+
+`/api/metrics/summary` now reports `collecting_since` and `window_hours`, so
+an emptied store reads as a window that keeps resetting rather than as a
+quiet week.
 
 ## v1.9.1 — 2026-07-30
 

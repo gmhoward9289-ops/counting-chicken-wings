@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import db as dbm
@@ -1412,20 +1412,19 @@ async def post_metrics(request: Request):
     Accepts only the closed set of names in `metrics.EVENTS`, caps the batch,
     and timestamps from the server clock.
 
-    **The variant comes from the body, the session from the cookie.** The
-    body is the page telling us which design it actually was, captured when
-    it loaded. Re-deriving it from the cookie at POST time looks safer and is
-    measurably wrong: the `dwell` beacon fires during unload, so a visitor
-    switching variants has the outgoing page's time recorded against the
-    incoming page's cookie. That was not hypothetical -- it credited 32
-    seconds of variant b to variant a the first time this was exercised in a
-    browser, and it is the one event the experiment most needs to be right.
+    **The variant comes from a signed token in the page, the session from the
+    cookie.** Re-deriving the variant from the cookie at POST time looks
+    safer and is measurably wrong: the `dwell` beacon fires during unload, so
+    a visitor switching variants has the outgoing page's time recorded
+    against the incoming page's cookie. That was not hypothetical -- it
+    credited 32 seconds of variant b to variant a the first time this was
+    exercised in a browser, and dwell is the event the comparison most needs
+    to be right.
 
-    This does mean a hand-written client can post events naming any arm. That
-    is not a defence worth having: the endpoint is public, so anyone wanting
-    to stuff the experiment can simply request `?ui=b` and post honestly.
-    The real limits are the closed event set, the batch cap, and knowing that
-    these numbers are a design aid and not an audited figure.
+    Letting the page simply *assert* its variant would fix that and open a
+    different hole, since this endpoint is public. The token closes both: it
+    is issued with the page, names the variant, is bound to the session
+    cookie so it cannot be replayed under another id, and expires.
     """
     sid = request.cookies.get(exp.SID_COOKIE)
     if not sid:
@@ -1437,11 +1436,12 @@ async def post_metrics(request: Request):
     if not isinstance(body, dict):
         return {"accepted": 0, "reason": "unreadable"}
 
-    claimed = body.get("variant")
-    ui = claimed if claimed in exp.VARIANTS else request.cookies.get(
-        exp.UI_COOKIE)
-    if ui not in exp.VARIANTS:
-        return {"accepted": 0, "reason": "no variant"}
+    ui = exp.read_token(body.get("token"), sid)
+    if ui is None:
+        # Deliberately not falling back to the cookie. A fallback would mean
+        # dropping the token was enough to bypass the signature, which is the
+        # same as not having one.
+        return {"accepted": 0, "reason": "missing or invalid token"}
 
     events = body.get("events") or []
     if not isinstance(events, list):
@@ -1471,7 +1471,11 @@ def index(request: Request, ui: str | None = None):
     variant, sid, _ = exp.resolve(
         ui, request.cookies.get(exp.UI_COOKIE),
         request.cookies.get(exp.SID_COOKIE))
-    resp = FileResponse(exp.path_for(variant))
+    # Rendered rather than sent as a file: the page carries a signed token
+    # naming its own variant, which is the only thing that stays correct
+    # while the cookie changes underneath it.
+    resp = HTMLResponse(exp.render_page(
+        exp.path_for(variant), exp.issue_token(sid, variant)))
     for name, value in ((exp.SID_COOKIE, sid), (exp.UI_COOKIE, variant)):
         resp.set_cookie(
             name, value, max_age=exp.COOKIE_MAX_AGE,

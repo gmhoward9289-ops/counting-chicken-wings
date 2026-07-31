@@ -60,7 +60,7 @@ Two pages, one URL. `static/index.html` is variant `a` (shipped, the control);
 `v2/`** — editing `index.html` destroys the control.
 
 ```bash
-WINGS_AB_SPLIT=50 wings gui          # 50% of new visitors get the redesign
+WINGS_AB_SECRET=$(openssl rand -hex 32) WINGS_AB_SPLIT=50 wings gui
 open 'http://localhost:8000/?ui=b'   # force a variant by hand, and pin it
 curl localhost:8000/api/experiment   # which am I on, and why
 curl localhost:8000/api/metrics/summary?hours=24
@@ -77,6 +77,21 @@ curl localhost:8000/api/metrics/summary?hours=24
 - `static/ab.js` is included **identically** by both pages and hooks the page
   from outside. Do not fork it per variant: an instrument that differs
   between the arms is measuring itself.
+- **Which arm an event belongs to comes from a signed token baked into the
+  page**, not from the cookie. A cookie describes the browser *now*; the
+  `dwell` beacon is sent during unload, when the cookie already belongs to
+  the next page. `/` is therefore rendered (placeholder substitution, cached
+  on mtime) rather than sent as a file.
+- **Set `WINGS_AB_SECRET`.** Without it each process signs with its own key,
+  so every token issued before a restart is refused after one and those
+  events are dropped — as data loss that looks like light traffic. It must be
+  one value shared by every process; two workers with two keys reject each
+  other's tokens.
+- **There is nowhere durable to keep `metrics.db` on Render.** That service
+  has no disk by design, so collection restarts on every deploy and every
+  wake from the free tier's spin-down. `/api/metrics/summary` reports
+  `collecting_since` so this shows up as a window that keeps resetting rather
+  than as a quiet week. Run the experiment where there is storage.
 - `v2/index.html` starts as an exact copy of `index.html`. That first run is an
   **A/A test** — it tells you the noise floor, and any later difference
   smaller than it is not a difference.
