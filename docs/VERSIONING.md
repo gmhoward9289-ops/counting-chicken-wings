@@ -23,12 +23,16 @@ because the metadata was stale until reinstall.
 
 Deriving the version from git tags is tempting and would remove the manual
 bump. It is the wrong call **for this project specifically**, because of the
-deploy target: Render clones the repo without tags, so `setuptools-scm` would
-resolve to something like `0.1.dev1+g8031a98` in production while the tag
-says `v1.0.0`.
+deploy target, and the move to swamplink did not change this. `deploy.yml`
+checks out with `fetch-depth: 0` but then pushes `HEAD:refs/heads/main` to the
+bare repo — a refspec push carries **no tags**, so the server's checkout has
+none. `setuptools-scm` would resolve to something like `0.1.dev1+g8031a98` in
+production while the tag says `v1.0.0`. The Render fallback has the same
+problem for its own reason: it clones without tags.
 
 A static version plus a CI check that tag and `pyproject.toml` agree is
-duller and correct. Revisit only if the deploy pipeline starts fetching tags.
+duller and correct. Revisit only if the deploy pipeline starts pushing tags
+to the box as well as the branch.
 
 ## MAJOR.MINOR.MINOR
 
