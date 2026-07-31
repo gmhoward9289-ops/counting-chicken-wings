@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.10.0 — 2026-07-30
 
 ### A/B harness for the frontend
 
