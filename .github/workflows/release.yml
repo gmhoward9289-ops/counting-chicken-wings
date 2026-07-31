@@ -48,6 +48,36 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
+      # THE NUMBER IS DECIDED HERE, not on the branch.
+      #
+      # Reading pyproject.toml only ever released the version master CURRENTLY
+      # declared, which silently drops any release that another merge lands on
+      # top of. That is not a corner case: v1.9.1 and v1.10.0 were both lost to
+      # it within one hour on 2026-07-31.
+      #
+      # It also ends the race docs/VERSIONING.md warns about. A branch that
+      # names a number has to hope no one else takes it during review -- v1.5.0
+      # and v1.6.0 were both taken out from under a branch on 2026-07-30. A
+      # branch now writes `## Unreleased` and no number at all, so whichever
+      # merge lands first takes the next one and the second computes its own
+      # against a base that has already moved.
+      - name: Decide this merge's version
+        id: version
+        run: |
+          if next="$(python tools/next_version.py)"; then
+            echo "this merge releases v$next"
+            python tools/next_version.py --explain
+            echo "computed=yes" >> "$GITHUB_OUTPUT"
+            echo "next=$next"    >> "$GITHUB_OUTPUT"
+          else
+            echo "no '## Unreleased' section; falling back to pyproject.toml"
+            echo "computed=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the number into the changelog and pyproject
+        if: steps.version.outputs.computed == 'yes'
+        run: python tools/next_version.py --apply
+
       - name: Does this version still need a tag or a release?
         id: need
         env:
@@ -118,6 +148,31 @@ jobs:
           fi
           echo "comparing against $prev"
           python tools/release_check.py --base "$prev"
+
+      # The computed number has to reach master BEFORE the tag is cut, because
+      # the tag must name a commit whose pyproject.toml agrees with it -- that
+      # agreement is exactly what `version-consistency` checks for anyone who
+      # tags by hand later. Pushing after tagging would leave the tag pointing
+      # at a commit that still said `## Unreleased`.
+      - name: Record the version on master
+        if: steps.version.outputs.computed == 'yes'
+        env:
+          VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md pyproject.toml
+          git commit -m "Release v$VERSION
+
+          Number assigned at merge by .github/workflows/release.yml. Branches
+          write '## Unreleased' and never claim a number, so two merges landing
+          together cannot take the same one."
+          # A human merge can land between this job starting and this push.
+          # Rebase rather than force: the other merge is somebody's work, and
+          # the version this computed is still correct relative to the tag.
+          git pull --rebase --quiet origin master
+          git push origin HEAD:master
+          echo "recorded v$VERSION on master"
 
       - name: Tag
         if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
