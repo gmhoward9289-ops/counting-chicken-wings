@@ -115,29 +115,36 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
   because someone's existing citation is now wrong, and the changelog states old and new.
   The old rule ("all data changes are MINOR") took the project 1.0.0 → 1.7.0 in two days
   and made the middle number meaningless.
-- **Do not bump `pyproject.toml` when you start a branch.** Write the changelog under
-  `## Unreleased` and set the number in one commit right before merging, after
-  `git fetch` and a look at `git log origin/master` for a `(vX.Y.Z)` subject. Several
-  branches are open at once and they release the same day — a number claimed early gets
-  taken while you are in review, and each renumber costs a rebase plus a sweep of the
-  version string through three files.
+- **Never write a version number on a branch — not in `pyproject.toml`, not in the
+  changelog heading.** Write your entry under `## Unreleased` and stop there. The
+  number is computed at merge by `tools/next_version.py`, from the tag that exists
+  plus `release_check.py`'s verdict on what actually changed.
 
-**Tagging and releasing are automatic — do not do them by hand.**
-`.github/workflows/release.yml` fires on every push to master: if `pyproject.toml`
-declares a version with no tag on the remote, it cuts the tag and the GitHub release,
-with notes taken from that version's `CHANGELOG.md` section. So the merge IS the
-release, and the only thing you owe it is a correct number and a written changelog
-section. A version with no section fails the job rather than publishing an empty
+  This used to be a rule you had to remember to follow, and it did not survive
+  contact with several sessions merging the same day: v1.5.0 and v1.6.0 were both
+  taken out from under a branch in review on 2026-07-30, each renumber costing a
+  rebase and a sweep of the version string through three files. A branch that names
+  no number cannot lose a race for one.
+
+**Versioning, tagging and releasing are all automatic — do not do any of them by
+hand.** `.github/workflows/release.yml` fires on every push to master and, when
+`CHANGELOG.md` carries an `## Unreleased` section with content:
+
+1. computes the number from the latest version tag and `release_check.py`'s verdict;
+2. rewrites `## Unreleased` to `## vX.Y.Z — <date>` and sets `pyproject.toml`;
+3. commits that back to master, then tags and releases it.
+
+So **the merge is the release**, and all you owe it is a written changelog section.
+A section that cannot be described fails the job rather than publishing an empty
 release.
 
 Two consequences worth knowing:
 
-- **It only ever releases the version master currently declares.** Land two version
-  bumps before the workflow runs and the middle one is skipped for good — v1.9.1 was
-  lost that way and needs a manual backfill.
-- **The version checks moved earlier.** `ci.yml` gates them on `refs/tags/v*`, which
-  cannot work for a bot-created tag: GitHub does not raise workflow-triggering events
-  for pushes made with the default `GITHUB_TOKEN`, so a tag the workflow pushes starts
+- **`pyproject.toml` is an output now, not an input.** It is written by the release
+  job. Editing it on a branch just creates a conflict for the bot to resolve.
+- **The version checks moved earlier.** `ci.yml` gates them on tag refs, which cannot
+  work for a bot-created tag: GitHub does not raise workflow-triggering events for
+  pushes made with the default `GITHUB_TOKEN`, so a tag the workflow pushes starts
   nothing. `release.yml` therefore runs `release_check.py` itself, *before* tagging —
   a bad release is easier to prevent than to retract.
 

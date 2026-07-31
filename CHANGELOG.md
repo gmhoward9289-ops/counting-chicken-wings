@@ -160,6 +160,34 @@ taking its "no previous tag" branch and exiting 0 on every tag it ever ran on.
 `docs/VERSIONING.md` still told you to tag and release by hand, which #37 had
 already taken away.
 
+### The version is decided at merge, not on the branch
+
+A branch now writes `## Unreleased` and no number anywhere — not in the
+changelog heading, not in `pyproject.toml`. `tools/next_version.py` computes
+the number when the merge lands, from the latest version tag plus
+`release_check.py`'s verdict on what actually changed, then writes it into
+both files and commits it back to master ahead of the tag.
+
+This closes two failures that were the same failure.
+
+**Releases were being skipped.** Reading `pyproject.toml` only ever released
+the version master *currently* declared, so any release that another merge
+landed on top of vanished. v1.9.1 and v1.10.0 were both lost to it within one
+hour on 2026-07-31, and both had to be backfilled by hand. A number derived at
+merge cannot be overtaken, because the merge that computes it is the one that
+publishes it.
+
+**Numbers were being raced for.** `docs/VERSIONING.md` already said to pick the
+number last, but that was a rule people had to remember while several branches
+were in review at once. On 2026-07-30 a seasonality branch was numbered
+v1.5.0, another session released v1.5.0 during its review, it was renumbered
+v1.6.0, and that was taken too — it shipped as v1.7.0 having cost two rebases
+and two sweeps of the version string through three files. A branch that names
+no number cannot lose a race for one.
+
+`pyproject.toml` is now an output of the release job rather than an input to
+it. Editing it on a branch only creates a conflict for the bot to resolve.
+
 ## v1.11.0 — 2026-07-31
 
 ### Variant B becomes a real design
