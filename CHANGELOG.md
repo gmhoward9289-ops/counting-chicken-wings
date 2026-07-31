@@ -1,5 +1,107 @@
 # Changelog
 
+## v1.10.0 — 2026-07-30
+
+### A/B harness for the frontend
+
+Two frontends can now be served from one URL, with measurement attached, so a
+redesign can be argued about with numbers instead of taste.
+
+- `experiment.py` assigns a variant per visitor and makes it **stick**. The
+  choice is deterministic from a random cookie id rather than a coin flip per
+  request, because a page that changes under the person being measured
+  measures nothing. `?ui=a` / `?ui=b` forces and pins a variant by hand.
+- **The split defaults to 0%** — everyone gets the shipped page until
+  `WINGS_AB_SPLIT` deliberately turns the experiment on. Deploying this
+  branch does not change what a visitor sees.
+- `metrics.py` stores events in **its own SQLite file** (`metrics.db`,
+  `WINGS_METRICS_DB`), and refuses to open `chickens.db`. `build` recreates
+  the corpus database, which would destroy the measurements; the corpus is
+  also what the citation audit reasons about, and an observation is not a
+  cited figure.
+- `static/ab.js` is shared verbatim by both variants — an instrument that
+  differs between the arms measures itself. It attaches from outside the page
+  (delegated listener, fetch wrapper), so neither design has to be edited to
+  be measured and the redesign cannot forget to instrument anything.
+- `GET /api/metrics/summary` compares the arms: load time, API latency,
+  dwell, time to first interaction, interaction rate, error rate, how much of
+  the UI got found. It reports no significance test, and says so.
+- `static/v2/index.html` is seeded as an **exact copy** of the shipped page,
+  so the first run is an A/A test that measures the noise floor. A later
+  difference smaller than that one is not a difference.
+- `test_static.py`'s structural invariants now run against **both** pages.
+  The redesign is a second page, not a second standard.
+
+### Which arm an event belongs to is signed
+
+Found by exercising it in a browser rather than only in tests: the `dwell`
+beacon fires during unload, so deriving the variant from the cookie at POST
+time credited 32 seconds of variant b to variant a — silently, on the event
+the comparison most depends on.
+
+The page now carries a signed token naming its own variant, issued when it
+was served. A cookie describes the browser *now*; a token describes the page
+that earned the measurement. It is bound to the session cookie so it cannot
+be replayed under another id, and it expires after 12 hours. Letting the page
+simply assert its variant would have fixed the attribution and opened a
+different hole, since `/api/metrics` is public and unauthenticated.
+
+Consequences worth knowing:
+
+- **`WINGS_AB_SECRET` must be set** for anything that restarts, and must be
+  one value across processes. Otherwise tokens are signed with a per-process
+  key and refused after a restart, losing those events as what looks like
+  light traffic rather than as a misconfiguration. `render.yaml` now
+  generates one; a warning is logged if the experiment is on without it.
+- `/` is rendered rather than served as a file, to substitute the token.
+  Cached on mtime, so editing a variant is still picked up without a restart.
+- One session can contribute at most 2,000 events. A signature proves which
+  arm a page is; it does not stop that page reporting a million times, and
+  every rate in the summary is per-session.
+
+### The experiment runs on swamplink, because Render cannot store it
+
+Render's service has no disk — deliberately, it is read-only at runtime — so
+`metrics.db` would sit on the container filesystem and be lost on every deploy
+and every wake from the free tier's idle spin-down. `WINGS_AB_SPLIT` is pinned
+to `0` there, with the reasoning in `render.yaml`.
+
+swamplink has a real disk and is always on, so that is where it runs.
+
+- `compose.yml` mounts a named volume at `/data` — the one piece of state
+  this app has. The corpus is baked into the image and never written to;
+  metrics are written constantly and are worthless if they do not outlive the
+  container.
+- The Dockerfile creates `/data` owned by the unprivileged user. Docker seeds
+  a fresh named volume from the image path, ownership included; mounting onto
+  a path the image lacks yields a root-owned volume the container cannot
+  write to.
+- **A/B config lives at `/srv/apps/wings/ab.env`, outside the checkout.** The
+  post-receive hook overwrites `src/.env` with `GIT_COMMIT` on every deploy,
+  so anything put there dies at the next push. Keeping the split there also
+  makes starting and stopping the experiment an operational dial rather than
+  a code change.
+- `/api/metrics/summary` reports `collecting_since` and `window_hours`, so an
+  emptied store reads as a resetting window rather than a quiet week.
+
+### A validator, because a public experiment collects more than the experiment
+
+`wings ab` prints the comparison. `wings ab-clean` reports what does not
+belong in it, and `--clean` removes it. Read-only by default.
+
+It catches sessions that saw both arms (what `?ui=` flipping looks like
+afterwards, including our own testing — it inflates both arms at once),
+events with no pageview, sessions at the ingest ceiling, impossible load
+times, tabs left open for hours, and arms that no longer exist. Retention
+pruning is opt-in via `--older-than`.
+
+**It refuses to clean everything it flags.** A session that loaded a page and
+then made no API calls looks like a crawler and looks identical to a variant
+failing on somebody's browser — the most valuable thing this experiment could
+surface. Those are reported, starred, and never deleted. A cleaner that
+quietly removes the interesting cases is worse than no cleaner, because the
+store then looks tidy and is wrong.
+
 ## v1.9.1 — 2026-07-30
 
 Wording only: the Israel-facing copy now leads with what Israel's sources

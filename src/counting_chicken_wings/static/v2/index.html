@@ -1,5 +1,18 @@
 <!doctype html>
-<html lang="en">
+<!-- VARIANT B - the redesign.
+     Seeded as an exact copy of variant a on purpose: with both arms
+     identical the first run is an A/A test, which measures the noise
+     floor. Any later difference smaller than what this run showed is
+     not a difference. Redesign work goes in this file; leave
+     ../index.html alone so the control stays a control.
+
+     WHILE THIS IS STILL A SEED COPY, edits to ../index.html must be
+     mirrored here, or the A/A run is comparing two different pages
+     and calls the difference noise. v1.9.1 landed a copy edit on the
+     control while this branch was open and did exactly that. Once
+     real redesign work starts the two are meant to diverge, and this
+     note stops applying. -->
+<html lang="en" data-variant="b">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
