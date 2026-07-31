@@ -495,6 +495,15 @@ RULES, and breaking any of them makes the answer useless:
   document came from, not about what it says, and a human assigns them. This
   used to permit "study" for journal articles and a model applied it to an
   extension web page, so the option was removed rather than re-explained.
+- If the number you want to use comes from a table, do not quote only the row.
+  A bare row of digits does not say what the number IS -- retail loss and
+  consumer loss can sit side by side in two columns, and a pie chart's percent
+  and its total calories can sit side by side on one line, and a quote of just
+  the row cannot tell those apart afterward. Copy the column header too, even
+  if it is several lines above the row in the text, so "quote" carries both the
+  number and the label that gives it meaning. If you cannot find a header that
+  names what the number counts, reply {{"found": false}} rather than guessing
+  from the row alone.
 
 QUESTION: {question}
 UNIT WANTED: {unit}

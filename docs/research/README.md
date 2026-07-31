@@ -211,6 +211,13 @@ counter-examples and a gate that cries wolf gets ignored:
   complete and unreviewable, and used to pass because its last character was a
   bracket.
 
+The extraction prompt (`tools/cooper/runner.py`) also carries a standing
+instruction to copy a table's column header into the quote, not just the row,
+and to decline rather than guess when no header can be found. That is
+instruction, not enforcement -- it costs nothing to ignore, which is why
+`quote_lacks_basis` still runs at gate time regardless of what the model was
+told.
+
 ## SSH, and two traps that have already cost time
 
 - **Quoting through `ssh cooper "..."` is unreliable.** cmd.exe strips single
