@@ -99,7 +99,26 @@ def required_level(base: str) -> tuple[str, list[str]]:
         capture_output=True, text=True, cwd=ROOT)
     if out.returncode not in (0, 1) or not out.stdout.strip():
         raise SystemExit(f"release_check failed: {out.stderr.strip()[:300]}")
-    d = json.loads(out.stdout)
+
+    return parse_verdict(out.stdout)
+
+
+def parse_verdict(stdout: str) -> tuple[str, list[str]]:
+    """`required` and its reasons, out of release_check's --json stream.
+
+    That stream is NOT a single JSON document: on a FAIL verdict the object is
+    followed by a human line, so `json.loads` raises "Extra data".
+
+    FAIL is the normal case here rather than the exception, which is worth
+    stating plainly. release_check derives `actual` by diffing pyproject
+    against the base tag, and under this scheme a branch never bumps pyproject
+    -- so `actual` is always "none" and every verdict reads as failing. Only
+    `required` is read: this runs BEFORE the number is applied and asks what
+    the diff needs, not whether the tree already says so. The workflow still
+    runs release_check as a real gate, after --apply, when there is an actual
+    bump to compare against.
+    """
+    d, _ = json.JSONDecoder().raw_decode(stdout[stdout.index("{"):])
     return d.get("required", "none"), d.get("reasons", [])
 
 

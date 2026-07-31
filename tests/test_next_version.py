@@ -124,6 +124,41 @@ def test_rewrite_touches_only_the_first_heading():
 # ---------------------------------------------------------------------------
 
 
+FAILING_JSON = """{
+ "base": "v1.11.0",
+ "required": "second",
+ "actual": "none",
+ "ok": false,
+ "reasons": ["new domain(s): livestock"]
+}
+
+FAIL: version bump is none, but this diff requires second
+"""
+
+
+def test_a_failing_verdict_still_parses():
+    """release_check prints a human line AFTER the object when it fails.
+
+    That makes the stream two documents, and `json.loads` raises "Extra
+    data". This is the normal path, not a corner case: under version-at-merge
+    a branch never bumps pyproject, so `actual` is always "none" and every
+    verdict reads as FAIL. Parsing only the leading object is what lets the
+    number be computed at all.
+    """
+    level, reasons = nv.parse_verdict(FAILING_JSON)
+    assert level == "second"
+    assert reasons == ["new domain(s): livestock"]
+
+
+def test_a_passing_verdict_parses_too():
+    level, _ = nv.parse_verdict('{"required": "third", "reasons": []}\n')
+    assert level == "third"
+
+
+def test_a_missing_required_field_reads_as_none_rather_than_crashing():
+    assert nv.parse_verdict('{"base": "v1.0.0"}')[0] == "none"
+
+
 def test_the_levels_are_ordered_weakest_first():
     """`none` must sort below `third`; the floor rule depends on it."""
     assert nv.LEVELS.index("none") < nv.LEVELS.index("third") \
