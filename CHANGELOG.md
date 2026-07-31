@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+### The fetcher now says when it was handed a doorman
+
+`scout` already refuses a bot wall it can see from either host, and `verify`
+already fails a walled document that reaches the inbox. The fetcher itself
+said nothing: in batch-05-milk it printed `fetched pmc-….txt (167 chars)` for
+167 characters of reCAPTCHA and the run reported **zero** fetch failures while
+having suffered one. That silently removed Gross 2023 (*Animal Frontiers*), the
+strongest source in the batch, and made two spec items unanswerable.
+
+- **`runner.fetch_url` checks body plausibility on every fetch**, HTML and
+  extracted PDF alike, and prints `[WALLED]` naming the URL and the marker. The
+  fetch phase then reports the walls together before any model is called, so a
+  wall cannot scroll past under two hundred chunk messages.
+- **The document is kept, not discarded.** The artifact is the evidence
+  `verify` re-checks quotes against; deleting it would move the silence one
+  layer down. A wall is a warning at fetch time and a failure at gate time,
+  because the wall is per-request — COOPER got reCAPTCHA from PMC in batch-05
+  and 82,331 characters of the same article in batch-06.
+- **The marker list has exactly one home.** It moved into `tools/cooper/`, the
+  only half of the pipeline that exists on COOPER, and `research_batch.py`
+  imports it. A scout disagreeing with the runner about what counts as a
+  document would be pre-flighting a fetcher it does not match.
+- The certifi trust-store warning now fires at the first fetch rather than at
+  import, so `verify` and `accept` — which never open a socket — stay quiet.
+
 ## v1.12.0 — 2026-07-31
 ### A gallon of syrup is not one tree — a correctness fix to shipped output
 

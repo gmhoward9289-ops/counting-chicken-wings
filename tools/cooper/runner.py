@@ -249,6 +249,74 @@ def ollama(model: str, prompt: str, timeout: int = 300) -> str:
 _FETCH_CACHE: dict[str, Path | None] = {}
 _EMBED_CACHE: dict[str, list[float] | None] = {}
 
+# Documents this run fetched that turned out to be doormen. Collected so the
+# end of the run can say so in one place: the per-fetch line scrolls past under
+# 200 chunk messages, and the batch-05 wall went unnoticed for exactly that
+# reason.
+WALLED_FETCHES: list[tuple[str, str]] = []
+
+# ---------------------------------------------------------------------------
+# Bot walls: what a fetch looks like when the answer is 200 and the body is a
+# doorman.
+#
+# This is the CANONICAL definition and it lives here, in the fetcher, for two
+# reasons. It has to run on COOPER, where only tools/cooper/ is present and
+# nothing else of the project is importable; and the check belongs next to the
+# code whose output it describes. tools/research_batch.py imports these names
+# rather than restating them -- two copies of this list would drift, and the
+# half that drifted would be the half that stayed silent.
+# ---------------------------------------------------------------------------
+
+# Phrases that appear in an interstitial and essentially nowhere in a document
+# that is actually about a subject. Matched only against SHORT bodies, because
+# a real page may carry <noscript>Please enable JavaScript</noscript> in its
+# chrome and still contain the whole article underneath.
+INTERSTITIAL_MARKERS = (
+    "recaptcha",
+    "checking your browser",
+    "enable javascript",
+    "javascript is disabled",
+    "cf-browser-verification",
+    "cloudflare",
+    "just a moment...",
+    "attention required!",
+    "verify you are human",
+    "are you a robot",
+    "access denied",
+    "request unsuccessful",
+    "ddos protection",
+)
+
+# A body under this many characters is too small to be the document a spec
+# cites, so an interstitial marker inside it is the whole page rather than a
+# fragment of one. PMC's wall was 167 characters; the smallest real document
+# in batch-05 was 2,039.
+INTERSTITIAL_MAX_CHARS = 1500
+
+
+def looks_like_interstitial(text: str,
+                            total_chars: int | None = None) -> tuple[bool, str]:
+    """True when a fetch is a doorman rather than a document.
+
+    The dangerous case is not an error: FSIS 403s to COOPER and the runner says
+    so. PMC returned HTTP 200 and 167 characters of "Checking your browser -
+    reCAPTCHA", which every layer downstream treated as a successful fetch of
+    Gross 2023 (Animal Frontiers) -- the strongest source in batch-05-milk.
+
+    `total_chars` exists for the scout, which only ships the first 2,000
+    characters of a remote body back across the wire and must judge the size on
+    the count rather than on what it holds.
+    """
+    n = len(text) if total_chars is None else total_chars
+    if n > INTERSTITIAL_MAX_CHARS:
+        return False, ""
+    low = text.lower()
+    for m in INTERSTITIAL_MARKERS:
+        if m in low:
+            return True, (f"body is {n} chars and contains {m!r} -- this is an "
+                          f"interstitial, not the document")
+    return False, ""
+
 
 def fetch_once(url: str, doc_dir: Path) -> Path | None:
     """Fetch a URL at most once per run.
@@ -308,19 +376,61 @@ def _ca_context() -> ssl.SSLContext | None:
 
 
 _SSL_CTX = _ca_context()
-if _SSL_CTX is None:
-    # Deliberately does not name a machine. This module is imported on the Mac
-    # too -- research_batch.py and the tests parse specs with it -- and the Mac
-    # has a working system trust store, so asserting "COOPER does not have one"
-    # was simply wrong half the time it printed.
+_WARNED_ABOUT_CERTIFI = False
+
+
+def _warn_once_about_trust_store() -> None:
+    """Say it when it can matter -- at the first fetch, not at import.
+
+    Deliberately does not name a machine. This module is imported on the Mac
+    too -- research_batch.py imports it for the spec parser and the bot-wall
+    definitions, and the tests import it directly -- and the Mac has a working
+    system trust store, so asserting "COOPER does not have one" was simply
+    wrong half the time it printed.
+
+    It is deferred to the first fetch for the same reason it is worded that
+    way: research_batch's `verify` and `accept` never open a socket, and a
+    warning printed on every invocation of a command it cannot apply to is
+    noise. Noise on a channel that also carries [WALLED] is not free.
+    """
+    global _WARNED_ABOUT_CERTIFI
+    if _SSL_CTX is not None or _WARNED_ABOUT_CERTIFI:
+        return
+    _WARNED_ABOUT_CERTIFI = True
     print("  WARNING: certifi is not installed, so HTTPS verification falls "
           "back to whatever trust store this interpreter has. On a host with "
           "none (COOPER reports cafile=None) expect fetch failures on PMC and "
           "some .edu hosts. Fix: pip install certifi")
 
 
+def _note_if_walled(url: str, text: str, path: Path) -> None:
+    """Say loudly when what just landed is a doorman, not a document.
+
+    Deliberately does NOT return None to the caller and does NOT delete the
+    file. The artifact is the evidence: `research_batch verify` re-checks every
+    document that arrives and `fetch` reports the walls it finds, and both of
+    those need the file to exist. Suppressing it here would only move the
+    silence one layer down.
+
+    This is a WARNING at fetch time and a FAILURE at gate time, and that split
+    is on purpose. The wall is per-request -- COOPER was served PMC's reCAPTCHA
+    during batch-05 and 82,331 characters of the same article during batch-06 --
+    so the fetcher's job is to make it visible, not to adjudicate it.
+    """
+    walled, why = looks_like_interstitial(text)
+    if not walled:
+        return
+    WALLED_FETCHES.append((url, why))
+    print(f"    [WALLED] {path.name}: {why}")
+    print(f"             {url}")
+    print("             This is a 200 with a doorman behind it. Any item "
+          "resting on it will\n             come back empty for a plumbing "
+          "reason, not a source one.")
+
+
 def fetch_url(url: str, dest: Path) -> Path | None:
     """Save a URL to disk. The artifact is the evidence, so it must persist."""
+    _warn_once_about_trust_store()
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         req = urllib.request.Request(
@@ -355,6 +465,7 @@ def fetch_url(url: str, dest: Path) -> Path | None:
                 txt.write_text(text, encoding="utf-8")
                 print(f"    fetched + extracted {txt.name} "
                       f"(pypdf, {len(reader.pages)} pages, {len(text):,} chars)")
+                _note_if_walled(url, text, txt)
                 return txt
             print(f"    {pdf.name}: pypdf found no extractable text "
                   f"(likely a scanned image -- would need OCR)")
@@ -388,6 +499,7 @@ def fetch_url(url: str, dest: Path) -> Path | None:
     dest = dest.with_suffix(".txt")
     dest.write_text(text, encoding="utf-8")
     print(f"    fetched {dest.name} ({len(text):,} chars)")
+    _note_if_walled(url, text, dest)
     return dest
 
 
@@ -662,6 +774,18 @@ def run(batch: str) -> int:
     docs = [d for d in (_FETCH_CACHE.get(u) for u in urls) if d]
     if not docs:
         sys.exit("no documents could be fetched -- check the URLs in the spec")
+
+    # Report the walls together, after the fetch phase and before the models
+    # get anything, so the count is legible. batch-05 reported "0 fetch
+    # failures" and had suffered one; this is the line that would have said so.
+    if WALLED_FETCHES:
+        print(f"\n  {len(WALLED_FETCHES)} of {len(docs)} document(s) are "
+              f"interstitials, not sources:")
+        for u, why in WALLED_FETCHES:
+            print(f"    [WALLED] {u}\n             {why}")
+        print("  These were fetched with a 200 and are worth nothing. Expect "
+              "the items resting\n  on them to return empty, and do not read "
+              "that as the models declining.")
 
     # -- Phase 2: chunk and embed each document once -------------------------
     print(f"\nchunking + embedding {len(docs)} document(s)")

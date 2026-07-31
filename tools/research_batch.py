@@ -49,6 +49,13 @@ DATA = ROOT / "data"
 
 sys.path.insert(0, str(SRC))
 
+# The fetcher is imported, not duplicated. It owns the spec parser AND the bot
+# wall definitions, and this file has to agree with it exactly: a scout that
+# disagreed with the runner about what counts as a document would be checking
+# something other than the run it is a pre-flight for.
+sys.path.insert(0, str(ROOT / "tools" / "cooper"))
+import runner as _runner                              # noqa: E402
+
 HOST = "cooper"
 REMOTE_ROOT = "C:/research"
 
@@ -758,31 +765,14 @@ def accept(batch: str) -> int:
 # doorman
 # ---------------------------------------------------------------------------
 
-# Phrases that appear in an interstitial and essentially nowhere in a document
-# that is actually about a subject. Matched only against SHORT bodies, because
-# a real page may carry <noscript>Please enable JavaScript</noscript> in its
-# chrome and still contain the whole article underneath.
-INTERSTITIAL_MARKERS = (
-    "recaptcha",
-    "checking your browser",
-    "enable javascript",
-    "javascript is disabled",
-    "cf-browser-verification",
-    "cloudflare",
-    "just a moment...",
-    "attention required!",
-    "verify you are human",
-    "are you a robot",
-    "access denied",
-    "request unsuccessful",
-    "ddos protection",
-)
-
-# A body under this many characters is too small to be the document a spec
-# cites, so an interstitial marker inside it is the whole page rather than a
-# fragment of one. PMC's wall was 167 characters; the smallest real document
-# in batch-05 was 2,039.
-INTERSTITIAL_MAX_CHARS = 1500
+# The marker list and the size floor are NOT defined here. They live in
+# tools/cooper/runner.py, which is the code that actually does the fetching and
+# is the only half of this pipeline that runs on COOPER, where nothing else of
+# the project is importable. Importing them keeps one definition: two copies
+# would drift, and the half that drifted would be the half that went quiet.
+INTERSTITIAL_MARKERS = _runner.INTERSTITIAL_MARKERS
+INTERSTITIAL_MAX_CHARS = _runner.INTERSTITIAL_MAX_CHARS
+looks_like_interstitial = _runner.looks_like_interstitial
 
 # Remote-over-local ratio below which the two hosts are not being served the
 # same thing. Measured evidence sets this very loosely on purpose: across
@@ -796,26 +786,6 @@ COLLAPSE_RATIO = 0.25
 # Below this, ratios stop meaning anything -- a 300-character local fetch is
 # already too small to matter and its ratio is noise.
 COLLAPSE_MIN_LOCAL_CHARS = 1000
-
-
-def looks_like_interstitial(text: str,
-                            total_chars: int | None = None) -> tuple[bool, str]:
-    """True when a fetch is a doorman rather than a document.
-
-    The dangerous case is not an error: FSIS 403s to COOPER and the runner says
-    so. PMC returned HTTP 200 and 167 characters of "Checking your browser -
-    reCAPTCHA", which every layer downstream treated as a successful fetch of
-    Gross 2023.
-    """
-    n = len(text) if total_chars is None else total_chars
-    if n > INTERSTITIAL_MAX_CHARS:
-        return False, ""
-    low = text.lower()
-    for m in INTERSTITIAL_MARKERS:
-        if m in low:
-            return True, (f"body is {n} chars and contains {m!r} -- this is an "
-                          f"interstitial, not the document")
-    return False, ""
 
 
 def host_delta_verdict(local_chars: int | None,
@@ -999,9 +969,7 @@ def scout(batch: str) -> int:
     if not spec.exists():
         raise SystemExit(f"no spec at {spec}")
 
-    sys.path.insert(0, str(ROOT / "tools" / "cooper"))
-    import runner                                    # noqa: PLC0415
-
+    runner = _runner
     items = runner.parse_spec(spec)["items"]
     text = spec.read_text(encoding="utf-8")
     doc_dir = RESEARCH / "inbox" / f"_scout-{batch}"
