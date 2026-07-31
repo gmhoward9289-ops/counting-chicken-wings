@@ -393,6 +393,15 @@ Four details are load-bearing:
   collapses concurrent runs correctly — the first releases everything
   unreleased, the second finds nothing to do and does nothing.
 
+It needs **one repository setting**, which is the one thing here a workflow
+file cannot grant itself: *Settings → Actions → General → Workflow permissions
+→ "Allow GitHub Actions to create and approve pull requests"*. With it off,
+`gh pr create` fails with `GitHub Actions is not permitted to create or approve
+pull requests` — which is how the first live run of this mechanism died. A
+leftover `release/vX.Y.Z` branch with no PR is now cleared and recreated rather
+than failing the job, so one dead run does not wedge every release after it; a
+leftover branch *with* an open PR still fails, because that one is in flight.
+
 Also fixed alongside it: `next_version.py`'s `latest_tag()` called
 `git describe --tags` unfiltered, so a marker tag (`snapshot/…`,
 `checkpoint/…`) pushed after the last release would silently become the base
