@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Say what COOPER actually did
+
+`docs/research/README.md` now states the attribution in one place: extracted by
+a local model, specified and graded by a human, verified against the returned
+document. Not "research done by an AI", which overstates a worker that fetches
+exactly the URLs it is handed and never searches, and understates the quote
+gate that is the reason any of these figures are citable.
+
+Findings files carry an `extraction:` block -- host, models, run date, and the
+gate that passed them -- written by `runner.py` rather than added by hand, so a
+row quoted out of `accepted/` still says what produced it. The directory name
+was doing that job by implication, and an implication does not survive a
+copy-paste. Backfilled onto saffron and maple. It records the batch; per-figure
+detail stays in `agreement:`, because which model won a given field is not
+something the runner measures and inventing it would be the tidy-looking
+fiction the pipeline exists to keep out. The block carries neither `quote` nor
+`confidence`, so `verify` never sees it.
+
 ### Tags that are not releases
 
 Since #37 the merge cuts the release, so a tag is no longer how you publish one.
