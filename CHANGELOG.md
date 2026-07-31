@@ -59,16 +59,48 @@ Consequences worth knowing:
   arm a page is; it does not stop that page reporting a million times, and
   every rate in the summary is per-session.
 
-### The Render deployment cannot store what it collects
+### The experiment runs on swamplink, because Render cannot store it
 
-Noted rather than fixed, because fixing it costs money. That service has no
-disk — deliberately, it is read-only at runtime — so `metrics.db` sits on the
-container filesystem and is lost on every deploy and every wake from the free
-tier's idle spin-down. `WINGS_AB_SPLIT` is pinned to `0` there.
+Render's service has no disk — deliberately, it is read-only at runtime — so
+`metrics.db` would sit on the container filesystem and be lost on every deploy
+and every wake from the free tier's idle spin-down. `WINGS_AB_SPLIT` is pinned
+to `0` there, with the reasoning in `render.yaml`.
 
-`/api/metrics/summary` now reports `collecting_since` and `window_hours`, so
-an emptied store reads as a window that keeps resetting rather than as a
-quiet week.
+swamplink has a real disk and is always on, so that is where it runs.
+
+- `compose.yml` mounts a named volume at `/data` — the one piece of state
+  this app has. The corpus is baked into the image and never written to;
+  metrics are written constantly and are worthless if they do not outlive the
+  container.
+- The Dockerfile creates `/data` owned by the unprivileged user. Docker seeds
+  a fresh named volume from the image path, ownership included; mounting onto
+  a path the image lacks yields a root-owned volume the container cannot
+  write to.
+- **A/B config lives at `/srv/apps/wings/ab.env`, outside the checkout.** The
+  post-receive hook overwrites `src/.env` with `GIT_COMMIT` on every deploy,
+  so anything put there dies at the next push. Keeping the split there also
+  makes starting and stopping the experiment an operational dial rather than
+  a code change.
+- `/api/metrics/summary` reports `collecting_since` and `window_hours`, so an
+  emptied store reads as a resetting window rather than a quiet week.
+
+### A validator, because a public experiment collects more than the experiment
+
+`wings ab` prints the comparison. `wings ab-clean` reports what does not
+belong in it, and `--clean` removes it. Read-only by default.
+
+It catches sessions that saw both arms (what `?ui=` flipping looks like
+afterwards, including our own testing — it inflates both arms at once),
+events with no pageview, sessions at the ingest ceiling, impossible load
+times, tabs left open for hours, and arms that no longer exist. Retention
+pruning is opt-in via `--older-than`.
+
+**It refuses to clean everything it flags.** A session that loaded a page and
+then made no API calls looks like a crawler and looks identical to a variant
+failing on somebody's browser — the most valuable thing this experiment could
+surface. Those are reported, starred, and never deleted. A cleaner that
+quietly removes the interesting cases is worse than no cleaner, because the
+store then looks tidy and is wrong.
 
 ## v1.9.1 — 2026-07-30
 

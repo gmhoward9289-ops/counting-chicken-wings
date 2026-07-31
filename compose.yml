@@ -23,6 +23,28 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8101:8000"
+
+    # A/B configuration lives OUTSIDE the git checkout, at
+    # /srv/apps/wings/ab.env, because the post-receive hook overwrites
+    # src/.env with GIT_COMMIT on every deploy -- anything put there is gone
+    # by the next push. It holds WINGS_AB_SPLIT and WINGS_AB_SECRET.
+    #
+    # Keeping the split there rather than in this file also makes starting
+    # and stopping the experiment an operational dial rather than a code
+    # change: edit one line on the box and restart, no commit, no deploy.
+    #
+    # required:false so a local `docker compose up` works without it. Absent
+    # the file the split defaults to 0 and nothing is served differently.
+    env_file:
+      - path: ../ab.env
+        required: false
+
+    # The corpus is baked into the image and never written to. Metrics are
+    # the opposite: written constantly, and worthless if they do not outlive
+    # the container. This is the one piece of state this app has.
+    volumes:
+      - wings-metrics:/data
+
     environment:
       # /api/version exists to answer "what am I looking at?", and it answers
       # `null` unless somebody tells it. The hook exports GIT_COMMIT from the
@@ -31,6 +53,9 @@ services:
       GIT_COMMIT: "${GIT_COMMIT:-}"
       SERVICE_NAME: "wings@swamplink"
       GIT_BRANCH: "master"
+      # On the volume, not in the image: an image rebuild happens on every
+      # push and would otherwise reset the experiment mid-run.
+      WINGS_METRICS_DB: "/data/metrics.db"
     healthcheck:
       # /healthz touches no database and builds no payload -- it exists to be
       # pinged cheaply.
@@ -47,3 +72,11 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+# Named rather than a bind mount: nothing outside the container needs to read
+# this file directly, and `docker compose down` will not take it with it.
+# Inspect or clean it with
+#   docker compose exec wings wings ab
+#   docker compose exec wings wings ab-clean
+volumes:
+  wings-metrics:

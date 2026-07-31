@@ -87,11 +87,48 @@ curl localhost:8000/api/metrics/summary?hours=24
   events are dropped — as data loss that looks like light traffic. It must be
   one value shared by every process; two workers with two keys reject each
   other's tokens.
-- **There is nowhere durable to keep `metrics.db` on Render.** That service
-  has no disk by design, so collection restarts on every deploy and every
-  wake from the free tier's spin-down. `/api/metrics/summary` reports
-  `collecting_since` so this shows up as a window that keeps resetting rather
-  than as a quiet week. Run the experiment where there is storage.
+- **The experiment runs on swamplink, not Render.** Render's service has no
+  disk by design, so collection there restarts on every deploy and every wake
+  from the free tier's spin-down; its split is pinned to `0`.
+  `/api/metrics/summary` reports `collecting_since`, so an ephemeral store
+  reads as a window that keeps resetting rather than as a quiet week.
+
+### Running it on swamplink
+
+`compose.yml` mounts a named volume `wings-metrics` at `/data` and points
+`WINGS_METRICS_DB` there — the one piece of state this app has. The corpus is
+baked into the image and never written to; metrics are the opposite.
+
+**Configuration lives at `/srv/apps/wings/ab.env`, outside the git checkout**,
+because the post-receive hook overwrites `src/.env` with `GIT_COMMIT` on every
+deploy — anything put there is gone by the next push. It holds
+`WINGS_AB_SECRET` and `WINGS_AB_SPLIT`, so starting and stopping the
+experiment is one line on the box plus a restart, with no commit and no
+deploy:
+
+```bash
+ssh swamplink
+vi /srv/apps/wings/ab.env          # WINGS_AB_SPLIT=50
+cd /srv/apps/wings/src && docker compose up -d
+docker compose exec wings wings ab        # the comparison
+docker compose exec wings wings ab-clean  # what should not be in it
+```
+
+`/data` must exist **in the image** with the right owner (it does — see the
+Dockerfile). Docker seeds a fresh named volume from the image path, ownership
+included; mount onto a path the image lacks and the volume arrives root-owned,
+which an unprivileged container cannot write to.
+
+### Cleaning the data
+
+Real traffic brings crawlers, prefetches, tabs left open for days, and our own
+`?ui=` flipping. `wings ab-clean` reports; `--clean` acts.
+
+**It deliberately will not clean everything it flags.** A session that loaded
+a page and then made no API calls looks like a crawler and looks identical to
+a variant failing on somebody's browser — the most valuable thing this
+experiment could surface. Starred findings are reported and never deleted. If
+you add a check, ask first whether it could be the finding.
 - `v2/index.html` starts as an exact copy of `index.html`. That first run is an
   **A/A test** — it tells you the noise floor, and any later difference
   smaller than it is not a difference.

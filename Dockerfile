@@ -30,6 +30,16 @@ EXPOSE 8000
 
 # Run unprivileged.
 RUN useradd --create-home --uid 10001 wings && chown -R wings /app
+
+# /data is where a metrics volume gets mounted, and it must exist HERE with
+# the right owner. Docker seeds a fresh named volume from the image path,
+# ownership included; mount onto a path the image does not have and the
+# volume arrives root-owned, leaving an unprivileged process unable to write
+# to its own store. Nothing writes here unless a volume is mounted, so this
+# is inert in a plain `docker run`.
+RUN mkdir -p /data && chown wings /data
+VOLUME /data
+
 USER wings
 
 CMD ["sh", "-c", "uvicorn counting_chicken_wings.api:app --host 0.0.0.0 --port ${PORT}"]
