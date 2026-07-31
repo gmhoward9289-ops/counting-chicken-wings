@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Deleted `CHECKPOINT.md`
+
+It opened with "Read this first on resume" and then told you the project was at
+v1.2.0, `master` was at `4fe60b2`, 277 tests passed, and the site was on Render.
+By 2026-07-30 every one of those was wrong: v1.9.0, `5695099`, 416 tests, and
+served from swamplink since #29. A file whose whole purpose is orientation is
+worse than absent once it points the wrong way.
+
+It was a mid-session scratch note that got committed, and the durable parts of
+it have since grown proper homes:
+
+- **Where the project is** — `docs/ROADMAP.md`'s "Where we are now" table, which
+  says in as many words that it is verified against the working tree rather than
+  carried forward.
+- **What shipped** — this file.
+- **What is next** — `docs/ROADMAP.md` already tracks fact voting, and the
+  vanilla and wagyu batches that are drafted but never run.
+- **The invariants** — `CLAUDE.md`.
+
+Nothing referenced it. The lesson is the file's own: a checkpoint is session
+state, and session state does not belong in git.
+
 ## v1.9.0 — 2026-07-30
 
 Maple syrup: the third domain, and the first individual that survives being
