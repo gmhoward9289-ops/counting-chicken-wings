@@ -1,5 +1,68 @@
 # Changelog
 
+## Unreleased
+
+### Variant B becomes a real design
+
+The harness had no design in it. `v2/index.html` was a byte-copy of the
+shipped page, so there was nothing to measure — the apparatus was finished and
+the thing it existed to test had never been built.
+
+- **Three files instead of one.** Variant A keeps 2,109 lines of markup, CSS
+  and JS interleaved, where changing the type scale means scrolling past the
+  Monte Carlo code to find it. Variant B splits into `v2/index.html`,
+  `v2/app.css` and `v2/app.js`. The element ids stay identical across both
+  arms: two designs that disagree about what to call the answer field are two
+  applications, and the test would measure the wrong difference.
+- **A cold instrument instead of warm paper.** Variant A dresses the project
+  as a bulletin — cream stock, a serif display face, violet inspection ink.
+  The subject is a measuring problem, so variant B is built as an instrument:
+  blue-grey stock, a condensed grotesque, and one accent taken from
+  chill-tank water. The warm ambers are untouched and are now **the only warm
+  thing on the page**, so colour alone tells you what is data and what is
+  chrome. `industry` moves from cyan to the violet that vacated the accent
+  slot, which also widens the hue gap between the four evidence grades.
+- **The answer and its band are one object.** Variant A centred the figure
+  and parked the floor..ceiling band below it as a thin decoration. This
+  project's claim is not "12", it is "12, and here is the span it had to fall
+  inside" — so the band is set beside the figure at instrument scale, ruled
+  every 10%, with the reading drawn as a hard edge rather than a gradient.
+- **Eleven views are a list, not a tab strip.** The horizontal nav wrapped to
+  three rows on a laptop and put the current view's name in a different place
+  at every window width. It is a sticky index in a left rail on desktop, and
+  one scrolling row on a phone, where wrapping had pushed the answer most of
+  a screen down.
+- `test_static.py`'s fixtures now **follow `/static/` links** rather than
+  reading the document alone. Every invariant is about what reaches the
+  browser, not which file it was typed into. This mattered immediately:
+  `test_theme_is_applied_before_first_paint` had been passing variant A for
+  the wrong reason — its inline stylesheet put `data-theme` in `<head>`
+  whether or not any script set it — and it now checks the mechanism.
+
+**Variant B was collecting nothing.** This branch was written against the
+harness as first drafted, before the variant token was signed, so
+`v2/index.html` carried no `__CCW_AB_TOKEN__` placeholder — and `ab.js`
+returns early without one. The redesign would have served normally, looked
+right, and reported not a single event, which is indistinguishable from a
+variant nobody visited. Caught on rebase by
+`test_every_variant_carries_the_measurement_hooks`, which exists for exactly
+this.
+
+`test_no_variant_ships_its_own_copy_of_the_instrument` moved from the `html`
+fixture to `doc` for a related reason: now that the fixture follows
+`/static/` links it inlines the shared `ab.js`, so the test failed on both
+arms over the very file it is meant to protect. It now reads the variant's
+own assets and skips `ab.js`.
+
+The seed-identity test is deleted rather than fixed. It existed to keep the
+copy in step with the control while B was a copy, and divergence is the point
+now.
+
+**The A/A noise floor was never run**, and the arms have diverged, so that
+number is not available from this branch. It never collected real traffic —
+only our own verification sessions, which were cleared. Any difference this
+experiment now reports has no measured baseline to be compared against.
+
 ## v1.10.0 — 2026-07-30
 
 ### A/B harness for the frontend
@@ -26,9 +89,10 @@ redesign can be argued about with numbers instead of taste.
 - `GET /api/metrics/summary` compares the arms: load time, API latency,
   dwell, time to first interaction, interaction rate, error rate, how much of
   the UI got found. It reports no significance test, and says so.
-- `static/v2/index.html` is seeded as an **exact copy** of the shipped page,
-  so the first run is an A/A test that measures the noise floor. A later
-  difference smaller than that one is not a difference.
+- `static/v2/index.html` was seeded as an **exact copy** of the shipped page,
+  so the first run would be an A/A test measuring the noise floor. A later
+  difference smaller than that one is not a difference. (Superseded under Unreleased —
+  variant B carries a real design now, and that run never happened.)
 - `test_static.py`'s structural invariants now run against **both** pages.
   The redesign is a second page, not a second standard.
 

@@ -59,6 +59,13 @@ Two pages, one URL. `static/index.html` is variant `a` (shipped, the control);
 `static/v2/index.html` is variant `b` (the redesign). **Do the redesign work in
 `v2/`** — editing `index.html` destroys the control.
 
+The two arms are built differently on purpose. Variant A is one 2,109-line
+file with its CSS and JS inline. Variant B is three: `v2/index.html` (markup),
+`v2/app.css`, `v2/app.js`. **The element ids are the contract between them and
+are identical across both arms** — two designs that disagree about what to call
+the answer field are two applications, and the test would be measuring the
+wrong difference.
+
 ```bash
 WINGS_AB_SECRET=$(openssl rand -hex 32) WINGS_AB_SPLIT=50 wings gui
 open 'http://localhost:8000/?ui=b'   # force a variant by hand, and pin it
@@ -129,13 +136,17 @@ a page and then made no API calls looks like a crawler and looks identical to
 a variant failing on somebody's browser — the most valuable thing this
 experiment could surface. Starred findings are reported and never deleted. If
 you add a check, ask first whether it could be the finding.
-- `v2/index.html` starts as an exact copy of `index.html`. That first run is an
-  **A/A test** — it tells you the noise floor, and any later difference
-  smaller than it is not a difference.
+- `v2/` **was** an exact copy of `index.html`, which made the first run an
+  A/A test measuring the noise floor. It is a real design now, so that run
+  has to happen before this one if you want the floor — an A/A reading taken
+  after the arms diverge is not a noise floor, it is a result.
 - `test_static.py` runs every structural invariant against both pages. The
   redesign has to clear the same bar (dark mode, no hardcoded corpus prose,
   focus visibility, headline scaling), or it wins the test for a reason that
-  has nothing to do with design.
+  has nothing to do with design. Its fixtures **follow `/static/` links**, so
+  an invariant that moved from inline CSS to `app.css` is still checked;
+  reading only the document would have quietly passed variant B by finding
+  no rules to object to.
 - The summary is descriptive. It computes no significance test, and a few
   dozen sessions will differ by chance alone.
 
