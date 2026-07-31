@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.9.1 — 2026-07-30
+
+Wording only: the Israel-facing copy now leads with what Israel's sources
+are, not with what they lack. No figure, citation, grade, or behaviour
+changed — the government-only view still carries no slaughter count, and the
+corpus still refuses to derive one.
+
+The learning-centre fact `israel-head-count-is-not-measured` (slug unchanged)
+now opens with the strength of the coverage — CBS's poultry series reaching
+back to 1960, and the industry bodies' detailed public sector tables — and
+presents the missing heads-slaughtered series as a definitional choice many
+national statistical systems make, with the US enumeration as the exception.
+The no-derivation stance is stated as this corpus's own discipline rather
+than as an Israeli gap. The country view's intro, its coverage notes, and the
+`/api/countries` and `/api/output` docstrings got the same reframe.
+
+No test assertions changed: they pin identifiers and data, not prose, which
+is exactly why a copy edit of this size touches nothing else.
+
 ## v1.9.0 — 2026-07-30
 
 Maple syrup: the third domain, and the first individual that survives being

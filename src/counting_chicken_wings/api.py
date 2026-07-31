@@ -517,9 +517,11 @@ def countries():
     Deliberately shaped as coverage rather than as a list of names. A selector
     built from names alone invites the comparison this project must not make:
     the US has enumerated head slaughtered, 50 states and a sourced loss
-    chain, and Israel has tonnage, districts and no head figure at all. A
-    caller that can see `answers` cannot accidentally imply parity, and one
-    that only saw ISO codes would have to guess.
+    chain, and Israel has one of the longest output series anywhere -- CBS
+    tonnage, value and districts -- with its bird count carried at industry
+    grade rather than as a government enumeration. A caller that can see
+    `answers` cannot accidentally imply parity, and one that only saw ISO
+    codes would have to guess.
     """
     conn = dbm.connect()
     try:
@@ -625,8 +627,9 @@ def output(
     Israel rather than having one chosen for them:
 
       min_confidence=measured  government figures only. Tonnage, value, a
-                               year-end flock and districts -- and NO bird
-                               count, so no answer to "how many chickens".
+                               year-end flock and districts -- the measures
+                               CBS publishes; the industry-reported bird
+                               count drops out with the filter.
       (omitted)                everything, including the industry head count
                                of ~260 million birds a year from a named trade
                                official. The count question becomes answerable
