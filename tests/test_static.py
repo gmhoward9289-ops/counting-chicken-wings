@@ -18,9 +18,6 @@ import pytest
 
 from counting_chicken_wings import experiment as exp
 
-STATIC = (Path(__file__).resolve().parents[1]
-          / "src" / "counting_chicken_wings" / "static" / "index.html")
-
 # Every invariant below runs against **both** frontends. The redesign is a
 # second page, not a second standard: a variant that drops dark mode, or
 # retypes floor prose the data owns, is not a design to A/B against -- it is
@@ -32,13 +29,41 @@ VARIANT_FILES = [
 ]
 
 
+def _linked(doc, ext):
+    """Same-origin assets the page pulls, resolved to files on disk.
+
+    Anchored on `/static/` so a CDN stays out of it: Plotly is not ours and
+    its minified bundle would swamp every check below in false positives.
+    """
+    return [exp.STATIC / rel for rel in
+            re.findall(rf'(?:href|src)="/static/([^"]+\.{ext})"', doc)]
+
+
 @pytest.fixture(params=VARIANT_FILES, scope="module")
-def html(request):
+def doc(request):
+    """The variant's HTML file, exactly as served."""
     return Path(request.param).read_text()
 
 
 @pytest.fixture(scope="module")
-def script(html):
+def html(doc):
+    """Everything the page is made of: its markup plus its linked assets.
+
+    Variant A keeps CSS and JS inline in one 2,109-line file; variant B
+    links `v2/app.css` and `v2/app.js`. Every invariant here is about what
+    reaches the browser, not about which file it was typed into, so the
+    fixture follows the links rather than reading only the document.
+
+    Getting this wrong is silent in the worst direction: a `.headline` rule
+    that has moved to a stylesheet would read as a page with no headline
+    rule at all, and the tests would pass by finding nothing to object to.
+    """
+    return "\n".join([doc] + [p.read_text() for p in
+                              _linked(doc, "css") + _linked(doc, "js")])
+
+
+@pytest.fixture(scope="module")
+def script(doc):
     """Executable JS only.
 
     Non-greedy per block, because a greedy match spans from the first
@@ -47,8 +72,9 @@ def script(html):
     check for. JS comments are stripped for the same reason: a comment
     saying "this used to be hardcoded" is the opposite of a violation.
     """
-    blocks = re.findall(r"<script>(.*?)</script>", html, re.S)
-    assert blocks, "could not find any inline script"
+    blocks = re.findall(r"<script>(.*?)</script>", doc, re.S)
+    blocks += [p.read_text() for p in _linked(doc, "js")]
+    assert blocks, "could not find any script"
     js = "\n".join(blocks)
     js = re.sub(r"/\*.*?\*/", "", js, flags=re.S)     # block comments
     js = re.sub(r"^\s*//.*$", "", js, flags=re.M)     # whole-line comments
@@ -88,11 +114,27 @@ def test_both_themes_define_the_same_custom_properties(html):
     assert not missing, f"not themed for dark: {sorted(missing)}"
 
 
-def test_theme_is_applied_before_first_paint(html):
-    """Otherwise a dark reload flashes light."""
-    head = html.split("</head>")[0]
-    assert "data-theme" in head, "theme not set in <head>"
-    assert "localStorage" in head, "stored theme not read before paint"
+def test_theme_is_applied_before_first_paint(doc):
+    """Otherwise a dark reload flashes light.
+
+    Deliberately reads the document rather than the resolved bundle: the
+    point is that the theme attribute is set by a script the parser runs on
+    its way through <head>, before anything paints. A linked file cannot do
+    this job, so following the links here would defeat the check.
+
+    Checked against the mechanism (`dataset.theme` / `data-theme` set from
+    `localStorage`) rather than the mere presence of the string. Variant A
+    passed the older, looser version for the wrong reason -- its entire
+    stylesheet was inline, so `:root[data-theme="dark"]` put the substring
+    in <head> whether or not any script ever set it.
+    """
+    head = doc.split("</head>")[0]
+    m = re.search(r"<script>(.*?)</script>", head, re.S)
+    assert m, "no inline script in <head> to set the theme"
+    boot = m.group(1)
+    assert "dataset.theme" in boot or "data-theme" in boot, \
+        "the <head> script does not set the theme attribute"
+    assert "localStorage" in boot, "stored theme not read before paint"
 
 
 # ---------------------------------------------------------------------------
@@ -192,40 +234,31 @@ def test_every_variant_carries_the_measurement_hooks(html):
     assert "/static/ab.js" in html, "ab.js is not included"
 
 
-def test_a_seeded_variant_stays_identical_to_its_control():
-    """While `b` is still a seed copy, a change to `a` must be mirrored.
-
-    An A/A run compares two arms that are supposed to be the same page. If
-    the control moves and the copy does not, the run measures that drift and
-    reports it as the noise floor -- which then licenses ignoring a real
-    difference of the same size later.
-
-    This is not hypothetical: v1.9.1 landed a copy edit on the control while
-    the A/B branch was open, and the two pages silently diverged.
-
-    **Delete this test the moment the redesign genuinely begins.** Divergence
-    is the point then, and the invariants above are what still apply to both.
-    """
-    a = (exp.STATIC / exp.VARIANTS["a"]).read_text()
-    b = (exp.STATIC / exp.VARIANTS["b"]).read_text()
-
-    seeded = re.sub(r"<!-- VARIANT B.*?-->\n", "", b, flags=re.S).replace(
-        '<html lang="en" data-variant="b">', '<html lang="en">')
-    if seeded != a:
-        pytest.fail(
-            "variant b has drifted from variant a. Either mirror the change "
-            "into v2/index.html, or -- if the redesign has started for real "
-            "-- delete this test, because divergence is now the point.")
+# `test_a_seeded_variant_stays_identical_to_its_control` lived here, and it
+# was deleted on purpose when variant b stopped being a seed copy. It existed
+# to catch the control moving while the copy did not -- which v1.9.1 did, and
+# which would have made an A/A run report that drift as its noise floor.
+#
+# Divergence is the point now, so the test would only ever fail. What still
+# applies to both arms is every invariant above.
 
 
-def test_no_variant_ships_its_own_copy_of_the_instrument(html):
+def test_no_variant_ships_its_own_copy_of_the_instrument(doc):
     """One instrument, shared verbatim.
 
     A collector that differs between the arms measures itself as much as the
     design under test.
+
+    Checked against the variant's OWN markup and assets, with the shared
+    `ab.js` excluded -- it is supposed to be there, and the `html` fixture
+    inlines it. Asserting over `html` instead makes this fail for both arms
+    on the thing it is trying to protect.
     """
-    assert "ccwTrack = " not in html, "a variant defines its own collector"
-    assert "sendBeacon" not in html, "a variant collects metrics inline"
+    own = "\n".join(
+        [doc] + [p.read_text() for p in _linked(doc, "css") + _linked(doc, "js")
+                 if p.name != "ab.js"])
+    assert "ccwTrack = " not in own, "a variant defines its own collector"
+    assert "sendBeacon" not in own, "a variant collects metrics inline"
 
 
 def test_headline_figures_scale_on_small_screens(html):
