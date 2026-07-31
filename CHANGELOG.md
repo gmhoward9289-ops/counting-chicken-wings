@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+### The release job opens a pull request, because it is not allowed to push
+
+Since #44 the release job has failed on every run. It computed the right number
+and committed it, then died pushing it:
+
+```
+[master 92ebb5b] Release v1.12.0
+remote: - Changes must be made through a pull request.
+ ! [remote rejected] HEAD -> master (push declined due to repository rule violations)
+```
+
+The `protect-master` ruleset requires a pull request and four passing checks and
+lists **no bypass actors** — not the Actions bot, not an admin. #44 was reviewed
+and merged anyway, because a human pushing to master opens a PR without thinking
+about it and the bot has no such habit. Nine commits sat unreleased behind this.
+
+The job now opens a `release/vX.Y.Z` PR instead, and the release happens across
+two runs of the same workflow: the merge that earns a version opens the PR, and
+merging that PR gives master a version with no tag, which is the fallback path
+this workflow already had. Tagging is untouched — the ruleset targets
+`~DEFAULT_BRANCH`, so it never governed `refs/tags/*`.
+
+Two things follow from GitHub raising no workflow events for anything the default
+`GITHUB_TOKEN` does — the rule this workflow already documents one layer up, for
+tags:
+
+- **The release PR must be merged by hand.** Auto-merge would leave phase two
+  unstarted and the tag uncut, silently, which is precisely the failure #37 was
+  written to end.
+- **The job dispatches `ci.yml` against its own PR.** A PR the token opened
+  starts no checks, and the ruleset holds it at "4 of 4 required status checks
+  are expected" indefinitely. `workflow_dispatch` is the documented exception to
+  that rule, so `ci.yml` gains that trigger.
+
+`version-consistency` skips on a branch and a skipped required check counts as
+satisfied — that is how every PR in this repo already merges, so the three jobs
+that do run are what the ruleset is actually waiting on.
+
 ### A gallon of syrup is not one tree — a correctness fix to shipped output
 
 `wings count 1 --product maple_syrup_gallon` published a self-contradiction:

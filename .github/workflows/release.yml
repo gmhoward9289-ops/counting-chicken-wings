@@ -28,6 +28,7 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: write   # the version bump reaches master as a PR, not a push
 
 jobs:
   release:
@@ -149,33 +150,91 @@ jobs:
           echo "comparing against $prev"
           python tools/release_check.py --base "$prev"
 
-      # The computed number has to reach master BEFORE the tag is cut, because
-      # the tag must name a commit whose pyproject.toml agrees with it -- that
-      # agreement is exactly what `version-consistency` checks for anyone who
-      # tags by hand later. Pushing after tagging would leave the tag pointing
-      # at a commit that still said `## Unreleased`.
-      - name: Record the version on master
+      # ---------------------------------------------------------------------
+      # PHASE ONE: the number reaches master as a PULL REQUEST.
+      #
+      # This job used to `git push origin HEAD:master` here, and that could
+      # never have worked: the `protect-master` ruleset requires a pull request
+      # and four passing checks, and lists NO bypass actors -- not the Actions
+      # bot, not an admin. So every run after #44 merged died on
+      #   ! [remote rejected] HEAD -> master (push declined due to repository
+      #     rule violations)
+      # having already computed the right number (v1.12.0) and committed it
+      # locally. Nine commits sat unreleased behind that.
+      #
+      # It looked fine when it was tested by hand because a human pushing to
+      # master is a human opening a PR; the bot has no such habit.
+      #
+      # So: open a PR and stop. The tag is NOT cut here -- it would name a
+      # commit that is not on master yet. Phase two below does that, on the
+      # next run, once this PR has merged.
+      # ---------------------------------------------------------------------
+      - name: Open the release PR
         if: steps.version.outputs.computed == 'yes'
         env:
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.next }}
         run: |
+          branch="release/v$VERSION"
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
           git add CHANGELOG.md pyproject.toml
           git commit -m "Release v$VERSION
 
           Number assigned at merge by .github/workflows/release.yml. Branches
           write '## Unreleased' and never claim a number, so two merges landing
           together cannot take the same one."
-          # A human merge can land between this job starting and this push.
-          # Rebase rather than force: the other merge is somebody's work, and
-          # the version this computed is still correct relative to the tag.
-          git pull --rebase --quiet origin master
-          git push origin HEAD:master
-          echo "recorded v$VERSION on master"
 
+          # Force is safe and is not force-pushing over anyone's work: this
+          # branch is master plus one generated commit, recreated from scratch
+          # each run. A leftover from an earlier attempt holds nothing a human
+          # wrote. (`non_fast_forward` in the ruleset protects master only.)
+          git push --force origin "HEAD:refs/heads/$branch"
+
+          {
+            echo "Cut by \`.github/workflows/release.yml\` after the merge that"
+            echo "earned it. **Merge this and the tag and GitHub release follow"
+            echo "automatically** on the next run of that workflow."
+            echo
+            echo "Merge it BY HAND. Auto-merge is deliberately not enabled:"
+            echo "GitHub raises no workflow events for anything the default"
+            echo "\`GITHUB_TOKEN\` does, so a bot-merged release PR would never"
+            echo "start phase two and the tag would silently never be cut."
+            echo
+            echo "---"
+            echo
+            cat /tmp/notes.md
+          } > /tmp/prbody.md
+
+          if gh pr view "$branch" --json number >/dev/null 2>&1; then
+            echo "release PR for $branch already open; its head was updated"
+          else
+            gh pr create --base master --head "$branch" \
+              --title "Release v$VERSION" --body-file /tmp/prbody.md
+          fi
+
+          # The four required checks do not start on their own. GitHub does not
+          # raise `pull_request` or `push` events for anything the default
+          # GITHUB_TOKEN did -- the same rule this file already documents for
+          # tags, one layer up. `workflow_dispatch` is the documented exception
+          # to it, so ask for the run explicitly. Without this the PR sits at
+          # "4 of 4 required status checks are expected" and can never merge.
+          gh workflow run ci.yml --ref "$branch"
+          echo "opened release PR for v$VERSION and dispatched CI on $branch"
+
+      # ---------------------------------------------------------------------
+      # PHASE TWO: the release PR has merged, so master now declares a version
+      # that carries no tag. `next_version.py` finds no `## Unreleased` section
+      # (phase one rewrote it into a dated heading), so `computed` is `no` and
+      # the version comes from pyproject.toml -- which is exactly the fallback
+      # path that already existed.
+      #
+      # Pushing a TAG is allowed: `protect-master` targets `~DEFAULT_BRANCH`,
+      # so it governs refs/heads/master and says nothing about refs/tags/*.
+      # ---------------------------------------------------------------------
       - name: Tag
-        if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
+        if: steps.version.outputs.computed == 'no' && steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
         env:
           VERSION: ${{ steps.need.outputs.version }}
         run: |
@@ -187,7 +246,7 @@ jobs:
           echo "tagged v$VERSION"
 
       - name: Release
-        if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_release == 'yes'
+        if: steps.version.outputs.computed == 'no' && steps.need.outputs.go == 'yes' && steps.need.outputs.need_release == 'yes'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.need.outputs.version }}

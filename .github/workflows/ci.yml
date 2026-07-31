@@ -8,6 +8,12 @@ on:
     # no run at all. See "Tags that are not releases" in docs/VERSIONING.md.
     tags: ['v[0-9]*']
   pull_request:
+  # Lets `release.yml` start these checks by hand on the release PR it opens.
+  # It has to: GitHub raises no `pull_request` event for a PR the default
+  # GITHUB_TOKEN created, so the four required contexts would never report and
+  # that PR could never be merged. `workflow_dispatch` is the one trigger the
+  # token is documented to still fire, which is the whole reason it is here.
+  workflow_dispatch:
 
 jobs:
   # A tag names a commit that already went through master, where these two jobs

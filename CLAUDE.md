@@ -132,11 +132,29 @@ hand.** `.github/workflows/release.yml` fires on every push to master and, when
 
 1. computes the number from the latest version tag and `release_check.py`'s verdict;
 2. rewrites `## Unreleased` to `## vX.Y.Z — <date>` and sets `pyproject.toml`;
-3. commits that back to master, then tags and releases it.
+3. opens a **`release/vX.Y.Z` pull request** carrying those two edits.
 
-So **the merge is the release**, and all you owe it is a written changelog section.
-A section that cannot be described fails the job rather than publishing an empty
-release.
+**Merging that PR is the one manual step, and it is deliberate.** The tag and the
+GitHub release are cut by the next run of the same workflow, which sees a version
+on master that carries no tag. All you owe a release is a written changelog
+section; a section that cannot be described fails the job rather than publishing
+an empty release.
+
+The job cannot simply push the bump to master, and the reason is worth knowing
+before anyone "simplifies" it back: the `protect-master` ruleset requires a pull
+request and four passing checks and lists **no bypass actors at all** — not the
+Actions bot, not an admin. #44 shipped with a direct push and every run after it
+failed on `push declined due to repository rule violations`, having already
+computed the correct number. It passed review because a human pushing to master
+opens a PR by habit; the bot has no habit.
+
+For the same reason the release PR must be merged **by hand**. Nothing that the
+default `GITHUB_TOKEN` does raises a workflow event, so a bot-merged release PR
+would never start the run that tags it — auto-merge here would silently stop
+releases from happening, which is the exact failure this pipeline exists to end.
+That rule is also why the job has to `gh workflow run ci.yml` against its own PR:
+the four required checks would otherwise never report and the PR could never
+merge.
 
 Two consequences worth knowing:
 

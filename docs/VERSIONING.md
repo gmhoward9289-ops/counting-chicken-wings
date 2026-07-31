@@ -183,10 +183,33 @@ Immediately before merging:
    `version` in `pyproject.toml` to match.
 Then merge. **There is no step 5.**
 
-`.github/workflows/release.yml` fires on every push to master: if
-`pyproject.toml` declares a version the remote has no tag for, it runs the gates,
-cuts the annotated tag and publishes the GitHub release. The tag is `v`-prefixed,
-the `pyproject.toml` value is not — the workflow adds the `v`.
+`.github/workflows/release.yml` fires on every push to master, and runs in two
+phases across two of its own runs:
+
+1. **A merge carrying `## Unreleased`** — it computes the number, writes the
+   changelog heading and `pyproject.toml`, and opens a **`release/vX.Y.Z` pull
+   request**. It does not tag: the commit is not on master yet.
+2. **That PR merges** — now `pyproject.toml` declares a version the remote has no
+   tag for, so the same workflow runs the gates, cuts the annotated tag and
+   publishes the GitHub release.
+
+The tag is `v`-prefixed, the `pyproject.toml` value is not — the workflow adds
+the `v`.
+
+**The bump reaches master as a PR because it cannot reach it any other way.** The
+`protect-master` ruleset requires a pull request and four passing checks and has
+no bypass actors, so the direct `git push origin HEAD:master` that #44 shipped
+was rejected on every single run. Pushing a *tag* is still fine: the ruleset
+targets `~DEFAULT_BRANCH`, so it governs `refs/heads/master` and says nothing
+about `refs/tags/*`.
+
+**Merge the release PR by hand.** Auto-merge would break the chain — GitHub
+raises no workflow event for anything the default `GITHUB_TOKEN` does, so a
+bot-merged release PR would never trigger phase 2, and the tag would silently
+never be cut. That same rule is why phase 1 ends with an explicit
+`gh workflow run ci.yml --ref release/vX.Y.Z`: a PR the token opened starts no
+checks on its own, and the ruleset would hold it at "4 of 4 required status
+checks are expected" forever.
 
 Do not tag or release by hand. Releasing was the one manual step left and it
 became the step that did not happen: v1.2.0 through v1.7.0 sat untagged until
