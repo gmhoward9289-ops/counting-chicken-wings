@@ -23,12 +23,25 @@ const api = p => {
         // LIST of {msg, loc, ...} objects, and interpolating that straight into
         // a template literal renders "[object Object]" to the person who simply
         // typed a zero. Join the messages instead.
+        //
+        // And an OBJECT is the third shape. /api/bird-size answers "which of
+        // the two 404s is this?" in the body -- a species the corpus has never
+        // been asked about is a different thing from a slug that does not
+        // exist, and only the first is renderable. An object reaching the
+        // template literal is the same "[object Object]" bug as the list, one
+        // shape over, so it reads `message` and the caller reads the rest.
         return r.json().catch(() => null).then(body => {
           const d = body && body.detail;
           const msg = Array.isArray(d)
             ? d.map(e => e && e.msg).filter(Boolean).join('; ')
-            : d;
-          throw new Error(msg || `${p} -> ${r.status}`);
+            : (d && typeof d === 'object') ? d.message : d;
+          const err = new Error(msg || `${p} -> ${r.status}`);
+          // The status and the structured detail travel WITH the error, so a
+          // caller can act on the failure instead of only reporting it. Every
+          // catch that just wants a sentence still gets one from `.message`.
+          err.status = r.status;
+          err.detail = d;
+          throw err;
         });
       }
       return r.json();
@@ -1159,25 +1172,63 @@ async function initSize() {
   if (first) await showSize(first.slug);
 }
 
+// The species the corpus has never been asked a size question about. A 404,
+// because there is no size question to serve -- but a renderable one: the
+// error names the species and says so in a sentence, and this draws that
+// rather than leaving the panel on whichever species was showing before.
+//
+// Handling the failure is the point. An unhandled rejection here is what the
+// picker used to avoid by not offering these species at all, which is how a
+// view claiming to grade "every species" came to show three of six.
+function renderUnaskedSize(detail) {
+  const sp = detail.species;
+  $('#size-question').textContent = detail.message;
+  $('#size-intro').textContent =
+    'The axis has to be sourced before it can be shown, and no other ' +
+    'species’ axis can stand in for it — the question is different for ' +
+    'each one, and so is what a bigger individual costs. This is a gap in ' +
+    'the corpus, stated rather than filled in.';
+
+  // Three open questions, drawn by the same cell the answered legs use, so
+  // "nobody has asked" looks like every other unsourced thing on this page.
+  $('#size-verdict').innerHTML = [
+    [`Yield per ${sp.individual_noun}`, null],
+    ['Quality', null],
+    [`${sp.individual_plural} on the plate`, null],
+  ].map(([k, v]) => verdictCell(k, v)).join('');
+
+  $('#size-bands-panel').hidden = true;
+  $('#size-chart').hidden = true;
+  $('#size-defects-panel').hidden = false;
+  $('#size-defects-title').textContent = 'What more of it costs you';
+  $('#size-defects-note').textContent =
+    `No quality figures for ${sp.common_name.toLowerCase()} are in the ` +
+    'corpus either. That is a gap in the sourcing, not a finding that ' +
+    'nothing goes wrong.';
+  $('#size-defects').innerHTML = '';
+  $('#size-defects').hidden = true;
+  $('#size-defect-notes').innerHTML = '';
+}
+
 async function showSize(species) {
-  const d = await api('/api/bird-size?species=' + encodeURIComponent(species));
-  // `axis` is null for a species with no size question recorded -- a 200, not
-  // a 404, because an unasked question is data and has to be renderable.
-  // Everything below already degrades correctly on the empty case: the bands
-  // panel hides on an empty `axis_bands`, the chart on empty `regions`, and
-  // the three verdict legs are nulls, which verdictCell already draws as open
-  // questions. Only the heading and the intro need to know.
-  const ax = d.axis || {}, sp = d.species, s = d.spread;
+  let d;
+  try {
+    d = await api('/api/bird-size?species=' + encodeURIComponent(species));
+  } catch (err) {
+    // Only the one failure this view can say something useful about. Anything
+    // else -- an unknown slug, the API being down -- is a real error and
+    // belongs on the floor, where load() logs it and lets the view retry.
+    if (err.detail && err.detail.error === 'no_size_question') {
+      renderUnaskedSize(err.detail);
+      return;
+    }
+    throw err;
+  }
+  const ax = d.axis, sp = d.species, s = d.spread;
   const unit = ax.x_unit ? ` ${ax.x_unit}` : '';
 
-  $('#size-question').textContent = d.has_axis ? ax.question
-    : `No size question has been recorded for ` +
-      `${sp.common_name.toLowerCase()} yet`;
-  $('#size-intro').textContent = d.has_axis ? (d.verdict.summary || '')
-    : 'The axis has to be sourced before it can be shown, and no other ' +
-      'species’ axis can stand in for it — the question is different ' +
-      'for each one, and so is what a bigger individual costs. This is a ' +
-      'gap in the corpus, stated rather than filled in.';
+  $('#size-question').textContent = ax.question;
+  $('#size-intro').textContent = d.verdict.summary || '';
 
   // The three legs of the verdict, named for this species rather than for
   // chickens: "wings per chicken" is meaningless on a crocus.
@@ -1272,11 +1323,8 @@ async function showSize(species) {
   }
   dp.hidden = false;
   $('#size-defects').hidden = false;
-  // Defects hang off the species, not off the axis, so a species can have
-  // them with no axis recorded. Name the axis only when there is one.
-  $('#size-defects-title').textContent = ax.x_label
-    ? `What more ${ax.x_label.toLowerCase()} costs you`
-    : 'What more of it costs you';
+  $('#size-defects-title').textContent = `What more ${
+    ax.x_label.toLowerCase()} costs you`;
   $('#size-defects-note').textContent =
     'Every defect measured gets more common as the axis rises. The contrast ' +
     'between parts is the point: one is riddled with problems and the other ' +

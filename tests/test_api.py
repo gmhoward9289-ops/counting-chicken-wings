@@ -614,20 +614,39 @@ def test_the_picker_offers_every_active_species(client):
         assert a["axis_rows"] == 0 and a["has_figures"] is False
 
 
-def test_a_species_with_no_size_question_is_not_an_error(client):
-    """200 with a null axis, not a 404.
+def test_a_species_with_no_size_question_says_so_in_the_404(client):
+    """A 404 the client can render, rather than one it can only report.
 
-    The picker's own reason for omitting these species was that asking about
-    them raised a 404. An unasked question is data and has to be renderable;
-    only an unknown slug is a caller mistake.
+    There is genuinely no size question to serve, so this stays an error --
+    but the picker's reason for omitting these species entirely was that the
+    error carried nothing to act on. `detail` is an object now: a machine-
+    readable code, a sentence built from the corpus' own name for the species,
+    and the species itself so the view can label the gap without typing a
+    species name into the page.
     """
-    d = get(client, "/api/bird-size", species="silkworm")
-    assert d["has_axis"] is False
-    assert d["axis"] is None
-    # Still named, so the view can say WHICH species has no question yet.
-    assert d["species"]["common_name"]
-    assert d["axis_bands"] == [] and d["has_figures"] is False
-    assert all(v is None for v in d["verdict"].values())
+    r = client.get("/api/bird-size", params={"species": "silkworm"})
+    assert r.status_code == 404
+    d = r.json()["detail"]
+    assert d["error"] == "no_size_question"
+    assert d["message"], "nothing for the page to print"
+    for key in ("slug", "common_name", "individual_noun", "individual_plural"):
+        assert d["species"][key], f"species missing {key}"
+    assert d["species"]["slug"] == "silkworm"
+
+
+def test_the_two_404s_are_told_apart(client):
+    """An unknown slug is a bug; an unasked question is a fact about the corpus.
+
+    Spelled the same way, a client can only treat both as failure -- which is
+    exactly what made three of six species disappear from the picker.
+    """
+    unknown = client.get("/api/bird-size", params={"species": "nope"})
+    unasked = client.get("/api/bird-size", params={"species": "sugar_maple"})
+    assert unknown.status_code == unasked.status_code == 404
+    assert unknown.json()["detail"]["error"] == "unknown_species"
+    assert unasked.json()["detail"]["error"] == "no_size_question"
+    # Only the renderable one carries a species to render.
+    assert "species" not in unknown.json()["detail"]
 
 
 def test_a_graded_species_does_not_borrow_weight_bands(client):

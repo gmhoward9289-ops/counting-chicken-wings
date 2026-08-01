@@ -50,10 +50,26 @@ They are offered now, marked with a dashed border, and selecting one states the
 gap rather than showing a blank: *"No size question has been recorded for
 silkworm yet"*, with all three verdict legs rendered as open questions.
 
-`/api/bird-size` for a known species with no axis is a **200 with `axis: null`**,
-not a 404 — the 404 was the picker's reason for omitting them. An unasked
-question is data and has to be renderable; only an unknown slug is a caller
-mistake, and that is still a 404.
+It stays a **404** — there is genuinely no size question to serve — but a
+renderable one. `detail` is an object rather than a sentence, carrying a
+machine-readable `error`, a message built from the corpus' own name for the
+species, and the species itself:
+
+```json
+{"detail": {"error": "no_size_question",
+            "message": "No size question has been recorded for silkworm yet",
+            "species": {"slug": "silkworm", "common_name": "Silkworm", ...}}}
+```
+
+An unknown slug is `{"error": "unknown_species"}` and carries no species. The
+two used to be one bare string, so a client could only treat both as failure —
+which is precisely why the picker dealt with them by not offering those species
+at all.
+
+The page's fetch helper now puts `status` and the parsed `detail` on the error
+it throws, so a caller can act on a failure instead of only reporting it. An
+object reaching the template literal would have been the `[object Object]` bug
+from v1.15.0 one shape over, so the message is read from `detail.message`.
 
 ## v1.15.0 — 2026-08-01
 ### A strapline for the three views that carry the page

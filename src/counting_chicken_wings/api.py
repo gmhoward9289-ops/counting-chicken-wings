@@ -1305,13 +1305,21 @@ def bird_size(year: int = 2025, species: str = "broiler"):
     verdict all come from `quality_axis` -- a species whose answer differs
     (or does not exist) is a YAML change, not a code change.
 
-    A species the corpus KNOWS but has no size question for is a 200 with a
-    null `axis`, not a 404. It used to be a 404, and the picker dealt with
-    that by not offering those species at all -- so a silkworm, a beef cow and
-    a sugar maple were silently absent from a view that claims to cover
-    "every species". An unasked question is data; a 404 is an error, and the
-    two must not be spelled the same way. An UNKNOWN slug is still a 404,
-    because that really is a caller mistake.
+    TWO 404s, and they are not the same failure. This endpoint serves a size
+    QUESTION, so a species with no `quality_axis` row has no resource here to
+    return -- but that is a fact about the corpus, not a caller mistake, and
+    the caller has to be able to tell which it hit. Both used to be one bare
+    string, so the picker could only avoid them by not offering those species
+    at all: a silkworm, a beef cow and a sugar maple were silently absent from
+    a view claiming to grade "every species".
+
+    So `detail` is an object rather than a sentence, carrying a machine-
+    readable `error` and -- for `no_size_question` -- the species itself, which
+    is what lets a client render the gap honestly instead of blanking. The
+    corpus names the species; the page does not.
+
+      unknown_species    the slug is not in the corpus at all. A bug.
+      no_size_question   the species exists and nobody has asked yet.
     """
     conn = dbm.connect()
     try:
@@ -1327,9 +1335,24 @@ def bird_size(year: int = 2025, species: str = "broiler"):
             (species,),
         ).fetchone()
         if axis is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"unknown species: '{species}'")
+            raise HTTPException(404, detail={
+                "error": "unknown_species",
+                "message": f"unknown species: '{species}'",
+            })
+        if axis["question"] is None:
+            raise HTTPException(404, detail={
+                "error": "no_size_question",
+                # Ready to print, and built from the corpus' own name for the
+                # species so the page never types one.
+                "message": "No size question has been recorded for "
+                           f"{axis['common_name'].lower()} yet",
+                "species": {
+                    "slug": axis["species_slug"],
+                    "common_name": axis["common_name"],
+                    "individual_noun": axis["individual_noun"],
+                    "individual_plural": axis["individual_plural"],
+                },
+            })
         # v_broiler_size_stat is, as its name says, broilers only. Other
         # species have no regional weight series, and inheriting the broiler
         # one would put chicken pounds on a turkey's axis.
@@ -1399,17 +1422,11 @@ def bird_size(year: int = 2025, species: str = "broiler"):
             ratio = None
 
         ax = dict(axis)
-        has_axis = ax["question"] is not None
         # Same rule as /api/quality-axes: only the table that actually carries
         # this axis is returned as the axis. A laying hen's production_program
         # rows are flock sizes and belong to a different question entirely, so
         # they are not handed to a view that would chart them as egg sizes.
-        #
-        # With no axis at all it is neither table. `x_kind` is null there, and
-        # falling through to `grades` would have charted a graded ladder under
-        # a question nobody has asked yet.
-        on_axis = [] if not has_axis else (
-            programs if ax["x_kind"] == "continuous" else grades)
+        on_axis = programs if ax["x_kind"] == "continuous" else grades
         return {
             "year": year,
             "species": {
@@ -1418,13 +1435,12 @@ def bird_size(year: int = 2025, species: str = "broiler"):
                 "individual_noun": ax["individual_noun"],
                 "individual_plural": ax["individual_plural"],
             },
-            "has_axis": has_axis,
             "axis": {
                 "question": ax["question"],
                 "x_label": ax["x_label"],
                 "x_unit": ax["x_unit"],
                 "x_kind": ax["x_kind"],
-            } if has_axis else None,
+            },
             "national_avg": national["avg_size"] if national else None,
             "regions": rows,
             "axis_bands": [dict(b) for b in on_axis],

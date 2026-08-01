@@ -246,6 +246,26 @@ def test_the_scope_marker_follows_both_the_view_and_the_product(script):
         "changing the product does not re-render the scope marker"
 
 
+def test_a_renderable_error_is_actually_rendered(script):
+    """The size picker must not go back to hiding what it cannot answer.
+
+    Three of six active species have no size question, `/api/bird-size` 404s
+    for them, and the picker's original fix for that was to omit them -- so a
+    view claiming to grade "every species" showed three chips. The 404 now
+    carries a code and the species, which only helps if the client branches on
+    it: an unhandled rejection would blank the panel and leave whichever
+    species was showing before, which is worse than the omission was.
+
+    Two halves, both required. The fetch helper has to put the structured body
+    on the error at all (`.message` alone collapses it to a sentence -- the
+    "[object Object]" shape one bug over), and showSize has to act on it.
+    """
+    assert re.search(r"err\.detail\s*=", script), \
+        "the fetch helper drops the error body, so no caller can act on it"
+    assert "no_size_question" in script, \
+        "nothing handles the one 404 this view can render"
+
+
 def test_the_anchor_sentence_comes_from_the_api(script):
     """Which species is the anchor is computed, never typed.
 
