@@ -126,6 +126,18 @@ document.querySelectorAll('nav button').forEach(b => {
   };
 });
 
+// The strapline's three names, wired to the same nav buttons rather than to a
+// second copy of the switching logic. `.click()` on the real control keeps one
+// definition of what opening a view means, and keeps the rail's `.on` marker
+// honest -- a duplicate switcher was how the nav and the visible section came
+// apart in an earlier draft of this page.
+document.querySelectorAll('[data-goto]').forEach(b => {
+  b.onclick = () => {
+    const target = document.querySelector(`nav button[data-v="${b.dataset.goto}"]`);
+    if (target) target.click();
+  };
+});
+
 // ---- calculator
 let calcSeq = 0;
 
