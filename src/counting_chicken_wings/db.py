@@ -389,6 +389,36 @@ SIZE_VIEW_BY_SPECIES = {
 }
 
 
+def latest_broiler_size_year(conn) -> int | None:
+    """The most recent year with an annual (non-monthly) broiler size row.
+
+    `/api/states` used to default its `year` query param to a literal 2025.
+    The instant the corpus rolls forward past a hardcoded year, that endpoint
+    would render an empty map and a header-only table with no explanation --
+    this is what it should ask instead: whatever year is actually there.
+    """
+    row = conn.execute(
+        "SELECT MAX(year) AS year FROM v_broiler_size_stat WHERE month IS NULL"
+    ).fetchone()
+    return row["year"] if row and row["year"] is not None else None
+
+
+def latest_monthly_size_year(conn, species_slug: str = "broiler") -> int | None:
+    """The most recent year with a full monthly series for `species_slug`.
+
+    Same reasoning as `latest_broiler_size_year`: `/api/seasonality`
+    hardcoded 2025 too, and rolling past it turned into a silent 404 (the
+    frontend's `load()` swallows it) rather than a working default.
+    """
+    view = SIZE_VIEW_BY_SPECIES.get(species_slug)
+    if view is None:
+        return None
+    row = conn.execute(
+        f"SELECT MAX(year) AS year FROM {view} WHERE month IS NOT NULL"
+    ).fetchone()
+    return row["year"] if row and row["year"] is not None else None
+
+
 def monthly_size_series(
     conn, year: int = 2025, species_slug: str = "broiler",
 ) -> dict[str, dict]:
