@@ -130,6 +130,7 @@ def cmd_count(args) -> int:
         chain_slug=chain,
     )
     mixing = dbm.load_mixing_stages(conn, chain)
+    correlated = dbm.load_correlated_groups(conn, product["species_slug"])
 
     # None for wings; a rate-and-window for eggs. run() derives the effective
     # per-individual yield from it, because 288 eggs a year is 0.79 in a day.
@@ -143,6 +144,7 @@ def cmd_count(args) -> int:
         iterations=args.iterations,
         seed=args.seed,
         recurring=recurring,
+        correlated_groups=correlated,
         # No aggregate_units here on purpose. Whether a unit is a blend is
         # derived from the figures inside run(); this was one of three copies
         # of `yield_mode == "continuous"`, and copies drift. See run().
