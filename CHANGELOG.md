@@ -1,160 +1,6 @@
 # Changelog
 
-## v1.14.0 — 2026-08-01
-### The mixing answer is saturation, and now the corpus can prove it
-
-The README and `data/mixing.yaml` both claimed size grading was "the single
-strongest driver pushing the answer toward 12". The model has never agreed and
-nobody had asked it. Sweeping the grader's separation efficiency across its
-entire range moves the commodity 12-wing answer by **0.0003 of a bird**; scaling
-every pool in the cascade down 100-fold still returns 11.9966. The number is a
-saturation result, not a mechanism result, and the published prose now says so.
-
-That is the stronger claim, not the weaker one: every pool size in the corpus is
-our unsourced estimate, and the commodity answer does not depend on any of them.
-
-- **`model.saturation_threshold` makes the claim checkable.** Above **661**
-  commingled birds a dozen wings is within 0.05 of twelve, and above 3,301 it is
-  within 0.01. `tests/test_scientific.py` fails if any wing route's worst-case
-  stream — each stage at its *lo* bound, not its mode — ever drops near that,
-  and asserts the butcher's tray stays below it, because a cascade whose routes
-  all saturate has stopped distinguishing anything.
-
-- **`SEPARATION_EFFICIENCY` no longer lives in Python.** A figure hardcoded in a
-  module bypasses the citation audit, which is this project's one guarantee. It
-  sat at a bare `0.90` for months, and the sweep above is the first time anyone
-  could say what it was worth. It and three new parameters are now rows in the
-  `model_parameter` table, built from `data/mixing.yaml`, each with a lo/mode/hi
-  band, a confidence grade and a citation, and each audited exactly like a loss
-  factor. `MixingParams()` deliberately carries **no** copy of the shipped
-  values — it turns every mechanism off — so a caller that forgets to pass
-  params fails towards the assumption-free answer rather than towards a stale
-  constant. `tests/test_scientific.py` pins the wiring.
-
-- **Clustering in the draw**, the only force in the model that can push the
-  count down. A fryer scoop is a grab of contiguous units from a bin filled case
-  by case, not twelve independent picks. Modelled with standard cluster
-  sampling: a scoop size, an adjacency-retention parameter per stage kind, and
-  Kish's design effect reported so the loss of effective sample size is
-  explicit. A route's retention is the product of its stages', so the
-  `random`/`separating`/`none` sequence finally determines something.
-
-  Grouping an exchangeable draw is an **exact** no-op — pinned to 1e-12, because
-  getting that null wrong invents an effect that is not there.
-
-- **What fell out, reported rather than tuned.** The parameters were reasoned
-  from case packs, combo-bin sizes and how a portion is taken from a bin, graded
-  `estimate`, and left alone. The commodity answer **did not move**: six bulk
-  commingling stages and a grader leave a cascade retention near 1e-6. The
-  mechanism is not impotent — delete the stages that destroy adjacency and the
-  same pools collapse to 6.50 — it is that a chiller is a stirred tank.
-
-  **One published figure moves.** The local butcher route goes **11.16 → 11.01**
-  for a dozen wings: a forty-bird tray keeps adjacency a plant destroys, which
-  is exactly where clustering physically should bite. Commodity foodservice
-  (11.99997), grocery retail and whole-birds-at-home are unchanged.
-
-- **Not yet resampled by the Monte Carlo.** Each parameter carries a band for
-  that purpose and the loop still holds them at the mode, so the reported
-  interval understates the spread on the distinct figure by whatever they
-  contribute. The pool sizes beside them are resampled. Known open item, called
-  out in `model.run`'s docstring.
-
-## v1.13.0 — 2026-08-01
-### The Monte Carlo headline is now the median, and no longer pretends its inputs are independent
-
-Two bugs in `model.run`'s scientific mode, filed as #76 and #77.
-
-- **#76 — the point estimate was not the centre of its own confidence
-  interval, and this moves a published headline figure.** `run()` silently
-  overwrote the deterministic product-of-modes answer with the Monte Carlo
-  **mean** whenever `iterations > 0`. A triangular distribution's mean is
-  `(lo+mode+hi)/3`, not its mode, and `required_individuals` divides by
-  every stage's survival fraction in turn, so that upward bias compounds
-  across the loss chain (Jensen's inequality on `1/x`, nine times over). On
-  the real loss chain (40,000 draws, seed 1): deterministic **6.904**
-  birds, Monte Carlo mean **7.072** birds — and the deterministic figure
-  sits at roughly the **19th percentile** of its own simulated
-  distribution. `run()` now reports the **median** (**7.063** birds for
-  the same chain) as the headline: it is the honest centre of the reported
-  band and, unlike the mean, is invariant under the reciprocal transform
-  the loss chain applies. `Result.required_estimator` records which
-  statistic produced `required` (`"deterministic"` or
-  `"monte_carlo_median"`), the same way `confidence_level` already records
-  what a reported band means, so a chart or API consumer can never
-  mislabel the number. Both `/api/calculate` and `/api/scientific` now
-  return `required_estimator` alongside `required`.
-- **#77 — independent sampling of correlated loss factors understated the
-  band.** `wing_damage`, `grading_downgrade`, and `transport_doa` all load
-  on the same latent per-load handling-quality variable — a bad load is
-  bad on all three at once — but were sampled independently, letting their
-  errors partially cancel at roughly `sqrt(n)` and narrowing the reported
-  interval. A new `CorrelatedGroup` shares one latent factor across a
-  group's stages per iteration (single-factor Gaussian-copula construction:
-  each stage's own triangular lo/mode/hi band is preserved exactly, only
-  the co-movement changes). The correlation coefficient (`rho = 0.5`) is
-  itself an unmeasured estimate, so it lives in `data/loss_chain.yaml`
-  under a new `correlated_groups` section with a confidence grade and a
-  citation — visible to `audit.py` via a new `loss_correlation_group`
-  table, not a bare constant in Python. On a synthetic two-stage band with
-  `rho = 0.8`, correlated sampling widened the reported interval by about
-  25% versus independent sampling of the same inputs; on the real
-  `handling_quality` group (`rho = 0.5`) the widening was about 13%. The
-  point is not that 0.5 is the right number — nothing in the corpus
-  measures it — it is that asserting zero correlation was wrong.
-
-## v1.12.3 — 2026-08-01
-### The release job approves the run GitHub parks for it
-
-v1.12.1 published only because a human approved a workflow run at the right
-moment. `release.yml` opens its version PR with the default `GITHUB_TOKEN`, and
-the file already documented that this raises no `pull_request` event — which is
-true, and incomplete. GitHub still **creates** the `pull_request` run and parks
-it at `action_required`. That parked run holds the four required contexts, so
-the PR sat at `BLOCKED` while the dispatched run passed green beside it, and the
-job waited out its deadline for a merge that could never happen.
-
-The symptom is deliberately hard to read: `gh pr checks` reports *"no checks
-reported on the branch"* while the check-runs API shows every check successful.
-
-- **`approve_stalled_runs` in the wait loop** approves any `pull_request` run on
-  the release branch sitting at `action_required`. Not a bypass — approving is
-  what makes the required checks actually run, and they still have to pass.
-- **It lives in the poll loop, not in a step after the dispatch**, because the
-  parked run can appear after the dispatch returns, and `gh pr update-branch` in
-  the `BEHIND` case creates a fresh one needing the same treatment.
-- **It cannot abort a release.** Every failure path is guarded; a lookup or
-  approval that fails warns and lets the loop carry on to its own deadline.
-- The dispatch step's comment claimed the run is never created. Corrected in
-  place rather than left to mislead the next reader.
-
-Considered and rejected: loosening `fork-pr-contributor-approval` repo-wide.
-It would work, but this repo is public and that setting also gates first-time
-human contributors — a real cost to fix a bot problem.
-
-## v1.12.2 — 2026-08-01
-### Seasonality: fixed crash and restricted concordance to full-year data
-
-Two defects in the seasonality module and its concordance test.
-
-- **Crash when analyzing regions with no published months.** The `_classify()`
-  function signature changed to include `wrap` and `months_present` arguments,
-  but one call site (line 238, triggered when all 12 months are suppressed) was
-  not updated. This was a two-character fix but the real defect is the missing
-  test — the new test suite covers regions with exactly one published month, all
-  identical months, and no published months.
-- **Partial-year regions silently entered concordance tests with the wrong null
-  hypothesis.** The concordance test's null is that each region's peak lands
-  anywhere in a chosen three-month window (p=0.25, or 3/12). For a partial-year
-  region publishing k months, the probability depends on which months survived
-  suppression — ranging from 0 to 1 with no single scalar null — which is why
-  excluding partial regions is correct rather than reweighting them. The fix
-  changes no published figures: 2025 broiler monthly data contains **22 states,
-  all 22 with a complete 12-month series, 0 partial.** Peak concordance
-  p_corrected = 0.00841 ("strong agreement"), trough p_corrected = 0.03445
-  ("agreement") — both unchanged. This is a guard against future corpora where
-  NASS suppression may leave a state partial. The exclusion count appears on the
-  API surface and is disclosed in caveats.
+## Unreleased
 
 ### A strapline for the three views that carry the page
 
@@ -221,6 +67,66 @@ check them.
 Nothing about the wing answer moved: 6.00 chickens, 39.7 lb, $1.67 to the
 grower, $0.12 allocated — the same figures, now traceable.
 
+## v1.14.0 — 2026-08-01
+### The mixing answer is saturation, and now the corpus can prove it
+
+The README and `data/mixing.yaml` both claimed size grading was "the single
+strongest driver pushing the answer toward 12". The model has never agreed and
+nobody had asked it. Sweeping the grader's separation efficiency across its
+entire range moves the commodity 12-wing answer by **0.0003 of a bird**; scaling
+every pool in the cascade down 100-fold still returns 11.9966. The number is a
+saturation result, not a mechanism result, and the published prose now says so.
+
+That is the stronger claim, not the weaker one: every pool size in the corpus is
+our unsourced estimate, and the commodity answer does not depend on any of them.
+
+- **`model.saturation_threshold` makes the claim checkable.** Above **661**
+  commingled birds a dozen wings is within 0.05 of twelve, and above 3,301 it is
+  within 0.01. `tests/test_scientific.py` fails if any wing route's worst-case
+  stream — each stage at its *lo* bound, not its mode — ever drops near that,
+  and asserts the butcher's tray stays below it, because a cascade whose routes
+  all saturate has stopped distinguishing anything.
+
+- **`SEPARATION_EFFICIENCY` no longer lives in Python.** A figure hardcoded in a
+  module bypasses the citation audit, which is this project's one guarantee. It
+  sat at a bare `0.90` for months, and the sweep above is the first time anyone
+  could say what it was worth. It and three new parameters are now rows in the
+  `model_parameter` table, built from `data/mixing.yaml`, each with a lo/mode/hi
+  band, a confidence grade and a citation, and each audited exactly like a loss
+  factor. `MixingParams()` deliberately carries **no** copy of the shipped
+  values — it turns every mechanism off — so a caller that forgets to pass
+  params fails towards the assumption-free answer rather than towards a stale
+  constant. `tests/test_scientific.py` pins the wiring.
+
+- **Clustering in the draw**, the only force in the model that can push the
+  count down. A fryer scoop is a grab of contiguous units from a bin filled case
+  by case, not twelve independent picks. Modelled with standard cluster
+  sampling: a scoop size, an adjacency-retention parameter per stage kind, and
+  Kish's design effect reported so the loss of effective sample size is
+  explicit. A route's retention is the product of its stages', so the
+  `random`/`separating`/`none` sequence finally determines something.
+
+  Grouping an exchangeable draw is an **exact** no-op — pinned to 1e-12, because
+  getting that null wrong invents an effect that is not there.
+
+- **What fell out, reported rather than tuned.** The parameters were reasoned
+  from case packs, combo-bin sizes and how a portion is taken from a bin, graded
+  `estimate`, and left alone. The commodity answer **did not move**: six bulk
+  commingling stages and a grader leave a cascade retention near 1e-6. The
+  mechanism is not impotent — delete the stages that destroy adjacency and the
+  same pools collapse to 6.50 — it is that a chiller is a stirred tank.
+
+  **One published figure moves.** The local butcher route goes **11.16 → 11.01**
+  for a dozen wings: a forty-bird tray keeps adjacency a plant destroys, which
+  is exactly where clustering physically should bite. Commodity foodservice
+  (11.99997), grocery retail and whole-birds-at-home are unchanged.
+
+- **Not yet resampled by the Monte Carlo.** Each parameter carries a band for
+  that purpose and the loop still holds them at the mode, so the reported
+  interval understates the spread on the distinct figure by whatever they
+  contribute. The pool sizes beside them are resampled. Known open item, called
+  out in `model.run`'s docstring.
+
 ### Scientific stops offering a chicken-wing question a maple sugarhouse
 
 `is_default` is per-species by design — the schema's unique index enforces it,
@@ -245,6 +151,49 @@ about the default for the same question.
   a sugarhouse. The species is already recorded on the route; nothing was asking
   it. One `_resolve_chain` helper answers all three questions for both
   endpoints, so they cannot drift apart again.
+
+## v1.13.0 — 2026-08-01
+### The Monte Carlo headline is now the median, and no longer pretends its inputs are independent
+
+Two bugs in `model.run`'s scientific mode, filed as #76 and #77.
+
+- **#76 — the point estimate was not the centre of its own confidence
+  interval, and this moves a published headline figure.** `run()` silently
+  overwrote the deterministic product-of-modes answer with the Monte Carlo
+  **mean** whenever `iterations > 0`. A triangular distribution's mean is
+  `(lo+mode+hi)/3`, not its mode, and `required_individuals` divides by
+  every stage's survival fraction in turn, so that upward bias compounds
+  across the loss chain (Jensen's inequality on `1/x`, nine times over). On
+  the real loss chain (40,000 draws, seed 1): deterministic **6.904**
+  birds, Monte Carlo mean **7.072** birds — and the deterministic figure
+  sits at roughly the **19th percentile** of its own simulated
+  distribution. `run()` now reports the **median** (**7.063** birds for
+  the same chain) as the headline: it is the honest centre of the reported
+  band and, unlike the mean, is invariant under the reciprocal transform
+  the loss chain applies. `Result.required_estimator` records which
+  statistic produced `required` (`"deterministic"` or
+  `"monte_carlo_median"`), the same way `confidence_level` already records
+  what a reported band means, so a chart or API consumer can never
+  mislabel the number. Both `/api/calculate` and `/api/scientific` now
+  return `required_estimator` alongside `required`.
+- **#77 — independent sampling of correlated loss factors understated the
+  band.** `wing_damage`, `grading_downgrade`, and `transport_doa` all load
+  on the same latent per-load handling-quality variable — a bad load is
+  bad on all three at once — but were sampled independently, letting their
+  errors partially cancel at roughly `sqrt(n)` and narrowing the reported
+  interval. A new `CorrelatedGroup` shares one latent factor across a
+  group's stages per iteration (single-factor Gaussian-copula construction:
+  each stage's own triangular lo/mode/hi band is preserved exactly, only
+  the co-movement changes). The correlation coefficient (`rho = 0.5`) is
+  itself an unmeasured estimate, so it lives in `data/loss_chain.yaml`
+  under a new `correlated_groups` section with a confidence grade and a
+  citation — visible to `audit.py` via a new `loss_correlation_group`
+  table, not a bare constant in Python. On a synthetic two-stage band with
+  `rho = 0.8`, correlated sampling widened the reported interval by about
+  25% versus independent sampling of the same inputs; on the real
+  `handling_quality` group (`rho = 0.5`) the widening was about 13%. The
+  point is not that 0.5 is the right number — nothing in the corpus
+  measures it — it is that asserting zero correlation was wrong.
 
 ### Charts follow the window, and a theme toggle stops leaving handlers behind
 
@@ -275,6 +224,53 @@ The resize path is guarded on `Plotly.Plots` rather than on `typeof Plotly`,
 because the CDN-failure stub defines `newPlot` and `relayout` and nothing else.
 An unreachable chart CDN has to stay a degraded page, never a thrown error.
 
+### Say what COOPER actually did
+
+`docs/research/README.md` now states the attribution in one place: extracted by
+a local model, specified and graded by a human, verified against the returned
+document. Not "research done by an AI", which overstates a worker that fetches
+exactly the URLs it is handed and never searches, and understates the quote
+gate that is the reason any of these figures are citable.
+
+Findings files carry an `extraction:` block -- host, models, run date, and the
+gate that passed them -- written by `runner.py` rather than added by hand, so a
+row quoted out of `accepted/` still says what produced it. The directory name
+was doing that job by implication, and an implication does not survive a
+copy-paste. Backfilled onto saffron and maple. It records the batch; per-figure
+detail stays in `agreement:`, because which model won a given field is not
+something the runner measures and inventing it would be the tidy-looking
+fiction the pipeline exists to keep out. The block carries neither `quote` nor
+`confidence`, so `verify` never sees it.
+
+## v1.12.3 — 2026-08-01
+### The release job approves the run GitHub parks for it
+
+v1.12.1 published only because a human approved a workflow run at the right
+moment. `release.yml` opens its version PR with the default `GITHUB_TOKEN`, and
+the file already documented that this raises no `pull_request` event — which is
+true, and incomplete. GitHub still **creates** the `pull_request` run and parks
+it at `action_required`. That parked run holds the four required contexts, so
+the PR sat at `BLOCKED` while the dispatched run passed green beside it, and the
+job waited out its deadline for a merge that could never happen.
+
+The symptom is deliberately hard to read: `gh pr checks` reports *"no checks
+reported on the branch"* while the check-runs API shows every check successful.
+
+- **`approve_stalled_runs` in the wait loop** approves any `pull_request` run on
+  the release branch sitting at `action_required`. Not a bypass — approving is
+  what makes the required checks actually run, and they still have to pass.
+- **It lives in the poll loop, not in a step after the dispatch**, because the
+  parked run can appear after the dispatch returns, and `gh pr update-branch` in
+  the `BEHIND` case creates a fresh one needing the same treatment.
+- **It cannot abort a release.** Every failure path is guarded; a lookup or
+  approval that fails warns and lets the loop carry on to its own deadline.
+- The dispatch step's comment claimed the run is never created. Corrected in
+  place rather than left to mislead the next reader.
+
+Considered and rejected: loosening `fork-pr-contributor-approval` repo-wide.
+It would work, but this repo is public and that setting also gates first-time
+human contributors — a real cost to fix a bot problem.
+
 ### The release now asks for its own deploy
 
 `deploy.yml` triggers on `push` to master, and `release.yml` merges its version
@@ -301,6 +297,30 @@ Considered and rejected: merging with a PAT or GitHub App token, which would
 make the whole cascade work. It fixes more, and it puts a long-lived credential
 with write access into a public repo's workflow for a problem one API call
 solves.
+
+## v1.12.2 — 2026-08-01
+### Seasonality: fixed crash and restricted concordance to full-year data
+
+Two defects in the seasonality module and its concordance test.
+
+- **Crash when analyzing regions with no published months.** The `_classify()`
+  function signature changed to include `wrap` and `months_present` arguments,
+  but one call site (line 238, triggered when all 12 months are suppressed) was
+  not updated. This was a two-character fix but the real defect is the missing
+  test — the new test suite covers regions with exactly one published month, all
+  identical months, and no published months.
+- **Partial-year regions silently entered concordance tests with the wrong null
+  hypothesis.** The concordance test's null is that each region's peak lands
+  anywhere in a chosen three-month window (p=0.25, or 3/12). For a partial-year
+  region publishing k months, the probability depends on which months survived
+  suppression — ranging from 0 to 1 with no single scalar null — which is why
+  excluding partial regions is correct rather than reweighting them. The fix
+  changes no published figures: 2025 broiler monthly data contains **22 states,
+  all 22 with a complete 12-month series, 0 partial.** Peak concordance
+  p_corrected = 0.00841 ("strong agreement"), trough p_corrected = 0.03445
+  ("agreement") — both unchanged. This is a guard against future corpora where
+  NASS suppression may leave a state partial. The exclusion count appears on the
+  API surface and is disclosed in caveats.
 
 ## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
@@ -612,24 +632,6 @@ The unsourced-estimate share of loss factors rises from 46% to 48%, and the
 README says so. That is the audit working: silk is the thinnest-sourced subject
 in the corpus and the thinness stays visible instead of being laundered by
 proximity to well-sourced poultry figures.
-
-### Say what COOPER actually did
-
-`docs/research/README.md` now states the attribution in one place: extracted by
-a local model, specified and graded by a human, verified against the returned
-document. Not "research done by an AI", which overstates a worker that fetches
-exactly the URLs it is handed and never searches, and understates the quote
-gate that is the reason any of these figures are citable.
-
-Findings files carry an `extraction:` block -- host, models, run date, and the
-gate that passed them -- written by `runner.py` rather than added by hand, so a
-row quoted out of `accepted/` still says what produced it. The directory name
-was doing that job by implication, and an implication does not survive a
-copy-paste. Backfilled onto saffron and maple. It records the batch; per-figure
-detail stays in `agreement:`, because which model won a given field is not
-something the runner measures and inventing it would be the tidy-looking
-fiction the pipeline exists to keep out. The block carries neither `quote` nor
-`confidence`, so `verify` never sees it.
 
 ### Tags that are not releases
 
@@ -1698,7 +1700,6 @@ measures breakage closely.
   must stay under rather than measured rates, so they overstate real loss.
 - No egg mixing cascade of its own; eggs reuse the broiler chains, which is
   wrong in detail — an egg carton is not a combo bin.
-
 
 ## v1.0.0 — 2026-07-29
 
