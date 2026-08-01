@@ -263,3 +263,20 @@ def test_seasonality_classification_is_graded_as_our_judgement():
 def test_seasonality_404s_for_a_year_with_no_monthly_data():
     r = TestClient(app).get("/api/seasonality", params={"year": 1899})
     assert r.status_code == 404
+
+
+def test_seasonality_default_year_has_monthly_data():
+    """Guards against the exact regression this replaced.
+
+    `year` used to be a hardcoded 2025. The moment the corpus rolled past it,
+    calling this endpoint with no `year` at all would 404 -- silently, since
+    the frontend's `load()` swallows a failed init. Confirms the endpoint
+    resolves its own default to a year the corpus actually has data for.
+    """
+    r = TestClient(app).get("/api/seasonality")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["regions"], (
+        "the default year has no monthly rows -- the endpoint is "
+        "defaulting to a year the corpus does not have data for"
+    )

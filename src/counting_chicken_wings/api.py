@@ -474,19 +474,21 @@ def mixing_curve(
 
 
 @app.get("/api/states")
-def states(year: int = 2025):
-    """Average live weight by state, with production volume where reported."""
+def states(year: int | None = None):
+    """Average live weight by state, with production volume where reported.
+
+    `year` defaults to the most recent year with data rather than a literal
+    constant -- a hardcoded year renders an empty map and a header-only table
+    with no explanation the moment the corpus rolls past it. Absent any data
+    at all, or given an explicit year with none, the response says so in
+    `message` rather than leaving the caller to infer it from an empty list.
+    """
     conn = dbm.connect()
     try:
-        rows = conn.execute(
-            """SELECT r.region, r.avg_size, r.size_unit, r.volume,
-                      r.volume_unit, s.slug AS source_slug
-               FROM v_broiler_size_stat r
-               JOIN source s ON s.id = r.source_id
-               WHERE r.year = ? AND r.month IS NULL
-               ORDER BY r.avg_size DESC""",
-            (year,),
-        ).fetchall()
+        explicit_year = year is not None
+        if year is None:
+            year = dbm.latest_broiler_size_year(conn)
+
         programs = conn.execute(
             """SELECT slug, label, size_lo, size_hi, typical_market
                FROM production_program ORDER BY size_lo"""
@@ -498,8 +500,32 @@ def states(year: int = 2025):
                     return p["label"]
             return None
 
+        rows = []
+        if year is not None:
+            rows = conn.execute(
+                """SELECT r.region, r.avg_size, r.size_unit, r.volume,
+                          r.volume_unit, s.slug AS source_slug
+                   FROM v_broiler_size_stat r
+                   JOIN source s ON s.id = r.source_id
+                   WHERE r.year = ? AND r.month IS NULL
+                   ORDER BY r.avg_size DESC""",
+                (year,),
+            ).fetchall()
+
+        message = None
+        if year is None:
+            message = "No state-level size data is loaded yet."
+        elif not rows:
+            message = (
+                f"No state-level size data for {year}."
+                if explicit_year else
+                f"No state-level size data for {year}, the most recent year "
+                "loaded."
+            )
+
         return {
             "year": year,
+            "message": message,
             "regions": [
                 {
                     "region": r["region"],
@@ -849,7 +875,7 @@ def _seasonality_summary(
 
 
 @app.get("/api/seasonality")
-def seasonality(year: int = 2025, species: str = "broiler"):
+def seasonality(year: int | None = None, species: str = "broiler"):
     """Does bird weight have a season, and does the answer change with it?
 
     The finding this endpoint exists to carry: **no single series is seasonal
@@ -859,16 +885,31 @@ def seasonality(year: int = 2025, species: str = "broiler"):
     that were surveyed separately is stronger evidence than any one series'
     range. Both results are returned, neither is hidden, and the weaker one is
     not dressed up as the stronger.
+
+    `year` defaults to the most recent year with a full monthly series rather
+    than a literal constant -- a hardcoded year turned this endpoint into a
+    404 the frontend silently swallowed the moment the corpus rolled past it.
     """
     conn = dbm.connect()
     try:
+        explicit_year = year is not None
+        if year is None:
+            year = dbm.latest_monthly_size_year(conn, species_slug=species)
+            if year is None:
+                raise HTTPException(
+                    404, f"no monthly {species} data is loaded at all")
+
         try:
             raw = dbm.monthly_size_series(conn, year=year, species_slug=species)
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         if not raw:
-            raise HTTPException(
-                404, f"no monthly {species} data for {year}")
+            detail = (
+                f"no monthly {species} data for {year}" if explicit_year else
+                f"no monthly {species} data for {year}, the most recent "
+                "year loaded"
+            )
+            raise HTTPException(404, detail)
 
         national_raw = raw.pop("United States", None)
         national = (

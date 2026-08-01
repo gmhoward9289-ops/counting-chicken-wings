@@ -427,6 +427,12 @@ const ABBR = {Alabama:'AL',Arkansas:'AR',Delaware:'DE',Georgia:'GA',
 
 async function initStates() {
   const d = await api('/api/states');
+  // The server names the empty case explicitly (no year had data, or the
+  // requested year had none) rather than leaving an empty map and a
+  // header-only table to speak for themselves.
+  const msg = $('#states-message');
+  msg.hidden = !d.message;
+  msg.textContent = d.message || '';
   const rows = d.regions.filter(r => ABBR[r.region]);
   Plotly.newPlot('statemap', [{
     type: 'choropleth', locationmode: 'USA-states',
