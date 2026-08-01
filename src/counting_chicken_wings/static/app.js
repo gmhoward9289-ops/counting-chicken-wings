@@ -1396,8 +1396,19 @@ READY = (async () => {
   };
   // Chains before the window, so a product change has a valid chain selected
   // by the time calc() reads it.
+  //
+  // Both are also bound to `input`, not just `change`: a <select> fires
+  // `input` before `change`, and calc() below listens on both. Without this,
+  // the first calc() after a product switch ran on `input` before syncChains
+  // had a chance to run on `change` -- so it read the PREVIOUS product's
+  // chain and briefly rendered a contradictory answer (egg with a wing
+  // chain: floor > ceiling). Listeners for the same event fire in
+  // registration order, so registering these before calc's own `input`
+  // listener (below) is what makes the ordering hold.
   $('#product').addEventListener('change', syncChains);
   $('#product').addEventListener('change', syncWindow);
+  $('#product').addEventListener('input', syncChains);
+  $('#product').addEventListener('input', syncWindow);
   syncChains();
   syncWindow();
 
