@@ -14,11 +14,31 @@ const api = p => {
   busy(1);
   return fetch(p)
     .then(r => {
-      if (!r.ok) throw new Error(`${p} -> ${r.status}`);
+      if (!r.ok) {
+        // FastAPI's HTTPException body is {"detail": "..."} -- surface that
+        // rather than a bare status code, so "count must be <= 100000" reaches
+        // the person who typed the count instead of only the console.
+        return r.json().catch(() => null).then(body => {
+          throw new Error((body && body.detail) || `${p} -> ${r.status}`);
+        });
+      }
       return r.json();
     })
     .finally(() => busy(-1));
 };
+
+// Shared inline error affordance. Small and next to the control it concerns,
+// not a modal -- and cleared on the next successful call so it cannot outlive
+// the problem it described. Every fetch path (calc/sci/impact/boot) used to
+// let a rejected request -- typically a 422 from an out-of-range count --
+// disappear silently, leaving the previous answer on screen with no
+// indication anything had gone wrong.
+function setError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg || '';
+  el.hidden = !msg;
+}
 // Plotly comes from a CDN, so a public deployment depends on that host being
 // reachable. If it is not, stub it rather than letting every chart-bearing
 // view die on "Plotly is not defined" -- the numbers all exist in the tables
@@ -138,10 +158,21 @@ document.querySelectorAll('nav button').forEach(b => {
 // ---- calculator
 let calcSeq = 0;
 
+// An empty field means "use the default", but `value || fallback` treats
+// "0" as truthy (it is a non-empty string) and sends it straight to the API,
+// which then 422s on a bound the field's own `min` already implied. Only an
+// actually-empty field should fall back; anything else -- including "0" or
+// a negative -- goes to the server and surfaces through the catch below,
+// rather than silently becoming the fallback value or silently failing.
+const numOrDefault = (id, def) => {
+  const v = $('#' + id).value;
+  return v === '' ? def : v;
+};
+
 async function calc() {
   const mine = ++calcSeq;
   const q = new URLSearchParams({
-    count: $('#count').value || 12,
+    count: numOrDefault('count', 12),
     product: $('#product').value || 'whole_wing',
     chain: $('#chain').value,
     pieces: $('#pieces').checked,
@@ -152,8 +183,17 @@ async function calc() {
   // the query string for wings.
   if (!$('#window-wrap').hidden && $('#window-days').value)
     q.set('window_days', $('#window-days').value);
-  const d = await api('/api/calculate?' + q);
+
+  let d;
+  try {
+    d = await api('/api/calculate?' + q);
+  } catch (err) {
+    if (mine !== calcSeq) return;   // superseded by a newer request
+    setError('calc-error', `Could not calculate: ${err.message}`);
+    return;
+  }
   if (mine !== calcSeq) return;     // superseded by a newer request
+  setError('calc-error', '');       // clear whatever the last attempt showed
   const a = d.answer, plural = d.question.individual_plural;
 
   $('#hl').textContent = fmtDistinct(a.distinct, a.ceiling);
@@ -218,7 +258,10 @@ async function calc() {
       fl += ` Accounting for every loss from the farm to the fryer,
         <b>${a.required.toFixed(2)}</b> ${plural} had to enter the system.`;
   }
-  if (d.question.segments_per_unit)
+  // > 1, not just truthy: the server returns segments_per_unit: 1 for any
+  // product with no piece breakdown (e.g. maple syrup), and "1 pieces is 1
+  // whole wings" glued a wing-specific sentence onto a non-wing answer.
+  if (d.question.segments_per_unit > 1)
     fl = `${d.question.count} pieces is ${(+d.question.units.toFixed(2))}
       whole wings. ` + fl;
   $('#floorline').innerHTML = fl;
@@ -245,7 +288,15 @@ async function calc() {
        ${d.floor_note
          ? `<p style="margin-top:8px">${d.floor_note}</p>` : ''}</div>` : '';
 
-  const f = await api('/api/facts?placement=result&limit=1');
+  // Informational only -- a failure here must not blank out the answer
+  // above, which already rendered successfully.
+  let f;
+  try {
+    f = await api('/api/facts?placement=result&limit=1');
+  } catch (err) {
+    console.error('failed to load a result fact', err);
+    return;
+  }
   if (mine !== calcSeq) return;
   if (f.facts.length) {
     const x = f.facts[0];
@@ -271,15 +322,23 @@ async function sci() {
   const mine = ++sciSeq;
   const conf = $('#s-conf').value;
   const q = new URLSearchParams({
-    count: $('#s-count').value || 12,
+    count: numOrDefault('s-count', 12),
     chain: $('#s-chain').value,
     confidence_level: $('#s-ci').value,
     iterations: $('#s-iter').value,
   });
   if (conf) q.set('min_confidence', conf);
 
-  const d = await api('/api/scientific?' + q);
+  let d;
+  try {
+    d = await api('/api/scientific?' + q);
+  } catch (err) {
+    if (mine !== sciSeq) return;
+    setError('sci-error', `Could not run the analysis: ${err.message}`);
+    return;
+  }
   if (mine !== sciSeq) return;      // superseded by a newer request
+  setError('sci-error', '');
   const a = d.answer, pct = Math.round(d.question.confidence_level * 100);
 
   $('#s-req').textContent = a.required.toFixed(2);
@@ -437,6 +496,12 @@ const ABBR = {Alabama:'AL',Arkansas:'AR',Delaware:'DE',Georgia:'GA',
 
 async function initStates() {
   const d = await api('/api/states');
+  // The server names the empty case explicitly (no year had data, or the
+  // requested year had none) rather than leaving an empty map and a
+  // header-only table to speak for themselves.
+  const msg = $('#states-message');
+  msg.hidden = !d.message;
+  msg.textContent = d.message || '';
   const rows = d.regions.filter(r => ABBR[r.region]);
   Plotly.newPlot('statemap', [{
     type: 'choropleth', locationmode: 'USA-states',
@@ -1028,14 +1093,33 @@ async function showSize(species) {
 }
 
 // ---- nutrition & impact
+// Same pattern as calcSeq/sciSeq above: requests are not guaranteed to
+// resolve in the order they were sent, so a stamp per call and a check on
+// return is what stops a partially-typed count from winning a race against
+// the finished one -- otherwise the footprint chart and the farmer's-share
+// paragraph could settle on numbers for "1" while "120" was still mid-type.
+let impactSeq = 0;
+
 async function impact() {
-  const count = $('#i-count').value || 12;
+  const mine = ++impactSeq;
+  const count = numOrDefault('i-count', 12);
   const product = $('#i-product').value || 'whole_wing';
 
-  const [n, f] = await Promise.all([
-    api(`/api/nutrition?product=${product}`),
-    api(`/api/footprint?count=${count}&product=${product}`),
-  ]);
+  let n, f;
+  try {
+    [n, f] = await Promise.all([
+      api(`/api/nutrition?product=${product}`),
+      api(`/api/footprint?count=${count}&product=${product}`),
+    ]);
+  } catch (err) {
+    // A superseded request must not report its failure either: the newer
+    // one owns the panel now, and a stale error would sit over live numbers.
+    if (mine !== impactSeq) return;
+    setError('impact-error', `Could not load: ${err.message}`);
+    return;
+  }
+  if (mine !== impactSeq) return;   // superseded by a newer request
+  setError('impact-error', '');
 
   $('#i-alloc').textContent = f.allocation_note;
 
@@ -1103,6 +1187,18 @@ async function impact() {
     '</table>';
 }
 
+// Trailing-edge debounce, used below to stop every keystroke in the count
+// field from firing its own request -- typing "120" fired six requests
+// (two listeners × three digits) before the seq guard above was even
+// reached.
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
 async function initImpact() {
   // Default to the headline product explicitly. Products come back ordered
   // by slug, which puts "boneless_wing" first alphabetically -- and boneless
@@ -1113,9 +1209,14 @@ async function initImpact() {
     .map(p => `<option value="${p.slug}"${
       p.slug === 'whole_wing' ? ' selected' : ''}>${p.label}</option>`)
     .join('');
+  // Assignment, not addEventListener: redrawTheme() re-runs initImpact on
+  // every theme toggle, and addEventListener would leave the previous
+  // toggle's listener in place instead of replacing it -- each theme switch
+  // would then fire one more impact() per keystroke than the last.
+  const debouncedImpact = debounce(impact, 250);
   ['i-count', 'i-product'].forEach(id => {
-    $('#' + id).addEventListener('change', impact);
-    $('#' + id).addEventListener('input', impact);
+    $('#' + id).onchange = impact;
+    $('#' + id).oninput = debouncedImpact;
   });
   await impact();
 }
@@ -1289,7 +1390,21 @@ READY = (async () => {
   // take the page down with it. It stays hidden if the fetch fails.
   api('/api/version').then(renderBuild).catch(() => {});
 
-  META = await api('/api/meta');
+  // Everything downstream reads META, so its failure is not survivable the
+  // way the logo's or the build stamp's is -- but it used to fail exactly
+  // as quietly: every dropdown stayed empty and the headline sat on its
+  // initial em-dash forever, with nothing on screen saying why.
+  try {
+    META = await api('/api/meta');
+  } catch (err) {
+    const el = document.getElementById('boot-error');
+    if (el) {
+      el.hidden = false;
+      el.textContent = 'Could not load — the API may be unreachable. ' +
+        `Reload to try again. (${err.message})`;
+    }
+    throw err;
+  }
 
   const active = META.products.filter(p => p.active);
   $('#product').innerHTML = active.map(p =>
@@ -1326,8 +1441,19 @@ READY = (async () => {
   };
   // Chains before the window, so a product change has a valid chain selected
   // by the time calc() reads it.
+  //
+  // Both are also bound to `input`, not just `change`: a <select> fires
+  // `input` before `change`, and calc() below listens on both. Without this,
+  // the first calc() after a product switch ran on `input` before syncChains
+  // had a chance to run on `change` -- so it read the PREVIOUS product's
+  // chain and briefly rendered a contradictory answer (egg with a wing
+  // chain: floor > ceiling). Listeners for the same event fire in
+  // registration order, so registering these before calc's own `input`
+  // listener (below) is what makes the ordering hold.
   $('#product').addEventListener('change', syncChains);
   $('#product').addEventListener('change', syncWindow);
+  $('#product').addEventListener('input', syncChains);
+  $('#product').addEventListener('input', syncWindow);
   syncChains();
   syncWindow();
 

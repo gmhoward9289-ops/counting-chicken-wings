@@ -233,6 +233,30 @@ def test_states_are_ranked_and_classified(client):
         by_region["Ohio"]["avg_size"]
 
 
+def test_states_default_year_has_rows(client):
+    """Guards against the exact regression this replaced.
+
+    `year` used to be a hardcoded 2025. The moment the corpus rolled past it,
+    this endpoint would return 200 with `regions: []` and no explanation --
+    silent, and only visible on `/api/states?year=2099`. Calling the endpoint
+    with no `year` at all must resolve to the corpus's latest year and come
+    back with real rows, not just a 200.
+    """
+    d = get(client, "/api/states")
+    assert d["year"] is not None
+    assert d["regions"], (
+        f"the default year ({d['year']}) has no rows -- the endpoint is "
+        "defaulting to a year the corpus does not have data for"
+    )
+    assert d["message"] is None
+
+
+def test_states_names_the_empty_case_for_an_unloaded_year(client):
+    d = get(client, "/api/states", year=2099)
+    assert d["regions"] == []
+    assert d["message"], "an empty result must say why, not just be empty"
+
+
 def test_trends_carry_the_full_series(client):
     d = get(client, "/api/trends")
     years = [r["year"] for r in d["husbandry"]]

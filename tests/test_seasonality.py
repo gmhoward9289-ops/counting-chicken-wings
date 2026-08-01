@@ -98,6 +98,44 @@ def test_suppressed_months_are_not_interpolated():
     assert "10 of 12" in s.explanation
 
 
+def test_single_published_month():
+    """A region with only one published month is insufficient, not a crash."""
+    values = [None] * 12
+    values[5] = 42.0  # Only June published
+    s = seas.analyse("Onemonthland", 2025, values)
+    assert s.months_present == 1
+    assert s.verdict == "insufficient"
+    assert s.peak_month == 6  # June
+    assert s.hi == 42.0
+    assert s.lo == 42.0
+    assert s.swing == 0.0
+    assert "1 of 12" in s.explanation
+
+
+def test_all_identical_months():
+    """Twelve identical values have zero swing and are not seasonal."""
+    values = [10.0] * 12
+    s = seas.analyse("Flatland", 2025, values)
+    assert s.months_present == 12
+    assert s.swing == 0.0
+    assert s.signal_ratio == 0.0
+    assert s.persistence == 0.0
+    # Zero swing cannot satisfy any seasonal test
+    assert s.verdict == "noise"
+    assert "typical month-to-month movement" in s.explanation
+
+
+def test_no_published_months():
+    """A region with no published months is insufficient."""
+    values = [None] * 12
+    s = seas.analyse("Ghostland", 2025, values)
+    assert s.months_present == 0
+    assert s.verdict == "insufficient"
+    assert "0 of 12" in s.explanation
+    assert s.peak_month == 0
+    assert s.trough_month == 0
+
+
 def test_sparkline_shows_a_gap_as_a_gap():
     values = sine_year()
     values[0] = None
@@ -161,6 +199,54 @@ def test_concordance_needs_enough_regions():
 def test_concordance_rejects_an_unknown_kind():
     with pytest.raises(ValueError):
         seas.concordance([_fake("A", 9)], "middle")
+
+
+def test_concordance_excludes_partial_data_regions():
+    """Partial-year regions are excluded from concordance testing.
+
+    The null hypothesis (peak month is uniform over 12 months, p=1/12)
+    does not hold for partial-year regions. A 3-month region should have
+    p=1/3 for uniformity, not p=1/12. Exclusion ensures we do not bias
+    the test by mixing incompatible null hypotheses.
+    """
+    # Create 12 full-year regions that all peak in month 9
+    full_year = [_fake(f"Full{i}", 9) for i in range(12)]
+    # Create 4 partial-year regions that all peak in month 9
+    partial = []
+    for i in range(4):
+        values = [10.0] * 3
+        values[2] = 11.0  # Peak in 3rd published month
+        s = seas.analyse(f"Partial{i}", 2025, values + [None] * 9)
+        partial.append(s)
+
+    # Test with all regions combined
+    all_regions = full_year + partial
+    c = seas.concordance(all_regions, "peak")
+
+    # Only the 12 full-year regions should be counted
+    assert c.regions_counted == 12, "only full-year regions should be counted"
+    assert c.regions_excluded == 4, "4 partial-year regions should be excluded"
+    assert all(m in c.window for m in [9])  # All peaks still align
+    assert c.verdict == "strong agreement"
+
+
+def test_concordance_reports_exclusion_in_caveats():
+    """Concordance includes a caveat explaining exclusions."""
+    # Create 4+ full-year regions and partial-year regions
+    full_year = [_fake(f"Full{i}", 9) for i in range(4)]
+    partial = []
+    for i in range(3):
+        # Create partial-year regions with 6 months each
+        values = [10.0] * 6 + [None] * 6
+        s = seas.analyse(f"Partial{i}", 2025, values)
+        partial.append(s)
+
+    c = seas.concordance(full_year + partial, "peak")
+
+    # Should exclude the partial-year regions
+    assert c.regions_excluded == 3
+    # Caveat should mention the exclusion
+    assert any("excluded" in cav.lower() for cav in c.caveats)
 
 
 # ---------------------------------------------------------------------------
@@ -263,3 +349,20 @@ def test_seasonality_classification_is_graded_as_our_judgement():
 def test_seasonality_404s_for_a_year_with_no_monthly_data():
     r = TestClient(app).get("/api/seasonality", params={"year": 1899})
     assert r.status_code == 404
+
+
+def test_seasonality_default_year_has_monthly_data():
+    """Guards against the exact regression this replaced.
+
+    `year` used to be a hardcoded 2025. The moment the corpus rolled past it,
+    calling this endpoint with no `year` at all would 404 -- silently, since
+    the frontend's `load()` swallows a failed init. Confirms the endpoint
+    resolves its own default to a year the corpus actually has data for.
+    """
+    r = TestClient(app).get("/api/seasonality")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["regions"], (
+        "the default year has no monthly rows -- the endpoint is "
+        "defaulting to a year the corpus does not have data for"
+    )
