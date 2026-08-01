@@ -43,6 +43,125 @@ def _source_payload(row) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Scope: which species a view is actually about
+#
+# Twelve products sit in one dropdown as equals, and eight of the eleven views
+# answer for exactly one of them. Picking "Silk dress" and opening Trends used
+# to show broiler chickens with nothing saying so.
+#
+# The fix has to survive the corpus growing, so no view names a species. Each
+# scoped endpoint reports the species ITS OWN QUERY reached, built from the
+# same rows it is returning -- the day /api/trends carries a second species,
+# its scope says two without anyone remembering to update it. This is the same
+# rule that put `coverage` on /api/footprint: prose about coverage rots, so
+# coverage is data.
+# ---------------------------------------------------------------------------
+
+
+def _scope(conn, species_slugs, *, label: str | None = None) -> dict:
+    """A view's scope, named from the `species` table rather than in prose.
+
+    `label` overrides the printed name where the scope is genuinely broader
+    than one species -- the fact deck is per DOMAIN, and "Poultry" is what it
+    covers, even though the species behind it are a broiler and a laying hen.
+    Callers still get `species` for the mismatch check either way.
+    """
+    slugs = [s for s in species_slugs if s]
+    rows = []
+    if slugs:
+        marks = ",".join("?" * len(slugs))
+        rows = conn.execute(
+            f"""SELECT slug, common_name, individual_noun, individual_plural
+                FROM species WHERE slug IN ({marks}) ORDER BY id""",
+            tuple(slugs),
+        ).fetchall()
+    names = [r["common_name"] for r in rows]
+    return {
+        "species": [dict(r) for r in rows],
+        # Ready to print. `label` when the caller has a truer word for the
+        # scope; otherwise the species' own names out of the corpus.
+        "label": label or (" and ".join(names) if names else None),
+    }
+
+
+# What each `v_species_coverage` flag is called in English. The columns are
+# the source of truth for WHICH dimensions exist -- this only names them, and
+# a column with no entry here is a schema change that forgot its label, which
+# is what test_scope_labels_every_dimension_the_view_carries checks.
+_DIMENSION_LABELS = {
+    "loss_chain": "a sourced supply chain",
+    "products": "products in the calculator",
+    "size_axis": "a size question",
+    "regional_weight": "region-by-region weights",
+    "seasonality": "a month-by-month series",
+    "trends": "a year-over-year series",
+    "footprint": "a resource footprint",
+    "nutrition": "nutrition figures",
+}
+
+# Columns of `v_species_coverage` that name the species rather than measure it.
+_SPECIES_COLUMNS = ("id", "slug", "common_name", "individual_noun",
+                    "individual_plural", "domain")
+
+
+@app.get("/api/scope")
+def scope():
+    """Which species the corpus answers, in how many dimensions, and the anchor.
+
+    The page's strapline needs to say that one species is the anchor dataset
+    and the rest are extensions. Written into the page, that sentence is a
+    coverage claim, and coverage claims rot -- an earlier draft of this project
+    hardcoded "Israel cannot answer how many chickens", which was true when
+    typed and false hours later.
+
+    So the anchor is COMPUTED, from `v_species_coverage`: the active species
+    present in the most dimensions. A tie returns `anchor: null` and the page
+    prints nothing rather than picking one -- the day a second species reaches
+    parity, the claim retires itself instead of becoming a lie.
+    """
+    conn = dbm.connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM v_species_coverage ORDER BY id"
+        ).fetchall()
+        keys = [k for k in (rows[0].keys() if rows else [])
+                if k not in _SPECIES_COLUMNS]
+
+        species = []
+        for r in rows:
+            dims = {k: bool(r[k]) for k in keys}
+            species.append({
+                "slug": r["slug"],
+                "common_name": r["common_name"],
+                "individual_noun": r["individual_noun"],
+                "individual_plural": r["individual_plural"],
+                "domain": r["domain"],
+                "dimensions": dims,
+                "depth": sum(dims.values()),
+            })
+
+        anchor = None
+        if species:
+            depths = sorted((s["depth"] for s in species), reverse=True)
+            # Strictly deepest, or nothing. Two species at the same depth is
+            # not an anchor, and a tie-break would invent one.
+            if len(depths) == 1 or depths[0] > depths[1]:
+                anchor = max(species, key=lambda s: s["depth"])
+
+        return {
+            "anchor": anchor,
+            "species": species,
+            "dimensions": [
+                {"key": k, "label": _DIMENSION_LABELS.get(k, k),
+                 "species": [s["slug"] for s in species if s["dimensions"][k]]}
+                for k in keys
+            ],
+        }
+    finally:
+        conn.close()
+
+
 @app.get("/healthz")
 def healthz():
     """Liveness check, deliberately cheap: no database, no imports.
@@ -579,9 +698,21 @@ def states(year: int | None = None):
                 "loaded."
             )
 
+        # Read back off the rows this call is returning, not asserted. The
+        # underlying view is broilers today; the day it widens, so does this,
+        # with nobody having to remember.
+        scoped = conn.execute(
+            """SELECT DISTINCT sp.slug
+               FROM v_broiler_size_stat r
+               JOIN species sp ON sp.id = r.species_id
+               WHERE r.year = ? AND r.month IS NULL""",
+            (year,),
+        ).fetchall() if year is not None else []
+
         return {
             "year": year,
             "message": message,
+            "scope": _scope(conn, [r["slug"] for r in scoped]),
             "regions": [
                 {
                     "region": r["region"],
@@ -695,7 +826,23 @@ def countries():
                     r["head_years"] or subnational or r["national_rows"]
                 ),
             })
-        return {"countries": out}
+
+        # Every `answers` flag above is counted off three tables, and all three
+        # are per-species. The view compares countries, so the species it is
+        # comparing them ON is the thing a reader cannot see and has to be
+        # told -- a maple-syrup question opened here got broiler coverage with
+        # nothing marking it. Read off the same rows rather than asserted.
+        scoped = conn.execute(
+            """SELECT sp.slug FROM species sp
+               WHERE sp.id IN (SELECT species_id FROM slaughter_stat_year
+                               UNION SELECT species_id FROM output_stat_year
+                               UNION SELECT species_id FROM v_broiler_size_stat)
+               ORDER BY sp.id"""
+        ).fetchall()
+        return {
+            "scope": _scope(conn, [r["slug"] for r in scoped]),
+            "countries": out,
+        }
     finally:
         conn.close()
 
@@ -990,6 +1137,10 @@ def seasonality(year: int | None = None, species: str = "broiler"):
         return {
             "year": year,
             "species": species,
+            # `species` above is the requested slug and has been in the payload
+            # since this endpoint existed; `scope` is the same fact in the
+            # shape every scoped view reads, so the page has one code path.
+            "scope": _scope(conn, [species]),
             "unit": national.unit if national else "lb",
             "measure": "average live weight at slaughter",
             "national": _seasonality_payload(national) if national else None,
@@ -1064,7 +1215,16 @@ def trends():
         yields = conn.execute(
             "SELECT year, dressing_yield FROM v_dressing_yield ORDER BY year"
         ).fetchall()
+        # Neither series above filters by species -- they return whatever the
+        # corpus holds -- so the scope is whatever they just reached.
+        scoped = conn.execute(
+            """SELECT sp.slug FROM species sp
+               WHERE sp.id IN (SELECT species_id FROM husbandry_stat_year
+                               UNION SELECT species_id FROM slaughter_stat_year)
+               ORDER BY sp.id"""
+        ).fetchall()
         return {
+            "scope": _scope(conn, [r["slug"] for r in scoped]),
             "husbandry": [dict(r) for r in hus],
             "slaughter": [dict(r) for r in sla],
             "dressing_yield": [dict(r) for r in yields],
@@ -1079,6 +1239,15 @@ def quality_axes():
 
     The view is built from this rather than from a hardcoded list, so a
     species with an axis row appears the moment its YAML lands.
+
+    LEFT JOIN, not an inner one, and the difference is the whole point of this
+    endpoint. Inner-joined, three of six active species vanished from the
+    picker: a silkworm, a beef cow and a sugar maple simply were not offered,
+    and nothing said why. A reader counted three chips and had no way to know
+    the corpus holds six species. An unanswered question is a finding about
+    the data -- omitting it misrepresents the corpus as more complete than it
+    is, which is the same bug the null verdict legs already exist to avoid,
+    one level up.
     """
     conn = dbm.connect()
     try:
@@ -1093,13 +1262,23 @@ def quality_axes():
                       (SELECT COUNT(*) FROM product_grade g
                         JOIN product pr ON pr.id = g.product_id
                        WHERE pr.species_id = sp.id) AS grades
-               FROM quality_axis a JOIN species sp ON sp.id = a.species_id
+               FROM species sp
+               LEFT JOIN quality_axis a ON a.species_id = sp.id
                WHERE sp.active = 1
                ORDER BY sp.id"""
         ).fetchall()
         out = []
         for r in rows:
             d = dict(r)
+            # No axis row at all: the species is offered, its question is
+            # stated as unasked, and every downstream field stays null rather
+            # than borrowing the neighbouring species' answer.
+            d["has_axis"] = d["question"] is not None
+            if not d["has_axis"]:
+                d["axis_rows"] = 0
+                d["has_figures"] = False
+                out.append(d)
+                continue
             # Which table backs the x-axis depends on the kind of axis, and
             # getting this wrong is subtle: a laying hen HAS production_program
             # rows, but they measure hens per house, not egg size. Counting
@@ -1125,6 +1304,22 @@ def bird_size(year: int = 2025, species: str = "broiler"):
     trade-off is visible in one payload. The question, the x-axis and the
     verdict all come from `quality_axis` -- a species whose answer differs
     (or does not exist) is a YAML change, not a code change.
+
+    TWO 404s, and they are not the same failure. This endpoint serves a size
+    QUESTION, so a species with no `quality_axis` row has no resource here to
+    return -- but that is a fact about the corpus, not a caller mistake, and
+    the caller has to be able to tell which it hit. Both used to be one bare
+    string, so the picker could only avoid them by not offering those species
+    at all: a silkworm, a beef cow and a sugar maple were silently absent from
+    a view claiming to grade "every species".
+
+    So `detail` is an object rather than a sentence, carrying a machine-
+    readable `error` and -- for `no_size_question` -- the species itself, which
+    is what lets a client render the gap honestly instead of blanking. The
+    corpus names the species; the page does not.
+
+      unknown_species    the slug is not in the corpus at all. A bug.
+      no_size_question   the species exists and nobody has asked yet.
     """
     conn = dbm.connect()
     try:
@@ -1134,14 +1329,30 @@ def bird_size(year: int = 2025, species: str = "broiler"):
                       a.question, a.x_label, a.x_unit, a.x_kind,
                       a.verdict_yield, a.verdict_quality, a.verdict_count,
                       a.summary
-               FROM quality_axis a JOIN species sp ON sp.id = a.species_id
+               FROM species sp
+               LEFT JOIN quality_axis a ON a.species_id = sp.id
                WHERE sp.slug = ?""",
             (species,),
         ).fetchone()
         if axis is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"no size question recorded for species '{species}'")
+            raise HTTPException(404, detail={
+                "error": "unknown_species",
+                "message": f"unknown species: '{species}'",
+            })
+        if axis["question"] is None:
+            raise HTTPException(404, detail={
+                "error": "no_size_question",
+                # Ready to print, and built from the corpus' own name for the
+                # species so the page never types one.
+                "message": "No size question has been recorded for "
+                           f"{axis['common_name'].lower()} yet",
+                "species": {
+                    "slug": axis["species_slug"],
+                    "common_name": axis["common_name"],
+                    "individual_noun": axis["individual_noun"],
+                    "individual_plural": axis["individual_plural"],
+                },
+            })
         # v_broiler_size_stat is, as its name says, broilers only. Other
         # species have no regional weight series, and inheriting the broiler
         # one would put chicken pounds on a turkey's axis.
@@ -1507,8 +1718,32 @@ def facts(
 ):
     conn = dbm.connect()
     try:
-        return {"facts": [dict(r) for r in
-                          dbm.get_facts(conn, placement, limit)]}
+        rows = dbm.get_facts(conn, placement, limit)
+        # Facts hang off a DOMAIN, not a species, so the domain's own label is
+        # the truer name for what the deck covers -- "Poultry" rather than
+        # "Broiler chicken and Laying hen". The species list comes back too,
+        # because that is what a caller compares a selected product against.
+        doms = conn.execute(
+            """SELECT DISTINCT d.slug, d.label FROM fact f
+               JOIN domain d ON d.id = f.domain_id
+               WHERE f.slug IN (%s) ORDER BY d.id"""
+            % (",".join("?" * len(rows)) or "NULL"),
+            tuple(r["slug"] for r in rows),
+        ).fetchall()
+        spp = conn.execute(
+            """SELECT sp.slug FROM species sp
+               WHERE sp.active = 1 AND sp.domain_id IN
+                 (SELECT id FROM domain WHERE slug IN (%s))
+               ORDER BY sp.id"""
+            % (",".join("?" * len(doms)) or "NULL"),
+            tuple(d["slug"] for d in doms),
+        ).fetchall()
+        return {
+            "scope": _scope(conn, [r["slug"] for r in spp],
+                            label=" and ".join(d["label"] for d in doms)
+                            or None),
+            "facts": [dict(r) for r in rows],
+        }
     finally:
         conn.close()
 

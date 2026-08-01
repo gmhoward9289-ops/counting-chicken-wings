@@ -54,6 +54,20 @@ def html(doc):
 
 
 @pytest.fixture(scope="module")
+def markup(doc):
+    """The document with its HTML comments removed.
+
+    Every comment in that file explains a bug the page used to have, and
+    several quote the offending prose verbatim -- "broiler chickens with
+    nothing marking them as unrelated" is a description of the fix, not a
+    violation of it. A check that reads the raw document flags its own
+    documentation, which is how a guard teaches people to stop writing
+    comments.
+    """
+    return re.sub(r"<!--.*?-->", "", doc, flags=re.S)
+
+
+@pytest.fixture(scope="module")
 def script(doc):
     """Executable JS only.
 
@@ -160,6 +174,107 @@ def test_the_size_verdict_is_not_hardcoded(script):
     assert "Heavier birds give more meat" not in script, \
         "broiler verdict summary is hardcoded in the page"
     assert "/api/quality-axes" in script, "size view is not axis-driven"
+
+
+def test_no_species_is_named_anywhere_in_the_page(markup, script):
+    """The class-level rule behind the scope markers.
+
+    Eight of eleven views answer for one species, and saying WHICH in the page
+    is a coverage claim: true when typed, wrong the day a second species fills
+    in. Every scope label now comes from an endpoint that read it off its own
+    rows, so no species' name should appear in what ships.
+
+    This is the general form of two guards that already exist one bug each:
+    the hardcoded floor prose, and the hardcoded country coverage claim. It
+    caught real copy when it was written -- "the figures this project holds
+    are measured on broiler chickens", in the footprint table's empty state,
+    which /api/footprint's own allocation_note was already saying correctly
+    one panel above.
+    """
+    from counting_chicken_wings import db as dbm
+
+    conn = dbm.connect()
+    try:
+        names = [r["common_name"] for r in conn.execute(
+            "SELECT common_name FROM species")]
+    finally:
+        conn.close()
+
+    shipped = markup + "\n" + script
+    offenders = [n for n in names if re.search(re.escape(n), shipped, re.I)]
+    assert not offenders, (
+        "species named in the page; scope copy must come from the API: "
+        f"{offenders}"
+    )
+
+
+def test_the_scope_markers_ship_empty(markup):
+    """Both are written by app.js, so both must arrive with nothing in them.
+
+    Text typed between these tags would render before the fetch resolves and
+    then be replaced -- which is a flash of a claim nobody checked, and it
+    would survive a broken endpoint as the page's last word on the subject.
+    """
+    for el in ("scope-note", "anchor-note"):
+        m = re.search(rf'id="{el}"[^>]*>(.*?)</p>', markup, re.S)
+        assert m, f"#{el} is gone; the scope marker was renamed or removed"
+        assert not m.group(1).strip(), f"#{el} carries copy in the markup"
+        assert "hidden" in m.group(0), \
+            f"#{el} is visible before it has anything to say"
+
+
+def test_the_scope_marker_follows_both_the_view_and_the_product(script):
+    """It has to be right on arrival, not one tab behind.
+
+    The bug being prevented is specifically a stale marker: choosing a silk
+    product and walking to Trends is the path the page used to take in
+    silence, and a marker that only updated on load would be silent again for
+    any view already visited (`loaded[v]` means an init does not re-run).
+    So the render must be driven by BOTH the navigation and the product
+    control, not by the fetch.
+    """
+    assert re.search(r"function\s+renderScope\s*\(", script), \
+        "renderScope is gone; the marker has no writer"
+    assert "#scope-note" in script, "nothing writes the scope marker"
+
+    nav = re.search(r"querySelectorAll\('nav button'\).*?\}\);", script, re.S)
+    assert nav and "renderScope" in nav.group(0), \
+        "switching views does not re-render the scope marker"
+
+    assert re.search(r"addEventListener\('(?:change|input)',\s*renderScope\)",
+                     script), \
+        "changing the product does not re-render the scope marker"
+
+
+def test_a_renderable_error_is_actually_rendered(script):
+    """The size picker must not go back to hiding what it cannot answer.
+
+    Three of six active species have no size question, `/api/bird-size` 404s
+    for them, and the picker's original fix for that was to omit them -- so a
+    view claiming to grade "every species" showed three chips. The 404 now
+    carries a code and the species, which only helps if the client branches on
+    it: an unhandled rejection would blank the panel and leave whichever
+    species was showing before, which is worse than the omission was.
+
+    Two halves, both required. The fetch helper has to put the structured body
+    on the error at all (`.message` alone collapses it to a sentence -- the
+    "[object Object]" shape one bug over), and showSize has to act on it.
+    """
+    assert re.search(r"err\.detail\s*=", script), \
+        "the fetch helper drops the error body, so no caller can act on it"
+    assert "no_size_question" in script, \
+        "nothing handles the one 404 this view can render"
+
+
+def test_the_anchor_sentence_comes_from_the_api(script):
+    """Which species is the anchor is computed, never typed.
+
+    /api/scope derives it from v_species_coverage and returns null on a tie,
+    so the page has to ask rather than assert -- that is what makes the claim
+    retire itself when a second species reaches parity.
+    """
+    assert "/api/scope" in script, "the page does not ask which species is the anchor"
+    assert "#anchor-note" in script, "nothing writes the anchor sentence"
 
 
 # ---------------------------------------------------------------------------

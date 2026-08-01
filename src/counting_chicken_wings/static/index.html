@@ -61,6 +61,17 @@ try {
        <button class="lnk" data-goto="calc">calculator</button> re-scopes
        itself to whatever you ask it about. Everything else traces back to a
        <button class="lnk" data-goto="sources">source</button>.</p>
+    <!-- Which species is the anchor dataset, written by app.js from
+         /api/scope and never typed here.
+         The product dropdown offers twelve products across six species as
+         equals, and most views answer for one of them. Naming that species in
+         this file would be a coverage claim in prose: true the day it was
+         typed, wrong the day a second species fills in — the same rot that
+         put "Israel cannot answer how many chickens" on the page once.
+         /api/scope computes the anchor from v_species_coverage and returns
+         null on a tie, so this paragraph stays hidden rather than picking a
+         winner the data no longer supports. -->
+    <p class="spot anchor" id="anchor-note" hidden></p>
   </div>
 
   <nav>
@@ -81,6 +92,20 @@ try {
 </div>
 
 <div class="main">
+
+<!-- The scope marker. One element above every view rather than eleven copies
+     inside them, because it says the same kind of thing each time and a
+     reader looking for "what am I actually being shown" should find it in one
+     place.
+
+     Its text is NEVER written here. Each scoped endpoint reports the species
+     its own query reached, and app.js prints that — so a view that widens to
+     a second species relabels itself with nobody remembering to. When the
+     product you picked on the calculator belongs to a different species than
+     the view is showing, this says so instead, which is the case the page
+     used to be silent about: choosing "Silk dress" and opening Trends showed
+     broiler chickens with nothing marking them as unrelated. -->
+<p class="scope" id="scope-note" hidden></p>
 
 <!-- ------------------------------------------------ calculator -->
 <section class="view on" id="v-calc">

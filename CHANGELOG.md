@@ -1,5 +1,76 @@
 # Changelog
 
+## Unreleased
+
+### Say which species a view is answering for
+
+The Product dropdown offers twelve products across six species as equals, and
+most of the eleven views answer for exactly one of them. Choosing *Silk dress*
+and then opening **Trends**, **Seasons**, **By state** or **Scientific** gave
+broiler-chicken data with nothing marking it as unrelated to what had just been
+asked.
+
+The data layer was already honest — `/api/nutrition?product=silk_dress` returns
+an empty list rather than borrowing chicken figures — so this was entirely a
+navigation and framing gap, and it is fixed as one.
+
+**A scope marker above every single-species view.** *Showing Broiler chicken.*
+When the product selected on the calculator belongs to a different species, it
+says so instead: *"Showing Broiler chicken. Silk dress is selected on the
+calculator, and the corpus files it under Silkworm — nothing on this page is
+that product's to borrow."* Same voice as `/api/footprint`'s `allocation_note`,
+which was already saying it for one panel.
+
+**No species is named in the page.** Each scoped endpoint — `/api/states`,
+`/api/trends`, `/api/seasonality`, `/api/facts`, `/api/countries` — now returns
+a `scope` block built from the species its own query reached, so a view that
+widens to a second species relabels itself. `test_static.py` gained the
+class-level guard: no species' `common_name` may appear anywhere in the shipped
+page. It caught existing copy on the way in — the footprint table's empty state
+said *"the figures this project holds are measured on broiler chickens"*, one
+panel below an API-sourced sentence already saying it correctly.
+
+**The anchor dataset, computed rather than asserted.** A new
+`v_species_coverage` view carries one boolean per corpus dimension per species,
+and `GET /api/scope` names the anchor as the active species present in the most
+of them. The strapline reads it. On a tie the endpoint returns `null` and the
+page prints nothing — so the day a second species reaches parity the claim
+retires itself instead of becoming a lie, which is the failure mode that put
+*"Israel cannot answer how many chickens"* on the page once before.
+
+### "Does size matter?" stops hiding the species it cannot answer for
+
+The view introduces itself with *"every species is graded on something"* and
+offered three chips out of six. `/api/quality-axes` inner-joined `quality_axis`,
+so a silkworm, a beef cow and a sugar maple never reached the picker at all, and
+nothing said they existed — a reader counting chips would have concluded the
+corpus holds three species.
+
+They are offered now, marked with a dashed border, and selecting one states the
+gap rather than showing a blank: *"No size question has been recorded for
+silkworm yet"*, with all three verdict legs rendered as open questions.
+
+It stays a **404** — there is genuinely no size question to serve — but a
+renderable one. `detail` is an object rather than a sentence, carrying a
+machine-readable `error`, a message built from the corpus' own name for the
+species, and the species itself:
+
+```json
+{"detail": {"error": "no_size_question",
+            "message": "No size question has been recorded for silkworm yet",
+            "species": {"slug": "silkworm", "common_name": "Silkworm", ...}}}
+```
+
+An unknown slug is `{"error": "unknown_species"}` and carries no species. The
+two used to be one bare string, so a client could only treat both as failure —
+which is precisely why the picker dealt with them by not offering those species
+at all.
+
+The page's fetch helper now puts `status` and the parsed `detail` on the error
+it throws, so a caller can act on a failure instead of only reporting it. An
+object reaching the template literal would have been the `[object Object]` bug
+from v1.15.0 one shape over, so the message is read from `detail.message`.
+
 ## v1.15.0 — 2026-08-01
 ### A strapline for the three views that carry the page
 

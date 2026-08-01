@@ -23,12 +23,25 @@ const api = p => {
         // LIST of {msg, loc, ...} objects, and interpolating that straight into
         // a template literal renders "[object Object]" to the person who simply
         // typed a zero. Join the messages instead.
+        //
+        // And an OBJECT is the third shape. /api/bird-size answers "which of
+        // the two 404s is this?" in the body -- a species the corpus has never
+        // been asked about is a different thing from a slug that does not
+        // exist, and only the first is renderable. An object reaching the
+        // template literal is the same "[object Object]" bug as the list, one
+        // shape over, so it reads `message` and the caller reads the rest.
         return r.json().catch(() => null).then(body => {
           const d = body && body.detail;
           const msg = Array.isArray(d)
             ? d.map(e => e && e.msg).filter(Boolean).join('; ')
-            : d;
-          throw new Error(msg || `${p} -> ${r.status}`);
+            : (d && typeof d === 'object') ? d.message : d;
+          const err = new Error(msg || `${p} -> ${r.status}`);
+          // The status and the structured detail travel WITH the error, so a
+          // caller can act on the failure instead of only reporting it. Every
+          // catch that just wants a sentence still gets one from `.message`.
+          err.status = r.status;
+          err.detail = d;
+          throw err;
         });
       }
       return r.json();
@@ -197,6 +210,71 @@ function fmtDistinct(v, ceil) {
 }
 const badge = c => c ? `<span class="badge b-${c}">${c}</span>` : '';
 
+// The product the page is built around. Four copies of the literal
+// 'whole_wing' used to sit in this file -- the calculator's default option,
+// the Nutrition tab's default option, the Scientific tab's fixed product, and
+// the mixing curve's implied one -- and nothing tied them together, so
+// changing which question the page opens on meant finding all four.
+const HEADLINE_PRODUCT = 'whole_wing';
+
+// ---- scope
+//
+// Eight of the eleven views answer for one species, and the product dropdown
+// offers twelve products across six as equals. Picking "Silk dress" and
+// opening Trends showed broiler chickens with nothing saying they were not
+// about silk -- the DATA was already honest (/api/nutrition returns an empty
+// list rather than borrowing chicken figures), so this is entirely a
+// navigation and framing gap.
+//
+// The rule that keeps the fix from rotting: no species is named in this file.
+// A scoped endpoint reports the species ITS OWN query reached, and what is
+// printed below is that. A view that widens to a second species relabels
+// itself; one that narrows does too.
+const VIEW_SCOPE = {};
+
+// The species behind a product, for the two views that are pinned to a
+// product by this page rather than scoped by their endpoint. Read out of
+// META, so it is the corpus talking, not this file.
+function productScope(slug) {
+  const p = META && META.products.find(x => x.slug === slug);
+  return p ? { species: [{ slug: p.species_slug, common_name: p.species }],
+               label: p.species } : null;
+}
+
+// What the calculator is currently asking about. The page has one product
+// selection and it lives there; every other view either follows it or, if it
+// cannot, has to say so.
+function selectedProduct() {
+  const el = document.getElementById('product');
+  return (META && el) ? META.products.find(p => p.slug === el.value) : null;
+}
+
+function renderScope() {
+  const el = $('#scope-note');
+  const cur = document.querySelector('nav button.on');
+  const s = cur ? VIEW_SCOPE[cur.dataset.v] : null;
+  if (!el) return;
+  if (!s || !s.label) {          // product-aware or corpus-wide: nothing to say
+    el.hidden = true;
+    el.innerHTML = '';
+    el.classList.remove('mismatch');
+    return;
+  }
+  const p = selectedProduct();
+  const mismatch = !!p && s.species.length > 0 &&
+    !s.species.some(x => x.slug === p.species_slug);
+  el.classList.toggle('mismatch', mismatch);
+  // Same voice as /api/footprint's allocation_note, which is where this
+  // sentence already existed for one panel: state the scope, name what was
+  // asked for, and refuse the borrow rather than quietly performing it.
+  el.innerHTML = mismatch
+    ? `Showing <b>${s.label}</b>. <b>${p.label}</b> is selected on the
+       calculator, and the corpus files it under <b>${p.species}</b> —
+       nothing on this page is that product's to borrow.`
+    : `Showing <b>${s.label}</b>.`;
+  el.hidden = false;
+}
+
 // ---- navigation
 document.querySelectorAll('nav button').forEach(b => {
   b.onclick = () => {
@@ -204,10 +282,14 @@ document.querySelectorAll('nav button').forEach(b => {
     document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
     $('#v-' + b.dataset.v).classList.add('on');
+    // Twice on purpose: once now from whatever this view already reported, so
+    // the marker never lags a tab behind, and once after load() in case this
+    // is the view's first visit and its scope arrives with its data.
+    renderScope();
     // A view already loaded does not redraw, so a chart drawn before the
     // window changed size is still carrying the old one. It has a container
     // to measure now, which it did not while hidden.
-    load(b.dataset.v).then(resizeCharts);
+    load(b.dataset.v).then(() => { renderScope(); resizeCharts(); });
   };
 });
 
@@ -513,9 +595,14 @@ async function sci() {
 // leaving it to the endpoint's own default means the chain list and the
 // request cannot disagree about which product is being asked about, which is
 // the whole of the bug below.
-const SCI_PRODUCT = 'whole_wing';
+const SCI_PRODUCT = HEADLINE_PRODUCT;
 
 function initSci() {
+  // Scoped by this page rather than by its endpoint -- /api/scientific will
+  // analyse any product, and this view chooses not to offer the choice. So
+  // the marker is derived from the pinned product's species, which is still
+  // the corpus talking rather than a species name typed here.
+  VIEW_SCOPE.sci = productScope(SCI_PRODUCT);
   // The chain list belongs to the analysed product's SPECIES. `is_default` is
   // per-species -- the schema's unique index enforces exactly that -- so
   // rendering all 15 chains flat and marking each default `selected` left
@@ -549,6 +636,10 @@ function initSci() {
 // ---- mixing simulator
 let CURVE = null;
 async function initMix() {
+  // The curve is drawn at the endpoint's default units_per_individual, which
+  // is two -- the headline product's anatomy. Same situation as Scientific:
+  // pinned by this page, so the marker comes from that product's species.
+  VIEW_SCOPE.mix = productScope(HEADLINE_PRODUCT);
   CURVE = await api('/api/mixing-curve?draw=12');
   const xs = CURVE.points.map(p => p.pool);
   const ys = CURVE.points.map(p => p.distinct);
@@ -595,6 +686,7 @@ const ABBR = {Alabama:'AL',Arkansas:'AR',Delaware:'DE',Georgia:'GA',
 
 async function initStates() {
   const d = await api('/api/states');
+  VIEW_SCOPE.states = d.scope;
   // The server names the empty case explicitly (no year had data, or the
   // requested year had none) rather than leaving an empty map and a
   // header-only table to speak for themselves.
@@ -663,7 +755,13 @@ let C_GRADE = '';
 let C_ISO = null;
 
 async function initCountry() {
-  COUNTRIES = (await api('/api/countries')).countries;
+  const meta = await api('/api/countries');
+  // Scope comes from the country LIST, not from /api/output: that endpoint
+  // 404s for a country with no output series (the US, which answers through
+  // "By state" instead) and showCountry deliberately swallows it, so a scope
+  // read from there would vanish on exactly the country the page opens on.
+  VIEW_SCOPE.country = meta.scope;
+  COUNTRIES = meta.countries;
   document.querySelectorAll('input[name="c-grade"]').forEach(r => {
     r.onchange = () => { C_GRADE = r.value; if (C_ISO) showCountry(C_ISO); };
   });
@@ -914,6 +1012,7 @@ function plotSeries(div, measures, byMeasure, meta) {
 // ---- trends
 async function initTrends() {
   const d = await api('/api/trends');
+  VIEW_SCOPE.trends = d.scope;
   const yr = d.husbandry.map(r => r.year);
   const line = (div, x, y, title, colour) => Plotly.newPlot(div,
     [{ x, y, mode: 'lines+markers', line: { color: colour, width: 2 } }],
@@ -948,6 +1047,7 @@ const SEASON_COLOUR = () => ({
 
 async function initSeason() {
   const d = await api('/api/seasonality');
+  VIEW_SCOPE.season = d.scope;
   $('#se-summary').textContent = d.verdict.summary;
 
   const nat = d.national;
@@ -1043,9 +1143,21 @@ const verdictCell = (key, v) => {
 async function initSize() {
   const { axes } = await api('/api/quality-axes');
   const box = $('#size-picker');
-  box.innerHTML = axes.map((a, i) =>
-    `<button data-sp="${a.slug}" class="${i ? '' : 'on'}"${
-      a.has_figures ? '' : ' data-thin="1"'}>${a.common_name}</button>`
+  // EVERY active species, including the three the corpus has no size question
+  // for yet. They used to be absent: the endpoint inner-joined quality_axis,
+  // so a silkworm, a beef cow and a sugar maple never reached the picker and
+  // a view introducing itself with "every species is graded on something"
+  // offered three chips out of six with no hint the other three existed.
+  //
+  // Three states, not two, and the distinction is the whole point of this
+  // project: an answered axis, an axis with no figures behind it yet
+  // (`data-thin`), and a question nobody has asked yet (`data-unasked`).
+  const first = axes.find(a => a.has_axis) || axes[0];
+  box.innerHTML = axes.map(a =>
+    `<button data-sp="${a.slug}" class="${a === first ? 'on' : ''}"${
+      !a.has_axis ? ' data-unasked="1"'
+                  : a.has_figures ? '' : ' data-thin="1"'}>${
+      a.common_name}</button>`
   ).join('');
   box.querySelectorAll('button').forEach(b => {
     b.onclick = () => {
@@ -1054,11 +1166,64 @@ async function initSize() {
       showSize(b.dataset.sp);
     };
   });
-  await showSize(axes[0].slug);
+  // Open on a species that has an answer. Opening on an unasked question
+  // would make the view's first impression a blank, which is a fact about
+  // one species being read as a fact about the corpus.
+  if (first) await showSize(first.slug);
+}
+
+// The species the corpus has never been asked a size question about. A 404,
+// because there is no size question to serve -- but a renderable one: the
+// error names the species and says so in a sentence, and this draws that
+// rather than leaving the panel on whichever species was showing before.
+//
+// Handling the failure is the point. An unhandled rejection here is what the
+// picker used to avoid by not offering these species at all, which is how a
+// view claiming to grade "every species" came to show three of six.
+function renderUnaskedSize(detail) {
+  const sp = detail.species;
+  $('#size-question').textContent = detail.message;
+  $('#size-intro').textContent =
+    'The axis has to be sourced before it can be shown, and no other ' +
+    'species’ axis can stand in for it — the question is different for ' +
+    'each one, and so is what a bigger individual costs. This is a gap in ' +
+    'the corpus, stated rather than filled in.';
+
+  // Three open questions, drawn by the same cell the answered legs use, so
+  // "nobody has asked" looks like every other unsourced thing on this page.
+  $('#size-verdict').innerHTML = [
+    [`Yield per ${sp.individual_noun}`, null],
+    ['Quality', null],
+    [`${sp.individual_plural} on the plate`, null],
+  ].map(([k, v]) => verdictCell(k, v)).join('');
+
+  $('#size-bands-panel').hidden = true;
+  $('#size-chart').hidden = true;
+  $('#size-defects-panel').hidden = false;
+  $('#size-defects-title').textContent = 'What more of it costs you';
+  $('#size-defects-note').textContent =
+    `No quality figures for ${sp.common_name.toLowerCase()} are in the ` +
+    'corpus either. That is a gap in the sourcing, not a finding that ' +
+    'nothing goes wrong.';
+  $('#size-defects').innerHTML = '';
+  $('#size-defects').hidden = true;
+  $('#size-defect-notes').innerHTML = '';
 }
 
 async function showSize(species) {
-  const d = await api('/api/bird-size?species=' + encodeURIComponent(species));
+  let d;
+  try {
+    d = await api('/api/bird-size?species=' + encodeURIComponent(species));
+  } catch (err) {
+    // Only the one failure this view can say something useful about. Anything
+    // else -- an unknown slug, the API being down -- is a real error and
+    // belongs on the floor, where load() logs it and lets the view retry.
+    if (err.detail && err.detail.error === 'no_size_question') {
+      renderUnaskedSize(err.detail);
+      return;
+    }
+    throw err;
+  }
   const ax = d.axis, sp = d.species, s = d.spread;
   const unit = ax.x_unit ? ` ${ax.x_unit}` : '';
 
@@ -1286,9 +1451,12 @@ async function impact() {
         <td class="num">${x.pct_change_decade != null
             ? x.pct_change_decade + '%' : '—'}</td>
         <td>${x.unit}</td></tr>`).join('') + '</table>'
+    // Which species the figures DO belong to is not named here: the panel
+    // above prints /api/footprint's own allocation_note, which says it from
+    // the corpus. This copy said "measured on broiler chickens" and would
+    // have gone on saying it after a second species gained a footprint.
     : `<p class="note">No resource footprint has been sourced for the
-       ${one} yet. The figures this project holds are measured on broiler
-       chickens, so there is nothing here that belongs to this product.</p>`;
+       ${one} yet.</p>`;
 
   const g = f.grower_pay;
   $('#i-econ').innerHTML = (g ? `<div class="step count">
@@ -1331,7 +1499,7 @@ async function initImpact() {
   $('#i-product').innerHTML = META.products
     .filter(p => p.active)
     .map(p => `<option value="${p.slug}"${
-      p.slug === 'whole_wing' ? ' selected' : ''}>${p.label}</option>`)
+      p.slug === HEADLINE_PRODUCT ? ' selected' : ''}>${p.label}</option>`)
     .join('');
   // Assignment, not addEventListener: redrawTheme() re-runs initImpact on
   // every theme toggle, and addEventListener would leave the previous
@@ -1395,6 +1563,7 @@ async function initFacts() {
   // limit high enough to take everything; the deck filters client-side so
   // changing the surprise floor does not re-fetch.
   const d = await api('/api/facts?placement=learning&limit=500');
+  VIEW_SCOPE.facts = d.scope;
   FACTS = d.facts;
 
   $('#f-prev').onclick = () => { POS--; renderCard(); };
@@ -1528,6 +1697,24 @@ READY = (async () => {
   // take the page down with it. It stays hidden if the fetch fails.
   api('/api/version').then(renderBuild).catch(() => {});
 
+  // The anchor sentence under the strapline. The species is never named in
+  // this file: /api/scope computes it from v_species_coverage as the active
+  // species present in the most dimensions of the corpus, and returns null on
+  // a tie -- so the day a second species reaches parity this paragraph
+  // disappears instead of making a claim the data stopped supporting.
+  //
+  // Non-blocking, like the logo and the build stamp: the page is entirely
+  // usable without it, so it must not be able to take boot down.
+  api('/api/scope').then(s => {
+    const a = s.anchor, el = $('#anchor-note');
+    if (!a || !el) return;
+    el.innerHTML = `<b>${a.common_name}</b> is the anchor dataset — the
+      species this corpus measures in the most ways. Everything else extends
+      it rather than matches it, and any view answering for one species says
+      which at the top.`;
+    el.hidden = false;
+  }).catch(() => {});
+
   // Everything downstream reads META, so its failure is not survivable the
   // way the logo's or the build stamp's is -- but it used to fail exactly
   // as quietly: every dropdown stayed empty and the headline sat on its
@@ -1546,8 +1733,8 @@ READY = (async () => {
 
   const active = META.products.filter(p => p.active);
   $('#product').innerHTML = active.map(p =>
-    `<option value="${p.slug}"${p.slug === 'whole_wing' ? ' selected' : ''}>${
-      p.label}</option>`).join('');
+    `<option value="${p.slug}"${p.slug === HEADLINE_PRODUCT ? ' selected' : ''
+      }>${p.label}</option>`).join('');
 
   // The window control only makes sense for a rate, so it follows the
   // selected product rather than sitting there permanently confusing anyone
@@ -1599,5 +1786,13 @@ READY = (async () => {
     $('#' + id).addEventListener('change', calc);
     $('#' + id).addEventListener('input', calc);
   });
+
+  // Changing the product changes whether every OTHER view is answering the
+  // question you just asked. Switching to a silk product and walking to
+  // Trends is the exact path the page used to take in silence, and the
+  // marker has to be right the moment you arrive, not one tab later.
+  $('#product').addEventListener('change', renderScope);
+  $('#product').addEventListener('input', renderScope);
+
   await calc();
 })();
