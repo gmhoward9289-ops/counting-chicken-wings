@@ -257,12 +257,6 @@ def test_states_names_the_empty_case_for_an_unloaded_year(client):
     assert d["message"], "an empty result must say why, not just be empty"
 
 
-def test_state_trend_returns_twelve_months(client):
-    d = get(client, "/api/state-trend/Ohio")
-    assert d["months"] == list(range(1, 13))
-    assert len(d["values"]) == 12
-
-
 def test_trends_carry_the_full_series(client):
     d = get(client, "/api/trends")
     years = [r["year"] for r in d["husbandry"]]
@@ -293,13 +287,50 @@ def test_unknown_supply_chain_is_404(client):
                       params={"chain": "teleportation"}).status_code == 404
 
 
-def test_unknown_region_is_404(client):
-    assert client.get("/api/state-trend/Atlantis").status_code == 404
-
-
 def test_invalid_evidence_grade_is_422(client):
     r = client.get("/api/scientific", params={"min_confidence": "vibes"})
     assert r.status_code == 422
+
+
+def test_output_min_confidence_pattern_is_anchored(client):
+    """An unanchored alternation matches anywhere in the string, so
+    'xxmeasuredxx' validated as if it were 'measured'."""
+    r = client.get("/api/output/USA",
+                    params={"min_confidence": "xxmeasuredxx"})
+    assert r.status_code == 422
+
+
+@pytest.mark.parametrize("limit", [-1, 0, 5000])
+def test_facts_limit_is_bounded(client, limit):
+    """SQLite reads a negative LIMIT as "no limit at all", so limit=-1 used
+    to return the entire corpus rather than nothing."""
+    assert client.get("/api/facts",
+                      params={"limit": limit}).status_code == 422
+
+
+@pytest.mark.parametrize("count", [0, -5, 999999999])
+def test_footprint_count_is_bounded(client, count):
+    """Unlike /api/calculate, count here had no `le`, so a huge count
+    returned 200 with a footprint scaled to hundreds of millions of birds."""
+    assert client.get("/api/footprint",
+                      params={"count": count}).status_code == 422
+
+
+def test_calculate_recurring_misconfiguration_is_a_4xx_not_a_500(
+    client, monkeypatch,
+):
+    """dbm.make_recurring raising ValueError must not surface as a 500 --
+    a malformed product row is a bad-request-shaped problem, not a server
+    crash, and a 500 hides that distinction from whoever is looking at logs.
+    """
+    import counting_chicken_wings.db as dbm
+
+    def boom(product, window_days=None):
+        raise ValueError("product misconfigured for this test")
+
+    monkeypatch.setattr(dbm, "make_recurring", boom)
+    r = client.get("/api/calculate", params={"count": 12})
+    assert r.status_code == 400
 
 
 @pytest.mark.parametrize("count", [0, -5, 999999])

@@ -12,10 +12,13 @@ import pytest
 
 from counting_chicken_wings.model import (
     CONFIDENCE_RANK,
+    CorrelatedGroup,
     LossStage,
     MixingStage,
     _percentile,
+    _triangular_ppf,
     meets_confidence,
+    required_individuals,
     run,
     sensitivity,
 )
@@ -286,3 +289,138 @@ def test_high_result_exceeds_low_result():
 
 def test_sensitivity_of_an_empty_chain_is_empty():
     assert sensitivity(12, 2.0, []) == []
+
+
+# ---------------------------------------------------------------------------
+# Headline estimator (#76)
+#
+# The point estimate used to be silently overwritten by the Monte Carlo
+# MEAN, and a mean is not the centre of its own triangular inputs -- it sits
+# above the mode, and required_individuals() divides by every survival
+# fraction in turn, so that upward bias compounds across the chain. On the
+# real loss chain (40k draws, seed 1) the deterministic product-of-modes
+# figure of 6.904 birds sits at roughly the 19th percentile of the
+# simulated distribution whose mean is 7.073 -- reproduced independently of
+# these tests before this fix landed. The median is reported instead
+# because it is both the honest centre of the reported band and, unlike the
+# mean, invariant under the reciprocal transform the loss chain applies.
+# ---------------------------------------------------------------------------
+
+def test_deterministic_run_records_its_own_estimator():
+    res = run(12, 2.0, GRADED, COMMODITY)
+    assert res.required_estimator == "deterministic"
+
+
+def test_monte_carlo_run_switches_the_estimator_and_uses_the_median():
+    res = run(12, 2.0, GRADED, COMMODITY, iterations=2000, seed=1,
+               keep_samples=True)
+    assert res.required_estimator == "monte_carlo_median"
+    assert res.required == pytest.approx(
+        _percentile(sorted(res.required_samples), 0.5)
+    )
+
+
+def test_simulated_headline_agrees_with_the_deterministic_one_for_a_narrow_band():
+    """Sanity check, not a claim about the real chain.
+
+    A single stage with a tight, nearly-symmetric band has almost no
+    reciprocal skew to compound, so the simulated median should land close
+    to the deterministic product-of-modes -- a basic regression guard
+    against the median and deterministic paths disagreeing outright. This
+    does NOT hold across the full, wide-banded real loss chain: that is
+    the whole point of #76, and is covered by
+    `test_monte_carlo_run_switches_the_estimator_and_uses_the_median`
+    stating what IS invariant (median == 50th percentile of the samples)
+    rather than asserting a numeric match that the real chain does not have.
+    """
+    narrow = [stage("s1", "product", 0.930, 0.950, 0.970, "study")]
+    det, _ = required_individuals(12, 2.0, narrow)
+    res = run(12, 2.0, narrow, [], iterations=20000, seed=1)
+    assert res.required == pytest.approx(det, rel=0.01)
+
+
+# ---------------------------------------------------------------------------
+# Correlated loss stages (#77)
+#
+# Independent sampling of stages that in reality move together -- wing
+# damage, grading downgrade, and transport DOA all ride the same per-load
+# handling quality -- lets their errors partially cancel at roughly
+# sqrt(n), understating the reported band. `CorrelatedGroup` shares one
+# latent factor across a group's stages each iteration instead.
+# ---------------------------------------------------------------------------
+
+def test_correlated_sampling_widens_the_required_band():
+    stages = [
+        stage("a", "product", 0.85, 0.90, 0.95, seq=10),
+        stage("b", "product", 0.85, 0.90, 0.95, seq=20),
+        stage("c", "individual", 0.85, 0.90, 0.95, seq=30),
+    ]
+    group = [CorrelatedGroup(slug="g", label="g", stage_slugs=["a", "b"],
+                              rho=0.8)]
+
+    indep = run(12, 2.0, stages, [], iterations=20000, seed=3)
+    corr = run(12, 2.0, stages, [], iterations=20000, seed=3,
+               correlated_groups=group)
+
+    indep_width = indep.required_hi - indep.required_lo
+    corr_width = corr.required_hi - corr.required_lo
+    assert corr_width > indep_width * 1.05, (
+        "correlated sampling should meaningfully widen the band, not just "
+        "add sampling noise"
+    )
+    # Correlation changes co-movement, not each stage's own marginal band,
+    # so the centre of the distribution should barely move.
+    assert corr.required == pytest.approx(indep.required, rel=0.01)
+
+
+def test_zero_correlation_group_behaves_like_independent_sampling():
+    stages = [
+        stage("a", "product", 0.85, 0.90, 0.95, seq=10),
+        stage("b", "product", 0.85, 0.90, 0.95, seq=20),
+    ]
+    group = [CorrelatedGroup(slug="g", label="g", stage_slugs=["a", "b"],
+                              rho=0.0)]
+    indep = run(12, 2.0, stages, [], iterations=8000, seed=9)
+    corr = run(12, 2.0, stages, [], iterations=8000, seed=9,
+               correlated_groups=group)
+    indep_width = indep.required_hi - indep.required_lo
+    corr_width = corr.required_hi - corr.required_lo
+    assert corr_width == pytest.approx(indep_width, rel=0.05)
+
+
+def test_correlated_sampling_is_reproducible_with_a_seed():
+    stages = [stage("a", "product", 0.85, 0.90, 0.95, seq=10),
+              stage("b", "product", 0.85, 0.90, 0.95, seq=20)]
+    group = [CorrelatedGroup(slug="g", label="g", stage_slugs=["a", "b"],
+                              rho=0.6)]
+    a = run(12, 2.0, stages, [], iterations=500, seed=42,
+            correlated_groups=group)
+    b = run(12, 2.0, stages, [], iterations=500, seed=42,
+            correlated_groups=group)
+    assert a.required == pytest.approx(b.required)
+    assert a.required_lo == pytest.approx(b.required_lo)
+    assert a.required_hi == pytest.approx(b.required_hi)
+
+
+def test_group_naming_fewer_than_two_present_stages_is_a_no_op():
+    """A group that loses all but one member (e.g. to min_confidence
+    filtering) has nothing left to correlate, so it must not crash and
+    must not perturb the result versus not having named a group at all."""
+    stages = [stage("a", "product", 0.85, 0.90, 0.95, seq=10)]
+    group = [CorrelatedGroup(slug="g", label="g", stage_slugs=["a", "b"],
+                              rho=0.9)]
+    plain = run(12, 2.0, stages, [], iterations=2000, seed=5)
+    grouped = run(12, 2.0, stages, [], iterations=2000, seed=5,
+                  correlated_groups=group)
+    assert grouped.required == pytest.approx(plain.required)
+    assert grouped.required_lo == pytest.approx(plain.required_lo)
+    assert grouped.required_hi == pytest.approx(plain.required_hi)
+
+
+def test_triangular_ppf_inverts_the_mode():
+    """The quantile at the mode's own CDF position must return the mode."""
+    lo, mode, hi = 0.90, 0.95, 0.99
+    fc = (mode - lo) / (hi - lo)
+    assert _triangular_ppf(fc, lo, mode, hi) == pytest.approx(mode)
+    assert _triangular_ppf(0.0, lo, mode, hi) == pytest.approx(lo)
+    assert _triangular_ppf(1.0, lo, mode, hi) == pytest.approx(hi)
