@@ -1,10 +1,21 @@
 batch: batch-01-saffron
 subject: saffron
 
+# Extracted by a local model, specified and graded by a human, verified
+# against the returned document. See docs/research/README.md.
+extraction:
+  host: COOPER
+  models: [qwen2.5-coder:7b, gemma4-32k]
+  ran: 2026-07-29
+  specified_by: human            # which URLs, which fields, which questions
+  gate: verify (verbatim quote against the returned document)
+
 # HUMAN-REVIEWED. COOPER returned five figures; three survived, one was
 # corrected, one was dropped. The full decision record is in
-# docs/research/accepted/batch-01-saffron-REVIEW.md, which is committed --
-# this directory is gitignored, so the reasoning cannot live only here.
+# docs/research/accepted/batch-01-saffron-REVIEW.md, which is committed
+# alongside this file -- only inbox/ and outbox/ are gitignored, and the
+# reasoning is worth more than the rows, so it does not live only in a
+# session transcript.
 #
 # Nothing in the gate was weakened to make this pass. The one row that needed
 # rethinking (drying) now records what the source ACTUALLY SAYS -- 80% of

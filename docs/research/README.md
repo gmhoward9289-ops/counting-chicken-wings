@@ -14,6 +14,33 @@ than a frontier model. It is not trusted. It is *checked*.
 COOPER is free and idle. Frontier tokens are not. So COOPER does everything it
 is capable of, and paid attention is spent only on the two things it cannot do.
 
+## What to call this, and what not to call it
+
+**This is machine extraction against human-chosen sources, verified verbatim.
+It is not "research done by an AI", and describing it that way is wrong in both
+directions at once.**
+
+It overstates COOPER, which does not search. It fetches exactly the URLs a spec
+hands it and reads them; an invented URL fetches nothing and the batch comes
+back empty for a reason the model cannot report. Deciding a source is
+authoritative, and probing whether it actually contains the figure being asked
+for, is the work — and it is the step the division of labour below assigns to a
+human precisely because a model cannot do it. The World Bank vanilla guide is
+strong on yields and says "cured" once in 4,433 lines; nothing in COOPER can
+notice that before a batch half-fails on it.
+
+And it understates the gate, which is the part that makes these figures
+citable. Every row came back with the sentence containing it and the document
+it was read from, and `verify` checked the quote character-for-character before
+`accept` would move it. A number here is not trusted because a model produced
+it. It is trusted because the quote was checked and the grade was set by a
+person.
+
+So: **extracted by** a local model, **specified and graded by** a human,
+**verified against** the returned document. Use that phrasing anywhere this
+work is described outside the repo — it is the claim that survives a reader who
+goes and checks, and "an AI researched it" is the claim that does not.
+
 ## Division of labour
 
 | Step | Who |
@@ -71,6 +98,35 @@ point — judgement is the expensive part.
 
 Returning the document is not optional. Without the artifact there is nothing
 to check the quote against, and the gate becomes theatre.
+
+## Provenance travels with the figure
+
+Every findings file in `accepted/` carries an `extraction:` block at its head:
+
+```yaml
+extraction:
+  host: COOPER
+  models: [qwen2.5-coder:7b, gemma4-32k]
+  ran: 2026-07-29
+  specified_by: human            # which URLs, which fields, which questions
+  gate: verify (verbatim quote against the returned document)
+```
+
+It is written where it is for one reason: a row that gets read, quoted or
+copied out of this directory should say what produced it without the reader
+having to know what `docs/research/` means. A directory name is not provenance
+— it is an implication, and it does not survive the first copy-paste.
+
+The block describes the batch; `agreement:` on each row carries the per-figure
+detail, including which model went quiet (`1/1`, `1/2 disagree: 20 vs None`).
+Those two together are the honest record. Do not collapse them into a single
+"extracted by" string per row unless the runner starts recording which model
+won each field, which it currently does not — a per-row attribution nobody
+measured is exactly the kind of tidy-looking fiction this pipeline exists to
+keep out.
+
+`extraction:` is metadata. `verify` reads `findings:` and ignores it, so the
+block cannot be used to smuggle a claim past the gate.
 
 ## Three free quality mechanisms
 
