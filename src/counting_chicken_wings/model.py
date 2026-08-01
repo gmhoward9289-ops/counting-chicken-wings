@@ -187,10 +187,85 @@ def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     return r
 
 
+def _miss_probability(
+    container_units: float,
+    units_held: float,
+    drawn: float,
+    cluster_size: float = 1.0,
+    retention: float = 0.0,
+) -> float:
+    """P(none of one individual's `units_held` units are in the draw).
+
+    The exchangeable case -- cluster_size 1, retention 0 -- is exactly
+    C(W-k, n)/C(W, n) and nothing below changes it. Everything else is the
+    cluster-sampling generalisation.
+
+    A scoop is not an exchangeable draw. It takes `c` contiguous units at a
+    time, so the draw is really g = n/c whole clusters chosen from G = W/c.
+    Two branches, weighted by how much adjacency survived the cascade:
+
+      retention        the individual's units were kept together, so they
+                       occupy ceil(k/c) consecutive clusters and are taken or
+                       missed as one object. When taken they spend k of the n
+                       units on a single individual. This is the only term in
+                       the whole model that pushes the distinct count DOWN.
+      1 - retention    the units sit at exchangeable positions in the
+                       container, which is the ordinary hypergeometric on
+                       UNITS -- unchanged by how the draw is grouped.
+
+    That second branch is worth being careful about, because getting it wrong
+    is easy and invents an effect that is not there. Grouping an exchangeable
+    draw into clusters changes nothing: a pair at random positions falls in
+    one cluster with probability (c-1)/(W-1) and is then taken with
+    probability g/G, and adding that to the both-clusters-drawn case
+    reproduces the unclustered answer exactly. Cluster size can only matter
+    through positive correlation -- through `retention` -- which is precisely
+    the survey-sampling result that clustering costs you nothing when the
+    intra-class correlation is zero.
+
+    So the two degenerate cases are exact rather than approximate: c=1 makes
+    the branches identical (a one-unit grab cannot hold an adjacent pair),
+    and k=1 makes them identical too (a single unit is not adjacent to
+    itself). Both correctly leave `retention` inert.
+    """
+    exchangeable = _ratio_choose(container_units, units_held, drawn)
+    if retention <= 0.0 or units_held <= 1:
+        return exchangeable
+
+    c = max(1.0, min(float(cluster_size), float(drawn), float(container_units)))
+    if c <= 1.0:
+        return exchangeable
+
+    g = drawn / c
+    grid = container_units / c
+    blocks = ceil(units_held / c)
+    together = _ratio_choose(grid, blocks, g)
+
+    r = min(1.0, retention)
+    return r * together + (1.0 - r) * exchangeable
+
+
+def design_effect(cluster_size: float, retention: float) -> float:
+    """Kish's design effect for the draw: deff = 1 + (c - 1) * ICC.
+
+    Standard survey sampling, borrowed rather than invented. The intra-class
+    correlation is the retention -- the probability that units grabbed
+    together came from the same individual rather than being an independent
+    pick -- and `drawn / deff` is the effective number of independent draws.
+
+    Reported because the loss of effective sample size should be explicit
+    rather than buried in a formula. deff = 1 is an exchangeable draw.
+    """
+    c = max(1.0, float(cluster_size))
+    return 1.0 + (c - 1.0) * max(0.0, min(1.0, retention))
+
+
 def expected_distinct_general(
     drawn: int,
     container_units: int,
     distinct_in_container: float,
+    cluster_size: float = 1.0,
+    retention: float = 0.0,
 ) -> float:
     """Expected distinct individuals in a draw, for any units-per-individual.
 
@@ -210,6 +285,11 @@ def expected_distinct_general(
     That is exact and physically meaningful, where interpolating the two
     totals is neither -- it can produce a value above `drawn`, which is
     impossible.
+
+    `cluster_size` and `retention` make the draw a clustered one rather than
+    an exchangeable one; see `_miss_probability`. Their defaults are the
+    exchangeable draw, so leaving them alone reproduces the old formula
+    exactly.
     """
     if drawn <= 0:
         return 0.0
@@ -230,9 +310,11 @@ def expected_distinct_general(
     n_hi = max(0.0, n_hi)
     n_lo = max(0.0, n_lo)
 
-    e = n_lo * (1.0 - _ratio_choose(container_units, lo, drawn))
+    e = n_lo * (1.0 - _miss_probability(
+        container_units, lo, drawn, cluster_size, retention))
     if n_hi > 0:
-        e += n_hi * (1.0 - _ratio_choose(container_units, lo + 1, drawn))
+        e += n_hi * (1.0 - _miss_probability(
+            container_units, lo + 1, drawn, cluster_size, retention))
     return min(e, float(drawn))
 
 
@@ -240,6 +322,8 @@ def expected_distinct(
     drawn: int,
     container_units: int,
     paired_individuals: float,
+    cluster_size: float = 1.0,
+    retention: float = 0.0,
 ) -> float:
     """Two-units-per-individual case, expressed via the general formula.
 
@@ -257,8 +341,10 @@ def expected_distinct(
     p2 = max(0.0, min(paired_individuals, container_units / 2))
     p1 = container_units - 2 * p2          # individuals contributing one unit
 
-    miss_two = _ratio_choose(container_units, 2, drawn)
-    miss_one = _ratio_choose(container_units, 1, drawn)
+    miss_two = _miss_probability(
+        container_units, 2, drawn, cluster_size, retention)
+    miss_one = _miss_probability(
+        container_units, 1, drawn, cluster_size, retention)
 
     return p2 * (1.0 - miss_two) + p1 * (1.0 - miss_one)
 
@@ -305,16 +391,132 @@ def meets_confidence(level: str | None, minimum: str | None) -> bool:
             <= CONFIDENCE_RANK.get(minimum, 99))
 
 
-# How thoroughly a 'separating' stage pulls an individual's two units apart.
-# Size grading routes a bird's wings to different boxes whenever they
-# straddle a grade boundary, which is most of the time but not all of it.
-SEPARATION_EFFICIENCY = 0.90
+@dataclass(frozen=True)
+class MixingParams:
+    """The scalar parameters of the mixing model.
+
+    THESE DEFAULTS ARE NOT THE SHIPPED VALUES, and that is deliberate.
+
+    `SEPARATION_EFFICIENCY = 0.90` used to live here as a bare module
+    constant. In this project that is a bug by definition -- a figure
+    hardcoded in a module bypasses the citation audit, so the question "how
+    much does this number matter?" could only be answered by writing a
+    one-off sweep. It sat there for months; when someone finally swept it the
+    answer turned out to be 0.0003 of a bird. Harmless, but unknowable, which
+    is the entire argument for the rule.
+
+    The real figures live in `data/mixing.yaml`, carry a confidence grade and
+    a citation, are audited, and reach the model through
+    `db.load_mixing_params`. Putting a copy of any of them here as a default
+    would recreate exactly the bug that was just removed -- two figures, one
+    audited and one not, free to drift.
+
+    So `MixingParams()` is the INERT configuration: every mechanism off, the
+    exchangeable draw, no adjacency. It is what the model does when it has
+    been told nothing, which is the honest thing for it to do. If a headline
+    figure ever moves because a caller forgot to pass params, it moves
+    towards the assumption-free answer rather than towards a stale constant.
+    `test_model.py` pins the corpus values reaching the real code path.
+    """
+    # How thoroughly a 'separating' stage pulls an individual's units apart.
+    separation_efficiency: float = 0.0
+    # Units taken per contiguous grab. 1 is the exchangeable draw.
+    draw_cluster_size: float = 1.0
+    # Fraction of "these two units are adjacent" surviving one stage.
+    adjacency_retention_random: float = 0.0
+    adjacency_retention_passthrough: float = 0.0
+
+    @classmethod
+    def inert(cls) -> "MixingParams":
+        """Every mechanism off. Same as `MixingParams()`, but says so."""
+        return cls()
+
+
+def cascade_retention(
+    stages: list[MixingStage],
+    params: MixingParams,
+) -> float:
+    """How much unit-to-unit adjacency survives the whole cascade.
+
+    The product of the stages' retentions, which is what finally gives a
+    route's `mixing_kind` sequence something to determine. Before clustering
+    existed, 'random' and 'none' were nearly interchangeable in the maths --
+    both only ever raised the pool.
+
+    A 'separating' stage gets no parameter of its own. Routing a bird's two
+    wings into different grade boxes IS destroying their adjacency, so its
+    retention falls out of the separation efficiency already estimated:
+    (1 - efficiency) of pairs survive the split, and those then take the
+    ordinary bulk-commingling hit for passing through the machine.
+
+    The number this returns for the commodity cascade is about 1e-6. Six bulk
+    commingling stages and a grader do not leave two wings adjacent. That is
+    the finding, not a tuning failure.
+    """
+    r = 1.0
+    for s in stages:
+        if s.mixing_kind == "separating":
+            r *= (params.adjacency_retention_random
+                  * (1.0 - params.separation_efficiency))
+        elif s.mixing_kind == "random":
+            r *= params.adjacency_retention_random
+        else:
+            r *= params.adjacency_retention_passthrough
+    return max(0.0, min(1.0, r))
+
+
+def saturation_threshold(
+    drawn: int,
+    units_per_individual: float,
+    epsilon: float = 0.05,
+    max_pool: int = 10_000_000,
+) -> int:
+    """Smallest commingled pool whose answer is within `epsilon` of the ceiling.
+
+    The headline claim of the mixing model, made checkable. The
+    distinct-count curve flattens hard, and above this pool size the answer
+    stops depending on the pool at all -- which is the honest reason the
+    commodity number is what it is. Every pool figure in `data/mixing.yaml`
+    is our estimate, and this is what licenses saying the commodity answer
+    does not rest on them.
+
+    Deliberately measured on a SINGLE 'random' stage with no separation and
+    no clustering: the weakest, most conservative cascade that can be built.
+    A real cascade only ever mixes harder, so a threshold established here
+    holds a fortiori for one with a grader in it.
+
+    Returns the pool in individuals. `max_pool` is a guard, not a model
+    parameter -- a draw that can never saturate raises rather than looping.
+    """
+    if drawn <= 0:
+        raise ValueError("must draw at least one unit")
+    ceiling = float(drawn)
+
+    def gap(pool: int) -> float:
+        stages = [MixingStage("probe", "Probe", pool, "random")]
+        c, d, _ = resolve_pool(stages, drawn, units_per_individual)
+        return ceiling - expected_distinct_general(drawn, c, d)
+
+    if gap(max_pool) > epsilon:
+        raise ValueError(
+            f"a draw of {drawn} never comes within {epsilon} of its ceiling"
+        )
+
+    lo, hi = 1, max_pool
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if gap(mid) <= epsilon:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
 
 
 def resolve_pool(
     stages: list[MixingStage],
     units_requested: int,
     units_per_individual: float,
+    params: MixingParams | None = None,
 ) -> tuple[int, float, list[str]]:
     """Reduce a mixing cascade to (container_units, distinct_in_container, notes).
 
@@ -329,9 +531,13 @@ def resolve_pool(
     rather than surviving pairs is what lets this handle bone-in wings
     (2 units per bird) and boneless wings (tens of pieces per bird) with
     one formula.
+
+    `params` carries the scalar parameters, which come from the corpus.
+    Omitting it applies NO mechanism at all -- see `MixingParams`.
     """
     notes: list[str] = []
     upi = units_per_individual
+    params = params or MixingParams()
 
     if not stages:
         # No mixing anywhere: the container is exactly what you cut up, and
@@ -354,19 +560,48 @@ def resolve_pool(
     # Expected distinct individuals represented in the container: an
     # individual is absent entirely only if none of its `upi` units were
     # drawn into it from the stream.
+    #
+    # That is the exchangeable version, and it assumes the container is a
+    # uniform random sample of the stream. It is not: a bin is filled case by
+    # case and a case is packed from a contiguous belt run, so an
+    # individual's units are correlated in whether they land in the SAME
+    # container. `retention` is how much of that correlation survives the
+    # cascade -- the product of the stages' retentions.
+    #
+    #   retention 0   each of the individual's units lands independently,
+    #                 which is exactly 1 - (1 - share)^upi as before.
+    #   retention 1   its units travel as one object, in or out together, so
+    #                 the container's W units come from W/upi individuals --
+    #                 precisely the floor, which is the right limit.
+    #
+    # Written so the r=0 branch is bit-for-bit the old expression: the
+    # clustering work must not perturb the answer it is being compared to.
     share = min(1.0, container / (stream * upi))
-    distinct = stream * (1.0 - (1.0 - share) ** upi)
+    retention = cascade_retention(stages, params)
+    if retention <= 0.0:
+        distinct = stream * (1.0 - (1.0 - share) ** upi)
+    else:
+        distinct = stream * (
+            retention * share
+            + (1.0 - retention) * (1.0 - (1.0 - share) ** upi)
+        )
+        notes.append(
+            f"About {retention:.2%} of unit-to-unit adjacency survives this "
+            f"cascade, so an individual's units are that much more likely to "
+            f"land in the same container than chance alone would give."
+        )
 
     # A separating stage routes an individual's units into different
     # streams, so more individuals are represented by fewer units each --
     # which pushes distinct up toward the container size.
+    eff = params.separation_efficiency
     for s in stages:
-        if s.mixing_kind != "separating":
+        if s.mixing_kind != "separating" or eff <= 0.0:
             continue
-        distinct += (container - distinct) * SEPARATION_EFFICIENCY
+        distinct += (container - distinct) * eff
         notes.append(
             f"{s.label} actively separates an individual's units, so "
-            f"{SEPARATION_EFFICIENCY:.0%} of the units that would have "
+            f"{eff:.0%} of the units that would have "
             f"shared a source are split apart."
         )
 
@@ -391,6 +626,54 @@ def resolve_pool(
         f"{distinct:,.0f} individuals, or {per:.3f} units each."
     )
     return container, distinct, notes
+
+
+def draw_from_cascade(
+    stages: list[MixingStage],
+    drawn: int,
+    units_per_individual: float,
+    params: MixingParams | None = None,
+) -> tuple[int, float, list[str], float]:
+    """One full pass: resolve the container, then take the draw from it.
+
+    Returns (container_units, distinct_in_container, notes, expected_distinct).
+
+    Clustering enters twice, because it is two different questions with one
+    physical answer:
+
+      container level  did an individual's units land in the same BIN? The
+                       full cascade retention applies -- a case is a long
+                       contiguous run, so its length imposes no discount.
+      draw level       given they are in the same bin, are they in the same
+                       SCOOP? Discounted by (c-1)/c, because a grab of c
+                       contiguous units that contains one member of an
+                       adjacent pair contains the other only if the pair does
+                       not straddle the edge of the grab. At c=1 that is 0:
+                       a one-unit grab is exchangeable by construction, which
+                       is the model as it stood before clustering existed.
+    """
+    params = params or MixingParams()
+    container, distinct_in_container, notes = resolve_pool(
+        stages, drawn, units_per_individual, params
+    )
+
+    c = max(1.0, params.draw_cluster_size)
+    retention = cascade_retention(stages, params)
+    draw_retention = retention * (c - 1.0) / c if c > 1.0 else 0.0
+
+    expected = expected_distinct_general(
+        int(drawn), container, distinct_in_container,
+        cluster_size=c, retention=draw_retention,
+    )
+
+    deff = design_effect(c, draw_retention)
+    if deff > 1.0 + 1e-12:
+        notes.append(
+            f"The draw is a grab of {c:g} contiguous units at a time rather "
+            f"than {drawn} independent picks, so its design effect is "
+            f"{deff:.3f} -- {drawn / deff:.2f} effective draws."
+        )
+    return container, distinct_in_container, notes, expected
 
 
 # ---------------------------------------------------------------------------
@@ -708,6 +991,7 @@ def run(
     aggregate_units: bool | None = None,
     anatomical: bool = True,
     floor_source: str | None = None,
+    params: MixingParams | None = None,
     correlated_groups: list[CorrelatedGroup] | None = None,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
@@ -755,6 +1039,18 @@ def run(
     each held their own copy of the condition, all three said
     `yield_mode == "continuous"`, and all three were wrong about maple on
     the same day.
+
+    `params` carries the mixing model's scalar parameters -- separation
+    efficiency, scoop size, adjacency retention. They live in
+    `data/mixing.yaml` and reach here through `db.load_mixing_params`;
+    omitting them applies no mechanism at all rather than a stale default.
+    See `MixingParams` for why there is no Python copy of the shipped values.
+
+    NOT YET RESAMPLED BY THE MONTE CARLO. Each parameter carries a lo/mode/hi
+    band in the corpus for exactly that purpose and the loop below still
+    holds them at the mode, so the reported interval understates the spread
+    on the distinct figure by however much these contribute. The pool sizes
+    beside them ARE resampled. Wiring that up is a known open item.
 
     Pass it explicitly only to test the branch itself.
     """
@@ -818,8 +1114,7 @@ def run(
         floor of 1,800 -- the same contradiction the shares fix exists to
         remove, surviving in the path nobody re-ran.
         """
-        c, d, n = resolve_pool(stages, draw_units, draw_upi)
-        return c, d, n, expected_distinct_general(int(draw_units), c, d)
+        return draw_from_cascade(stages, draw_units, draw_upi, params)
 
     container, distinct_in_container, notes, distinct = _draw(mixing_stages)
 

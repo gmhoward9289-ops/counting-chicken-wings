@@ -3,10 +3,10 @@
 # This is the conceptual core of the project. Mixing begins the instant the
 # product separates from the individual and only ever increases the pool.
 #
-# THE KEY REFINEMENT
-# ------------------
-# It is not enough to track pool size. What matters is how many wings each
-# bird still contributes to the container you draw from.
+# THE FORMULA
+# -----------
+# What matters is how many wings each bird still contributes to the container
+# you draw from.
 #
 #   k = 2  a bird's two wings are still travelling together in the pool
 #   k = 1  they have been separated into different streams
@@ -19,16 +19,153 @@
 # At k=1 this collapses to exactly n - every wing is a different bird.
 # At k=2 it gives the familiar 6..12 curve.
 #
-# So a 'separating' stage is far more powerful than a 'random' one. Size
-# grading does not shuffle a bird's two wings, it deliberately SPLITS them
-# whenever they differ in weight - and two wings off the same bird rarely
-# weigh exactly the same. This is why the answer sits near 12 rather than
-# somewhere in the middle of the band.
+# WHAT ACTUALLY DETERMINES THE COMMODITY ANSWER: SATURATION
+# ---------------------------------------------------------
+# This file used to claim that size grading was "the single strongest driver
+# pushing the answer toward 12". That claim was wrong, and the model has
+# always said so - nobody had asked it. Sweeping the grader's separation
+# efficiency across its entire possible range, on the real commodity cascade
+# with a 12-wing draw:
+#
+#     separation efficiency 0.00 (mechanism fully off)   11.9997
+#     separation efficiency 0.90 (the shipped value)     12.0000
+#     separation efficiency 0.99                         12.0000
+#
+# Turning the mechanism completely OFF costs 0.0003 of a bird. Scaling every
+# pool in the cascade down by 100x still returns 11.9966.
+#
+# What pins the answer is SATURATION, not any modelled mechanism. The
+# distinct-count curve flattens hard: above roughly a thousand commingled
+# individuals the answer is already within 0.05 of the ceiling, and the
+# smallest pool anywhere in this commodity cascade is twenty times that even
+# at its lo bound. The 100,000-bird distributor warehouse dwarfs the
+# 4,000-unit container, so the container is essentially all-different-birds
+# BEFORE grading or the fryer draw happen at all.
+#
+# That is a STRONGER result than "our grading estimate drove it": the
+# commodity answer is robust to every pool figure in this file, all of which
+# are our estimates. `model.saturation_threshold` computes the flattening
+# point, and `tests/test_scientific.py` fails if the claim stops holding.
+#
+# The cut-up line and the grader are still real, still described below, and
+# still matter for the SMALL-pool routes - the local butcher, where nothing
+# is saturated, is where the cascade earns its keep. What is no longer
+# claimed is that they DETERMINE the commodity number.
+#
+# THE ONE FORCE THAT CAN PUSH BACK DOWN: CLUSTERING
+# -------------------------------------------------
+# Every mechanism above pushes the distinct count UP. A fryer scoop is not
+# an exchangeable draw - it is a grab of contiguous units from a bin that was
+# filled case by case, and cases are packed from contiguous belt runs. Units
+# that travelled together tend to stay together, and positive intra-cluster
+# correlation is the only force in the system that lowers the answer.
+#
+# It is modelled below by `draw_cluster_size` and the two adjacency-retention
+# parameters, and the retention of the CASCADE is the product of its stages'
+# retentions - so a route's mixing_kind sequence finally determines something
+# it could not before. See the parameter descriptions for the reasoning, and
+# `README.md` for what falls out. Short version: a commodity cascade runs a
+# bird's wings through six bulk commingling stages and a grader, adjacency
+# does not survive that, and the commodity answer does not move. The result
+# is reported rather than tuned.
 #
 # Pool sizes below are OUR ESTIMATES, reasoned from line speeds and standard
-# container sizes. The qualitative conclusion is robust to them: the curve
-# flattens hard above ~1,000 birds, so any commodity-scale pool lands within
-# a hair of the ceiling.
+# container sizes.
+
+# Scalar parameters of the model itself, as opposed to pool sizes.
+#
+# These are HERE and not in model.py on purpose. A figure hardcoded in a
+# module bypasses the citation audit, which is the one guarantee this project
+# makes. SEPARATION_EFFICIENCY lived in Python at a bare 0.90 and nobody
+# could ask the corpus how much it mattered.
+#
+# Every one of them is an estimate. Every one carries a lo/mode/hi band so
+# it can be swept and, in due course, resampled.
+model_parameters:
+  - slug: separation_efficiency
+    label: Grading separation efficiency
+    value_lo: 0.70
+    value_mode: 0.90
+    value_hi: 0.98
+    confidence: estimate
+    source: project-estimate-mixing-parameters
+    description: >-
+      How thoroughly a 'separating' stage pulls one individual's units apart.
+      Size grading weighs each wing and routes it to a grade stream, so a
+      bird's two wings go to different boxes whenever they fall on opposite
+      sides of a grade boundary. Grade bands are narrow relative to the
+      left/right weight difference on one bird, so most pairs straddle one -
+      hence a mode near 0.9 rather than near 0.5. The band is wide because
+      band widths and the left/right weight correlation are both unsourced.
+
+      Worth knowing before you spend research effort on it: sweeping this
+      from 0.0 to 0.99 moves the commodity 12-wing answer by 0.0003 of a
+      bird. It is not what determines that number - saturation is. It does
+      still matter for small-pool routes, and it drives how much adjacency
+      survives a separating stage.
+
+  - slug: draw_cluster_size
+    label: Units taken per contiguous grab
+    value_lo: 1.0
+    value_mode: 4.0
+    value_hi: 12.0
+    confidence: estimate
+    source: project-estimate-mixing-parameters
+    description: >-
+      How many units come up in one scoop. A foodservice wing order is not
+      counted out one wing at a time; it is scooped from a bin, and each
+      scoop takes a contiguous handful. A whole wing runs about 0.23 lb, so
+      a roughly one-pound scoop is about four wings - the mode. The lo bound
+      of 1 is the exchangeable draw the model assumed before this parameter
+      existed: portioned piece by piece, or weighed to order. The hi bound of
+      12 is a single scoop taking the entire order at once.
+
+      This is a design-effect parameter in the survey-sampling sense: it
+      shrinks the effective sample size of the draw. On its own it barely
+      moves anything - what matters is whether an individual's units are
+      still adjacent by the time the scoop reaches them, which is what the
+      retention parameters below govern.
+
+  - slug: adjacency_retention_random
+    label: Adjacency surviving one bulk commingling stage
+    value_lo: 0.05
+    value_mode: 0.20
+    value_hi: 0.50
+    confidence: estimate
+    source: project-estimate-mixing-parameters
+    description: >-
+      The probability that two units which arrived at a 'random' stage
+      adjacent to one another leave it still adjacent. A wing chiller is a
+      stirred immersion vessel holding tens of thousands of wings with a
+      residence time in tens of minutes - it is a mixing tank by design, and
+      very little adjacency survives it. A combo-bin dump and a distributor
+      pallet rebuild are less violent but still re-order in bulk.
+
+      A mode of 0.20 says one bulk commingling stage keeps about a fifth of
+      whatever adjacency reached it. Deliberately generous to clustering:
+      picking the number that makes clustering LOOK strongest is the honest
+      direction to err in, because the finding being reported is that even
+      then it does not move the commodity answer.
+
+  - slug: adjacency_retention_passthrough
+    label: Adjacency surviving one passthrough stage
+    value_lo: 0.85
+    value_mode: 0.95
+    value_hi: 1.00
+    confidence: estimate
+    source: project-estimate-mixing-parameters
+    description: >-
+      The same quantity for a 'none' stage. A case pack and a fryer basket do
+      not mix - they draw from an already-mixed stream. A case is filled from
+      a contiguous run coming off the pack line and is later emptied into the
+      bin as a block, so units adjacent on the belt are still adjacent in the
+      bin. Retention is therefore near 1: a passthrough stage preserves
+      whatever arrived, which is exactly why 'none' is a distinct kind.
+
+      A 'separating' stage needs no parameter of its own. Splitting a pair
+      into different boxes is destroying its adjacency, so its retention is
+      derived as (1 - separation_efficiency) * adjacency_retention_random
+      rather than estimated a second time.
 
 stages:
   - slug: separation
@@ -73,8 +210,13 @@ stages:
     description: >-
       Wings are weighed individually and routed to grade streams. This is
       ACTIVE SEPARATION, not shuffling: a bird's two wings go to different
-      boxes whenever they fall on opposite sides of a grade boundary. The
-      single strongest driver pushing the answer toward 12.
+      boxes whenever they fall on opposite sides of a grade boundary.
+
+      Real, and the strongest single stage in the cascade - but not what
+      determines the commodity answer. By the time wings reach the grader the
+      pool is already far past the saturation point, so switching this stage
+      off entirely costs 0.0003 of a bird. It earns its keep on the
+      small-pool routes and in destroying adjacency.
 
   - slug: combo_bin
     domain: poultry
@@ -174,11 +316,13 @@ supply_chains:
       stage applies. This is what almost everyone eating wings is actually
       getting.
     floor_note: >-
-      Mixing starts the instant the wings leave the bird. On the cut-up line a
-      chicken's two wings drop onto the same conveyor and part company, then
-      size grading actively splits any pair that survived - two wings off one
-      bird rarely weigh the same. That is why the answer sits just under twelve
-      rather than at the floor of six.
+      Mixing starts the instant the wings leave the bird, and by the combo bin
+      the pool is enormous: a hundred thousand birds' worth of wings behind a
+      container holding four thousand. At that scale almost every wing in the
+      container is already from a different bird, so the answer sits just under
+      twelve - and it would sit there for any pool this side of a thousand
+      birds. The cut-up line and the grader are real, but the number is a
+      saturation result, not a grading result.
     stages:
       - separation
       - wing_chiller
