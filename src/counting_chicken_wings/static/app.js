@@ -325,7 +325,7 @@ async function sci() {
     ],
     annotations: [
       { x: a.required, yref: 'paper', y: 1.06, showarrow: false,
-        text: `mean ${a.required.toFixed(2)}`, font: { color: CH.ink } },
+        text: `median ${a.required.toFixed(2)}`, font: { color: CH.ink } },
       { x: a.required_lo, yref: 'paper', y: 1.06, showarrow: false,
         text: a.required_lo.toFixed(2), font: { color: CH.stampSoft } },
       { x: a.required_hi, yref: 'paper', y: 1.06, showarrow: false,
@@ -352,7 +352,7 @@ async function sci() {
 
   const modeEnd = w.length ? w[w.length - 1].to : a.floor;
   $('#s-waterfall-gap').textContent =
-    `Mode path ends at ${modeEnd.toFixed(3)}; Monte Carlo mean is ` +
+    `Mode path ends at ${modeEnd.toFixed(3)}; Monte Carlo median is ` +
     `${a.required.toFixed(3)} — a gap of ${(a.required - modeEnd).toFixed(3)} ` +
     `chickens from band asymmetry.`;
 

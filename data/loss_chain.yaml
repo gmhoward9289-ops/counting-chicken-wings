@@ -370,3 +370,36 @@ stages:
           waste, driven largely by oversized portions, but gives no clean
           per-item uneaten fraction. This band is our estimate and is the
           weakest number in the model.
+
+# Loss stages sampled independently in the Monte Carlo (model.run,
+# iterations > 0) understate the reported band whenever the underlying
+# causes are not actually independent - errors that would partially cancel
+# get let cancel at roughly sqrt(n), pulling the interval in (#77).
+#
+# `rho` is a single-factor equicorrelation between every pair of stages
+# listed: each stage's sampled percentile is drawn as
+# sqrt(rho)*shared + sqrt(1-rho)*idiosyncratic, so its own triangular
+# lo/mode/hi band is preserved exactly and only the co-movement changes.
+# The number itself is not measured - nothing in the corpus quantifies it -
+# so it is graded 'estimate' and cited like any other unsourced figure
+# rather than living as a bare constant in Python. The point of this group
+# is to stop asserting the correlation is zero, not to claim 0.5 is right.
+correlated_groups:
+  - slug: handling_quality
+    label: Handling-quality latent factor
+    description: >-
+      wing_damage, grading_downgrade, and transport_doa all load on the same
+      per-load handling quality: rough catching, shackling, and loading
+      bruises and breaks wings (wing_damage), the same damaged or
+      undersized product gets pulled at size/colour/trim grading
+      (grading_downgrade), and the same rough handling raises in-transit
+      mortality before the plant (transport_doa). A bad load is bad on all
+      three counts together, not independently.
+    stages: [wing_damage, grading_downgrade, transport_doa]
+    rho: 0.5
+    confidence: estimate
+    source: project-estimate-unsourced
+    notes: >-
+      0.5 is a deliberately moderate placeholder standing in for "these are
+      not independent," not a calibrated coefficient - nothing in the
+      corpus measures the co-movement of these three stages. See #77.
