@@ -165,6 +165,111 @@ def products_in(db: Path) -> list[str]:
         conn.close()
 
 
+# ---------------------------------------------------------------------------
+# The public surface: what a caller can invoke.
+#
+# The fourth signal, and the one that closes the gap this file's own docstring
+# admits to. Structure, volume and the published answer are all facts about
+# the CORPUS, so a release that adds an endpoint or a CLI flag moves none of
+# them -- docs/VERSIONING.md says a new view, endpoint or CLI flag "takes the
+# second digit under the rule and is invisible to it", and v1.15.1 duly
+# shipped /api/scope and a new database view as a third-digit bump.
+#
+# Routes are read from the SOURCE, not by importing the app, and that is not
+# laziness. `release_check` runs where `pip install -e .` was used -- no `gui`
+# extra, so no FastAPI -- and an import-based probe would raise there, degrade
+# to "not comparable", and silently never fire in the one place it matters.
+# Reading the decorators also works at any base ref regardless of what is
+# installed, and cannot be broken by an import-time error in an old tree.
+# ---------------------------------------------------------------------------
+
+_ROUTE_RE = re.compile(
+    r"@app\.(get|post|put|patch|delete)\(\s*[\"']([^\"']+)[\"']")
+
+# argparse only, so this runs anywhere the package imports at all. A base ref
+# predating `build_parser` yields nothing and the CLI comparison is skipped
+# rather than reported as a wholesale removal.
+_CLI_PROBE = """
+import json
+out = None
+try:
+    from counting_chicken_wings.cli import build_parser
+    p = build_parser()
+    names = set()
+    for action in p._actions:
+        names.update(action.option_strings)
+        # The subparser action holds one parser per subcommand; each has its
+        # own flags, and `wings count --pieces` is as much a surface as
+        # `wings count` is.
+        #
+        # `or {}` OUTSIDE the getattr: every action has a `choices`
+        # attribute and on ordinary ones it is None, so a default only
+        # applies when the attribute is missing -- which it never is. Written
+        # the other way this raised AttributeError on the first flag it saw
+        # and took the whole probe down with it, reporting the CLI as "not
+        # comparable" at every ref.
+        for cmd, sub in (getattr(action, "choices", None) or {}).items():
+            names.add(cmd)
+            for a in sub._actions:
+                names.update(f"{cmd} {o}" for o in a.option_strings)
+    out = sorted(names)
+except Exception:
+    out = None
+print(json.dumps(out))
+"""
+
+
+def routes_in(tree: Path) -> list[str] | None:
+    """HTTP routes declared in this tree, or None if they cannot be read."""
+    src = tree / "src" / "counting_chicken_wings" / "api.py"
+    if not src.is_file():
+        return None
+    return sorted({f"{m.group(1).upper()} {m.group(2)}"
+                   for m in _ROUTE_RE.finditer(src.read_text())})
+
+
+def cli_in(tree: Path) -> list[str] | None:
+    """Subcommands and flags this tree's CLI accepts, or None if unavailable."""
+    env = dict(os.environ, PYTHONPATH=str(tree / "src"))
+    try:
+        out = subprocess.run(
+            [sys.executable, "-c", _CLI_PROBE], cwd=tree, env=env,
+            check=True, capture_output=True, text=True, timeout=60,
+        ).stdout
+        return json.loads(out)
+    except Exception:                               # noqa: BLE001
+        return None
+
+
+def surface(tree: Path) -> dict[str, list[str] | None]:
+    return {"routes": routes_in(tree), "cli": cli_in(tree)}
+
+
+def surface_moved(base: dict, head: dict) -> list[str]:
+    """Reasons a surface diff justifies the second digit.
+
+    Both directions, because a route or a flag that DISAPPEARS breaks a caller
+    outright -- the same argument the removed-table branch already makes, one
+    layer up from the data.
+
+    `None` on either side means the comparison could not be made at that ref,
+    and an unavailable comparison must never read as a wholesale removal. This
+    is the same rule `answers_moved` follows for a product missing at the base.
+    """
+    reasons = []
+    for key, noun in (("routes", "endpoint"), ("cli", "CLI surface")):
+        old, new = base.get(key), head.get(key)
+        if old is None or new is None:
+            continue
+        added = sorted(set(new) - set(old))
+        gone = sorted(set(old) - set(new))
+        if added:
+            reasons.append(f"new {noun}(s): {', '.join(added)}")
+        if gone:
+            reasons.append(f"{noun}(s) REMOVED: {', '.join(gone)}")
+    return reasons
+
+
 def headline(tree: Path, db: Path) -> dict[str, str]:
     """Every active product's answer at this ref, keyed by slug.
 
@@ -209,9 +314,19 @@ def answers_moved(base: dict[str, str], head: dict[str, str]) -> list[str]:
 
 def required_bump(base: dict, head: dict,
                   base_answers: dict[str, str],
-                  head_answers: dict[str, str]) -> tuple[str, list[str]]:
-    """The smallest bump this diff justifies, with the reasons."""
+                  head_answers: dict[str, str],
+                  base_surface: dict | None = None,
+                  head_surface: dict | None = None) -> tuple[str, list[str]]:
+    """The smallest bump this diff justifies, with the reasons.
+
+    The surface pair defaults to None so a caller that only has a corpus can
+    still ask -- which is honest rather than convenient: "I did not compare
+    the surface" and "the surface did not change" must not be the same
+    argument.
+    """
     reasons: list[str] = []
+    if base_surface is not None and head_surface is not None:
+        reasons += surface_moved(base_surface, head_surface)
 
     new_tables = sorted(set(head["tables"]) - set(base["tables"]))
     if new_tables:
@@ -289,8 +404,10 @@ def main(argv: list[str] | None = None) -> int:
         base_snap, head_snap = snapshot(base_db), snapshot(head_db)
         base_ans = headline(base_tree, base_db)
         head_ans = headline(head_tree, head_db)
+        base_surf, head_surf = surface(base_tree), surface(head_tree)
 
-        need, reasons = required_bump(base_snap, head_snap, base_ans, head_ans)
+        need, reasons = required_bump(base_snap, head_snap, base_ans, head_ans,
+                                      base_surf, head_surf)
         got = actual_bump(version_of(base_ref), version_of())
         ok = RANK[got] >= RANK[need]
 
@@ -300,6 +417,7 @@ def main(argv: list[str] | None = None) -> int:
                 "base": base_ref, "required": need, "actual": got,
                 "ok": ok, "reasons": reasons, "answers_moved": moved,
                 "products_compared": sorted(set(base_ans) & set(head_ans)),
+                "surface": {"base": base_surf, "head": head_surf},
                 "base_version": version_of(base_ref),
                 "head_version": version_of(),
             }, indent=1))
@@ -314,6 +432,15 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print("  answers     not comparable at this base "
                       "(CLI differs); structure and volume only")
+            # Said out loud in both states. "The surface did not change" and
+            # "I could not read the surface" look identical in a reasons list
+            # that stays empty, and only one of them is reassuring.
+            for key, noun in (("routes", "endpoints"), ("cli", "CLI surface")):
+                if base_surf[key] is None or head_surf[key] is None:
+                    print(f"  {noun:<11} not comparable at this base")
+                else:
+                    print(f"  {noun:<11} {len(base_surf[key])} -> "
+                          f"{len(head_surf[key])}")
             print()
             for r in reasons:
                 print(f"  - {r}")

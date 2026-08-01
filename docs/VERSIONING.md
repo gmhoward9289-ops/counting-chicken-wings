@@ -103,7 +103,7 @@ python tools/release_check.py --base v1.6.0
 ```
 
 It builds the corpus at both refs and reports the smallest bump the diff
-justifies. Three signals:
+justifies. Four signals:
 
 | signal | verdict |
 |---|---|
@@ -111,6 +111,8 @@ justifies. Three signals:
 | a table or kind **removed** | **second** — retraction breaks an existing citation |
 | row counts of existing tables changed, nothing else | **third** |
 | **`wings count 12` returns different numbers for any product** | **second**, whatever else did or did not change |
+| **a new HTTP endpoint, subcommand or CLI flag** | **second** — you can ask something you could not ask before |
+| an endpoint, subcommand or flag **removed** | **second** — the retraction rule, one layer up from the data |
 
 The last one is the reason this exists. It is the rule's own criterion rather
 than a proxy for it, and unlike the other two it fires on a *code* change as
@@ -144,11 +146,23 @@ compares against the previous tag rather than the one being cut.
 
 #### What it cannot see, stated plainly
 
-It diffs the **corpus and the published answer**. A new view, endpoint or CLI
-flag takes the **second** digit under the rule and is invisible to it, because
-nothing about the data changed. Run it against v1.6.0 and it reports "THIRD
-required" for a release that added `seasonality.py`, a view and an endpoint —
-and v1.7.0 was correctly a second-digit bump.
+It diffs the **corpus, the published answer, and the public surface**. The
+surface signal is the newest and was added because the paragraph that used to
+be here described a real gap: a new endpoint or CLI flag takes the second digit
+and *nothing detected it*, so v1.15.1 shipped `/api/scope` and a new database
+view as a third-digit bump.
+
+Routes are read from the `@app.get(...)` decorators in the source rather than
+by importing the app. That is deliberate: the check runs where `pip install -e .`
+was used, with no `gui` extra and therefore no FastAPI, so an import-based
+probe would raise, degrade to "not comparable", and silently never fire in the
+one place it matters. The CLI is introspected by importing `build_parser()` in
+the base tree, which needs only argparse.
+
+What is still invisible: a new **page view** (the frontend is one document with
+no per-view URL, so there is nothing to diff), a change in an endpoint's
+response *shape* rather than its existence, and anything whose capability lives
+in prose. Declare those with `bump:` in your `.changes/` entry.
 
 That under-detection is deliberately the safe direction. The check only fails
 on **under**-bumping, so a human who moves the second digit for new capability
@@ -167,6 +181,11 @@ input `next_version.py` had, so it was a ceiling as well as a floor, and
 an endpoint and a database view as a third-digit bump. A branch can now declare
 the level it needs, and that declaration may raise this floor and may never
 lower it. See "Declaring a level" under **Release procedure**.
+
+The two are complementary rather than redundant, and the order matters: the
+surface signal catches what it can *automatically*, so `bump:` is for the
+residue. Reach for a declaration when the check has told you it saw nothing and
+you know it was looking in the wrong place.
 
 The floor is also why this check and the "pick the number last" rule below do
 not argue: the check tells you the smallest bump the diff justifies, and the
