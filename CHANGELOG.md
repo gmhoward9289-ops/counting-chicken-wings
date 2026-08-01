@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.13.0 — 2026-08-01
 ### The Monte Carlo headline is now the median, and no longer pretends its inputs are independent
 
 Two bugs in `model.run`'s scientific mode, filed as #76 and #77.
