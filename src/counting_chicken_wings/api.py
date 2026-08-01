@@ -180,6 +180,7 @@ def calculate(
             units = count / segments
 
         chain = chain or dbm.default_supply_chain(conn, prod["species_slug"])
+
         loss = dbm.load_loss_stages(
             conn, prod["species_slug"], prod["slug"],
             include_optional=include_mortality,
