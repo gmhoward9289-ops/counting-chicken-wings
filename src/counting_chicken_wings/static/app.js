@@ -209,7 +209,10 @@ async function calc() {
       fl += ` Accounting for every loss from the farm to the fryer,
         <b>${a.required.toFixed(2)}</b> ${plural} had to enter the system.`;
   }
-  if (d.question.segments_per_unit)
+  // > 1, not just truthy: the server returns segments_per_unit: 1 for any
+  // product with no piece breakdown (e.g. maple syrup), and "1 pieces is 1
+  // whole wings" glued a wing-specific sentence onto a non-wing answer.
+  if (d.question.segments_per_unit > 1)
     fl = `${d.question.count} pieces is ${(+d.question.units.toFixed(2))}
       whole wings. ` + fl;
   $('#floorline').innerHTML = fl;

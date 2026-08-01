@@ -67,6 +67,15 @@
 
 * { box-sizing: border-box; }
 
+/* The UA default for [hidden] is `display: none`, but several rules below
+   set `display: flex` on elements that also carry `hidden` (`.check`,
+   `footer.build`) -- an author display rule always wins over the UA one, so
+   `hidden` silently stopped hiding anything. This must win over every other
+   display rule in the sheet, which is what !important is for here: it is not
+   a specificity shortcut, it is restoring the one behaviour `hidden` is
+   supposed to guarantee regardless of what else targets the element. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font: 15.5px/1.62 'Public Sans', system-ui, -apple-system, sans-serif;
