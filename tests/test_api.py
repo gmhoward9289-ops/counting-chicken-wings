@@ -203,6 +203,57 @@ def test_scientific_is_reproducible_for_a_fixed_seed(client):
 
 
 # ---------------------------------------------------------------------------
+# variance decomposition
+# ---------------------------------------------------------------------------
+
+def test_variance_returns_a_share_per_mixing_input(client):
+    d = get(client, "/api/variance", count=12, samples=128, bootstrap=10)
+    assert d["output"] == "distinct"
+    assert d["shares"]
+    for s in d["shares"]:
+        for k in ("slug", "label", "kind", "confidence", "first_order",
+                  "total_order", "first_lo", "first_hi", "total_lo",
+                  "total_hi", "degenerate", "inert"):
+            assert k in s, k
+    assert d["evaluations"] == 128 * (len(d["shares"]) + 2)
+    assert d["notes"]
+
+
+def test_variance_leads_with_a_spread_not_just_shares(client):
+    """The panel's whole framing depends on these being present: shares of a
+    vanishing variance are meaningless without the variance beside them."""
+    d = get(client, "/api/variance", count=12, samples=128, bootstrap=0)
+    assert d["sd"] >= 0.0
+    assert d["sample_lo"] <= d["mean"] <= d["sample_hi"]
+
+
+def test_variance_is_reproducible_for_a_fixed_seed(client):
+    a = get(client, "/api/variance", count=12, samples=128, bootstrap=0, seed=7)
+    b = get(client, "/api/variance", count=12, samples=128, bootstrap=0, seed=7)
+    assert a["shares"] == b["shares"]
+
+
+def test_variance_asks_an_aggregate_product_in_shares(client):
+    """A gram of saffron is 150 flowers, so the cascade is asked in
+    individual-shares. If this endpoint re-derived that for itself it would
+    eventually disagree with the histogram rendered beside it."""
+    d = get(client, "/api/variance", product="saffron_gram", count=12,
+            samples=64, bootstrap=0)
+    assert d["question"]["drawn_upi"] == 1.0
+    assert d["question"]["drawn_units"] > 12
+
+
+def test_variance_rejects_a_sample_count_it_cannot_estimate_from(client):
+    r = client.get("/api/variance", params={"samples": 8})
+    assert r.status_code == 422
+
+
+def test_variance_404s_on_an_unknown_product(client):
+    r = client.get("/api/variance", params={"product": "unicorn_wing"})
+    assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
 # mixing curve
 # ---------------------------------------------------------------------------
 

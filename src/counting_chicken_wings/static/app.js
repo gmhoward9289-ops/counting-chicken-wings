@@ -468,6 +468,80 @@ const CONF_COLOUR = () => ({
 // otherwise changing two controls quickly renders a stale answer.
 let sciSeq = 0;
 
+// Shares of a variance always fill the axis, so a saturated cascade whose
+// answer cannot move renders as a chart full of confident-looking bars. The
+// absolute spread therefore goes ABOVE the chart, in words, computed from the
+// response — never written into the markup, where it would go stale and where
+// test_static.py would rightly object to it.
+function renderSobol(v) {
+  const panel = $('#s-sobol'), verdict = $('#s-sobol-verdict');
+  if (!v || !v.shares || !v.shares.length) {
+    if (panel) panel.innerHTML = '';
+    if (verdict) verdict.textContent =
+      'The variance decomposition is unavailable for this question.';
+    return;
+  }
+
+  // Below about a thousandth the fixed notation is all zeroes, and the whole
+  // point of the sentence is how small the number is.
+  const fine = x => Math.abs(x) < 1e-3 ? x.toExponential(2) : x.toFixed(5);
+
+  verdict.textContent =
+    `Across all ${v.shares.length} mixing inputs, ${v.output} moves between ` +
+    `${fine(v.sample_lo)} and ${fine(v.sample_hi)} — a standard deviation of ` +
+    `${fine(v.sd)} on a mean of ${fine(v.mean)}. The bars below divide that ` +
+    `spread; they do not say it is large.`;
+
+  $('#s-sobol-notes').innerHTML = v.notes.map(n => `<div>${n}</div>`).join('');
+
+  $('#s-sobol-cost').textContent =
+    `${v.samples.toLocaleString()} samples, ` +
+    `${v.evaluations.toLocaleString()} model evaluations, ` +
+    `${v.bootstrap} bootstrap replicates, seed ${v.seed}. First-order shares ` +
+    `sum to ${v.sum_first_order.toFixed(3)} and total-order to ` +
+    `${v.sum_total_order.toFixed(3)}; the gap is interaction.`;
+
+  const s = v.shares.slice().reverse();
+  // A zero bar is three different claims — never read, no band recorded, or
+  // genuinely unimportant — and they are not interchangeable. Say which.
+  const why = x => x.degenerate
+    ? 'no band recorded, so nothing to propagate'
+    : (x.inert ? 'the model never reads this input' : `grade: ${x.confidence}`);
+  const err = (val, lo, hi) => ({
+    type: 'data', symmetric: false,
+    array: val.map((x, i) => hi[i] - x),
+    arrayminus: val.map((x, i) => x - lo[i]),
+    color: CH.dim, thickness: 1,
+  });
+  const f = s.map(x => x.first_order), t = s.map(x => x.total_order);
+
+  Plotly.newPlot('s-sobol', [{
+    type: 'bar', orientation: 'h', name: 'first-order (alone)',
+    x: f, y: s.map(x => x.label),
+    marker: {
+      color: s.map(x => (x.degenerate || x.inert)
+        ? CH.faint : (CONF_COLOUR()[x.confidence] || CH.faint)),
+    },
+    error_x: err(f, s.map(x => x.first_lo), s.map(x => x.first_hi)),
+    customdata: s.map(x => [why(x), x.kind]),
+    hovertemplate: '%{y}<br>first-order %{x:.4f}<br>' +
+      '%{customdata[1]} — %{customdata[0]}<extra></extra>',
+  }, {
+    type: 'bar', orientation: 'h', name: 'total (with interactions)',
+    x: t, y: s.map(x => x.label),
+    marker: { color: CH.barRecede },
+    error_x: err(t, s.map(x => x.total_lo), s.map(x => x.total_hi)),
+    hovertemplate: '%{y}<br>total-order %{x:.4f}<extra></extra>',
+  }], Object.assign({}, PLOT, {
+    barmode: 'group', showlegend: true,
+    legend: { orientation: 'h', y: 1.12 },
+    margin: { l: 230, r: 20, t: 34, b: 44 },
+    xaxis: Object.assign({}, PLOT.xaxis, {
+      title: `share of variance in ${v.output}`, range: [0, 1],
+    }),
+  }), CFG);
+}
+
 async function sci() {
   const mine = ++sciSeq;
   const conf = $('#s-conf').value;
@@ -482,9 +556,23 @@ async function sci() {
   });
   if (conf) q.set('min_confidence', conf);
 
-  let d;
+  // The variance decomposition is a second analysis of its own, and it is
+  // fetched CONCURRENTLY rather than after: both endpoints take a couple of
+  // seconds, so in series every load would pay for both. It also fails soft —
+  // it is one panel of five, and losing it should not blank the view.
+  const vq = new URLSearchParams({
+    count: numOrDefault('s-count', 12),
+    product: SCI_PRODUCT,
+    chain: $('#s-chain').value,
+    confidence_level: $('#s-ci').value,
+  });
+
+  let d, v;
   try {
-    d = await api('/api/scientific?' + q);
+    [d, v] = await Promise.all([
+      api('/api/scientific?' + q),
+      api('/api/variance?' + vq).catch(() => null),
+    ]);
   } catch (err) {
     if (mine !== sciSeq) return;
     setError('sci-error', `Could not run the analysis: ${err.message}`);
@@ -525,6 +613,8 @@ async function sci() {
     margin: { l: 210, r: 20, t: 10, b: 44 },
     xaxis: Object.assign({}, PLOT.xaxis, { title: 'swing in chickens required' }),
   }), CFG);
+
+  renderSobol(v);
 
   // Monte Carlo histogram with the interval marked.
   const h = d.required_hist;

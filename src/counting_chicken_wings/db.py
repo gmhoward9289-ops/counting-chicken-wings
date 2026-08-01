@@ -351,6 +351,32 @@ def load_mixing_params(conn) -> MixingParams:
     )
 
 
+def load_mixing_param_bands(
+    conn,
+) -> dict[str, tuple[str, float, float, float, str]]:
+    """The same four parameters, with the bands `load_mixing_params` drops.
+
+    Returns slug -> (label, lo, mode, hi, confidence). Deliberately a sibling
+    rather than a wider return type on `load_mixing_params`, whose
+    `MixingParams` result is load-bearing in `api.py`, `cli.py` and
+    `test_scientific.py`.
+
+    `schema.sql` says of these columns that they are a triangular band "so
+    the Monte Carlo can resample these the same way it resamples pools", and
+    until `model.variance_decomposition` nothing read them -- `run`'s
+    docstring has carried that as a known open item. This is the loader that
+    closes it.
+    """
+    return {
+        r["slug"]: (r["label"], float(r["value_lo"]), float(r["value_mode"]),
+                    float(r["value_hi"]), r["confidence"])
+        for r in conn.execute(
+            "SELECT slug, label, value_lo, value_mode, value_hi, confidence "
+            "FROM model_parameter"
+        ).fetchall()
+    }
+
+
 def load_mixing_stages(conn, chain_slug: str) -> list[MixingStage]:
     rows = conn.execute(
         """

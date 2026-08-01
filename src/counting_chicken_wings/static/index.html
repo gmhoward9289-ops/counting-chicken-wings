@@ -246,14 +246,39 @@ try {
   </div>
 
   <div class="panel">
-    <h3>Where the uncertainty comes from</h3>
+    <h3>Where the uncertainty in the requirement comes from</h3>
     <p class="muted">
       Each bar swings one stage across its own lo/hi with every other stage
       held at its mode. The longest bar is where more research would pay off
       most. Mass-only stages register zero — they cannot move a count however
-      uncertain they are.
+      uncertain they are. This chart is about the <b>requirement</b>; the panel
+      below asks a different question, by a different method, about the number
+      on the plate.
     </p>
     <div id="s-tornado" style="height:340px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>What drives the number on the plate</h3>
+    <p class="muted">
+      A different question from the tornado above. That chart swings one loss
+      stage at a time and reports individuals <b>required</b>; this one varies
+      every mixing input at once and reports each one's share of the variance
+      in <b>distinct</b>. It has to: the mixing model is not a product of
+      factors, so its inputs interact, and one-at-a-time would miss exactly the
+      interaction that matters.
+    </p>
+    <div id="s-sobol-verdict" class="note" style="margin:0 0 10px"></div>
+    <p class="muted">
+      Bars are first-order (this input alone) and total-order (including
+      everything it interacts with). Total above first is interaction.
+      Whiskers are a bootstrap over the same draws. Every input here is
+      estimate-grade — none is a sourced measurement — so the whole chart
+      renders in one colour, and that is the point rather than a fault.
+    </p>
+    <div id="s-sobol" style="height:380px"></div>
+    <div id="s-sobol-notes" class="note" style="margin-top:10px"></div>
+    <div id="s-sobol-cost" class="note" style="margin-top:6px"></div>
   </div>
 
   <div class="panel">

@@ -426,6 +426,31 @@ def test_a_resize_redraws_the_visible_charts(script):
         "resizeCharts calls into Plotly before checking the stub is not in use"
 
 
+def test_the_variance_panel_ids_exist_on_both_sides_of_the_contract(
+        markup, script):
+    """The element ids ARE the contract between the markup and `app.js`.
+
+    Rename one on one side and the panel silently never fills in -- no error,
+    no blank chart, just a section that quietly stops being about anything.
+    Every id this panel writes to is checked in both files.
+    """
+    for el in ("s-sobol", "s-sobol-verdict", "s-sobol-cost", "s-sobol-notes"):
+        assert f'id="{el}"' in markup, f"{el} is missing from the markup"
+        assert el in script, f"nothing in the script ever writes to {el}"
+
+
+def test_the_variance_panel_states_its_own_spread(script):
+    """Shares of a variance always fill the axis, so a saturated cascade
+    renders as a chart full of confident bars over an answer that cannot
+    move. The absolute spread is what stops that reading, and it has to come
+    from the response -- a number typed into the markup would be a corpus
+    figure bypassing the citation audit, and would go stale besides."""
+    body = _fn_body(script, "renderSobol")
+    for k in ("sample_lo", "sample_hi", "sd", "mean"):
+        assert k in body, f"the verdict line never mentions {k}"
+    assert "v.notes" in body, "the computed notes are never rendered"
+
+
 def _fn_body(script, name):
     m = re.search(rf"function\s+{name}\s*\([^)]*\)\s*\{{", script)
     assert m, f"{name} is gone; the redraw path was renamed or removed"

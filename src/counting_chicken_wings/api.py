@@ -21,6 +21,7 @@ from .model import (
     meets_confidence,
     run,
     sensitivity,
+    variance_decomposition,
 )
 
 STATIC = Path(__file__).parent / "static"
@@ -595,6 +596,124 @@ def scientific(
             ],
             "waterfall": waterfall,
             "evidence_mix": mix,
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/variance")
+def variance(
+    count: float = Query(12, gt=0, le=100000),
+    product: str = "whole_wing",
+    chain: str | None = None,
+    pieces: bool = False,
+    include_mortality: bool = False,
+    samples: int = Query(1024, ge=64, le=16384),
+    bootstrap: int = Query(200, ge=0, le=2000),
+    confidence_level: float = Query(0.90, gt=0.0, lt=1.0),
+    seed: int | None = 12345,
+):
+    """Which mixing input drives the uncertainty in `distinct`?
+
+    A DIFFERENT QUESTION FROM `/api/scientific`'s TORNADO, and served
+    separately for two reasons. It is about `distinct` rather than
+    `required`, by a variance-based method rather than one-at-a-time -- see
+    `model.sensitivity`'s docstring for why the two outputs need different
+    methods. And it costs a couple of seconds of its own, so bolting it onto
+    an endpoint that already runs 20,000 Monte Carlo iterations would make
+    every scientific-mode load pay for both in series. Fetched alongside,
+    the wall clock is the slower of the two rather than the sum.
+
+    Read `sd` before the shares. On a saturated cascade the indices still
+    sum to about one while the variance they are dividing is 2e-5 of an
+    individual; the shares say who owns what little is left, not that the
+    answer is uncertain. `notes` says which case you are in.
+    """
+    conn = dbm.connect()
+    try:
+        try:
+            prod = dbm.get_product(conn, product)
+        except KeyError:
+            raise HTTPException(404, f"unknown product: {product}")
+
+        units = count
+        if pieces:
+            seg = conn.execute(
+                """SELECT COUNT(*) FROM product_segment
+                   WHERE product_id = ? AND sold_as_product = 1""",
+                (prod["id"],),
+            ).fetchone()[0] or 1
+            units = count / seg
+
+        chain = _resolve_chain(conn, prod, chain)
+        upi = prod["units_per_individual_mode"]
+        loss = dbm.load_loss_stages(
+            conn, prod["species_slug"], prod["slug"],
+            include_optional=include_mortality,
+            chain_slug=chain,
+        )
+        mixing = dbm.load_mixing_stages(conn, chain)
+        params = dbm.load_mixing_params(conn)
+
+        # A deterministic pass purely to resolve the question. For an
+        # aggregate unit -- a gram of saffron -- the cascade is asked in
+        # individual-shares rather than in grams, and the decomposition has
+        # to be asked in the same currency or it silently analyses a
+        # different question than the histogram it is rendered beside.
+        # `run` owns that derivation and reports what it used;
+        # `test_aggregate_units.py` forbids this module deciding it again.
+        res = run(
+            units_requested=units, units_per_individual=upi,
+            loss_stages=loss, mixing_stages=mixing,
+            anatomical=bool(prod["is_anatomical_constant"]),
+            floor_source=dbm.product_source_slug(conn, prod["slug"]),
+            params=params,
+        )
+
+        dec = variance_decomposition(
+            mixing_stages=mixing,
+            param_bands=dbm.load_mixing_param_bands(conn),
+            units_requested=int(res.draw_units),
+            units_per_individual=res.draw_upi,
+            samples=samples, seed=seed, bootstrap=bootstrap,
+            confidence_level=confidence_level,
+            base_params=params,
+        )
+
+        return {
+            "question": {
+                "count": count, "units": units, "chain": chain,
+                "product": prod["label"],
+                "individual_plural": prod["individual_plural"],
+                "drawn_units": res.draw_units,
+                "drawn_upi": res.draw_upi,
+            },
+            "output": dec.output,
+            "mean": dec.mean,
+            "variance": dec.variance,
+            "sd": dec.sd,
+            "sample_lo": dec.sample_lo,
+            "sample_hi": dec.sample_hi,
+            "samples": dec.samples,
+            "evaluations": dec.evaluations,
+            "bootstrap": dec.bootstrap,
+            "confidence_level": dec.confidence_level,
+            "seed": dec.seed,
+            "sum_first_order": dec.sum_first_order,
+            "sum_total_order": dec.sum_total_order,
+            "notes": dec.notes,
+            "shares": [
+                {
+                    "slug": s.slug, "label": s.label, "kind": s.kind,
+                    "confidence": s.confidence,
+                    "first_order": s.first_order,
+                    "first_lo": s.first_lo, "first_hi": s.first_hi,
+                    "total_order": s.total_order,
+                    "total_lo": s.total_lo, "total_hi": s.total_hi,
+                    "degenerate": s.degenerate, "inert": s.inert,
+                }
+                for s in dec.shares
+            ],
         }
     finally:
         conn.close()
