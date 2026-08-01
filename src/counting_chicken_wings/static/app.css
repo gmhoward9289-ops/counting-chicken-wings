@@ -141,6 +141,20 @@ nav button.on { color: var(--stamp); border-left-color: var(--stamp);
     flex-direction: row; flex-wrap: nowrap; border-left: 0;
     border-bottom: 1px solid var(--line); margin: 16px 0 16px;
     overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    /* Eleven items in one hidden-scrollbar row read as "half the tabs are
+       missing" with no other cue that six through eleven exist off-screen.
+       A mask, not a background gradient, so it fades the buttons themselves
+       (any theme's colours) rather than requiring a second gradient to keep
+       in sync with light/dark. Right edge only: the row opens scrolled all
+       the way left, so a left-side fade would clip the very first tab
+       ("Calculator") before anyone has scrolled anywhere. Stationary on the
+       element while its content scrolls underneath, which is what makes it
+       read as an edge rather than a highlight on whichever button happens
+       to be there. */
+    mask-image: linear-gradient(to right,
+      #000, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right,
+      #000, #000 calc(100% - 28px), transparent);
   }
   nav::-webkit-scrollbar { display: none; }
   nav button {
