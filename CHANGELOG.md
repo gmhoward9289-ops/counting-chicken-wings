@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+### Seasonality: fixed crash and restricted concordance to full-year data
+
+Two defects in the seasonality module and its concordance test.
+
+- **Crash when analyzing regions with no published months.** The `_classify()`
+  function signature changed to include `wrap` and `months_present` arguments,
+  but one call site (line 238, triggered when all 12 months are suppressed) was
+  not updated. This was a two-character fix but the real defect is the missing
+  test — the new test suite covers regions with exactly one published month, all
+  identical months, and no published months.
+- **Partial-year regions silently entered concordance tests with the wrong null
+  hypothesis.** The concordance test assumes each region's peak is uniform over
+  12 months (p=1/12). For a 3-month region, the null should be p=1/3. These
+  regions are now excluded and tracked. The survey found 0 partial-year states
+  in the 2025 data; this is defensive for future data and for the regression
+  tests. The exclusion count appears on the API surface and is disclosed in
+  caveats.
+
 ## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
 

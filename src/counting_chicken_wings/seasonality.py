@@ -235,7 +235,7 @@ def analyse(
     present = [v for v in values if v is not None]
     s.months_present = len(present)
     if not present:
-        s.verdict, s.explanation = _classify(0.0, 0)
+        s.verdict, s.explanation = _classify(0.0, 0.0, 0.0, 0)
         return s
 
     s.lo, s.hi = min(present), max(present)
@@ -297,6 +297,7 @@ class Concordance:
 
     kind: str                      # "peak" or "trough"
     regions_counted: int = 0
+    regions_excluded: int = 0      # Regions excluded due to incomplete data
     window: tuple[int, int, int] = (0, 0, 0)
     in_window: int = 0
     expected: float = 0.0
@@ -325,16 +326,24 @@ def concordance(series: list[Seasonality], kind: str = "peak") -> Concordance:
 
     Pass the STATES only. A national row is the sum of its states and would be
     counted as a 23rd independent witness to its own evidence.
+
+    Only full-year regions (months_present == 12) are used. Partial-year
+    regions are excluded to ensure the null hypothesis (uniform distribution
+    over 12 months) holds for all witnesses.
     """
     if kind not in ("peak", "trough"):
         raise ValueError("kind must be 'peak' or 'trough'")
 
+    # Filter to full-year regions only, tracking exclusions
+    full_year = [s for s in series if s.months_present == 12]
+    excluded = len(series) - len(full_year)
+
     months = [
         (s.peak_month if kind == "peak" else s.trough_month)
-        for s in series
+        for s in full_year
         if (s.peak_month if kind == "peak" else s.trough_month)
     ]
-    c = Concordance(kind=kind, regions_counted=len(months))
+    c = Concordance(kind=kind, regions_counted=len(months), regions_excluded=excluded)
     if len(months) < 4:
         c.explanation = (
             f"Only {len(months)} regions have a {kind} month, too few to test "
@@ -378,6 +387,14 @@ def concordance(series: list[Seasonality], kind: str = "peak") -> Concordance:
         "This tests WHEN the year turns, not how much it moves. The movement "
         "is small: under 3% nationally.",
     ]
+    if c.regions_excluded > 0:
+        c.caveats.insert(
+            0,
+            f"{c.regions_excluded} region(s) with incomplete monthly data "
+            f"(fewer than 12 months) were excluded from this test, because the "
+            f"null hypothesis (uniform peak over 12 months) does not hold for "
+            f"partial-year series.",
+        )
     return c
 
 
