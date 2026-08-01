@@ -96,6 +96,35 @@ Two defects in the seasonality module and its concordance test.
   NASS suppression may leave a state partial. The exclusion count appears on the
   API surface and is disclosed in caveats.
 
+### Charts follow the window, and a theme toggle stops leaving handlers behind
+
+Two bugs with one shared cause: `redrawTheme()` invalidates every view and
+rebuilds the visible one, and three of the inits it re-runs were registering
+their listeners with `addEventListener` rather than assigning them.
+
+- **The facts deck skipped.** Three theme toggles left four `keydown` handlers
+  on `document`, so one right-arrow press moved the deck four cards. The
+  `touchstart`/`touchend` swipe handlers piled up the same way, on `document`
+  and the card — global leaks, not per-view ones. They now bind once, in
+  `bindFactsGestures`, because `{ passive: true }` cannot be expressed as a
+  property assignment and `document.onkeydown` is a single shared slot.
+- **Scientific fired N concurrent Monte Carlo runs.** Same cause, worse
+  consequence: each toggle added another `change` handler to all five controls,
+  at up to 100,000 iterations per request. `initSci` and `initImpact` now
+  assign `.onchange` / `.oninput`, which is the pattern `initCountry` already
+  used and the reason it never had this bug.
+- **Charts never resized.** Measured at 1280px: the mixing chart sat at 700px
+  inside an 820px container after a viewport change, and stayed there through
+  tab switches. `responsive: true` alone was not covering it. A debounced
+  `resize` listener and a resize after a view is shown now call
+  `Plotly.Plots.resize` on the visible view's charts — the second one matters
+  because a chart drawn while its view was hidden had no container to measure,
+  and `loaded[v]` meant revisiting never redrew it.
+
+The resize path is guarded on `Plotly.Plots` rather than on `typeof Plotly`,
+because the CDN-failure stub defines `newPlot` and `relayout` and nothing else.
+An unreachable chart CDN has to stay a degraded page, never a thrown error.
+
 ### The release now asks for its own deploy
 
 `deploy.yml` triggers on `push` to master, and `release.yml` merges its version

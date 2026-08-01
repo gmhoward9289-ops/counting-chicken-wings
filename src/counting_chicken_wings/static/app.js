@@ -100,7 +100,51 @@ function applyTheme() {
   mkPlot();
   return mode;
 }
+// ---- the one redraw path
+//
+// A Plotly chart reads its colours from the CSS custom properties AND sizes
+// itself to its container, both at draw time. Neither is re-read afterwards,
+// so both go stale without a data change: rotate a phone and the chart keeps
+// the width it was born with.
+//
+// `responsive: true` in CFG is not enough on its own, and the gap is
+// measurable: at 1280px the mixing chart sat at 700px inside an 820px
+// container, and dispatching a `resize` event by hand fixed it instantly.
+// Charts drawn in a view that was hidden at the time never get a size worth
+// keeping either, and revisiting the view does not redraw them because
+// `loaded[v]` is still true. So ask for the resize explicitly, on the two
+// occasions a chart's container can have changed size under it.
+//
+// Guarded on `Plotly.Plots`, because the CDN-failure stub at the top of this
+// file defines `newPlot` and `relayout` and nothing else. A missing chart
+// library must stay a degraded page, never a thrown error.
+function resizeCharts() {
+  if (!window.Plotly || !Plotly.Plots || !Plotly.Plots.resize) return;
+  const view = document.querySelector('.view.on');
+  if (!view) return;
+  // `.js-plotly-plot` is Plotly's own marker class, so a container that was
+  // never drawn into -- or that holds the stub's failure paragraph -- is
+  // skipped rather than resized into an error.
+  view.querySelectorAll('.js-plotly-plot').forEach(el => {
+    try { Plotly.Plots.resize(el); } catch (e) { /* one chart, not the page */ }
+  });
+}
+
+// Debounced, because a drag-resize fires this continuously and a relayout is
+// not free. 120ms is below the threshold where a redraw reads as lag.
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resizeCharts, 120);
+});
+
 // Redraw whatever view is showing; the others rebuild when opened.
+//
+// Colours cannot be restyled in place here: trace colours come from the same
+// CSS variables as the frame does, so half a chart would follow the theme and
+// half would not. A full re-init is the honest redraw, and it is what makes
+// the additive listeners the inits used to register accumulate on every
+// toggle -- see initSci/initImpact/initFacts, now assigning handlers instead.
 function redrawTheme() {
   loaded = {};
   const cur = document.querySelector('nav button.on');
@@ -142,7 +186,10 @@ document.querySelectorAll('nav button').forEach(b => {
     document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
     $('#v-' + b.dataset.v).classList.add('on');
-    load(b.dataset.v);
+    // A view already loaded does not redraw, so a chart drawn before the
+    // window changed size is still carrying the old one. It has a container
+    // to measure now, which it did not while hidden.
+    load(b.dataset.v).then(resizeCharts);
   };
 });
 
@@ -432,8 +479,14 @@ function initSci() {
   $('#s-chain').innerHTML = META.chains.map(c =>
     `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
   ).join('');
+  // Assigned, not added. Every init here can run more than once -- a theme
+  // toggle clears `loaded` so the visible view rebuilds -- and
+  // `addEventListener` has no idea it has been called before. Three toggles
+  // left four `change` handlers on each control, so one dropdown change fired
+  // four concurrent Monte Carlo runs at up to 100,000 iterations apiece.
+  // `.onchange =` replaces; it is the pattern initCountry already uses.
   ['s-count','s-chain','s-ci','s-conf','s-iter'].forEach(id => {
-    $('#' + id).addEventListener('change', sci);
+    $('#' + id).onchange = sci;
   });
   sci();
 }
@@ -1274,6 +1327,22 @@ async function initFacts() {
     renderCard();
   };
 
+  // Everything below binds to `document` and to the card element, and both
+  // outlive this function. `.onkeydown =` is not an option on `document`
+  // (one slot, shared with anything else that ever wants it) and the touch
+  // handlers want `{ passive: true }`, which the property form cannot carry.
+  // So bind once and say so, rather than adding another copy of all three
+  // every time a theme toggle rebuilds this view. Three toggles was three
+  // extra keydown handlers, and one right-arrow press moved the deck four
+  // cards -- the reported "the deck skips".
+  if (!factsBound) { factsBound = true; bindFactsGestures(); }
+
+  filterDeck();
+}
+
+let factsBound = false;
+
+function bindFactsGestures() {
   // Arrow keys, scoped to the facts view so they do not hijack the page
   // while someone is on the calculator.
   document.addEventListener('keydown', ev => {
@@ -1299,8 +1368,6 @@ async function initFacts() {
     }
     x0 = y0 = null;
   }, { passive: true });
-
-  filterDeck();
 }
 async function initSources() {
   const d = await api('/api/sources');
