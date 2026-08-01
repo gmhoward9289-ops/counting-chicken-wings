@@ -257,7 +257,11 @@ try {
     <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
       <div style="flex:1;min-width:260px">
         <label>Pool size — chickens in the batch</label>
-        <input type="range" class="slider" id="pool" min="0" max="100" value="0">
+        <!-- Disabled until initMix() resolves CURVE and re-enables it below --
+             dragging beforehand moved the thumb while the readout stayed
+             frozen at "6.00" since mixMove() has nothing to read yet. -->
+        <input type="range" class="slider" id="pool" min="0" max="100"
+               value="0" disabled>
         <div class="note"><span id="poollabel">6</span> chickens in the pool</div>
       </div>
       <div>

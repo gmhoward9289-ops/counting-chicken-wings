@@ -232,3 +232,93 @@ def test_hidden_attribute_is_not_defeated_by_a_display_rule(html):
     assert "!important" in guard.group(1), \
         "[hidden] must out-specify author display rules like .check or " \
         "footer.build, or it will be silently defeated again"
+
+
+# ---------------------------------------------------------------------------
+# A view init can run more than once
+# ---------------------------------------------------------------------------
+
+
+def _init_bodies(script):
+    """Each `init*` function body, by brace matching.
+
+    A regex cannot find the end of a JS function, and these bodies carry
+    nested braces inside template literals on nearly every line. Counting
+    braces from the opening one is crude and correct enough for a source file
+    we own.
+    """
+    bodies = {}
+    for m in re.finditer(r"(?:async\s+)?function\s+(init\w+)\s*\([^)]*\)\s*\{",
+                         script):
+        depth, i = 1, m.end()
+        while i < len(script) and depth:
+            if script[i] == "{":
+                depth += 1
+            elif script[i] == "}":
+                depth -= 1
+            i += 1
+        bodies[m.group(1)] = script[m.end():i]
+    assert bodies, "found no init* functions to check"
+    return bodies
+
+
+def test_view_inits_do_not_add_listeners(script):
+    """`init*` runs again on every theme toggle, so it must assign, not add.
+
+    `redrawTheme()` clears `loaded` and rebuilds the visible view, which is
+    the correct redraw: trace colours come from the same CSS variables as the
+    frame, so restyling in place would leave half a chart following the theme
+    and half not. The cost is that every init is re-entrant, and
+    `addEventListener` has no idea it has been called before.
+
+    Three toggles left four `change` handlers on each Scientific control, so
+    one dropdown change fired four concurrent Monte Carlo runs at up to
+    100,000 iterations apiece -- and four `keydown` handlers on `document`, so
+    one right-arrow press moved the facts deck four cards. `initCountry` never
+    had either bug, because it assigns `.onchange`.
+
+    Listeners that genuinely cannot be assigned -- `{ passive: true }` touch
+    handlers, anything on `document` -- belong in a bind-once helper behind a
+    guard, which is what `bindFactsGestures` is.
+    """
+    offenders = sorted(name for name, body in _init_bodies(script).items()
+                       if "addEventListener" in body)
+    assert not offenders, (
+        "these view inits add listeners instead of assigning them, so a "
+        f"theme toggle leaves a duplicate behind: {offenders}"
+    )
+
+
+def test_a_resize_redraws_the_visible_charts(script):
+    """Plotly sizes itself at draw time and never re-reads its container.
+
+    Measured before this was fixed: at 1280px the mixing chart sat at 700px
+    inside an 820px container after a viewport change, and switching tabs away
+    and back did not help, because `loaded[v]` meant the view never redrew.
+    `responsive: true` in CFG was not covering it on its own.
+
+    The guard is on `Plotly.Plots`, not on `typeof Plotly`, because the
+    CDN-failure stub defines `newPlot` and `relayout` and nothing else. An
+    unreachable chart CDN has to stay a degraded page -- every figure is in
+    the tables and the API regardless -- never a thrown error on every resize.
+    """
+    assert re.search(r"addEventListener\(\s*'resize'", script), \
+        "nothing redraws the charts when the window changes size"
+    body = _fn_body(script, "resizeCharts")
+    assert "Plotly.Plots.resize" in body, \
+        "the resize path does not actually resize any chart"
+    assert "Plotly.Plots" in body.split("Plotly.Plots.resize")[0], \
+        "resizeCharts calls into Plotly before checking the stub is not in use"
+
+
+def _fn_body(script, name):
+    m = re.search(rf"function\s+{name}\s*\([^)]*\)\s*\{{", script)
+    assert m, f"{name} is gone; the redraw path was renamed or removed"
+    depth, i = 1, m.end()
+    while i < len(script) and depth:
+        if script[i] == "{":
+            depth += 1
+        elif script[i] == "}":
+            depth -= 1
+        i += 1
+    return script[m.end():i]

@@ -296,6 +296,25 @@ class Builder:
                     notes=f.get("notes"),
                 )
 
+        # Which loss stages are not independent of one another (#77), e.g.
+        # wing_damage/grading_downgrade/transport_doa all riding the same
+        # per-load handling-quality variable. `rho` is an estimate like any
+        # other and gets a citation, not a bare Python constant.
+        for g in t.get("correlated_groups", []):
+            gid = self.ins(
+                "loss_correlation_group",
+                slug=g["slug"], label=g["label"],
+                description=g.get("description"),
+                rho=g["rho"], confidence=g["confidence"],
+                source_id=self.src(g["source"], f"correlation {g['slug']}"),
+                notes=g.get("notes"),
+            )
+            for slug in g["stages"]:
+                self.ins(
+                    "loss_correlation_group_stage",
+                    group_id=gid, loss_stage_id=self.loss_stage[slug],
+                )
+
     def mixing(self):
         # Merged across every data/mixing*.yaml, same reasoning as taxonomy:
         # a new product's cascade is a new file. mixing.yaml is loaded first

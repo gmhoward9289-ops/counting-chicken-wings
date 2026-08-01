@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from math import ceil, comb
+from math import ceil, comb, erf, sqrt
 
 
 # ---------------------------------------------------------------------------
@@ -708,6 +708,36 @@ class LossStage:
 
 
 @dataclass
+class CorrelatedGroup:
+    """Loss stages that are NOT independent of one another (#77).
+
+    Sampling every stage's triangular band independently -- as the Monte
+    Carlo did before this existed -- lets errors partially cancel at
+    roughly sqrt(n) across stages, which understates the reported band
+    whenever the underlying causes actually move together. `wing_damage`,
+    `grading_downgrade`, and `transport_doa` are the clearest case here:
+    all three ride the same per-load handling quality, so a bad load is bad
+    on all three at once, not independently.
+
+    `rho` is a single-factor equicorrelation applied pairwise to every
+    stage listed: each stage's sampled percentile is
+    sqrt(rho)*shared + sqrt(1-rho)*idiosyncratic (see `_correlated_pick`),
+    which preserves each stage's own triangular lo/mode/hi band exactly and
+    changes only how the stages co-move. It is itself an unmeasured
+    estimate -- the point is to stop asserting zero correlation, not to
+    claim this figure is calibrated -- so it carries a confidence grade and
+    a source citation like any other figure in the model, recorded in
+    `data/loss_chain.yaml` rather than hardcoded here.
+    """
+    slug: str
+    label: str
+    stage_slugs: list[str]
+    rho: float
+    confidence: str = "estimate"
+    source_slug: str | None = None
+
+
+@dataclass
 class StepTrace:
     """One line of the audit trail the 'show reasoning' toggle unfolds."""
     sequence: int
@@ -845,6 +875,21 @@ class Result:
     # The interval actually reported, e.g. 0.90 for a 5th-95th percentile
     # band. Recorded on the result so a chart can never mislabel its axis.
     confidence_level: float = 0.90
+    # Which statistic populates `required`. Recorded for the same reason
+    # `confidence_level` is: a number that can silently swap out from under
+    # its own label is a lie waiting to happen. "deterministic" means the
+    # product of every stage's survive_mode -- point value, no simulation.
+    # "monte_carlo_median" means the 50th percentile of the resampled
+    # distribution (see `run`'s iterations > 0 branch). The two are NOT
+    # interchangeable: on the real loss chain the deterministic figure sits
+    # at roughly the 19th percentile of its own simulated distribution
+    # (#76), because a triangular distribution's mean is (lo+mode+hi)/3, not
+    # its mode, and `required_individuals` divides by each survival fraction
+    # in turn -- Jensen's inequality on 1/x compounds that skew across every
+    # stage. The median is reported instead of the mean because it is the
+    # honest centre of the band AND is invariant under that reciprocal
+    # transform (median(1/X) == 1/median(X), which is not true of the mean).
+    required_estimator: str = "deterministic"
     # Raw Monte Carlo draws, kept for histograms. Empty unless requested.
     required_samples: list[float] = field(default_factory=list)
     distinct_samples: list[float] = field(default_factory=list)
@@ -868,6 +913,56 @@ def _triangular(lo: float, mode: float, hi: float, rng: random.Random) -> float:
     if lo == hi:
         return mode
     return rng.triangular(lo, hi, mode)
+
+
+def _norm_cdf(z: float) -> float:
+    """Standard normal CDF, via the error function -- no scipy dependency."""
+    return 0.5 * (1.0 + erf(z / sqrt(2.0)))
+
+
+def _triangular_ppf(p: float, lo: float, mode: float, hi: float) -> float:
+    """Inverse CDF of a triangular(lo, mode, hi) distribution at quantile p.
+
+    Lets a stage be sampled from a percentile handed to it -- e.g. one
+    derived from a shared latent factor (`_correlated_pick`) -- rather than
+    only ever from its own independent draw, while landing on exactly the
+    same triangular distribution `_triangular` would have used.
+    """
+    if lo == hi:
+        return mode
+    p = 0.0 if p < 0.0 else (1.0 if p > 1.0 else p)
+    span = hi - lo
+    fc = (mode - lo) / span
+    if p < fc:
+        return lo + sqrt(p * span * (mode - lo))
+    return hi - sqrt((1.0 - p) * span * (hi - mode))
+
+
+def _correlated_pick(
+    stage: "LossStage",
+    group: "CorrelatedGroup | None",
+    group_shared: dict[str, float],
+    rng: random.Random,
+) -> float:
+    """One stage's Monte Carlo draw, honoring a shared latent factor if any.
+
+    Ungrouped stages fall through to the plain independent draw. A grouped
+    stage instead draws its OWN standard-normal deviate and blends it with
+    the group's shared deviate (drawn once per iteration, before any stage
+    loop, so every member of the group sees the same value that iteration),
+    then converts the blend to a percentile and looks that percentile up in
+    the stage's own triangular band. sqrt(rho)/sqrt(1-rho) weighting is the
+    standard single-factor construction that makes the PAIRWISE Pearson
+    correlation between any two members' latent deviates equal to rho.
+    """
+    if group is None:
+        return _triangular(stage.survive_lo, stage.survive_mode,
+                            stage.survive_hi, rng)
+    shared = group_shared[group.slug]
+    idio = rng.gauss(0.0, 1.0)
+    z = sqrt(group.rho) * shared + sqrt(1.0 - group.rho) * idio
+    return _triangular_ppf(_norm_cdf(z), stage.survive_lo,
+                            stage.survive_mode, stage.survive_hi)
 
 
 def _percentile(sorted_vals: list[float], q: float) -> float:
@@ -897,6 +992,7 @@ def run(
     anatomical: bool = True,
     floor_source: str | None = None,
     params: MixingParams | None = None,
+    correlated_groups: list[CorrelatedGroup] | None = None,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
 
@@ -911,6 +1007,26 @@ def run(
     interval reflects the recorded uncertainty of the inputs rather than
     being asserted. `confidence_level` sets the interval width -- 0.90 gives
     a 5th-95th percentile band, 0.99 gives 0.5th-99.5th.
+
+    The headline `required` figure returned is the MEDIAN of the resampled
+    distribution, not its mean, and `res.required_estimator` records which
+    (see the field's docstring on `Result`, and #76). A triangular
+    distribution's mean sits above its own mode, and `required_individuals`
+    divides by every stage's survival fraction in turn, so that upward bias
+    compounds across the chain -- on the real loss chain the deterministic
+    product-of-modes figure sits at roughly the 19th percentile of its own
+    simulated distribution. The median is both the honest centre of the
+    band and invariant under that reciprocal transform, which the mean is
+    not.
+
+    `correlated_groups` (#77) names loss stages that are not independent of
+    one another -- e.g. wing damage, grading downgrade, and transport DOA
+    riding the same per-load handling quality -- and gives their pairwise
+    correlation `rho`. Sampling every stage independently, as this did
+    before groups existed, lets errors partially cancel at roughly sqrt(n)
+    and understates the band; grouped stages instead share one latent
+    factor per iteration (see `_correlated_pick`). Ungrouped stages, and
+    every stage when this is None, sample exactly as before.
 
     `min_confidence` drops loss stages whose evidence grade is weaker than
     the given level, which answers "what does the answer look like using
@@ -1047,10 +1163,29 @@ def run(
         req_s: list[float] = []
         dist_s: list[float] = []
 
+        # Map each (post-exclusion) stage to the group it belongs to, if
+        # any, once -- not per iteration. A group left with fewer than two
+        # of its stages present (excluded by min_confidence, or simply not
+        # part of this chain) has nothing left to correlate.
+        stage_group: dict[str, CorrelatedGroup] = {}
+        for g in (correlated_groups or []):
+            present = [s for s in g.stage_slugs
+                       if any(st.slug == s for st in loss_stages)]
+            if len(present) < 2:
+                continue
+            for slug in present:
+                stage_group[slug] = g
+        active_groups = {g.slug for g in stage_group.values()}
+
         for _ in range(iterations):
+            # One shared latent draw per group per iteration -- every
+            # member stage this iteration sees the SAME value, which is
+            # what makes them move together rather than independently.
+            group_shared = {gs: rng.gauss(0.0, 1.0) for gs in active_groups}
             picks = {
-                s.slug: _triangular(s.survive_lo, s.survive_mode,
-                                    s.survive_hi, rng)
+                s.slug: _correlated_pick(
+                    s, stage_group.get(s.slug), group_shared, rng
+                )
                 for s in loss_stages
             }
             r, _ = required_individuals(
@@ -1078,7 +1213,11 @@ def run(
         tail = (1.0 - confidence_level) / 2.0
 
         res.iterations = iterations
-        res.required = sum(req_s) / len(req_s)
+        # Median, not mean (#76) -- see the docstring above and on
+        # `Result.required_estimator` for why the two disagree by enough to
+        # matter here.
+        res.required = _percentile(req_s, 0.5)
+        res.required_estimator = "monte_carlo_median"
         res.required_lo = _percentile(req_s, tail)
         res.required_hi = _percentile(req_s, 1.0 - tail)
         res.distinct_mean = sum(dist_s) / len(dist_s)

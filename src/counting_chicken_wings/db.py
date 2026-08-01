@@ -10,7 +10,8 @@ import sqlite3
 from pathlib import Path
 
 from .build import DEFAULT_DB, build
-from .model import LossStage, MixingParams, MixingStage, RecurringYield
+from .model import (CorrelatedGroup, LossStage, MixingParams, MixingStage,
+                    RecurringYield)
 
 # A recurring product needs a window before it means anything, and the right
 # default is a property of the PRODUCT, not of the module. It lived here as a
@@ -200,6 +201,48 @@ def load_loss_stages(
             continue
         out.append(_loss_stage_from_row(r))
     return out
+
+
+def load_correlated_groups(
+    conn, species_slug: str = "broiler",
+) -> list[CorrelatedGroup]:
+    """Which loss stages are NOT independent of one another (#77).
+
+    Restricted to stages the given species actually has -- a group
+    referencing a stage id that exists for a species with no factor row
+    would otherwise leak in as an empty, meaningless group.
+    """
+    rows = conn.execute(
+        """
+        SELECT g.slug, g.label, g.rho, g.confidence, src.slug AS source_slug,
+               ls.slug AS stage_slug
+        FROM loss_correlation_group g
+        JOIN loss_correlation_group_stage gs ON gs.group_id = g.id
+        JOIN loss_stage ls ON ls.id = gs.loss_stage_id
+        JOIN source src ON src.id = g.source_id
+        JOIN loss_factor lf ON lf.loss_stage_id = ls.id
+        JOIN species sp ON sp.id = lf.species_id
+        WHERE sp.slug = ?
+        """,
+        (species_slug,),
+    ).fetchall()
+
+    groups: dict[str, CorrelatedGroup] = {}
+    for r in rows:
+        g = groups.get(r["slug"])
+        if g is None:
+            g = CorrelatedGroup(
+                slug=r["slug"], label=r["label"], rho=r["rho"],
+                confidence=r["confidence"], source_slug=r["source_slug"],
+                stage_slugs=[],
+            )
+            groups[r["slug"]] = g
+        if r["stage_slug"] not in g.stage_slugs:
+            g.stage_slugs.append(r["stage_slug"])
+
+    # A group naming only one (or zero) stages for this species has nothing
+    # left to correlate, so it is dropped rather than sampled as a no-op.
+    return [g for g in groups.values() if len(g.stage_slugs) > 1]
 
 
 def default_supply_chain(conn, species_slug: str) -> str:
