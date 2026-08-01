@@ -119,6 +119,21 @@ h1 {
 }
 .sub { color: var(--dim); margin: 0; font-size: 13.5px; max-width: 34ch; }
 
+/* The strapline. One size down from .sub and separated by a rule rather than
+   by a box: it is a pointer, not a banner, and this page does not do banners.
+   `.lnk` is a button because it moves the view rather than following a URL --
+   the page is one document with no per-view address, so an <a href> would be
+   lying about what happens. Styled as a link because that is what it does. */
+.spot { color: var(--dim); margin: 0; font-size: 12.5px; max-width: 34ch;
+        line-height: 1.55; padding-top: 12px;
+        border-top: 1px solid var(--line); }
+.lnk {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: var(--stamp);
+  border-bottom: 1px solid var(--stamp-soft);
+}
+.lnk:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
 /* The view index. Numbers are deliberately absent: these are eleven ways of
    asking one question, not eleven steps of anything. */
 nav { display: flex; flex-direction: column; margin: 26px 0 22px;

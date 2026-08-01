@@ -156,6 +156,25 @@ Two defects in the seasonality module and its concordance test.
   NASS suppression may leave a state partial. The exclusion count appears on the
   API surface and is disclosed in caveats.
 
+### A strapline for the three views that carry the page
+
+Eleven views, uniform weight, and the mixing simulator — the whole argument of
+the project in one slider — sitting third in the list. One line under the
+subtitle now names the three that matter: the mixing simulator, the calculator's
+re-scoping, and sources.
+
+Named rather than reordered. The index is deliberately unnumbered ("eleven ways
+of asking one question, not eleven steps"), and promoting two entries would
+imply an order that does not exist.
+
+App copy only, and it quotes no figure. "59 citations" written into the page
+would be wrong the next time a source lands — the same rot `test_static.py`'s
+coverage-claim check exists to catch.
+
+The three names are `<button>`s, not links: the page is one document with no
+per-view address, so an `<a href>` would misdescribe what happens. They click
+the real nav button rather than carrying a second copy of the switching logic.
+
 ### Nutrition & impact stops narrating a silk dress as a chicken
 
 **Nutrition & impact** answered every product as a broiler. A gallon of maple
