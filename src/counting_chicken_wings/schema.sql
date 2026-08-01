@@ -258,6 +258,40 @@ CREATE TABLE product_segment (
     UNIQUE (product_id, slug)
 );
 
+-- What share of one individual's mass this product actually is.
+--
+-- The number every resource and economic figure has to be multiplied by before
+-- it can be charged to a product. A dozen wings does not carry six birds'
+-- worth of anything: the wings are ~7.3% of live weight and the rest of each
+-- bird fed other people, so charging the whole bird overstates by ~14x.
+--
+-- IT LIVES IN THE CORPUS BECAUSE IT IS A STATISTIC. It used to be one line of
+-- Python -- `0.073 if slug == 'whole_wing' else 0.23` -- which is to say the
+-- chicken-BREAST share was applied to all eleven non-wing products, including
+-- a gallon of maple syrup and a silk dress. That is the exact failure CLAUDE.md
+-- names: a figure hardcoded in a module bypasses the citation audit, so nobody
+-- could see that ten of those twelve values had no source because they were not
+-- facts about anything.
+--
+-- A product with NO ROW HERE has no published mass share, and that is a state
+-- the API has to render as "we do not have this" rather than fill in. Silk and
+-- syrup are not mass-allocated fractions of an animal in the first place; the
+-- honest answer for them is not a smaller number, it is no number.
+CREATE TABLE product_mass_share (
+    id                  INTEGER PRIMARY KEY,
+    product_id          INTEGER NOT NULL UNIQUE REFERENCES product(id),
+    -- Fraction of one individual, in the basis named below. Bounded above by
+    -- 1: a product cannot be more of an animal than the animal.
+    mass_share          REAL    NOT NULL
+                            CHECK (mass_share > 0 AND mass_share <= 1),
+    -- What the share is OF: 'live_weight', 'carcass_weight'. The eight-strain
+    -- yield paper reports wings at 9.1-10.2% of CARCASS and 6.7-7.3% of LIVE
+    -- weight, and quoting one as the other is a 40% error with no symptom.
+    basis               TEXT    NOT NULL,
+    source_id           INTEGER NOT NULL REFERENCES source(id),
+    notes               TEXT
+);
+
 -- Production programs: small-bird vs big-bird broilers, dairy breeds, etc.
 -- Drives product SIZE, and therefore how many individuals a given POUNDAGE
 -- represents. Does not change a countable floor -- a distinction the UI

@@ -88,6 +88,50 @@ products:
       the dominant uncertainty, which is exactly why
       is_anatomical_constant is 0 here and 1 for a real wing.
 
+# What share of one individual's mass each product actually is.
+#
+# The multiplier every resource and economic figure needs before it can be
+# charged to a product. It used to be a line of Python -- 0.073 for a whole
+# wing and 0.23, the chicken BREAST share, for everything else -- so a gallon
+# of maple syrup was narrated as 51.5 broilers and a silk dress as 22,200.
+# Being in Python also meant it was invisible to the citation audit, which is
+# the whole reason a corpus exists.
+#
+# ONLY PRODUCTS WITH A REAL SOURCE APPEAR HERE. Ten of the twelve products have
+# no published mass share, and for most of them the concept does not apply:
+# silk is spun, not butchered, and a gallon of syrup is not a fraction of a
+# tree. Their absence is data. The API reports "no mass-allocation figure for
+# this product" rather than borrowing the broiler's, which is what it did.
+mass_shares:
+  - product: whole_wing
+    mass_share: 0.073
+    basis: live_weight
+    source: wing-yield-eight-strains
+    notes: >-
+      Measured across eight commercial broiler strains: whole wing is 6.7-7.3%
+      of LIVE weight and 9.1-10.2% of carcass weight. The top of the live-weight
+      band is used, which is the conservative choice here -- it charges the
+      wings the largest share the source supports, so the allocated footprint
+      is an upper bound rather than a flattering one.
+
+      Recording the basis alongside the number is not bookkeeping. Quoting the
+      carcass figure as a live-weight one would overstate every allocated
+      footprint by about 40%, and nothing downstream would look wrong.
+
+  - product: boneless_wing
+    mass_share: 0.23
+    basis: live_weight
+    source: tyson-foodservice-boneless
+    notes: >-
+      A boneless wing is breast meat, and a 6.62 lb broiler carries about 23%
+      of its live weight as boneless breast -- roughly 691 g. Same figure the
+      "a dozen boneless wings takes about a third of a chicken" fact rests on,
+      and the same citation, so the two cannot drift apart.
+
+      This is the value that used to be applied to every non-wing product,
+      which is how a pound of raw silk came to be 30,000 birds and $8,341 of
+      broiler grower pay.
+
 segments:
   - product: whole_wing
     slug: drumette
