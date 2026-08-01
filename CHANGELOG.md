@@ -12,12 +12,17 @@ Two defects in the seasonality module and its concordance test.
   test — the new test suite covers regions with exactly one published month, all
   identical months, and no published months.
 - **Partial-year regions silently entered concordance tests with the wrong null
-  hypothesis.** The concordance test assumes each region's peak is uniform over
-  12 months (p=1/12). For a 3-month region, the null should be p=1/3. These
-  regions are now excluded and tracked. The survey found 0 partial-year states
-  in the 2025 data; this is defensive for future data and for the regression
-  tests. The exclusion count appears on the API surface and is disclosed in
-  caveats.
+  hypothesis.** The concordance test's null is that each region's peak lands
+  anywhere in a chosen three-month window (p=0.25, or 3/12). For a partial-year
+  region publishing k months, the probability depends on which months survived
+  suppression — ranging from 0 to 1 with no single scalar null — which is why
+  excluding partial regions is correct rather than reweighting them. The fix
+  changes no published figures: 2025 broiler monthly data contains **22 states,
+  all 22 with a complete 12-month series, 0 partial.** Peak concordance
+  p_corrected = 0.00841 ("strong agreement"), trough p_corrected = 0.03445
+  ("agreement") — both unchanged. This is a guard against future corpora where
+  NASS suppression may leave a state partial. The exclusion count appears on the
+  API surface and is disclosed in caveats.
 
 ## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
