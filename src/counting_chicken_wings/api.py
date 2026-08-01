@@ -788,6 +788,7 @@ def _concordance_payload(c: seas.Concordance) -> dict:
     return {
         "kind": c.kind,
         "regions_counted": c.regions_counted,
+        "regions_excluded": c.regions_excluded,
         "window": list(c.window),
         "window_names": c.window_names,
         "in_window": c.in_window,
