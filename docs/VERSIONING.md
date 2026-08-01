@@ -160,23 +160,80 @@ published figure changing rather than its value, and no diff can detect that.
 `major` stays in the ranking purely so that a human who bumps it still
 satisfies the over-bumping rule.
 
+**Saying so is what `bump:` in a `.changes/` file is for.** For a while the
+paragraphs above described a gap nothing could close: the verdict was the only
+input `next_version.py` had, so it was a ceiling as well as a floor, and
+"a human who moves the second digit" had nowhere to move it — v1.15.1 shipped
+an endpoint and a database view as a third-digit bump. A branch can now declare
+the level it needs, and that declaration may raise this floor and may never
+lower it. See "Declaring a level" under **Release procedure**.
+
 The floor is also why this check and the "pick the number last" rule below do
-not argue: the check tells you the smallest number the diff justifies, and you
-claim a number after running it. It cannot tell you the claim is *big* enough —
-a new endpoint is invisible to it — and it cannot tell you the number is still
-free. Nobody claims one any more: `release.yml` computes it at merge, against
-master's tip, so "still free" is not a question anyone has to answer.
+not argue: the check tells you the smallest bump the diff justifies, and the
+branch may raise it with a `bump:` declaration for what the diff cannot see.
+Neither names a number. `release.yml` computes that at merge, against master's
+tip, so "is this number still free" is not a question anyone has to answer.
 
 ## Release procedure
 
 While the work is in progress:
 
-1. Write the changelog section under `## Unreleased`. State what moved,
-   including any figure whose value changed.
-2. Leave `pyproject.toml` alone. Do not pick a number yet.
+1. Write your changelog entry in a **new file under `.changes/`**, named after
+   the branch. State what moved, including any figure whose value changed.
+2. If the change is one the corpus diff cannot see, declare the level in that
+   file's frontmatter — see below.
+3. Leave `pyproject.toml` alone. Do not pick a number yet.
 
-Then merge. **There is no step 3.** You never pick a number, never edit
+Then merge. **There is no step 4.** You never pick a number, never edit
 `pyproject.toml`, and never write a `## vX.Y.Z` heading.
+
+A file per branch rather than a shared `## Unreleased` section, because that
+section was a guaranteed rebase conflict: every branch appended to the same
+paragraph, and this repo routinely has eight sessions live at once. Two files
+cannot conflict. The old section is still read, so a branch already in flight
+keeps working and a release finding both merges them into one section.
+
+### Declaring a level
+
+`bump:` is **`third`**, **`second`** or **`major`** — a level, never a number.
+
+```markdown
+---
+bump: second
+---
+### What changed
+```
+
+Usually you do not need it. `release_check.py` gets the answer right on its own
+from the corpus diff and the published answer. Declare when the capability is
+one it is **blind to**, which this document already listed: a new view,
+endpoint or CLI flag. v1.15.1 shipped a new endpoint and a new database view
+under a third-digit bump because there was no way to say so.
+
+Also declare `major`. It is otherwise unreachable — `release_check` never
+returns it, deliberately, because the MAJOR criterion is the *meaning* of a
+published figure changing rather than its value, and no diff can detect that.
+
+**A number in `bump:` is an error, not a shortcut.** A branch that names
+`v1.16.0` has to hope nobody takes that number during review, which is exactly
+how v1.5.0 and v1.6.0 were both taken out from under a branch on 2026-07-30. A
+level is relative, so two branches may both declare `second` and neither
+collides; the number is still resolved at merge against the tag that exists
+then.
+
+**A declaration may only raise.** The released level is `max(what
+release_check requires, what the branches declared)`. Declaring below the
+computed floor is a warning and the floor wins — the same direction
+`release_check` has always enforced, where over-bumping passes and
+under-bumping fails. A declaration speaks for the part of the change the diff
+cannot see; it is not a veto over the part it can.
+
+Check before you push:
+
+```bash
+python tools/next_version.py --lint      # do the declarations parse?
+python tools/next_version.py --explain   # what would this release as, and why?
+```
 
 `.github/workflows/release.yml` fires on every push to master and does the rest:
 
@@ -255,13 +312,17 @@ Three things about it are worth knowing, because each is load-bearing:
 Two merges landing together still cannot take the same number, and the
 mechanism is now two things rather than one. The `concurrency: release` group
 serialises the runs, and syncing to master's tip means the second run reads a
-tree that already contains the first run's version commit — so it finds no
-`## Unreleased` section, computes nothing, and correctly does nothing. This
-replaces the `git pull --rebase` the old push did, and it is strictly stronger:
-rebasing happened *after* the number was computed, so a run whose trigger SHA
-predated a landed release would rename an `## Unreleased` section still holding
-the previous release's prose and publish it a second time under a second
-number.
+tree that already contains the first run's version commit — so it finds nothing
+unreleased, computes nothing, and correctly does nothing. This replaces the
+`git pull --rebase` the old push did, and it is strictly stronger: rebasing
+happened *after* the number was computed, so a run whose trigger SHA predated a
+landed release would rename an `## Unreleased` section still holding the
+previous release's prose and publish it a second time under a second number.
+
+`.changes/` reaches the same place more directly. The first run merges every
+changeset it finds and **deletes them in the same commit**, so the second run's
+tree has an empty directory: "what is unreleased" is a fact about the tree at
+the moment of the run, which is what syncing to master's tip establishes.
 
 **One repository setting is required**, and the mechanism cannot work without
 it: *Settings → Actions → General → Workflow permissions →* **"Allow GitHub
@@ -290,8 +351,9 @@ minutes. It shipped as v1.7.0.
 Each renumber costs a rebase plus a sweep of the version string through
 `CHANGELOG.md` (the heading, plus any cross-reference to it in an earlier
 entry), `docs/ROADMAP.md` (the status table plus every "*Shipped in*" marker),
-and `pyproject.toml`. Writing under `## Unreleased` costs nothing and cannot
-collide, because the heading carries no number to collide with.
+and `pyproject.toml`. Writing a `.changes/` entry costs nothing and cannot
+collide — it carries no number to collide with, and it is a file of your own
+rather than a paragraph in everyone's.
 
 This is why there is no longer a "check which numbers are taken" step. It used
 to depend on remembering to `git fetch`, and a working tree that has not
