@@ -230,8 +230,8 @@ def test_the_scope_marker_follows_both_the_view_and_the_product(script):
     product and walking to Trends is the path the page used to take in
     silence, and a marker that only updated on load would be silent again for
     any view already visited (`loaded[v]` means an init does not re-run).
-    So the render must be driven by BOTH the navigation and the product
-    control, not by the fetch.
+    So the render must be driven by BOTH the navigation and the product, not
+    by the fetch.
     """
     assert re.search(r"function\s+renderScope\s*\(", script), \
         "renderScope is gone; the marker has no writer"
@@ -241,9 +241,39 @@ def test_the_scope_marker_follows_both_the_view_and_the_product(script):
     assert nav and "renderScope" in nav.group(0), \
         "switching views does not re-render the scope marker"
 
-    assert re.search(r"addEventListener\('(?:change|input)',\s*renderScope\)",
-                     script), \
+    adopt = _fn_body(script, "adoptProduct")
+    assert "renderScope" in adopt, \
         "changing the product does not re-render the scope marker"
+
+
+def test_both_product_controls_drive_one_selection(script):
+    """The calculator and Nutrition & impact must not hold separate products.
+
+    They each had their own <select> and neither knew about the other, so
+    setting Nutrition to a silk product and walking to Trends produced a
+    marker citing whatever the CALCULATOR still had -- right about the view
+    and wrong about the question. It is also a plain contradiction of the
+    strapline, which says the page re-scopes itself to whatever you ask it
+    about.
+
+    Checked at the routing level rather than by behaviour, because there is no
+    browser here: both controls have to reach `adoptProduct`, which is the one
+    place the selection changes.
+    """
+    assert re.search(r"function\s+adoptProduct\s*\(", script), \
+        "adoptProduct is gone; the two product controls have no shared owner"
+
+    for control in ("#product", "#i-product"):
+        # The handler wiring for this control, up to the next blank-ish break.
+        wired = re.findall(rf"\$\('{re.escape(control)}'\)\s*\.\s*"
+                           r"(?:onchange|oninput|addEventListener)[^\n]*",
+                           script)
+        assert wired, f"{control} has no change handler at all"
+
+    body = _fn_body(script, "adoptProduct")
+    for control in ("#product", "#i-product"):
+        assert control in body, \
+            f"adoptProduct does not carry the selection to {control}"
 
 
 def test_a_renderable_error_is_actually_rendered(script):

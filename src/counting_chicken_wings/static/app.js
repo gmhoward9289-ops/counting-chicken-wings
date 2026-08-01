@@ -241,12 +241,75 @@ function productScope(slug) {
                label: p.species } : null;
 }
 
-// What the calculator is currently asking about. The page has one product
-// selection and it lives there; every other view either follows it or, if it
-// cannot, has to say so.
+// ---- the page's product selection
+//
+// ONE selection, two controls. The calculator and Nutrition & impact each had
+// their own <select> and neither knew about the other, so setting Nutrition to
+// a silk product and walking to Trends produced a scope marker citing whatever
+// the CALCULATOR still had -- the marker was right about the view and wrong
+// about the question. The page describes itself as one document that "re-scopes
+// itself to whatever you ask it about"; two independent product states
+// contradict that before any marker gets involved.
+//
+// Assigning `.value` does not fire `change` or `input`, so mirroring cannot
+// loop. The refresh of the OTHER view is therefore explicit, and only when
+// that view has been built -- calling impact() before initImpact has populated
+// its controls would read an empty select.
+let PRODUCT = HEADLINE_PRODUCT;
+
+// Set by boot once the calculator's controls exist. A no-op before that, so
+// an early product change cannot call into a half-built calculator.
+let syncCalcControls = () => {};
+
+// Take a new product from whichever control the reader used, and bring the
+// other one with it. The control that fired already refreshed its own view --
+// `calc` and `impact` are bound to their own selects -- so this refreshes the
+// OTHER one, and only if it has been built.
+function adoptProduct(slug) {
+  if (!slug || slug === PRODUCT) return;
+  PRODUCT = slug;
+
+  const calcSel = $('#product'), impactSel = $('#i-product');
+  const has = (sel) => sel && [...sel.options].some(o => o.value === slug);
+
+  if (has(calcSel) && calcSel.value !== slug) {
+    calcSel.value = slug;
+    // The chain belongs to the product's species and calc() reads it, so the
+    // controls have to be re-derived before the answer is recomputed.
+    syncCalcControls();
+    calc();
+  }
+  if (has(impactSel) && impactSel.value !== slug) {
+    impactSel.value = slug;
+    impact();
+  }
+
+  // The sentences are per-product, so they are refetched here rather than per
+  // tab switch. renderScope() runs inside, and again immediately below so the
+  // marker's scope line updates without waiting on the network.
+  refreshBorrowNotes();
+  renderScope();
+}
+
+// What the page is asking about, as a product row rather than a slug.
 function selectedProduct() {
-  const el = document.getElementById('product');
-  return (META && el) ? META.products.find(p => p.slug === el.value) : null;
+  return META ? META.products.find(p => p.slug === PRODUCT) : null;
+}
+
+// The mismatch sentences for the current product, one per species, from
+// /api/scope. Null until the first fetch resolves and whenever it fails --
+// `renderScope` degrades to the bare scope line rather than composing prose
+// this file is not allowed to hold.
+let BORROW = null;
+
+async function refreshBorrowNotes() {
+  try {
+    const d = await api('/api/scope?product=' + encodeURIComponent(PRODUCT));
+    BORROW = d.selected ? d.selected.borrow_notes : null;
+  } catch (err) {
+    BORROW = null;                // the scope line still renders without it
+  }
+  renderScope();
 }
 
 function renderScope() {
@@ -264,13 +327,21 @@ function renderScope() {
   const mismatch = !!p && s.species.length > 0 &&
     !s.species.some(x => x.slug === p.species_slug);
   el.classList.toggle('mismatch', mismatch);
-  // Same voice as /api/footprint's allocation_note, which is where this
-  // sentence already existed for one panel: state the scope, name what was
-  // asked for, and refuse the borrow rather than quietly performing it.
-  el.innerHTML = mismatch
-    ? `Showing <b>${s.label}</b>. <b>${p.label}</b> is selected on the
-       calculator, and the corpus files it under <b>${p.species}</b> —
-       nothing on this page is that product's to borrow.`
+
+  // The refusal sentence is the API's, not this file's. #110's constraint is
+  // that scope copy is either app copy or comes from the API, and the second
+  // is the better one: every noun in it is the corpus' own, so renaming a
+  // species renames the sentence. The scope LABEL is still interpolated here
+  // because it names no species by itself.
+  //
+  // One species is looked up rather than the whole set: a view scoped to two
+  // species is not a mismatch unless the product belongs to neither, and the
+  // first one it does not belong to is enough to say why.
+  const note = mismatch && BORROW
+    ? s.species.map(x => BORROW[x.slug]).find(Boolean)
+    : null;
+  el.innerHTML = note
+    ? `Showing <b>${s.label}</b>. ${note}`
     : `Showing <b>${s.label}</b>.`;
   el.hidden = false;
 }
@@ -1457,7 +1528,7 @@ let impactSeq = 0;
 async function impact() {
   const mine = ++impactSeq;
   const count = numOrDefault('i-count', 12);
-  const product = $('#i-product').value || 'whole_wing';
+  const product = $('#i-product').value || PRODUCT;
 
   let n, f;
   try {
@@ -1582,24 +1653,28 @@ function debounce(fn, ms) {
 }
 
 async function initImpact() {
-  // Default to the headline product explicitly. Products come back ordered
-  // by slug, which puts "boneless_wing" first alphabetically -- and boneless
-  // has no nutrition rows yet, so the default view would open on an empty
-  // panel.
+  // Opens on the page's CURRENT product, not on the headline one. This view is
+  // built lazily, so arriving here after picking maple syrup on the calculator
+  // used to reset the question to wings -- one half of the two-selections bug,
+  // the other half being that changing it here never reached the calculator.
+  // (The default still matters: products come back ordered by slug, which puts
+  // "boneless_wing" first alphabetically, and boneless has no nutrition rows
+  // yet, so an implicit default would open on an empty panel.)
   $('#i-product').innerHTML = META.products
     .filter(p => p.active)
     .map(p => `<option value="${p.slug}"${
-      p.slug === HEADLINE_PRODUCT ? ' selected' : ''}>${p.label}</option>`)
+      p.slug === PRODUCT ? ' selected' : ''}>${p.label}</option>`)
     .join('');
   // Assignment, not addEventListener: redrawTheme() re-runs initImpact on
   // every theme toggle, and addEventListener would leave the previous
   // toggle's listener in place instead of replacing it -- each theme switch
   // would then fire one more impact() per keystroke than the last.
   const debouncedImpact = debounce(impact, 250);
-  ['i-count', 'i-product'].forEach(id => {
-    $('#' + id).onchange = impact;
-    $('#' + id).oninput = debouncedImpact;
-  });
+  const onProduct = () => { impact(); adoptProduct($('#i-product').value); };
+  $('#i-count').onchange = impact;
+  $('#i-count').oninput = debouncedImpact;
+  $('#i-product').onchange = onProduct;
+  $('#i-product').oninput = onProduct;
   await impact();
 }
 
@@ -1852,8 +1927,14 @@ READY = (async () => {
     const p = active.find(x => x.slug === $('#product').value);
     $('#window-wrap').hidden = !p || p.yield_mode !== 'recurring';
     $('#pieces').closest('label').hidden =
-      !p || p.slug !== 'whole_wing';
+      !p || p.slug !== HEADLINE_PRODUCT;
   };
+
+  // The calculator's controls, re-derivable from outside the calculator --
+  // Nutrition & impact can now change the page's product, and the chain and
+  // window belong to the product's species rather than to whichever control
+  // was touched.
+  syncCalcControls = () => { syncChains(); syncWindow(); };
   // Chains before the window, so a product change has a valid chain selected
   // by the time calc() reads it.
   //
@@ -1881,8 +1962,9 @@ READY = (async () => {
   // question you just asked. Switching to a silk product and walking to
   // Trends is the exact path the page used to take in silence, and the
   // marker has to be right the moment you arrive, not one tab later.
-  $('#product').addEventListener('change', renderScope);
-  $('#product').addEventListener('input', renderScope);
+  const fromCalc = () => adoptProduct($('#product').value);
+  $('#product').addEventListener('change', fromCalc);
+  $('#product').addEventListener('input', fromCalc);
 
-  await calc();
+  await Promise.all([calc(), refreshBorrowNotes()]);
 })();

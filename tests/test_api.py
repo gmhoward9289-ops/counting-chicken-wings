@@ -1155,3 +1155,56 @@ def test_a_tie_for_deepest_claims_no_anchor(client, tmp_path, monkeypatch):
     d = apimod.scope()
     assert d["anchor"] is None
     assert [s["depth"] for s in d["species"]] == [2, 2]
+
+
+# ---------------------------------------------------------------------------
+# The refusal sentence belongs to the API, not to the page
+#
+# #110's constraint: scope copy is either app copy or comes from the API. The
+# second is the better one -- every noun is the corpus' own, so renaming a
+# species renames the sentence, and test_static.py can go on forbidding any
+# species name in the shipped page.
+# ---------------------------------------------------------------------------
+
+
+def test_scope_composes_a_refusal_for_every_species_the_product_is_not(client):
+    from counting_chicken_wings import db as dbm
+
+    conn = dbm.connect()
+    try:
+        active = {r["slug"] for r in conn.execute(
+            "SELECT slug FROM species WHERE active = 1")}
+    finally:
+        conn.close()
+
+    d = get(client, "/api/scope", product="silk_dress")
+    sel = d["selected"]
+    assert sel["slug"] == "silk_dress"
+    assert sel["label"] and sel["common_name"]
+
+    # One per species this product does NOT belong to, and none for its own --
+    # a view scoped to a product's own species is not a mismatch.
+    assert set(sel["borrow_notes"]) == active - {sel["species"]}
+    for slug, note in sel["borrow_notes"].items():
+        assert sel["label"] in note, f"{slug}: does not name the product"
+        assert note.endswith("to borrow."), \
+            f"{slug}: drops the pattern the footprint note established"
+
+
+def test_the_refusal_names_the_species_the_view_is_showing(client):
+    """Keyed by scope species, because the sentence differs per view."""
+    notes = get(client, "/api/scope",
+                product="maple_syrup_gallon")["selected"]["borrow_notes"]
+    assert "Broiler chicken" in notes["broiler"]
+    assert "Laying hen" in notes["layer_hen"]
+    assert notes["broiler"] != notes["layer_hen"]
+
+
+def test_scope_without_a_product_says_nothing_about_one(client):
+    """The parameter is optional and the anchor answer must not depend on it."""
+    assert get(client, "/api/scope")["selected"] is None
+
+
+def test_an_unknown_product_is_404_not_a_silent_null(client):
+    r = client.get("/api/scope", params={"product": "nope"})
+    assert r.status_code == 404
