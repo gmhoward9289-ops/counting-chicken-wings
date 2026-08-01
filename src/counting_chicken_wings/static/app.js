@@ -14,11 +14,31 @@ const api = p => {
   busy(1);
   return fetch(p)
     .then(r => {
-      if (!r.ok) throw new Error(`${p} -> ${r.status}`);
+      if (!r.ok) {
+        // FastAPI's HTTPException body is {"detail": "..."} -- surface that
+        // rather than a bare status code, so "count must be <= 100000" reaches
+        // the person who typed the count instead of only the console.
+        return r.json().catch(() => null).then(body => {
+          throw new Error((body && body.detail) || `${p} -> ${r.status}`);
+        });
+      }
       return r.json();
     })
     .finally(() => busy(-1));
 };
+
+// Shared inline error affordance. Small and next to the control it concerns,
+// not a modal -- and cleared on the next successful call so it cannot outlive
+// the problem it described. Every fetch path (calc/sci/impact/boot) used to
+// let a rejected request -- typically a 422 from an out-of-range count --
+// disappear silently, leaving the previous answer on screen with no
+// indication anything had gone wrong.
+function setError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg || '';
+  el.hidden = !msg;
+}
 // Plotly comes from a CDN, so a public deployment depends on that host being
 // reachable. If it is not, stub it rather than letting every chart-bearing
 // view die on "Plotly is not defined" -- the numbers all exist in the tables
@@ -129,10 +149,21 @@ document.querySelectorAll('nav button').forEach(b => {
 // ---- calculator
 let calcSeq = 0;
 
+// An empty field means "use the default", but `value || fallback` treats
+// "0" as truthy (it is a non-empty string) and sends it straight to the API,
+// which then 422s on a bound the field's own `min` already implied. Only an
+// actually-empty field should fall back; anything else -- including "0" or
+// a negative -- goes to the server and surfaces through the catch below,
+// rather than silently becoming the fallback value or silently failing.
+const numOrDefault = (id, def) => {
+  const v = $('#' + id).value;
+  return v === '' ? def : v;
+};
+
 async function calc() {
   const mine = ++calcSeq;
   const q = new URLSearchParams({
-    count: $('#count').value || 12,
+    count: numOrDefault('count', 12),
     product: $('#product').value || 'whole_wing',
     chain: $('#chain').value,
     pieces: $('#pieces').checked,
@@ -143,8 +174,17 @@ async function calc() {
   // the query string for wings.
   if (!$('#window-wrap').hidden && $('#window-days').value)
     q.set('window_days', $('#window-days').value);
-  const d = await api('/api/calculate?' + q);
+
+  let d;
+  try {
+    d = await api('/api/calculate?' + q);
+  } catch (err) {
+    if (mine !== calcSeq) return;   // superseded by a newer request
+    setError('calc-error', `Could not calculate: ${err.message}`);
+    return;
+  }
   if (mine !== calcSeq) return;     // superseded by a newer request
+  setError('calc-error', '');       // clear whatever the last attempt showed
   const a = d.answer, plural = d.question.individual_plural;
 
   $('#hl').textContent = fmtDistinct(a.distinct, a.ceiling);
@@ -236,7 +276,15 @@ async function calc() {
        ${d.floor_note
          ? `<p style="margin-top:8px">${d.floor_note}</p>` : ''}</div>` : '';
 
-  const f = await api('/api/facts?placement=result&limit=1');
+  // Informational only -- a failure here must not blank out the answer
+  // above, which already rendered successfully.
+  let f;
+  try {
+    f = await api('/api/facts?placement=result&limit=1');
+  } catch (err) {
+    console.error('failed to load a result fact', err);
+    return;
+  }
   if (mine !== calcSeq) return;
   if (f.facts.length) {
     const x = f.facts[0];
@@ -262,15 +310,23 @@ async function sci() {
   const mine = ++sciSeq;
   const conf = $('#s-conf').value;
   const q = new URLSearchParams({
-    count: $('#s-count').value || 12,
+    count: numOrDefault('s-count', 12),
     chain: $('#s-chain').value,
     confidence_level: $('#s-ci').value,
     iterations: $('#s-iter').value,
   });
   if (conf) q.set('min_confidence', conf);
 
-  const d = await api('/api/scientific?' + q);
+  let d;
+  try {
+    d = await api('/api/scientific?' + q);
+  } catch (err) {
+    if (mine !== sciSeq) return;
+    setError('sci-error', `Could not run the analysis: ${err.message}`);
+    return;
+  }
   if (mine !== sciSeq) return;      // superseded by a newer request
+  setError('sci-error', '');
   const a = d.answer, pct = Math.round(d.question.confidence_level * 100);
 
   $('#s-req').textContent = a.required.toFixed(2);
@@ -1019,13 +1075,20 @@ async function showSize(species) {
 
 // ---- nutrition & impact
 async function impact() {
-  const count = $('#i-count').value || 12;
+  const count = numOrDefault('i-count', 12);
   const product = $('#i-product').value || 'whole_wing';
 
-  const [n, f] = await Promise.all([
-    api(`/api/nutrition?product=${product}`),
-    api(`/api/footprint?count=${count}&product=${product}`),
-  ]);
+  let n, f;
+  try {
+    [n, f] = await Promise.all([
+      api(`/api/nutrition?product=${product}`),
+      api(`/api/footprint?count=${count}&product=${product}`),
+    ]);
+  } catch (err) {
+    setError('impact-error', `Could not load: ${err.message}`);
+    return;
+  }
+  setError('impact-error', '');
 
   $('#i-alloc').textContent = f.allocation_note;
 
@@ -1279,7 +1342,21 @@ READY = (async () => {
   // take the page down with it. It stays hidden if the fetch fails.
   api('/api/version').then(renderBuild).catch(() => {});
 
-  META = await api('/api/meta');
+  // Everything downstream reads META, so its failure is not survivable the
+  // way the logo's or the build stamp's is -- but it used to fail exactly
+  // as quietly: every dropdown stayed empty and the headline sat on its
+  // initial em-dash forever, with nothing on screen saying why.
+  try {
+    META = await api('/api/meta');
+  } catch (err) {
+    const el = document.getElementById('boot-error');
+    if (el) {
+      el.hidden = false;
+      el.textContent = 'Could not load — the API may be unreachable. ' +
+        `Reload to try again. (${err.message})`;
+    }
+    throw err;
+  }
 
   const active = META.products.filter(p => p.active);
   $('#product').innerHTML = active.map(p =>

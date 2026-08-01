@@ -369,6 +369,17 @@ td.num { text-align: right; font-family: var(--mono); font-size: 13.5px;
        font-variant-numeric: tabular-nums; }
 .note { color: var(--faint); font-size: 13px; }
 .warn { color: var(--estimate); }
+/* Inline affordance for a rejected request (usually a 422): small and near
+   the control it belongs to, not a modal -- cleared on the next success so
+   it cannot outlive the problem it described. */
+.err {
+  color: var(--bad); font-size: 13px; margin: 10px 0 0;
+  border-left: 2px solid var(--bad); padding-left: 10px;
+}
+#boot-error {
+  margin: 14px 22px 0; color: var(--bad); font-size: 14px;
+  border: 1px solid var(--bad); padding: 12px 14px;
+}
 
 /* -------------------------------------------------------- country picker */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
