@@ -425,6 +425,28 @@
     distinct-individual curve flattens above roughly 1,000 individuals, so
     any plausible commodity-scale pool lands within a hair of the ceiling.
 
+- slug: project-estimate-mixing-parameters
+  title: Mixing model parameters reasoned from grading, packing and portioning
+  publisher: counting-chicken-wings
+  retrieved_on: '2026-07-31'
+  source_type: estimate
+  notes: >-
+    The scalar parameters of the mixing model - how thoroughly a grader
+    splits a pair, how many wings come up in one scoop, how much of "these
+    two units travelled together" survives a stage - are OUR ESTIMATES,
+    reasoned from grade-band widths, case and combo-bin sizes, and how a
+    foodservice portion is actually taken from a bin. None of them is
+    measured, and each is flagged confidence=estimate.
+
+    They are kept separate from project-estimate-mixing because they are a
+    different claim. That source covers POOL SIZES - how many birds are
+    commingled at a stage. These cover the BEHAVIOUR of a stage, which is
+    reasoned from different evidence and can be wrong independently.
+
+    Two of them were previously bare constants in model.py, invisible to
+    this audit. They are here so that "how much does this number matter?"
+    is answerable from the corpus rather than from an ad-hoc sweep.
+
 - slug: project-estimate-unsourced
   title: Placeholder pending research
   publisher: counting-chicken-wings

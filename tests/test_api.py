@@ -716,3 +716,55 @@ def test_no_commit_anywhere_reads_as_unknown_not_as_a_lie(client, monkeypatch):
     d = get(client, "/api/version")
     assert d["git_commit"] is None
     assert d["git_commit_short"] is None
+
+
+# ---------------------------------------------------------------------------
+# A route belongs to a species, and both endpoints have to know it
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("path", ["/api/calculate", "/api/scientific"])
+def test_a_nonexistent_chain_is_refused(client, path):
+    """`/api/scientific?chain=total_nonsense` returned 200 and `distinct: 6.0`.
+
+    Six is the floor -- no mixing stages were found, so none were applied, and
+    the answer came back looking like a result. A wrong number that looks like
+    a result is the worst failure this project has, because nothing about it
+    invites a second look.
+    """
+    r = client.get(path, params={"chain": "total_nonsense"})
+    assert r.status_code == 404, r.text
+
+
+@pytest.mark.parametrize("path", ["/api/calculate", "/api/scientific"])
+def test_another_species_route_is_refused(client, path):
+    """A wing question walked through a maple sugarhouse, confidently.
+
+    `is_default` is per-species, so the Scientific tab's flat chain list left
+    `commodity_syrup` selected for a chicken-wing question and every foreign
+    route on offer beside it. Filtering the dropdown is half the fix; the
+    other half is that the endpoint must not accept the combination however it
+    arrives -- a URL, a bookmark, a stale tab.
+    """
+    r = client.get(path, params={"product": "whole_wing",
+                                 "chain": "commodity_syrup"})
+    assert r.status_code == 422, r.text
+    assert "syrup" in r.text
+
+
+@pytest.mark.parametrize("path", ["/api/calculate", "/api/scientific"])
+def test_a_products_own_route_is_accepted(client, path):
+    """The guard must not be so eager it refuses the ordinary case."""
+    for product, chain in (("whole_wing", "commodity_foodservice"),
+                           ("table_egg", "commercial_carton"),
+                           ("maple_syrup_gallon", "commodity_syrup")):
+        r = client.get(path, params={"product": product, "chain": chain})
+        assert r.status_code == 200, f"{product}/{chain}: {r.text[:200]}"
+
+
+def test_both_endpoints_default_to_the_same_route(client):
+    """The calculator and Scientific disagreed about the default for one
+    question, which is not a difference of opinion two views may hold."""
+    a = get(client, "/api/calculate", product="whole_wing")
+    b = get(client, "/api/scientific", product="whole_wing", iterations=100)
+    assert a["question"]["chain"] == b["question"]["chain"]

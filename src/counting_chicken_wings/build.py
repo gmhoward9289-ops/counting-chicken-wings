@@ -344,6 +344,27 @@ class Builder:
                 confidence=st["confidence"], description=st["description"],
             )
 
+        # Scalar model parameters. Global rather than per-domain: they
+        # describe how a draw behaves, not what is being drawn, and one set
+        # keeps every product's cascade on the same physics. A duplicate slug
+        # across two mixing*.yaml files is a real conflict, not a merge, so
+        # say so rather than letting the last file win silently.
+        seen: set[str] = set()
+        for p in t.get("model_parameters", []):
+            if p["slug"] in seen:
+                raise BuildError(
+                    f"model_parameter {p['slug']} defined twice"
+                )
+            seen.add(p["slug"])
+            self.ins(
+                "model_parameter",
+                slug=p["slug"], label=p["label"],
+                value_lo=p["value_lo"], value_mode=p["value_mode"],
+                value_hi=p["value_hi"],
+                source_id=self.src(p["source"], f"parameter {p['slug']}"),
+                confidence=p["confidence"], description=p["description"],
+            )
+
         for ch in t.get("supply_chains", []):
             species = ch.get("species")
             if species and species not in self.species:
