@@ -143,6 +143,50 @@ def brand():
     }
 
 
+def _resolve_chain(conn, prod, chain: str | None) -> str:
+    """The route to run this product through, checked against its species.
+
+    Every endpoint that takes a `chain` needs the same three answers, and they
+    were previously spelled out once, loosely, in `/api/calculate` and not at
+    all in `/api/scientific`: `?chain=total_nonsense` came back 200 with
+    `distinct: 6.0` -- the floor, because no mixing stages were found and none
+    were expected to be. A silently unmixed answer is the worst shape this
+    project's failures can take, since the number looks like a result.
+
+    1. No chain named: the species' own default. Never a global one --
+       `default_supply_chain` refuses that outright, for the reason its
+       docstring gives.
+    2. A chain that does not exist: 404.
+    3. A chain belonging to ANOTHER species: 422, not a silent answer. A wing
+       question routed through `commodity_syrup` moved the answer by up to six
+       chickens and produced a confident trace of a maple sugarhouse. The
+       schema already records which species a route belongs to, precisely so
+       this is answerable; nothing was asking.
+
+    A route with a NULL species applies to any of them, which is what the
+    column means, so it passes.
+    """
+    if not chain:
+        return dbm.default_supply_chain(conn, prod["species_slug"])
+
+    row = conn.execute(
+        """SELECT sc.slug, s.slug AS species_slug
+           FROM supply_chain sc
+           LEFT JOIN species s ON s.id = sc.species_id
+           WHERE sc.slug = ?""",
+        (chain,),
+    ).fetchone()
+    if row is None:
+        raise HTTPException(404, f"unknown supply chain: {chain}")
+    if row["species_slug"] and row["species_slug"] != prod["species_slug"]:
+        raise HTTPException(
+            422,
+            f"supply chain '{chain}' belongs to {row['species_slug']}, "
+            f"and {prod['label']} comes from {prod['species_slug']}",
+        )
+    return chain
+
+
 @app.get("/api/calculate")
 def calculate(
     count: float = Query(12, gt=0, le=100000),
@@ -179,17 +223,13 @@ def calculate(
             ).fetchone()[0] or 1
             units = count / segments
 
-        chain = chain or dbm.default_supply_chain(conn, prod["species_slug"])
+        chain = _resolve_chain(conn, prod, chain)
         loss = dbm.load_loss_stages(
             conn, prod["species_slug"], prod["slug"],
             include_optional=include_mortality,
             chain_slug=chain,
         )
         mixing = dbm.load_mixing_stages(conn, chain)
-        if not mixing and chain != "whole_bird_home":
-            existing = [c["slug"] for c in dbm.list_supply_chains(conn)]
-            if chain not in existing:
-                raise HTTPException(404, f"unknown supply chain: {chain}")
 
         try:
             recurring = dbm.make_recurring(prod, window_days)
@@ -352,7 +392,7 @@ def scientific(
             ).fetchone()[0] or 1
             units = count / seg
 
-        chain = chain or dbm.default_supply_chain(conn, prod["species_slug"])
+        chain = _resolve_chain(conn, prod, chain)
         upi = prod["units_per_individual_mode"]
         loss = dbm.load_loss_stages(
             conn, prod["species_slug"], prod["slug"],

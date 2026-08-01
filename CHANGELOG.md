@@ -156,6 +156,31 @@ Two defects in the seasonality module and its concordance test.
   NASS suppression may leave a state partial. The exclusion count appears on the
   API surface and is disclosed in caveats.
 
+### Scientific stops offering a chicken-wing question a maple sugarhouse
+
+`is_default` is per-species by design — the schema's unique index enforces it,
+and `list_supply_chains`' docstring warns about exactly this — so rendering all
+15 chains flat and marking each default `selected` left whichever sorted last in
+charge. Chains order by `is_default DESC, slug`, so the **Scientific** tab
+opened a chicken-wing question on **Commodity syrup**, with "Commodity silk
+trade", "Backyard flock" and "Home garden" on offer beside it. Picking one moved
+the answer by up to six chickens, and the calculator and Scientific disagreed
+about the default for the same question.
+
+- **The dropdown is filtered to the analysed product's species**, the same fix
+  `syncChains()` gave the calculator when saffron landed. Scientific never
+  received it. Four broiler routes now, not fifteen across six species.
+- **`/api/scientific` validates the chain**, which it did not do at all:
+  `?chain=total_nonsense` returned **200** with `distinct: 6.0` — the floor,
+  because no mixing stages were found and none were expected to be. A wrong
+  number that looks like a result is the worst shape a failure here can take.
+- **Both endpoints now refuse another species' route**, 422 rather than a silent
+  answer. `/api/calculate` only ever checked that a chain existed, so
+  `product=whole_wing&chain=commodity_syrup` was a 200 and a confident trace of
+  a sugarhouse. The species is already recorded on the route; nothing was asking
+  it. One `_resolve_chain` helper answers all three questions for both
+  endpoints, so they cannot drift apart again.
+
 ### Charts follow the window, and a theme toggle stops leaving handlers behind
 
 Two bugs with one shared cause: `redrawTheme()` invalidates every view and
