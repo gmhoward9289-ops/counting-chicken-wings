@@ -384,3 +384,45 @@ jobs:
             --title "$(cat /tmp/title.txt)" \
             --notes-file /tmp/notes.md
           echo "released v$VERSION"
+
+      # THE RELEASE MERGE DOES NOT DEPLOY ITSELF.
+      #
+      # `deploy.yml` triggers on `push` to master, and this job merges its
+      # version PR with the default `GITHUB_TOKEN`. GitHub raises no
+      # workflow-triggering event for anything done with that token, so the
+      # push that lands the release is the one push to master that never
+      # deploys. Observed on v1.12.1: merged at 23:41, and the newest Deploy
+      # run was still the human push at 23:38. The site served the previous
+      # release with nothing anywhere reporting a failure, because no run
+      # existed to be red. Human pushes deploy fine, which is exactly what
+      # makes the gap easy to miss.
+      #
+      # The restriction is on the event CASCADE, not on the dispatch API: a
+      # `workflow_dispatch` made with `GITHUB_TOKEN` does start the target
+      # workflow. So ask for the run explicitly rather than waiting for one
+      # that cannot arrive. `actions: write` above already covers it -- the
+      # same permission that dispatches ci.yml for the version PR.
+      #
+      # Dispatched on `master`, not on the tag, because deploys track the
+      # branch (see deploy.yml's header) and the tag may already be behind if
+      # another merge landed on top. Deploy's own "verify what is actually
+      # serving" step is what catches a wrong commit; its precondition is that
+      # a run exists at all.
+      #
+      # Failing to dispatch does not fail the release. The tag is cut and the
+      # release is published by this point, and retracting those to report an
+      # undeployed site would be strictly worse than saying so and leaving a
+      # one-click `workflow_dispatch` to a human. A warning is an annotation
+      # on a green run, which is the honest shape of "released, not deployed".
+      - name: Deploy the release
+        if: steps.need.outputs.go == 'yes' && steps.landed.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.need.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh workflow run deploy.yml --ref master; then
+            echo "dispatched deploy.yml on master for v$VERSION"
+          else
+            echo "::warning::could not dispatch deploy.yml -- v$VERSION is released but NOT deployed. Run the Deploy workflow on master by hand."
+          fi

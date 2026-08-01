@@ -162,6 +162,14 @@ Deploys track `branch: master`, not tags, so the deployed site is normally *ahea
 the latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version`
 for the commit SHA.
 
+**The release merge is the one push to master that does not deploy itself.**
+`deploy.yml` triggers on `push`, and the release PR is merged with `GITHUB_TOKEN`, so
+no `push` event is raised — v1.12.1 sat undeployed with nothing red anywhere, because
+no Deploy run existed to be red. `release.yml` now dispatches `deploy.yml` explicitly
+after its merge; the restriction is on the event *cascade*, not on the dispatch API.
+If a release ever ships and the site does not change, check that the **Deploy the
+release** step ran, not just that Deploy's own runs are green.
+
 ## Docs
 
 `docs/ROADMAP.md` (milestones, with `[!]` marking data-blocked items) ·

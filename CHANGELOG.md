@@ -24,6 +24,33 @@ Two defects in the seasonality module and its concordance test.
   NASS suppression may leave a state partial. The exclusion count appears on the
   API surface and is disclosed in caveats.
 
+### The release now asks for its own deploy
+
+`deploy.yml` triggers on `push` to master, and `release.yml` merges its version
+PR with the default `GITHUB_TOKEN` — which raises no workflow-triggering event.
+So the one push to master that lands a release is the one push that never
+deploys. v1.12.1 merged at 23:41 and the newest Deploy run was still the human
+push at 23:38; the site went on serving v1.12.0 with nothing red anywhere,
+because no run existed to fail. Human pushes deploy fine, which is what made
+this invisible for as long as it was.
+
+- **`release.yml` dispatches `deploy.yml` on master after the merge.** The
+  restriction is on the event *cascade*, not on the dispatch API — a
+  `workflow_dispatch` made with `GITHUB_TOKEN` does start the target workflow.
+  `actions: write` was already granted for the ci.yml dispatch.
+- **On `master`, not on the tag**, because deploys track the branch and the tag
+  may already be behind. Deploy's own "verify what is actually serving" step
+  catches a wrong commit; its precondition was a run existing at all.
+- **A failed dispatch warns rather than failing the release.** The tag is cut
+  and the release published by that point, so retracting them to report an
+  undeployed site would be worse than an annotation saying "released, not
+  deployed" next to a one-click manual dispatch.
+
+Considered and rejected: merging with a PAT or GitHub App token, which would
+make the whole cascade work. It fixes more, and it puts a long-lived credential
+with write access into a public repo's workflow for a problem one API call
+solves.
+
 ## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
 
