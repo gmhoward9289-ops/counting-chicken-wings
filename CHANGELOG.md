@@ -156,6 +156,52 @@ Two defects in the seasonality module and its concordance test.
   NASS suppression may leave a state partial. The exclusion count appears on the
   API surface and is disclosed in caveats.
 
+### Nutrition & impact stops narrating a silk dress as a chicken
+
+**Nutrition & impact** answered every product as a broiler. A gallon of maple
+syrup was *"51.50 birds at 6.62 lb each … the grower was paid $14.32 for raising
+them"*; a silk dress, 22,200 birds and $6,172.49; a pound of raw silk, 30,000
+birds and $8,341.20. The resource chart multiplied broiler feed and water by
+those counts, and the allocation note explained to a reader of a silk dress that
+*"the rest of the bird was eaten by someone else."*
+
+Three figures were hardcoded in `api.py` rather than looked up:
+
+```python
+mass_share = 0.073 if prod["slug"] == "whole_wing" else 0.23
+avg_lw     = lw["avg_live_weight_lb"] if lw else 6.62
+grower_pay = ...          # computed for every product, unconditionally
+```
+
+`0.23` is the chicken *breast* share, applied to all eleven non-wing products.
+This is the invariant CLAUDE.md names outright: a figure hardcoded in a module
+bypasses the citation audit, which is exactly why ten wrong multipliers could
+sit there unnoticed — they were not facts about anything, so nothing could
+check them.
+
+- **`product_mass_share` is a new corpus table**, one row per product that has a
+  published share, with a `basis` column (`live_weight` vs `carcass_weight` — the
+  eight-strain paper reports both, and quoting one as the other is a 40% error
+  with no symptom) and a mandatory `source_id`. `audit.py` discovered it from
+  the schema and reports it without being told: `product mass share 2/2 cited`.
+- **Two products have one.** Whole wing at 0.073, the top of the eight-strain
+  paper's 6.7–7.3% live-weight band. Boneless wing at 0.23, the same figure and
+  the same citation as the existing "a dozen boneless wings takes about a third
+  of a chicken" fact. **Ten products have no row, and that absence is the data.**
+  Silk is spun, not butchered; a gallon of syrup is not a fraction of a tree.
+- **Everything is scoped to what it actually describes.** Resource footprints
+  are per species, economic stats per domain, mass share per product — so they
+  go missing independently, and the response says which via `coverage`. Grower
+  pay now requires all three: a fee in the domain, a slaughter live weight for
+  the species, and a share to allocate by. A layer hen is in the poultry domain
+  and has no slaughter weight, which is what catches her.
+- **The page renders the gap instead of filling it.** No chart where there is
+  nothing to compare, the corpus's own noun in the headings ("Per tree", not
+  "Per bird"), and a note that says what is missing.
+
+Nothing about the wing answer moved: 6.00 chickens, 39.7 lb, $1.67 to the
+grower, $0.12 allocated — the same figures, now traceable.
+
 ### Scientific stops offering a chicken-wing question a maple sugarhouse
 
 `is_default` is per-species by design — the schema's unique index enforces it,

@@ -1300,13 +1300,41 @@ def footprint(
     count: float = Query(12, gt=0, le=100000),
     product: str = "whole_wing",
 ):
-    """Resource and economic footprint, mass-allocated to the product.
+    """Resource and economic footprint, where the corpus has one.
 
-    A dozen wings does NOT carry six birds' worth of anything. Wings are
-    about 7% of live weight and the rest of the bird fed other people, so
-    every figure here is scaled by the product's mass share. Both the raw
-    per-bird number and the allocated share are returned, because the gap
+    A dozen wings does NOT carry six birds' worth of anything. Wings are about
+    7.3% of live weight and the rest of the bird fed other people, so every
+    figure here is scaled by the product's mass share. Both the raw
+    per-individual number and the allocated share are returned, because the gap
     between them is the whole point.
+
+    WHAT THIS ENDPOINT USED TO DO, because the shape of the fix follows from
+    it. Three figures were hardcoded rather than looked up:
+
+      mass_share = 0.073 if slug == 'whole_wing' else 0.23
+      avg_lw     = ... else 6.62
+      grower_pay = computed unconditionally, for every product
+
+    `0.23` is the chicken-BREAST share, so it was applied to all eleven
+    non-wing products. A gallon of maple syrup was narrated as 51.50 birds at
+    6.62 lb each and $14.32 of broiler grower pay; a silk dress as 22,200
+    birds and $6,172.49; a pound of raw silk as 30,000 birds and $8,341.20.
+    The resource chart multiplied broiler feed and water by those counts, and
+    the allocation note told a reader of a silk dress that "the rest of the
+    bird was eaten by someone else."
+
+    So every figure now has to be found rather than assumed, and each of the
+    three has its own scope, which is why they can be absent independently:
+
+      - resource_footprint is per SPECIES. Only the broiler has one.
+      - economic_stat is per DOMAIN. Only poultry has any.
+      - the mass share is per PRODUCT, and lives in the corpus (see
+        `product_mass_share`), so it is subject to the citation audit like
+        everything else. Two products have one.
+
+    Nothing is substituted for a missing one. `metrics` comes back empty,
+    `mass_share` null, `grower_pay` null, and `coverage` says which -- so the
+    page can print "no figures for this product" instead of a chicken's.
     """
     conn = dbm.connect()
     try:
@@ -1315,72 +1343,151 @@ def footprint(
         except KeyError:
             raise HTTPException(404, f"unknown product: {product}")
 
+        # Scoped to THIS product's species. Unscoped, this handed broiler LCA
+        # figures to a silkworm and multiplied them by a silkworm count.
         metrics = conn.execute(
             """SELECT r.metric, r.label, r.unit, r.per_individual,
                       r.per_kg_liveweight, r.reference_lw_lb, r.year,
                       r.pct_change_decade, r.notes, s.slug AS source_slug,
                       s.title AS source_title, s.publisher, s.url
-               FROM resource_footprint r JOIN source s ON s.id = r.source_id
-               ORDER BY r.metric"""
+               FROM resource_footprint r
+               JOIN source s   ON s.id = r.source_id
+               JOIN species sp ON sp.id = r.species_id
+               WHERE sp.slug = ?
+               ORDER BY r.metric""",
+            (prod["species_slug"],),
         ).fetchall()
+
+        # Economic stats are per DOMAIN -- "355,000 industry workers" is a
+        # poultry figure, not a broiler one, and it is equally true of eggs.
         econ = conn.execute(
             """SELECT e.slug, e.label, e.value_lo, e.value_mode, e.value_hi,
                       e.unit, e.basis, e.confidence, e.notes,
                       s.slug AS source_slug, s.title AS source_title,
                       s.publisher, s.url
-               FROM economic_stat e JOIN source s ON s.id = e.source_id
-               ORDER BY e.slug"""
+               FROM economic_stat e
+               JOIN source s  ON s.id = e.source_id
+               JOIN domain d  ON d.id = e.domain_id
+               JOIN species sp ON sp.domain_id = d.id
+               WHERE sp.slug = ?
+               ORDER BY e.slug""",
+            (prod["species_slug"],),
         ).fetchall()
 
         upi = prod["units_per_individual_mode"]
-        birds = count / upi
+        individuals = count / upi
 
-        # Mass share of the bird this product represents. Whole wings run
-        # ~7.3% of live weight; boneless is breast, ~23%.
-        mass_share = 0.073 if prod["slug"] == "whole_wing" else 0.23
+        share_row = conn.execute(
+            """SELECT m.mass_share, m.basis, m.notes, s.slug AS source_slug,
+                      s.title AS source_title, s.publisher, s.url
+               FROM product_mass_share m
+               JOIN source s ON s.id = m.source_id
+               WHERE m.product_id = ?""",
+            (prod["id"],),
+        ).fetchone()
+        mass_share = share_row["mass_share"] if share_row else None
 
         out = []
         for m in metrics:
             d = dict(m)
-            per_bird = d["per_individual"]
-            d["birds"] = birds
-            d["naive_total"] = (per_bird * birds) if per_bird else None
+            per_one = d["per_individual"]
+            d["individuals"] = individuals
+            d["naive_total"] = (per_one * individuals) if per_one else None
+            # Null, not the naive total, when there is no share to allocate
+            # by. An unallocated figure presented as an allocated one is the
+            # bug this endpoint had, one order of magnitude smaller.
             d["allocated_total"] = (
-                per_bird * birds * mass_share if per_bird else None
+                per_one * individuals * mass_share
+                if per_one and mass_share else None
             )
             out.append(d)
 
+        # Grower pay needs three things to be true at once, and each of them
+        # was previously assumed. A layer hen is in the poultry domain, so she
+        # inherits the ERS *broiler* grower fee -- and has no slaughter live
+        # weight to multiply it by, which is the check that catches it.
         grower = next((dict(e) for e in econ
                        if e["slug"] == "grower_pay_per_lb"), None)
+        lw = conn.execute(
+            """SELECT sy.avg_live_weight_lb FROM slaughter_stat_year sy
+               JOIN species sp ON sp.id = sy.species_id
+               WHERE sp.slug = ? AND sy.avg_live_weight_lb IS NOT NULL
+               ORDER BY sy.year DESC LIMIT 1""",
+            (prod["species_slug"],),
+        ).fetchone()
+
         grower_pay = None
-        if grower and grower["value_mode"]:
-            lw = conn.execute(
-                """SELECT avg_live_weight_lb FROM slaughter_stat_year
-                   ORDER BY year DESC LIMIT 1"""
-            ).fetchone()
-            avg_lw = lw["avg_live_weight_lb"] if lw else 6.62
-            total_lb = birds * avg_lw
+        if grower and grower["value_mode"] and lw and mass_share:
+            avg_lw = lw["avg_live_weight_lb"]
+            total_lb = individuals * avg_lw
             grower_pay = {
                 "live_weight_lb": total_lb,
-                "paid_for_birds": total_lb * grower["value_mode"],
+                "avg_live_weight_lb": avg_lw,
+                "paid_for_individuals": total_lb * grower["value_mode"],
                 "allocated_to_product":
                     total_lb * grower["value_mode"] * mass_share,
                 "rate": grower["value_mode"],
                 "source": grower["source_slug"],
             }
 
+        if mass_share:
+            allocation_note = (
+                "Scaled by mass share. Charging a whole "
+                f"{prod['individual_noun']} to this product would overstate "
+                f"it by about {1 / mass_share:.0f}x, since the rest of it "
+                "went to someone else. Economic allocation would give a "
+                "higher figure, because wings sell at a premium per pound."
+            )
+        elif out:
+            allocation_note = (
+                f"These are per-{prod['individual_noun']} figures, not this "
+                "product's share of them. No published mass share exists for "
+                f"{prod['label']}, so allocating them would mean inventing "
+                "the multiplier rather than citing it."
+            )
+        elif econ:
+            allocation_note = (
+                f"No resource footprint has been sourced for the "
+                f"{prod['individual_noun']} yet, so there is nothing here to "
+                "allocate. The economic figures below describe the whole "
+                "industry rather than this product."
+            )
+        else:
+            allocation_note = (
+                "Nothing in the corpus measures the footprint of "
+                f"{prod['label']}. The resource and payment figures this "
+                "project holds are for broiler chickens, and they are not "
+                "this product's to borrow."
+            )
+
         return {
             "product": prod["label"],
+            "product_slug": prod["slug"],
+            "species": prod["species_slug"],
+            "individual_noun": prod["individual_noun"],
+            "individual_plural": prod["individual_plural"],
             "count": count,
-            "birds": birds,
+            "individuals": individuals,
             "mass_share": mass_share,
-            "allocation_note": (
-                "Scaled by mass share. Charging the whole bird to this "
-                "product would overstate it by about "
-                f"{1 / mass_share:.0f}x, since the rest of the bird was "
-                "eaten by someone else. Economic allocation would give a "
-                "higher figure, because wings sell at a premium per pound."
-            ),
+            "mass_share_basis": share_row["basis"] if share_row else None,
+            "mass_share_note": share_row["notes"] if share_row else None,
+            "mass_share_source": ({
+                "slug": share_row["source_slug"],
+                "title": share_row["source_title"],
+                "publisher": share_row["publisher"],
+                "url": share_row["url"],
+            } if share_row else None),
+            "allocation_note": allocation_note,
+            # What the corpus actually holds for this product, stated rather
+            # than left for a client to infer from three empty fields -- and
+            # inferring it wrongly is how the page came to narrate a silk
+            # dress as a chicken.
+            "coverage": {
+                "footprint": bool(out),
+                "economics": bool(econ),
+                "mass_share": mass_share is not None,
+                "grower_pay": grower_pay is not None,
+            },
             "metrics": out,
             "economics": [dict(e) for e in econ],
             "grower_pay": grower_pay,

@@ -215,6 +215,25 @@ class Builder:
                 notes=p.get("notes"),
             )
 
+        # Absent means absent. A product with no entry has no published mass
+        # share, which is the state ten of the twelve are actually in, and the
+        # API says so rather than substituting the broiler's -- which is what
+        # a hardcoded `else 0.23` in api.py did to a silk dress.
+        for m in t.get("mass_shares", []):
+            if m["product"] not in self.product:
+                raise BuildError(
+                    f"mass_share names unknown product '{m['product']}'"
+                )
+            self.ins(
+                "product_mass_share",
+                product_id=self.product[m["product"]],
+                mass_share=m["mass_share"],
+                basis=m["basis"],
+                source_id=self.src(m["source"],
+                                   f"mass share for {m['product']}"),
+                notes=m.get("notes"),
+            )
+
         for s in t.get("segments", []):
             self.ins(
                 "product_segment",
