@@ -18,8 +18,17 @@ const api = p => {
         // FastAPI's HTTPException body is {"detail": "..."} -- surface that
         // rather than a bare status code, so "count must be <= 100000" reaches
         // the person who typed the count instead of only the console.
+        //
+        // A 422 is the other shape: RequestValidationError makes `detail` a
+        // LIST of {msg, loc, ...} objects, and interpolating that straight into
+        // a template literal renders "[object Object]" to the person who simply
+        // typed a zero. Join the messages instead.
         return r.json().catch(() => null).then(body => {
-          throw new Error((body && body.detail) || `${p} -> ${r.status}`);
+          const d = body && body.detail;
+          const msg = Array.isArray(d)
+            ? d.map(e => e && e.msg).filter(Boolean).join('; ')
+            : d;
+          throw new Error(msg || `${p} -> ${r.status}`);
         });
       }
       return r.json();
