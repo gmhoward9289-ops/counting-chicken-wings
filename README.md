@@ -62,12 +62,98 @@ For a dozen whole wings:
 | Pool size | Expected distinct chickens |
 |---:|---:|
 | 6 birds | **6.00** — you broke down six birds by hand |
-| 50 birds | 11.3 |
-| 1,000 birds | 11.96 |
-| 40,000 birds | **11.99** — one plant shift |
+| 50 birds | 11.33 |
+| 500 birds | 11.93 |
+| 1,000 birds | 11.97 |
+| 100,000 birds | **12.00** — a distributor warehouse |
 
 Six is reachable only by hand. Everything from a commodity supply chain is pinned
 just under twelve.
+
+### The real reason is saturation, not grading
+
+That table is the whole answer, and it is worth being precise about *why* — because
+this README used to say something else. It called size grading "the single strongest
+driver pushing the answer toward 12", and the model has never agreed.
+
+Sweep the grader's separation efficiency across its entire possible range, on the real
+commodity cascade, for a 12-wing draw:
+
+| Separation efficiency | Expected distinct birds |
+|---:|---:|
+| 0.00 — mechanism fully off | 11.9997 |
+| 0.90 — the shipped value | 12.0000 |
+| 0.99 | 12.0000 |
+
+Turning the mechanism completely **off** costs 0.0003 of a bird. Scaling every pool in
+the cascade down 100-fold still returns 11.9966.
+
+What pins the answer is **saturation**. The curve above flattens hard, and
+`saturation_threshold` computes where: above **661 commingled birds** a dozen wings is
+already within 0.05 of twelve, and above 3,301 it is within 0.01. The smallest pool
+anywhere in the commodity cascade is thirty times the first figure *at the pessimistic
+end of its band*. By the time the wings reach the grader the container is already
+essentially all-different-birds.
+
+This is a **stronger** result than the one it replaces. Every pool size in
+`data/mixing.yaml` is our estimate, unsourced and flagged as such — and the commodity
+answer does not depend on any of them. `tests/test_scientific.py` fails if that stops
+being true.
+
+The cut-up line and the grader are still real, still described above, and still decide
+the **small-pool** routes, where nothing is saturated. A local butcher's 40-bird tray
+sits well below the threshold, which is exactly why that route reads meaningfully under
+twelve. What is no longer claimed is that they determine the commodity number.
+
+### The one force that pushes back down: clustering
+
+Everything above pushes the count **up**, which is why the headline sat at the ceiling
+carrying almost no information. A fryer scoop is not an exchangeable draw — it is a grab
+of contiguous units from a bin filled case by case, and cases are packed from contiguous
+belt runs. Wings that travelled together tend to stay together, and that positive
+intra-cluster correlation is the only thing in the whole model that can lower the answer.
+
+It is modelled with standard cluster-sampling machinery: a scoop size, an
+adjacency-retention parameter per stage kind, and Kish's design effect
+`deff = 1 + (c−1)·ICC` reported so the loss of effective sample size is explicit. The
+retention of a *route* is the product of its stages' retentions, so a cascade's
+`random` / `separating` / `none` sequence finally determines something it could not
+before.
+
+Two things must be said plainly about what fell out.
+
+**The mechanism works.** Take the commodity pool sizes, delete every stage that destroys
+adjacency, and vary how much survives:
+
+| Cascade retention | Scoop | Expected distinct birds |
+|---:|---:|---:|
+| 0.00 (exchangeable draw) | 1 | 12.00 |
+| 0.20 | 4 | 11.80 |
+| 0.50 | 4 | 10.85 |
+| 1.00 | 4 | 7.50 |
+| 1.00 | 12 (one grab) | **6.50** — essentially the floor |
+
+**And it does not move the commodity answer.** A real commodity cascade runs a bird's
+wings through six bulk commingling stages and a grader. A wing chiller is a stirred
+immersion vessel with a residence time in tens of minutes — it is a mixing tank by
+design. Multiplying the per-stage retentions out gives a cascade retention of about
+**0.000001**, and the commodity answer stays at 11.99997.
+
+| Route | Cascade retention | Answer |
+|---|---:|---:|
+| Commodity foodservice | 0.0000012 | 11.99997 |
+| Grocery retail | 0.0000061 | 11.99996 |
+| Local butcher | 0.040 | **11.01** (was 11.16) |
+| Whole birds at home | 1.0 | 6.00 |
+
+So clustering changes exactly the route where it physically should: the short cascade,
+where a tray of forty birds' wings never goes through anything that would separate them.
+
+The parameters were picked from case packs, combo-bin sizes and how a portion is
+actually taken from a bin, then graded `estimate` and left alone. They were **not** tuned
+to produce a more interesting headline, and the honest report is that the headline did
+not move. Where a judgement call existed it was made in clustering's favour, so the
+finding is stated against the thumb on the scale rather than with it.
 
 ---
 
@@ -174,7 +260,7 @@ already risen to meet the ceiling, leaving mixing nothing to move.
 
 Of the 25 loss factors in the model, **12 are unsourced estimates (48%)**. Only 9 of those affect the **count** answer; the other 3 are mass-only and cannot move it. That distinction is tracked and reported by the audit rather than glossed over.
 
-Corpus: **62 sources**, 57 facts, 12 products across 6 active species, 33 tables. Every statistic is cited and the build fails if one is not.
+Corpus: **63 sources**, 57 facts, 12 products across 6 active species, 34 tables. Every statistic is cited and the build fails if one is not.
 
 *Generated by `python -m counting_chicken_wings.audit --stats`. Do not hand-edit — `tests/test_readme.py` fails on drift.*
 

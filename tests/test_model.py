@@ -9,14 +9,25 @@ import pytest
 
 from counting_chicken_wings.model import (
     LossStage,
+    MixingParams,
     MixingStage,
+    cascade_retention,
+    design_effect,
+    draw_from_cascade,
     expected_distinct,
     expected_distinct_general,
     floor_individuals,
     required_individuals,
     resolve_pool,
     run,
+    saturation_threshold,
 )
+
+# The mechanisms are parameters now, not module constants, and the model
+# applies none of them unless told to -- see MixingParams. Tests that want a
+# mechanism must ask for it, which is the point: it makes each test say what
+# it is testing instead of inheriting a hidden global.
+GRADED = MixingParams(separation_efficiency=0.90)
 
 
 # ---------------------------------------------------------------------------
@@ -112,14 +123,30 @@ def test_separating_stage_pushes_toward_the_ceiling():
         MixingStage("g", "Grading", 20000, "separating"),
         MixingStage("b", "Bin", 2000, "random"),
     ]
-    c1, d1, _ = resolve_pool(random_only, 12, 2.0)
-    c2, d2, _ = resolve_pool(with_grading, 12, 2.0)
+    c1, d1, _ = resolve_pool(random_only, 12, 2.0, GRADED)
+    c2, d2, _ = resolve_pool(with_grading, 12, 2.0, GRADED)
     # resolve_pool returns DISTINCT individuals represented in the container.
     # Grading splits pairs, so the same number of units in the container comes
     # from more separate birds.
     assert d2 > d1
     assert (expected_distinct_general(12, c2, d2)
             >= expected_distinct_general(12, c1, d1))
+
+
+def test_separation_does_nothing_unless_it_is_asked_for():
+    """The mechanism is a parameter, and the default is no mechanism.
+
+    Guards the fix for the hardcoded SEPARATION_EFFICIENCY: if a default
+    carrying the corpus's value ever creeps back into MixingParams, this
+    fails. The honest failure direction is towards the assumption-free
+    answer, never towards a stale constant nobody is auditing.
+    """
+    stages = [MixingStage("g", "Grading", 20000, "separating")]
+    _, inert, _ = resolve_pool(stages, 12, 2.0)
+    _, graded, _ = resolve_pool(stages, 12, 2.0, GRADED)
+    assert graded > inert
+    assert MixingParams().separation_efficiency == 0.0
+    assert MixingParams() == MixingParams.inert()
 
 
 # ---------------------------------------------------------------------------
@@ -276,3 +303,197 @@ def test_boneless_run_floor_below_one_but_distinct_near_twelve():
     assert res.distinct_mean > 11.9
     # Distinct is bounded by the draw, never by the floor.
     assert res.distinct_mean <= 12.0 + 1e-9
+
+
+# ---------------------------------------------------------------------------
+# Clustering in the draw
+# ---------------------------------------------------------------------------
+#
+# A fryer scoop is a grab of contiguous units, not twelve independent picks.
+# Positive intra-cluster correlation is the only force in the whole model
+# that pushes the distinct count DOWN, so these tests pin its sign and its
+# degenerate cases hard. Getting the null wrong invents an effect.
+
+def test_grouping_an_exchangeable_draw_changes_nothing():
+    """THE null. Cluster size alone must be an exact no-op.
+
+    This is the easiest thing here to get wrong, and getting it wrong
+    manufactures an effect out of nothing. A pair at exchangeable positions
+    lands in one cluster with probability (c-1)/(W-1) and is then taken with
+    that cluster; adding that to the both-clusters-drawn case reproduces the
+    unclustered answer exactly. Equality, not approximation.
+    """
+    base = expected_distinct_general(12, 80, 40)
+    for c in (1, 2, 3, 4, 6, 12):
+        assert expected_distinct_general(
+            12, 80, 40, cluster_size=c, retention=0.0
+        ) == pytest.approx(base, abs=1e-12), c
+
+
+def test_retention_is_inert_without_a_cluster_to_retain_into():
+    """A one-unit grab cannot hold an adjacent pair, so c=1 kills retention."""
+    base = expected_distinct_general(12, 80, 40)
+    for r in (0.0, 0.5, 1.0):
+        assert expected_distinct_general(
+            12, 80, 40, cluster_size=1, retention=r
+        ) == pytest.approx(base, abs=1e-12), r
+
+
+def test_clustering_only_ever_lowers_the_count():
+    """The sign of the effect, which is the whole reason to model it."""
+    base = expected_distinct_general(12, 80, 40)
+    prev = base
+    for r in (0.2, 0.4, 0.6, 0.8, 1.0):
+        got = expected_distinct_general(12, 80, 40, cluster_size=4, retention=r)
+        assert got <= prev + 1e-12, r
+        prev = got
+    assert prev < base
+
+
+def test_clustering_never_breaches_the_floor():
+    """Six or more. Never fewer -- clustering included."""
+    for c in (1, 2, 4, 12):
+        for r in (0.0, 0.5, 1.0):
+            got = expected_distinct_general(
+                12, 80, 40, cluster_size=c, retention=r)
+            assert got >= 6.0 - 1e-9, (c, r)
+            assert got <= 12.0 + 1e-9, (c, r)
+
+
+def test_design_effect_is_kish():
+    """deff = 1 + (c-1)*ICC, borrowed from survey sampling, not invented."""
+    assert design_effect(1, 0.9) == pytest.approx(1.0)
+    assert design_effect(4, 0.0) == pytest.approx(1.0)
+    assert design_effect(4, 1.0) == pytest.approx(4.0)
+    assert design_effect(4, 0.5) == pytest.approx(2.5)
+
+
+def test_cascade_retention_is_the_product_of_its_stages():
+    """A route's mixing_kind sequence finally determines something."""
+    p = MixingParams(
+        separation_efficiency=0.90,
+        adjacency_retention_random=0.20,
+        adjacency_retention_passthrough=0.95,
+    )
+    assert cascade_retention([], p) == pytest.approx(1.0)
+    assert cascade_retention(
+        [MixingStage("a", "A", 10, "random")], p) == pytest.approx(0.20)
+    assert cascade_retention(
+        [MixingStage("a", "A", 10, "none")], p) == pytest.approx(0.95)
+    # A separating stage needs no parameter of its own: splitting a pair IS
+    # destroying its adjacency, so it derives from the efficiency.
+    assert cascade_retention(
+        [MixingStage("a", "A", 10, "separating")], p
+    ) == pytest.approx(0.20 * 0.10)
+    two = [MixingStage("a", "A", 10, "random"),
+           MixingStage("b", "B", 10, "random")]
+    assert cascade_retention(two, p) == pytest.approx(0.04)
+
+
+def test_a_long_commodity_cascade_retains_essentially_no_adjacency():
+    """The finding, pinned. Six bulk stages and a grader destroy adjacency.
+
+    Not a tuning failure and not a placeholder. This is WHY clustering does
+    not move the commodity answer, and it should fail loudly if the cascade
+    or the parameters ever change enough to make it untrue, because the
+    published narrative rests on it.
+    """
+    p = MixingParams(
+        separation_efficiency=0.90,
+        draw_cluster_size=4.0,
+        adjacency_retention_random=0.20,
+        adjacency_retention_passthrough=0.95,
+    )
+    long_chain = [
+        MixingStage("sep", "Cut-up", 5000, "random"),
+        MixingStage("chill", "Chiller", 20000, "random"),
+        MixingStage("grade", "Grading", 20000, "separating"),
+        MixingStage("combo", "Combo bin", 8700, "random"),
+        MixingStage("iqf", "IQF", 50000, "random"),
+        MixingStage("case", "Case pack", 175, "none"),
+        MixingStage("dist", "Distributor", 100000, "random"),
+        MixingStage("bin", "Freezer", 2000, "random"),
+        MixingStage("fry", "Fryer", 2000, "none"),
+    ]
+    assert cascade_retention(long_chain, p) < 1e-5
+    _, _, _, got = draw_from_cascade(long_chain, 12, 2.0, p)
+    assert got > 11.99
+
+
+def test_clustering_can_reach_the_floor_when_nothing_destroys_adjacency():
+    """The mechanism has real range. It is not a rounding artifact.
+
+    This is the necessary companion to the test above. "Clustering does not
+    move the commodity answer" is only an interesting claim if clustering is
+    capable of moving an answer at all -- otherwise it is a report on a
+    broken formula. So take the same pool sizes, delete every stage that
+    destroys adjacency, preserve it perfectly, and take the whole order in
+    one grab: the answer collapses from 12 to essentially the floor.
+
+    That is the honest shape of the finding. The commodity number survives
+    because a chiller and a grader are real, not because the model cannot
+    push back.
+    """
+    perfect = MixingParams(
+        separation_efficiency=0.0,
+        draw_cluster_size=12.0,
+        adjacency_retention_random=1.0,
+        adjacency_retention_passthrough=1.0,
+    )
+    chain = [
+        MixingStage("sep", "Cut-up", 5000, "random"),
+        MixingStage("dist", "Distributor", 100000, "random"),
+        MixingStage("bin", "Freezer", 2000, "random"),
+    ]
+    assert cascade_retention(chain, perfect) == pytest.approx(1.0)
+    _, _, _, got = draw_from_cascade(chain, 12, 2.0, perfect)
+    assert got < 7.0
+    # And never below the floor, however hard clustering is pushed.
+    assert got >= 6.0 - 1e-9
+
+    # Same pool, same scoop, but adjacency destroyed: back to the ceiling.
+    exchangeable = MixingParams(draw_cluster_size=12.0)
+    _, _, _, loose = draw_from_cascade(chain, 12, 2.0, exchangeable)
+    assert loose > 11.99
+
+
+def test_clustering_bites_where_the_cascade_is_short():
+    """A butcher's tray keeps adjacency a plant destroys, and it shows."""
+    p = MixingParams(
+        separation_efficiency=0.90,
+        draw_cluster_size=4.0,
+        adjacency_retention_random=0.20,
+        adjacency_retention_passthrough=0.95,
+    )
+    tray = [MixingStage("sep", "Cut-up", 40, "random"),
+            MixingStage("tray", "Tray", 40, "random")]
+    _, _, _, clustered = draw_from_cascade(tray, 12, 2.0, p)
+    _, _, _, exchangeable = draw_from_cascade(
+        tray, 12, 2.0, MixingParams(separation_efficiency=0.90))
+    assert clustered < exchangeable
+    assert clustered >= 6.0
+
+
+# ---------------------------------------------------------------------------
+# Saturation
+# ---------------------------------------------------------------------------
+
+def test_saturation_threshold_is_where_the_curve_flattens():
+    """The claim made computable: above this pool, the pool stops mattering."""
+    t = saturation_threshold(12, 2.0, epsilon=0.05)
+
+    def answer(b):
+        c, d, _ = resolve_pool(
+            [MixingStage("p", "Pool", b, "random")], 12, 2.0)
+        return expected_distinct_general(12, c, d)
+
+    assert 12.0 - answer(t) <= 0.05
+    assert 12.0 - answer(t - 1) > 0.05
+    # A tighter epsilon can only ever need a bigger pool.
+    assert saturation_threshold(12, 2.0, epsilon=0.01) > t
+
+
+def test_a_draw_that_cannot_saturate_raises_rather_than_looping():
+    """The guard is a guard, not a silent clamp."""
+    with pytest.raises(ValueError):
+        saturation_threshold(12, 2.0, epsilon=0.0)
