@@ -171,9 +171,18 @@ function fmtDistinct(v, ceil) {
   // implies a limit being approached when it has been hit, which is the
   // opposite of the truth. Wings approach and never arrive; eggs arrive.
   if (ceil - v <= 5e-7) return String(+v.toFixed(2));
+  // Truncate rather than round. A value a hair below the ceiling
+  // (11.99997 against 12) rounds UP to "12.00" at 2 decimals -- the exact
+  // ambiguity this function exists to avoid -- so the old loop kept adding
+  // decimal places until rounding finally landed strictly below the ceiling,
+  // which is how "11.99997 different chickens" reached the headline instead
+  // of a clean, short value. Truncating never overshoots the true value, so
+  // it never manufactures a false tie with the ceiling and two decimals is
+  // enough except in a genuinely pathological case.
   for (const p of [2,3,4,5,6]) {
-    const s = v.toFixed(p);
-    if (parseFloat(s) < ceil) return s;
+    const scale = 10 ** p;
+    const truncated = Math.floor(v * scale) / scale;
+    if (truncated < ceil) return truncated.toFixed(p);
   }
   return v.toFixed(6);
 }
@@ -511,11 +520,12 @@ async function initMix() {
       xaxis: Object.assign({}, PLOT.xaxis, { type: 'log',
         title: 'chickens in the pool (log scale)' }),
       yaxis: Object.assign({}, PLOT.yaxis, { title: 'distinct chickens',
-        range: [5.5, 12.5] }),
+        range: [5.5, 12.5], tickformat: '.2f' }),
       showlegend: false,
     }), CFG);
   $('#mixnote').textContent = CURVE.note;
   $('#pool').max = CURVE.points.length - 1;
+  $('#pool').disabled = false;   // was disabled until CURVE resolved
   mixMove();
 }
 function mixMove() {
