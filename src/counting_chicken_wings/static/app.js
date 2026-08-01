@@ -1045,52 +1045,77 @@ async function impact() {
       ).join('')
     : '<p class="note">No nutrition data for this product yet.</p>';
 
-  const m = f.metrics.filter(x => x.allocated_total != null);
-  Plotly.newPlot('i-footprint', [
-    { type: 'bar', name: 'charged to whole birds',
-      x: m.map(x => x.label), y: m.map(x => x.naive_total),
-      marker: { color: CH.barMuted },
-      hovertemplate: '%{x}<br>%{y:.2f}<extra>naive</extra>' },
-    { type: 'bar', name: 'this product’s share',
-      x: m.map(x => x.label), y: m.map(x => x.allocated_total),
-      marker: { color: CH.stamp },
-      hovertemplate: '%{x}<br>%{y:.2f}<extra>allocated</extra>' },
-  ], Object.assign({}, PLOT, {
-    barmode: 'group', showlegend: true,
-    legend: { orientation: 'h', y: 1.15 },
-    margin: { l: 56, r: 16, t: 30, b: 70 },
-    xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -20 }),
-    yaxis: Object.assign({}, PLOT.yaxis, { type: 'log',
-      title: 'log scale — units differ per metric' }),
-  }), CFG);
+  // Everything below is conditional on `f.coverage`, because for most
+  // products the honest render is an empty one. The endpoint used to hand
+  // back broiler figures whatever was asked for, so a silk dress arrived as
+  // 22,200 birds of feed and water and this code drew it without hesitating.
+  //
+  // The individual's noun comes from the corpus too. "birds" was written into
+  // the headings here, so even a correct egg answer read as poultry
+  // regardless -- the same bug as the hardcoded floor prose, one screen over.
+  const one = f.individual_noun, many = f.individual_plural;
 
-  $('#i-footprint-table').innerHTML = `<table><tr><th>Metric</th>
-    <th class="num">Per bird</th><th class="num">Allocated to your order</th>
-    <th class="num">Since 2010</th><th>Unit</th></tr>` +
-    f.metrics.map(x => `<tr><td>${x.label}</td>
-      <td class="num">${x.per_individual ?? '—'}</td>
-      <td class="num">${x.allocated_total != null
-          ? x.allocated_total.toFixed(2) : '—'}</td>
-      <td class="num">${x.pct_change_decade != null
-          ? x.pct_change_decade + '%' : '—'}</td>
-      <td>${x.unit}</td></tr>`).join('') + '</table>';
+  const m = f.metrics.filter(x => x.allocated_total != null);
+  if (m.length) {
+    Plotly.newPlot('i-footprint', [
+      { type: 'bar', name: `charged to whole ${many}`,
+        x: m.map(x => x.label), y: m.map(x => x.naive_total),
+        marker: { color: CH.barMuted },
+        hovertemplate: '%{x}<br>%{y:.2f}<extra>naive</extra>' },
+      { type: 'bar', name: 'this product’s share',
+        x: m.map(x => x.label), y: m.map(x => x.allocated_total),
+        marker: { color: CH.stamp },
+        hovertemplate: '%{x}<br>%{y:.2f}<extra>allocated</extra>' },
+    ], Object.assign({}, PLOT, {
+      barmode: 'group', showlegend: true,
+      legend: { orientation: 'h', y: 1.15 },
+      margin: { l: 56, r: 16, t: 30, b: 70 },
+      xaxis: Object.assign({}, PLOT.xaxis, { tickangle: -20 }),
+      yaxis: Object.assign({}, PLOT.yaxis, { type: 'log',
+        title: 'log scale — units differ per metric' }),
+    }), CFG);
+  } else {
+    // A chart of nothing is worse than no chart: an empty pair of axes still
+    // asserts that the comparison exists and happens to be zero.
+    $('#i-footprint').innerHTML = '';
+    $('#i-footprint').style.height = 'auto';
+  }
+
+  $('#i-footprint-table').innerHTML = f.metrics.length
+    ? `<table><tr><th>Metric</th>
+       <th class="num">Per ${one}</th>
+       <th class="num">Allocated to your order</th>
+       <th class="num">Since 2010</th><th>Unit</th></tr>` +
+      f.metrics.map(x => `<tr><td>${x.label}</td>
+        <td class="num">${x.per_individual ?? '—'}</td>
+        <td class="num">${x.allocated_total != null
+            ? x.allocated_total.toFixed(2) : '—'}</td>
+        <td class="num">${x.pct_change_decade != null
+            ? x.pct_change_decade + '%' : '—'}</td>
+        <td>${x.unit}</td></tr>`).join('') + '</table>'
+    : `<p class="note">No resource footprint has been sourced for the
+       ${one} yet. The figures this project holds are measured on broiler
+       chickens, so there is nothing here that belongs to this product.</p>`;
 
   const g = f.grower_pay;
   $('#i-econ').innerHTML = (g ? `<div class="step count">
       <h4>The farmer's share</h4>
-      <p>${f.birds.toFixed(2)} birds at
-      ${(g.live_weight_lb / f.birds).toFixed(2)} lb each is
+      <p>${f.individuals.toFixed(2)} ${many} at
+      ${g.avg_live_weight_lb.toFixed(2)} lb each is
       ${g.live_weight_lb.toFixed(1)} lb of live weight. At
       ${(g.rate * 100).toFixed(1)}¢ per lb the grower was paid
-      <b>$${g.paid_for_birds.toFixed(2)}</b> for raising them — of which
+      <b>$${g.paid_for_individuals.toFixed(2)}</b> for raising them — of which
       <b>$${g.allocated_to_product.toFixed(2)}</b> is this product's share.</p>
     </div>` : '') +
-    `<table><tr><th>Measure</th><th class="num">Value</th><th>Unit</th>
-     <th>Basis</th></tr>` +
-    f.economics.map(e => `<tr><td><b>${e.label}</b></td>
-      <td class="num">${(e.value_mode ?? 0).toLocaleString()}</td>
-      <td>${e.unit}</td><td>${badge(e.confidence)}</td></tr>`).join('') +
-    '</table>';
+    (f.economics.length
+      ? `<table><tr><th>Measure</th><th class="num">Value</th><th>Unit</th>
+         <th>Basis</th></tr>` +
+        f.economics.map(e => `<tr><td><b>${e.label}</b></td>
+          <td class="num">${(e.value_mode ?? 0).toLocaleString()}</td>
+          <td>${e.unit}</td><td>${badge(e.confidence)}</td></tr>`).join('') +
+        '</table>'
+      : `<p class="note">No payment or employment figures are in the corpus
+         for this industry yet.</p>`);
 }
 
 async function initImpact() {

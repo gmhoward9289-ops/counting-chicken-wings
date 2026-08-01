@@ -653,6 +653,101 @@ def test_the_host_neutral_variable_wins(client, monkeypatch):
     assert get(client, "/api/version")["git_commit"] == "c" * 40
 
 
+# ---------------------------------------------------------------------------
+# The footprint belongs to a species, and most products do not have one
+# ---------------------------------------------------------------------------
+#
+# `/api/footprint` hardcoded three figures: a mass share of 0.073 for whole
+# wings and 0.23 -- the chicken BREAST share -- for all eleven other products,
+# a 6.62 lb fallback live weight, and grower pay computed unconditionally. A
+# gallon of maple syrup was narrated as 51.50 birds and $14.32 of broiler
+# grower pay; a silk dress as 22,200 birds and $6,172.49.
+
+
+NON_BROILER = ["table_egg", "maple_syrup_gallon", "silk_dress",
+               "silk_pound_raw", "saffron_gram", "ground_beef_patty"]
+
+
+@pytest.mark.parametrize("product", NON_BROILER)
+def test_a_non_broiler_product_gets_no_broiler_footprint(client, product):
+    """The flagship regression: 0.23 was the breast share of a chicken."""
+    d = get(client, "/api/footprint", count=12, product=product)
+    assert d["metrics"] == [], f"{product} was handed a broiler's footprint"
+    assert d["mass_share"] is None
+    assert d["coverage"]["footprint"] is False
+
+
+@pytest.mark.parametrize("product", NON_BROILER)
+def test_nothing_but_a_broiler_is_paid_a_broiler_grower_fee(client, product):
+    """ERS broiler grower fees, at a 6.62 lb bird, for a silk dress.
+
+    Three things have to be true before this figure exists: a grower fee in
+    the product's domain, a slaughter live weight for its species, and a mass
+    share to allocate by. Each of the three was previously assumed.
+    """
+    d = get(client, "/api/footprint", count=12, product=product)
+    assert d["grower_pay"] is None
+    assert d["coverage"]["grower_pay"] is False
+
+
+@pytest.mark.parametrize("product", NON_BROILER)
+def test_the_allocation_note_never_narrates_another_species(client, product):
+    """"the rest of the bird was eaten by someone else" -- of a silk dress."""
+    note = get(client, "/api/footprint", count=12,
+               product=product)["allocation_note"].lower()
+    assert note
+    for phrase in ("the rest of the bird", "sell at a premium per pound"):
+        assert phrase not in note, f"{product}: {note}"
+
+
+def test_the_wing_footprint_still_answers_in_full(client):
+    """The guard must not be so eager it empties the product it was built for.
+
+    0.073 is the top of the 6.7-7.3% live-weight band in the eight-strain
+    yield paper, and it now comes from `product_mass_share` rather than from
+    a literal in api.py.
+    """
+    d = get(client, "/api/footprint", count=12, product="whole_wing")
+    assert d["mass_share"] == pytest.approx(0.073)
+    assert d["mass_share_basis"] == "live_weight"
+    assert d["mass_share_source"]["slug"] == "wing-yield-eight-strains"
+    assert all(v for v in d["coverage"].values())
+    assert d["individuals"] == pytest.approx(6.0)
+    for m in d["metrics"]:
+        if m["per_individual"]:
+            assert m["allocated_total"] == pytest.approx(
+                m["naive_total"] * 0.073)
+
+
+def test_boneless_wings_carry_the_breast_share_not_the_wing_one(client):
+    d = get(client, "/api/footprint", count=12, product="boneless_wing")
+    assert d["mass_share"] == pytest.approx(0.23)
+    assert d["mass_share_source"]["slug"] == "tyson-foodservice-boneless"
+
+
+def test_every_mass_share_is_cited(client):
+    """The point of moving it into the corpus. A hardcoded multiplier is
+    invisible to audit.py, which is why ten wrong ones went unnoticed."""
+    from counting_chicken_wings import db as dbm
+
+    conn = dbm.connect()
+    try:
+        rows = conn.execute(
+            "SELECT product_id, source_id FROM product_mass_share").fetchall()
+    finally:
+        conn.close()
+    assert rows, "no mass shares in the corpus at all"
+    assert all(r["source_id"] for r in rows)
+
+
+def test_footprint_speaks_the_species_own_noun(client):
+    """"birds" was written into the page's headings, so a correct egg answer
+    still read as poultry. The noun comes from the corpus now."""
+    d = get(client, "/api/footprint", count=12, product="maple_syrup_gallon")
+    assert d["individual_noun"] == "tree"
+    assert d["individual_plural"] == "trees"
+
+
 def test_no_commit_anywhere_reads_as_unknown_not_as_a_lie(client, monkeypatch):
     """Absent both, None is the honest answer: nobody told this process what
     it is, so it is almost certainly local."""
