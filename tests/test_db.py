@@ -347,3 +347,36 @@ def test_chains_without_declared_losses_are_unaffected(conn):
     stages = dbm.load_loss_stages(
         conn, "broiler", "whole_wing", chain_slug="local_butcher")
     assert stages, "default path returned nothing"
+
+
+# ---------------------------------------------------------------------------
+# Correlated loss groups (#77)
+# ---------------------------------------------------------------------------
+
+def test_handling_quality_group_loads_for_broiler(conn):
+    groups = dbm.load_correlated_groups(conn, "broiler")
+    by_slug = {g.slug: g for g in groups}
+    assert "handling_quality" in by_slug
+    g = by_slug["handling_quality"]
+    assert set(g.stage_slugs) == {
+        "wing_damage", "grading_downgrade", "transport_doa"
+    }
+    assert 0.0 <= g.rho < 1.0
+    assert g.confidence
+    assert g.source_slug
+
+
+def test_correlated_groups_carry_a_citation(conn):
+    """The correlation figure is an estimate like any other in the model,
+    so it must resolve to a real row in `source` -- not a dangling slug."""
+    groups = dbm.load_correlated_groups(conn, "broiler")
+    slugs = [g.source_slug for g in groups]
+    sources = dbm.get_sources(conn, slugs)
+    assert set(sources) == set(slugs)
+
+
+def test_species_with_no_correlation_group_gets_an_empty_list(conn):
+    """A species with no factor rows for any grouped stage must not crash
+    and must not surface an empty, meaningless group."""
+    groups = dbm.load_correlated_groups(conn, "layer_hen")
+    assert groups == []
