@@ -32,6 +32,9 @@ try {
 </head>
 <body>
 <div id="busy" aria-hidden="true"></div>
+<!-- Shown only if the boot fetch (/api/meta) fails -- the page otherwise
+     stays blank forever with every dropdown empty and no explanation. -->
+<div class="err" id="boot-error" hidden></div>
 
 <div class="shell">
 
@@ -69,7 +72,7 @@ try {
     <div class="controls">
       <div>
         <label>How many</label>
-        <input type="number" id="count" value="12" min="1" step="1">
+        <input type="number" id="count" value="12" min="1" max="100000" step="1">
       </div>
       <div>
         <label>Product</label>
@@ -102,6 +105,7 @@ try {
       <label class="check"><input type="checkbox" id="mort">
         Include grow-out mortality</label>
     </div>
+    <p class="err" id="calc-error" hidden></p>
   </div>
 
   <!-- The answer and the span it had to fall inside are ONE object here.
@@ -139,7 +143,7 @@ try {
     <div class="controls">
       <div>
         <label>Wings</label>
-        <input type="number" id="s-count" value="12" min="1" step="1">
+        <input type="number" id="s-count" value="12" min="1" max="100000" step="1">
       </div>
       <div>
         <label>Supply chain</label>
@@ -174,6 +178,7 @@ try {
         </select>
       </div>
     </div>
+    <p class="err" id="sci-error" hidden></p>
     <p class="note" style="margin-top:14px">
       The interval is a percentile band over the Monte Carlo draws — both the
       loss factors and the mixing pool sizes are resampled from their recorded
@@ -274,6 +279,7 @@ try {
       same year, different businesses — small-bird programs feed fast food,
       big-bird programs feed deboning.
     </p>
+    <p class="note warn" id="states-message" hidden></p>
     <div id="statemap" style="height:420px"></div>
   </div>
   <div class="panel">
@@ -380,13 +386,14 @@ try {
     <div class="controls">
       <div>
         <label>How many</label>
-        <input type="number" id="i-count" value="12" min="1" step="1">
+        <input type="number" id="i-count" value="12" min="1" max="100000" step="1">
       </div>
       <div>
         <label>Product</label>
         <select id="i-product"></select>
       </div>
     </div>
+    <p class="err" id="impact-error" hidden></p>
     <p class="note" id="i-alloc" style="margin-top:14px"></p>
   </div>
 

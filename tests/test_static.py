@@ -216,6 +216,24 @@ def test_headline_figures_scale_on_small_screens(html):
         "headline font-size does not scale"
 
 
+def test_hidden_attribute_is_not_defeated_by_a_display_rule(html):
+    """`hidden` must win over every other `display:` rule in the sheet.
+
+    `.check` and `footer.build` both set `display: flex`, and an author rule
+    beats the UA default `[hidden] { display: none }` -- so a checkbox label
+    or the build footer carrying the `hidden` attribute stayed visible (the
+    footer as a stray horizontal rule from its own border-top) until this
+    guard existed. A future `display:` rule on some other hideable element
+    would silently reintroduce the same bug without this check.
+    """
+    guard = re.search(r"\[hidden\]\s*\{([^}]*)\}", html)
+    assert guard, "no [hidden] rule in the stylesheet"
+    assert "display: none" in guard.group(1) or "display:none" in guard.group(1)
+    assert "!important" in guard.group(1), \
+        "[hidden] must out-specify author display rules like .check or " \
+        "footer.build, or it will be silently defeated again"
+
+
 # ---------------------------------------------------------------------------
 # A view init can run more than once
 # ---------------------------------------------------------------------------
