@@ -1,29 +1,6 @@
 # Changelog
 
 ## Unreleased
-### Seasonality: fixed crash and restricted concordance to full-year data
-
-Two defects in the seasonality module and its concordance test.
-
-- **Crash when analyzing regions with no published months.** The `_classify()`
-  function signature changed to include `wrap` and `months_present` arguments,
-  but one call site (line 238, triggered when all 12 months are suppressed) was
-  not updated. This was a two-character fix but the real defect is the missing
-  test — the new test suite covers regions with exactly one published month, all
-  identical months, and no published months.
-- **Partial-year regions silently entered concordance tests with the wrong null
-  hypothesis.** The concordance test's null is that each region's peak lands
-  anywhere in a chosen three-month window (p=0.25, or 3/12). For a partial-year
-  region publishing k months, the probability depends on which months survived
-  suppression — ranging from 0 to 1 with no single scalar null — which is why
-  excluding partial regions is correct rather than reweighting them. The fix
-  changes no published figures: 2025 broiler monthly data contains **22 states,
-  all 22 with a complete 12-month series, 0 partial.** Peak concordance
-  p_corrected = 0.00841 ("strong agreement"), trough p_corrected = 0.03445
-  ("agreement") — both unchanged. This is a guard against future corpora where
-  NASS suppression may leave a state partial. The exclusion count appears on the
-  API surface and is disclosed in caveats.
-
 ### The mixing answer is saturation, and now the corpus can prove it
 
 The README and `data/mixing.yaml` both claimed size grading was "the single
@@ -82,6 +59,86 @@ our unsourced estimate, and the commodity answer does not depend on any of them.
   interval understates the spread on the distinct figure by whatever they
   contribute. The pool sizes beside them are resampled. Known open item, called
   out in `model.run`'s docstring.
+
+## v1.12.3 — 2026-08-01
+### The release job approves the run GitHub parks for it
+
+v1.12.1 published only because a human approved a workflow run at the right
+moment. `release.yml` opens its version PR with the default `GITHUB_TOKEN`, and
+the file already documented that this raises no `pull_request` event — which is
+true, and incomplete. GitHub still **creates** the `pull_request` run and parks
+it at `action_required`. That parked run holds the four required contexts, so
+the PR sat at `BLOCKED` while the dispatched run passed green beside it, and the
+job waited out its deadline for a merge that could never happen.
+
+The symptom is deliberately hard to read: `gh pr checks` reports *"no checks
+reported on the branch"* while the check-runs API shows every check successful.
+
+- **`approve_stalled_runs` in the wait loop** approves any `pull_request` run on
+  the release branch sitting at `action_required`. Not a bypass — approving is
+  what makes the required checks actually run, and they still have to pass.
+- **It lives in the poll loop, not in a step after the dispatch**, because the
+  parked run can appear after the dispatch returns, and `gh pr update-branch` in
+  the `BEHIND` case creates a fresh one needing the same treatment.
+- **It cannot abort a release.** Every failure path is guarded; a lookup or
+  approval that fails warns and lets the loop carry on to its own deadline.
+- The dispatch step's comment claimed the run is never created. Corrected in
+  place rather than left to mislead the next reader.
+
+Considered and rejected: loosening `fork-pr-contributor-approval` repo-wide.
+It would work, but this repo is public and that setting also gates first-time
+human contributors — a real cost to fix a bot problem.
+
+## v1.12.2 — 2026-08-01
+### Seasonality: fixed crash and restricted concordance to full-year data
+
+Two defects in the seasonality module and its concordance test.
+
+- **Crash when analyzing regions with no published months.** The `_classify()`
+  function signature changed to include `wrap` and `months_present` arguments,
+  but one call site (line 238, triggered when all 12 months are suppressed) was
+  not updated. This was a two-character fix but the real defect is the missing
+  test — the new test suite covers regions with exactly one published month, all
+  identical months, and no published months.
+- **Partial-year regions silently entered concordance tests with the wrong null
+  hypothesis.** The concordance test's null is that each region's peak lands
+  anywhere in a chosen three-month window (p=0.25, or 3/12). For a partial-year
+  region publishing k months, the probability depends on which months survived
+  suppression — ranging from 0 to 1 with no single scalar null — which is why
+  excluding partial regions is correct rather than reweighting them. The fix
+  changes no published figures: 2025 broiler monthly data contains **22 states,
+  all 22 with a complete 12-month series, 0 partial.** Peak concordance
+  p_corrected = 0.00841 ("strong agreement"), trough p_corrected = 0.03445
+  ("agreement") — both unchanged. This is a guard against future corpora where
+  NASS suppression may leave a state partial. The exclusion count appears on the
+  API surface and is disclosed in caveats.
+
+### The release now asks for its own deploy
+
+`deploy.yml` triggers on `push` to master, and `release.yml` merges its version
+PR with the default `GITHUB_TOKEN` — which raises no workflow-triggering event.
+So the one push to master that lands a release is the one push that never
+deploys. v1.12.1 merged at 23:41 and the newest Deploy run was still the human
+push at 23:38; the site went on serving v1.12.0 with nothing red anywhere,
+because no run existed to fail. Human pushes deploy fine, which is what made
+this invisible for as long as it was.
+
+- **`release.yml` dispatches `deploy.yml` on master after the merge.** The
+  restriction is on the event *cascade*, not on the dispatch API — a
+  `workflow_dispatch` made with `GITHUB_TOKEN` does start the target workflow.
+  `actions: write` was already granted for the ci.yml dispatch.
+- **On `master`, not on the tag**, because deploys track the branch and the tag
+  may already be behind. Deploy's own "verify what is actually serving" step
+  catches a wrong commit; its precondition was a run existing at all.
+- **A failed dispatch warns rather than failing the release.** The tag is cut
+  and the release published by that point, so retracting them to report an
+  undeployed site would be worse than an annotation saying "released, not
+  deployed" next to a one-click manual dispatch.
+
+Considered and rejected: merging with a PAT or GitHub App token, which would
+make the whole cascade work. It fixes more, and it puts a long-lived credential
+with write access into a public repo's workflow for a problem one API call
+solves.
 
 ## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
@@ -393,6 +450,24 @@ The unsourced-estimate share of loss factors rises from 46% to 48%, and the
 README says so. That is the audit working: silk is the thinnest-sourced subject
 in the corpus and the thinness stays visible instead of being laundered by
 proximity to well-sourced poultry figures.
+
+### Say what COOPER actually did
+
+`docs/research/README.md` now states the attribution in one place: extracted by
+a local model, specified and graded by a human, verified against the returned
+document. Not "research done by an AI", which overstates a worker that fetches
+exactly the URLs it is handed and never searches, and understates the quote
+gate that is the reason any of these figures are citable.
+
+Findings files carry an `extraction:` block -- host, models, run date, and the
+gate that passed them -- written by `runner.py` rather than added by hand, so a
+row quoted out of `accepted/` still says what produced it. The directory name
+was doing that job by implication, and an implication does not survive a
+copy-paste. Backfilled onto saffron and maple. It records the batch; per-figure
+detail stays in `agreement:`, because which model won a given field is not
+something the runner measures and inventing it would be the tidy-looking
+fiction the pipeline exists to keep out. The block carries neither `quote` nor
+`confidence`, so `verify` never sees it.
 
 ### Tags that are not releases
 

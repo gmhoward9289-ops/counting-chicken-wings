@@ -157,10 +157,29 @@ Three consequences worth knowing:
   a bad release is easier to prevent than to retract. That same rule is why `ci.yml`
   carries a `workflow_dispatch` trigger: the bot's own PR gets no `pull_request`
   event, so `release.yml` asks for its four required checks by name.
+- **"No `pull_request` event" does not mean "no `pull_request` run."** GitHub still
+  *creates* one for the bot's PR and parks it at `action_required`, awaiting a human.
+  That parked run holds the four required contexts, so it pins the PR at `BLOCKED`
+  and the dispatched run passing alongside it does not release it. The tell is
+  `gh pr checks` saying **"no checks reported on the branch"** while
+  `/commits/<sha>/check-runs` shows them all green — a red release PR with nothing
+  visibly wrong. `release.yml` now approves the parked run itself, inside the wait
+  loop (`approve_stalled_runs`), which is not a bypass: approving makes the required
+  checks actually run, and they still have to pass. Loosening
+  `fork-pr-contributor-approval` repo-wide would also have fixed it and was rejected —
+  this repo is **public**, and that knob also gates first-time human contributors.
 
 Deploys track `branch: master`, not tags, so the deployed site is normally *ahead* of
 the latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version`
 for the commit SHA.
+
+**The release merge is the one push to master that does not deploy itself.**
+`deploy.yml` triggers on `push`, and the release PR is merged with `GITHUB_TOKEN`, so
+no `push` event is raised — v1.12.1 sat undeployed with nothing red anywhere, because
+no Deploy run existed to be red. `release.yml` now dispatches `deploy.yml` explicitly
+after its merge; the restriction is on the event *cascade*, not on the dispatch API.
+If a release ever ships and the site does not change, check that the **Deploy the
+release** step ran, not just that Deploy's own runs are green.
 
 ## Docs
 
