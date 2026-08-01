@@ -1018,7 +1018,15 @@ async function showSize(species) {
 }
 
 // ---- nutrition & impact
+// Same pattern as calcSeq/sciSeq above: requests are not guaranteed to
+// resolve in the order they were sent, so a stamp per call and a check on
+// return is what stops a partially-typed count from winning a race against
+// the finished one -- otherwise the footprint chart and the farmer's-share
+// paragraph could settle on numbers for "1" while "120" was still mid-type.
+let impactSeq = 0;
+
 async function impact() {
+  const mine = ++impactSeq;
   const count = $('#i-count').value || 12;
   const product = $('#i-product').value || 'whole_wing';
 
@@ -1026,6 +1034,7 @@ async function impact() {
     api(`/api/nutrition?product=${product}`),
     api(`/api/footprint?count=${count}&product=${product}`),
   ]);
+  if (mine !== impactSeq) return;   // superseded by a newer request
 
   $('#i-alloc').textContent = f.allocation_note;
 
@@ -1093,6 +1102,18 @@ async function impact() {
     '</table>';
 }
 
+// Trailing-edge debounce, used below to stop every keystroke in the count
+// field from firing its own request -- typing "120" fired six requests
+// (two listeners × three digits) before the seq guard above was even
+// reached.
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
 async function initImpact() {
   // Default to the headline product explicitly. Products come back ordered
   // by slug, which puts "boneless_wing" first alphabetically -- and boneless
@@ -1103,9 +1124,14 @@ async function initImpact() {
     .map(p => `<option value="${p.slug}"${
       p.slug === 'whole_wing' ? ' selected' : ''}>${p.label}</option>`)
     .join('');
+  // Assignment, not addEventListener: redrawTheme() re-runs initImpact on
+  // every theme toggle, and addEventListener would leave the previous
+  // toggle's listener in place instead of replacing it -- each theme switch
+  // would then fire one more impact() per keystroke than the last.
+  const debouncedImpact = debounce(impact, 250);
   ['i-count', 'i-product'].forEach(id => {
-    $('#' + id).addEventListener('change', impact);
-    $('#' + id).addEventListener('input', impact);
+    $('#' + id).onchange = impact;
+    $('#' + id).oninput = debouncedImpact;
   });
   await impact();
 }
