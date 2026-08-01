@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.14.0 — 2026-08-01
 ### The mixing answer is saturation, and now the corpus can prove it
 
 The README and `data/mixing.yaml` both claimed size grading was "the single
