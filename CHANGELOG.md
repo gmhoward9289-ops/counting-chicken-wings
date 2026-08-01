@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.12.2 — 2026-08-01
 ### Seasonality: fixed crash and restricted concordance to full-year data
 
 Two defects in the seasonality module and its concordance test.
