@@ -194,7 +194,7 @@ def calculate(
         try:
             recurring = dbm.make_recurring(prod, window_days)
         except ValueError as e:
-            raise HTTPException(500, str(e))
+            raise HTTPException(400, str(e))
 
         res = run(
             units_requested=units,
@@ -622,7 +622,11 @@ def countries():
 def output(
     iso3: str,
     species: str = "broiler",
-    min_confidence: str | None = Query(None, pattern="|".join(CONFIDENCE_RANK)),
+    # Anchored: an unanchored alternation only has to match SOMEWHERE in the
+    # string, so "xxmeasuredxx" validated as if it were "measured".
+    min_confidence: str | None = Query(
+        None, pattern=f"^(?:{'|'.join(CONFIDENCE_RANK)})$"
+    ),
 ):
     """Output, value and inventory for one country, in its own units.
 
@@ -716,29 +720,6 @@ def output(
             "suppressed_regions": sum(
                 1 for r in regional if r["suppressed"]
             ),
-        }
-    finally:
-        conn.close()
-
-
-@app.get("/api/state-trend/{region}")
-def state_trend(region: str, year: int = 2025):
-    """Month-over-month average live weight for one state."""
-    conn = dbm.connect()
-    try:
-        rows = conn.execute(
-            """SELECT month, avg_size FROM v_broiler_size_stat
-               WHERE region = ? AND year = ? AND month IS NOT NULL
-               ORDER BY month""",
-            (region, year),
-        ).fetchall()
-        if not rows:
-            raise HTTPException(404, f"no monthly data for {region}")
-        return {
-            "region": region,
-            "year": year,
-            "months": [r["month"] for r in rows],
-            "values": [r["avg_size"] for r in rows],
         }
     finally:
         conn.close()
@@ -1214,7 +1195,13 @@ def nutrition(product: str | None = None):
 
 
 @app.get("/api/footprint")
-def footprint(count: float = Query(12, gt=0), product: str = "whole_wing"):
+def footprint(
+    # `le` mirrors /api/calculate and /api/scientific, which both cap here --
+    # this one did not, so count=999999999 returned 200 with half a billion
+    # birds' worth of footprint.
+    count: float = Query(12, gt=0, le=100000),
+    product: str = "whole_wing",
+):
     """Resource and economic footprint, mass-allocated to the product.
 
     A dozen wings does NOT carry six birds' worth of anything. Wings are
@@ -1305,7 +1292,14 @@ def footprint(count: float = Query(12, gt=0), product: str = "whole_wing"):
 
 
 @app.get("/api/facts")
-def facts(placement: str = "learning", limit: int = 20):
+def facts(
+    placement: str = "learning",
+    # Unbounded before this: `limit` was a plain int, and SQLite reads a
+    # negative LIMIT as "no limit at all" -- so `?limit=-1` returned every
+    # fact in the corpus. The fact deck's own "everything" fetch asks for
+    # 500 (app.js initFacts), so the ceiling has to clear that.
+    limit: int = Query(20, ge=1, le=1000),
+):
     conn = dbm.connect()
     try:
         return {"facts": [dict(r) for r in
