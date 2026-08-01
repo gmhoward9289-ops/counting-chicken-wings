@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.12.3 — 2026-08-01
 ### The release job approves the run GitHub parks for it
 
 v1.12.1 published only because a human approved a workflow run at the right
