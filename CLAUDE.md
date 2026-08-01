@@ -157,6 +157,17 @@ Three consequences worth knowing:
   a bad release is easier to prevent than to retract. That same rule is why `ci.yml`
   carries a `workflow_dispatch` trigger: the bot's own PR gets no `pull_request`
   event, so `release.yml` asks for its four required checks by name.
+- **"No `pull_request` event" does not mean "no `pull_request` run."** GitHub still
+  *creates* one for the bot's PR and parks it at `action_required`, awaiting a human.
+  That parked run holds the four required contexts, so it pins the PR at `BLOCKED`
+  and the dispatched run passing alongside it does not release it. The tell is
+  `gh pr checks` saying **"no checks reported on the branch"** while
+  `/commits/<sha>/check-runs` shows them all green — a red release PR with nothing
+  visibly wrong. `release.yml` now approves the parked run itself, inside the wait
+  loop (`approve_stalled_runs`), which is not a bypass: approving makes the required
+  checks actually run, and they still have to pass. Loosening
+  `fork-pr-contributor-approval` repo-wide would also have fixed it and was rejected —
+  this repo is **public**, and that knob also gates first-time human contributors.
 
 Deploys track `branch: master`, not tags, so the deployed site is normally *ahead* of
 the latest release. "Is v1.0 running?" is the wrong question — ask `GET /api/version`

@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+### The release job approves the run GitHub parks for it
+
+v1.12.1 published only because a human approved a workflow run at the right
+moment. `release.yml` opens its version PR with the default `GITHUB_TOKEN`, and
+the file already documented that this raises no `pull_request` event — which is
+true, and incomplete. GitHub still **creates** the `pull_request` run and parks
+it at `action_required`. That parked run holds the four required contexts, so
+the PR sat at `BLOCKED` while the dispatched run passed green beside it, and the
+job waited out its deadline for a merge that could never happen.
+
+The symptom is deliberately hard to read: `gh pr checks` reports *"no checks
+reported on the branch"* while the check-runs API shows every check successful.
+
+- **`approve_stalled_runs` in the wait loop** approves any `pull_request` run on
+  the release branch sitting at `action_required`. Not a bypass — approving is
+  what makes the required checks actually run, and they still have to pass.
+- **It lives in the poll loop, not in a step after the dispatch**, because the
+  parked run can appear after the dispatch returns, and `gh pr update-branch` in
+  the `BEHIND` case creates a fresh one needing the same treatment.
+- **It cannot abort a release.** Every failure path is guarded; a lookup or
+  approval that fails warns and lets the loop carry on to its own deadline.
+- The dispatch step's comment claimed the run is never created. Corrected in
+  place rather than left to mislead the next reader.
+
+Considered and rejected: loosening `fork-pr-contributor-approval` repo-wide.
+It would work, but this repo is public and that setting also gates first-time
+human contributors — a real cost to fix a bot problem.
+
 ## v1.12.2 — 2026-08-01
 ### Seasonality: fixed crash and restricted concordance to full-year data
 
