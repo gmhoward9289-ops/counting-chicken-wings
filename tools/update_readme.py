@@ -51,7 +51,7 @@ def replace_block(text: str, block: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
-    text = README.read_text()
+    text = README.read_text(encoding="utf-8")
     updated = replace_block(text, stats_block())
 
     if "--check" in argv:
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     if updated == text:
         print(f"{README.name} already current")
         return 0
-    README.write_text(updated)
+    README.write_text(updated, encoding="utf-8")
     print(f"{README.name} updated")
     return 0
 

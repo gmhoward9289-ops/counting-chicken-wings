@@ -206,6 +206,8 @@ def calculate(
             # Derived inside run() from the figures -- see unit_is_aggregate.
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
+            correlated_groups=dbm.load_correlated_groups(
+                conn, prod["species_slug"]),
         )
 
         slugs = list({s.source_slug for s in res.trace if s.source_slug})
@@ -239,6 +241,7 @@ def calculate(
                 # wired up.
                 "ceiling": res.distinct_ceiling,
                 "required": res.required,
+                "required_estimator": res.required_estimator,
                 "required_lo": res.required_lo,
                 "required_hi": res.required_hi,
                 "distinct": res.distinct_mean,
@@ -365,6 +368,8 @@ def scientific(
             # Derived inside run() from the figures -- see unit_is_aggregate.
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
+            correlated_groups=dbm.load_correlated_groups(
+                conn, prod["species_slug"]),
         )
 
         kept = [s for s in loss
@@ -406,6 +411,7 @@ def scientific(
                 "floor": res.floor,
                 "ceiling": res.distinct_ceiling,   # see /api/calculate
                 "required": res.required,
+                "required_estimator": res.required_estimator,
                 "required_lo": res.required_lo,
                 "required_hi": res.required_hi,
                 "distinct": res.distinct_mean,

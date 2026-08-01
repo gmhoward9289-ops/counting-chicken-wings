@@ -652,6 +652,35 @@ CREATE TABLE loss_factor (
 CREATE INDEX idx_loss_factor_lookup
     ON loss_factor (loss_stage_id, species_id, producer_id, program_id);
 
+-- Loss stages are NOT independent of one another in reality -- rough
+-- catching and loading raises wing damage, grading trim loss, AND
+-- transport DOA together, because all three load on the same latent
+-- handling-quality of that particular load. Sampling every stage
+-- independently in the Monte Carlo (#77) let errors partially cancel at
+-- roughly sqrt(n), understating the reported band. `rho` is itself an
+-- estimate -- the point is to stop asserting zero correlation, not to
+-- claim a calibrated figure -- so it carries a confidence grade and a
+-- citation exactly like a loss_factor, rather than living as a bare
+-- constant in Python.
+CREATE TABLE loss_correlation_group (
+    id              INTEGER PRIMARY KEY,
+    slug            TEXT    NOT NULL UNIQUE,
+    label           TEXT    NOT NULL,
+    description     TEXT,
+    rho             REAL    NOT NULL CHECK (rho >= 0 AND rho < 1),
+    confidence      TEXT    NOT NULL CHECK (confidence IN (
+                        'measured', 'derived', 'study', 'industry', 'estimate'
+                    )),
+    source_id       INTEGER NOT NULL REFERENCES source(id),
+    notes           TEXT
+);
+
+CREATE TABLE loss_correlation_group_stage (
+    group_id        INTEGER NOT NULL REFERENCES loss_correlation_group(id),
+    loss_stage_id   INTEGER NOT NULL REFERENCES loss_stage(id),
+    PRIMARY KEY (group_id, loss_stage_id)
+);
+
 -- Size/quality grading. Modeled separately from loss because grading is
 -- also a MIXING event: it does not shuffle an individual's units, it
 -- deliberately separates them when they differ in size.
