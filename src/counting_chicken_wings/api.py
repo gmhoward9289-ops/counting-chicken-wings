@@ -206,6 +206,8 @@ def calculate(
             # Derived inside run() from the figures -- see unit_is_aggregate.
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
+            # From the corpus -- see model.MixingParams.
+            params=dbm.load_mixing_params(conn),
         )
 
         slugs = list({s.source_slug for s in res.trace if s.source_slug})
@@ -365,6 +367,8 @@ def scientific(
             # Derived inside run() from the figures -- see unit_is_aggregate.
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
+            # From the corpus -- see model.MixingParams.
+            params=dbm.load_mixing_params(conn),
         )
 
         kept = [s for s in loss
@@ -464,11 +468,17 @@ def mixing_curve(
         "floor": draw / units_per_individual,
         "ceiling": draw,
         "points": points,
+        # Deliberately the bare curve: no separation, no clustering. It is
+        # the shape that matters here, and the shape is the finding -- it
+        # flattens above a few hundred individuals and never recovers. Past
+        # that point the pool estimate stops mattering, which is why the
+        # commodity answer does not rest on any pool figure in the corpus.
         "note": (
             "Each individual contributes all of its units to the pool, so "
-            "this is the most conservative case. Size grading actively "
-            "separates a pair, which pushes the real answer even closer to "
-            "the ceiling."
+            "this is the most conservative case. Note how fast the curve "
+            "flattens: past a few hundred individuals the answer stops "
+            "depending on the pool size at all, which is why every "
+            "commodity-scale route lands in the same place."
         ),
     }
 

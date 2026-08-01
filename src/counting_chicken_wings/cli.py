@@ -148,6 +148,9 @@ def cmd_count(args) -> int:
         # of `yield_mode == "continuous"`, and copies drift. See run().
         anatomical=bool(product["is_anatomical_constant"]),
         floor_source=dbm.product_source_slug(conn, product["slug"]),
+        # From the corpus, never from a module constant. Omitting this turns
+        # every mixing mechanism off -- see model.MixingParams.
+        params=dbm.load_mixing_params(conn),
     )
 
     # ---- the answer ----------------------------------------------------

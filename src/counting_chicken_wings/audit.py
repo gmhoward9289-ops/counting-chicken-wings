@@ -39,6 +39,7 @@ TABLE_LABELS = {
     "producer": "producers",
     "loss_factor": "loss factors",
     "mixing_stage": "mixing stages",
+    "model_parameter": "mixing model parameters",
     "slaughter_stat_year": "national slaughter stats",
     "regional_size_stat": "regional stats",
     "regional_production_year": "regional production stats",

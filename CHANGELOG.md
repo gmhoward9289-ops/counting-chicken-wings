@@ -1,5 +1,65 @@
 # Changelog
 
+## Unreleased
+### The mixing answer is saturation, and now the corpus can prove it
+
+The README and `data/mixing.yaml` both claimed size grading was "the single
+strongest driver pushing the answer toward 12". The model has never agreed and
+nobody had asked it. Sweeping the grader's separation efficiency across its
+entire range moves the commodity 12-wing answer by **0.0003 of a bird**; scaling
+every pool in the cascade down 100-fold still returns 11.9966. The number is a
+saturation result, not a mechanism result, and the published prose now says so.
+
+That is the stronger claim, not the weaker one: every pool size in the corpus is
+our unsourced estimate, and the commodity answer does not depend on any of them.
+
+- **`model.saturation_threshold` makes the claim checkable.** Above **661**
+  commingled birds a dozen wings is within 0.05 of twelve, and above 3,301 it is
+  within 0.01. `tests/test_scientific.py` fails if any wing route's worst-case
+  stream — each stage at its *lo* bound, not its mode — ever drops near that,
+  and asserts the butcher's tray stays below it, because a cascade whose routes
+  all saturate has stopped distinguishing anything.
+
+- **`SEPARATION_EFFICIENCY` no longer lives in Python.** A figure hardcoded in a
+  module bypasses the citation audit, which is this project's one guarantee. It
+  sat at a bare `0.90` for months, and the sweep above is the first time anyone
+  could say what it was worth. It and three new parameters are now rows in the
+  `model_parameter` table, built from `data/mixing.yaml`, each with a lo/mode/hi
+  band, a confidence grade and a citation, and each audited exactly like a loss
+  factor. `MixingParams()` deliberately carries **no** copy of the shipped
+  values — it turns every mechanism off — so a caller that forgets to pass
+  params fails towards the assumption-free answer rather than towards a stale
+  constant. `tests/test_scientific.py` pins the wiring.
+
+- **Clustering in the draw**, the only force in the model that can push the
+  count down. A fryer scoop is a grab of contiguous units from a bin filled case
+  by case, not twelve independent picks. Modelled with standard cluster
+  sampling: a scoop size, an adjacency-retention parameter per stage kind, and
+  Kish's design effect reported so the loss of effective sample size is
+  explicit. A route's retention is the product of its stages', so the
+  `random`/`separating`/`none` sequence finally determines something.
+
+  Grouping an exchangeable draw is an **exact** no-op — pinned to 1e-12, because
+  getting that null wrong invents an effect that is not there.
+
+- **What fell out, reported rather than tuned.** The parameters were reasoned
+  from case packs, combo-bin sizes and how a portion is taken from a bin, graded
+  `estimate`, and left alone. The commodity answer **did not move**: six bulk
+  commingling stages and a grader leave a cascade retention near 1e-6. The
+  mechanism is not impotent — delete the stages that destroy adjacency and the
+  same pools collapse to 6.50 — it is that a chiller is a stirred tank.
+
+  **One published figure moves.** The local butcher route goes **11.16 → 11.01**
+  for a dozen wings: a forty-bird tray keeps adjacency a plant destroys, which
+  is exactly where clustering physically should bite. Commodity foodservice
+  (11.99997), grocery retail and whole-birds-at-home are unchanged.
+
+- **Not yet resampled by the Monte Carlo.** Each parameter carries a band for
+  that purpose and the loop still holds them at the mode, so the reported
+  interval understates the spread on the distinct figure by whatever they
+  contribute. The pool sizes beside them are resampled. Known open item, called
+  out in `model.run`'s docstring.
+
 ## v1.12.1 — 2026-07-31
 ### The fetcher now says when it was handed a doorman
 

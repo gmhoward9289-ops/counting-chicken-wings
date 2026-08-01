@@ -701,6 +701,37 @@ CREATE TABLE mixing_stage (
     UNIQUE (domain_id, sequence)
 );
 
+-- Scalar parameters of the mixing model itself -- how thoroughly a grader
+-- splits a pair, how many units come up in one scoop, how much of "these two
+-- units travelled together" survives a stage.
+--
+-- These used to live as bare constants in model.py, which is a bug in this
+-- project specifically: a figure hardcoded in a module bypasses the citation
+-- audit, so nobody could ask "how much does this number matter?" without
+-- writing a one-off sweep. SEPARATION_EFFICIENCY sat there at 0.90 for months
+-- and turned out to be worth 0.0003 of a bird -- harmless, but nobody knew
+-- that, which is the whole argument for the rule.
+--
+-- source_id is NOT NULL, so `audit.py` discovers this table from the schema
+-- and demands a citation for every row exactly as it does for a loss factor.
+CREATE TABLE model_parameter (
+    id              INTEGER PRIMARY KEY,
+    slug            TEXT    NOT NULL UNIQUE,
+    label           TEXT    NOT NULL,
+
+    -- Triangular band, same shape as a loss factor's survive_lo/mode/hi, so
+    -- the Monte Carlo can resample these the same way it resamples pools.
+    value_lo        REAL    NOT NULL,
+    value_mode      REAL    NOT NULL,
+    value_hi        REAL    NOT NULL,
+
+    source_id       INTEGER NOT NULL REFERENCES source(id),
+    confidence      TEXT    NOT NULL,
+    description     TEXT    NOT NULL,
+
+    CHECK (value_lo <= value_mode AND value_mode <= value_hi)
+);
+
 -- Named end-to-end routes: 'commodity_foodservice', 'local_butcher',
 -- 'whole_bird_home'. Choosing one selects which mixing stages apply, and
 -- that is what moves the answer within the floor..n band.

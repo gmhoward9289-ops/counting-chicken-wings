@@ -10,13 +10,17 @@ show up as a source of uncertainty about one.
 
 import pytest
 
+from counting_chicken_wings import db as dbm
+from counting_chicken_wings.db import connect
 from counting_chicken_wings.model import (
     CONFIDENCE_RANK,
     LossStage,
+    MixingParams,
     MixingStage,
     _percentile,
     meets_confidence,
     run,
+    saturation_threshold,
     sensitivity,
 )
 
@@ -286,3 +290,85 @@ def test_high_result_exceeds_low_result():
 
 def test_sensitivity_of_an_empty_chain_is_empty():
     assert sensitivity(12, 2.0, []) == []
+
+
+# ---------------------------------------------------------------------------
+# Saturation: the claim the commodity headline actually rests on
+# ---------------------------------------------------------------------------
+#
+# Every pool figure in data/mixing.yaml is our estimate. The commodity answer
+# is publishable anyway because it does not depend on them -- above the
+# saturation threshold the curve is flat and the pool stops mattering. That
+# is a stronger result than "our grading estimate drove it", and it is only
+# worth publishing while it is true, so it is a test rather than a sentence.
+
+def test_the_commodity_cascade_is_saturated_by_a_wide_margin():
+    """No pool estimate in the wing corpus is close to mattering.
+
+    Checked at each stage's LO bound, not its mode -- the claim has to hold
+    at the pessimistic end of every band or it is not a claim about the
+    corpus, it is a claim about one column of it.
+
+    The butcher's tray is deliberately exempt and asserted the other way: it
+    is genuinely below the threshold, which is exactly why that route reads
+    meaningfully under twelve. If it ever saturated too, the routes would
+    have stopped distinguishing anything and the cascade would be decoration.
+    """
+    conn = connect()
+    threshold = saturation_threshold(12, 2.0, epsilon=0.05)
+
+    for chain in ("commodity_foodservice", "grocery_retail"):
+        stages = dbm.load_mixing_stages(conn, chain)
+        worst_case_stream = max(s.band()[0] for s in stages)
+        assert worst_case_stream > threshold, (
+            f"{chain} is no longer saturated: worst-case stream "
+            f"{worst_case_stream} vs threshold {threshold}. The README's "
+            f"claim that the answer does not depend on any pool estimate "
+            f"has stopped being true."
+        )
+
+    butcher = dbm.load_mixing_stages(conn, "local_butcher")
+    assert max(s.pool for s in butcher) < threshold
+    conn.close()
+
+
+def test_the_shipped_parameters_reach_the_model():
+    """The plumbing test. Values live in YAML; nothing else may supply them.
+
+    MixingParams() applies no mechanism at all, on purpose, so a caller that
+    forgets to pass params fails towards the assumption-free answer rather
+    than towards a stale constant. The flip side is that the wiring itself
+    has to be checked, or the whole cascade could go quietly inert.
+    """
+    conn = connect()
+    params = dbm.load_mixing_params(conn)
+    assert params != MixingParams.inert()
+    assert params.separation_efficiency > 0.0
+    assert params.draw_cluster_size >= 1.0
+    assert 0.0 < params.adjacency_retention_random <= 1.0
+    assert 0.0 < params.adjacency_retention_passthrough <= 1.0
+    conn.close()
+
+
+def test_every_mixing_parameter_is_graded_and_cited():
+    """Same guarantee as a loss factor. This is the point of issue #79.
+
+    audit.py enforces the citation from the schema, which is the real gate;
+    this pins the grade and the band, which the schema cannot express.
+    """
+    conn = connect()
+    rows = conn.execute(
+        "SELECT p.slug, p.confidence, p.value_lo, p.value_mode, p.value_hi, "
+        "       s.slug AS source_slug "
+        "FROM model_parameter p JOIN source s ON s.id = p.source_id"
+    ).fetchall()
+    assert rows, "the mixing model has no parameters in the corpus"
+    for r in rows:
+        assert r["source_slug"], r["slug"]
+        assert r["confidence"] in CONFIDENCE_RANK, r["slug"]
+        assert r["value_lo"] <= r["value_mode"] <= r["value_hi"], r["slug"]
+        # A point value would be a claim of precision none of these has.
+        assert r["value_lo"] < r["value_hi"], (
+            f"{r['slug']} has no band, so it cannot be swept or resampled"
+        )
+    conn.close()

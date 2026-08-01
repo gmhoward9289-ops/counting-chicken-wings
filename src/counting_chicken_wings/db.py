@@ -10,7 +10,7 @@ import sqlite3
 from pathlib import Path
 
 from .build import DEFAULT_DB, build
-from .model import LossStage, MixingStage, RecurringYield
+from .model import LossStage, MixingParams, MixingStage, RecurringYield
 
 # A recurring product needs a window before it means anything, and the right
 # default is a property of the PRODUCT, not of the module. It lived here as a
@@ -271,6 +271,41 @@ def list_supply_chains(conn) -> list[sqlite3.Row]:
         "LEFT JOIN species s ON s.id = sc.species_id "
         "ORDER BY sc.is_default DESC, sc.slug"
     ).fetchall()
+
+
+def load_mixing_params(conn) -> MixingParams:
+    """The mixing model's scalar parameters, from the corpus.
+
+    This function is the ONLY way the shipped values reach the model. There
+    is deliberately no Python default carrying them -- `MixingParams()` turns
+    every mechanism off -- because a second copy of an audited figure is the
+    bug this table exists to fix.
+
+    A missing row falls back to the inert default rather than to a guess, so
+    the failure mode of a half-loaded corpus is "the model assumes nothing",
+    which is visible in the answer and is the honest direction to fail in.
+    """
+    rows = conn.execute(
+        "SELECT slug, value_mode FROM model_parameter"
+    ).fetchall()
+    have = {r["slug"]: r["value_mode"] for r in rows}
+    inert = MixingParams()
+
+    def pick(slug: str, fallback: float) -> float:
+        v = have.get(slug)
+        return fallback if v is None else float(v)
+
+    return MixingParams(
+        separation_efficiency=pick(
+            "separation_efficiency", inert.separation_efficiency),
+        draw_cluster_size=pick(
+            "draw_cluster_size", inert.draw_cluster_size),
+        adjacency_retention_random=pick(
+            "adjacency_retention_random", inert.adjacency_retention_random),
+        adjacency_retention_passthrough=pick(
+            "adjacency_retention_passthrough",
+            inert.adjacency_retention_passthrough),
+    )
 
 
 def load_mixing_stages(conn, chain_slug: str) -> list[MixingStage]:
