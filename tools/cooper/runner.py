@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures as cf
+import datetime as _dt
 import hashlib
 import html
 import json
 import re
+import socket
 import ssl
 import subprocess
 import sys
@@ -875,8 +877,25 @@ def run(batch: str) -> int:
         if it["field"] not in seen:
             report.append(f"{it['field']}: no figure found in any source")
 
+    # Provenance is written by the runner rather than added by hand at accept
+    # time, because a convention that depends on somebody remembering it decays
+    # on the batch nobody was watching. It records what produced these rows so
+    # a figure quoted out of this file still says where it came from -- the
+    # directory it happens to sit in is an implication, not provenance.
+    #
+    # `verify` walks for dicts carrying `quote` or `confidence`; this block has
+    # neither key, so it is metadata the gate cannot be fed. Keep it that way.
+    extraction = {
+        "host": socket.gethostname(),
+        "models": [EXTRACTOR, LONG_CONTEXT],
+        "ran": _dt.date.today().isoformat(),
+        "specified_by": "human",
+        "gate": "verify (verbatim quote against the returned document)",
+    }
+
     (out_dir / "findings.yaml").write_text(
         yaml.safe_dump({"batch": batch, "subject": subject,
+                        "extraction": extraction,
                         "findings": results, "proposed_sources": []},
                        sort_keys=False, allow_unicode=True),
         encoding="utf-8")

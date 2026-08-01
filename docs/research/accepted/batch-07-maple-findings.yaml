@@ -1,5 +1,20 @@
 batch: batch-07-maple
 subject: maple
+
+# Extracted by a local model, specified and graded by a human, verified
+# against the returned document. See docs/research/README.md.
+#
+# Call rates were low and asymmetric on this batch -- qwen2.5-coder:7b answered
+# 2 of 10, gemma4-32k 5 of 10 -- so several rows below rest on one model rather
+# than two. The per-row `agreement` field says which; nothing here is in the
+# corpus yet. See batch-07-maple-REVIEW.md.
+extraction:
+  host: COOPER
+  models: [qwen2.5-coder:7b, gemma4-32k]
+  ran: 2026-07-30
+  specified_by: human            # which URLs, which fields, which questions
+  gate: verify (verbatim quote against the returned document)
+
 findings:
 - field: sap_to_syrup_ratio
   value_lo: null

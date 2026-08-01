@@ -67,6 +67,15 @@
 
 * { box-sizing: border-box; }
 
+/* The UA default for [hidden] is `display: none`, but several rules below
+   set `display: flex` on elements that also carry `hidden` (`.check`,
+   `footer.build`) -- an author display rule always wins over the UA one, so
+   `hidden` silently stopped hiding anything. This must win over every other
+   display rule in the sheet, which is what !important is for here: it is not
+   a specificity shortcut, it is restoring the one behaviour `hidden` is
+   supposed to guarantee regardless of what else targets the element. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font: 15.5px/1.62 'Public Sans', system-ui, -apple-system, sans-serif;
@@ -132,6 +141,20 @@ nav button.on { color: var(--stamp); border-left-color: var(--stamp);
     flex-direction: row; flex-wrap: nowrap; border-left: 0;
     border-bottom: 1px solid var(--line); margin: 16px 0 16px;
     overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    /* Eleven items in one hidden-scrollbar row read as "half the tabs are
+       missing" with no other cue that six through eleven exist off-screen.
+       A mask, not a background gradient, so it fades the buttons themselves
+       (any theme's colours) rather than requiring a second gradient to keep
+       in sync with light/dark. Right edge only: the row opens scrolled all
+       the way left, so a left-side fade would clip the very first tab
+       ("Calculator") before anyone has scrolled anywhere. Stationary on the
+       element while its content scrolls underneath, which is what makes it
+       read as an edge rather than a highlight on whichever button happens
+       to be there. */
+    mask-image: linear-gradient(to right,
+      #000, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right,
+      #000, #000 calc(100% - 28px), transparent);
   }
   nav::-webkit-scrollbar { display: none; }
   nav button {
@@ -369,6 +392,17 @@ td.num { text-align: right; font-family: var(--mono); font-size: 13.5px;
        font-variant-numeric: tabular-nums; }
 .note { color: var(--faint); font-size: 13px; }
 .warn { color: var(--estimate); }
+/* Inline affordance for a rejected request (usually a 422): small and near
+   the control it belongs to, not a modal -- cleared on the next success so
+   it cannot outlive the problem it described. */
+.err {
+  color: var(--bad); font-size: 13px; margin: 10px 0 0;
+  border-left: 2px solid var(--bad); padding-left: 10px;
+}
+#boot-error {
+  margin: 14px 22px 0; color: var(--bad); font-size: 14px;
+  border: 1px solid var(--bad); padding: 12px 14px;
+}
 
 /* -------------------------------------------------------- country picker */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
