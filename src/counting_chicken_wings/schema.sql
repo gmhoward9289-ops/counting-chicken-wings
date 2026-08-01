@@ -1134,6 +1134,58 @@ JOIN source     src ON src.id = lf.source_id
 WHERE lf.valid_to IS NULL
 ORDER BY d.slug, ls.sequence;
 
+-- Coverage per SPECIES rather than per domain, one boolean per dimension of
+-- the corpus.
+--
+-- This exists because the page needs to say which species it actually answers
+-- in depth, and saying it in prose was the bug: twelve products sat in one
+-- dropdown as equals while eight of the eleven views showed exactly one of
+-- them, unlabelled. A sentence naming the deep species would have been true
+-- the day it was typed and wrong the day a second species filled in.
+--
+-- So the anchor is derived from this view instead: the active species present
+-- in the most dimensions. Add a dimension by adding a column here, never by
+-- listing species anywhere -- there is deliberately no such list, so the claim
+-- follows the data and retires itself when the data changes.
+--
+-- The raw `regional_size_stat` reads below are the one legitimate kind: the
+-- question is "which species have rows at all", which is precisely what
+-- v_broiler_size_stat and v_layer_egg_stat cannot answer without naming both
+-- of them. Every row here is grouped by species, so the pounds-versus-eggs
+-- confusion those views exist to prevent cannot occur.
+CREATE VIEW v_species_coverage AS
+SELECT
+    sp.id,
+    sp.slug,
+    sp.common_name,
+    sp.individual_noun,
+    sp.individual_plural,
+    d.slug AS domain,
+    EXISTS(SELECT 1 FROM supply_chain c
+            WHERE c.species_id = sp.id)              AS loss_chain,
+    EXISTS(SELECT 1 FROM product p
+            WHERE p.species_id = sp.id)              AS products,
+    EXISTS(SELECT 1 FROM quality_axis a
+            WHERE a.species_id = sp.id)              AS size_axis,
+    EXISTS(SELECT 1 FROM regional_size_stat r
+            WHERE r.species_id = sp.id
+              AND r.month IS NULL)                   AS regional_weight,
+    EXISTS(SELECT 1 FROM regional_size_stat r
+            WHERE r.species_id = sp.id
+              AND r.month IS NOT NULL)               AS seasonality,
+    EXISTS(SELECT 1 FROM husbandry_stat_year h
+            WHERE h.species_id = sp.id)
+      OR EXISTS(SELECT 1 FROM slaughter_stat_year y
+                 WHERE y.species_id = sp.id)         AS trends,
+    EXISTS(SELECT 1 FROM resource_footprint rf
+            WHERE rf.species_id = sp.id)             AS footprint,
+    EXISTS(SELECT 1 FROM nutrition n
+             JOIN product p ON p.id = n.product_id
+            WHERE p.species_id = sp.id)              AS nutrition
+FROM species sp
+JOIN domain d ON d.id = sp.domain_id
+WHERE sp.active = 1;
+
 -- Coverage dashboard: what is actually populated per domain. Drives the
 -- "add to it every day" workflow -- shows at a glance where the gaps are.
 CREATE VIEW v_domain_coverage AS

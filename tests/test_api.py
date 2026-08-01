@@ -36,7 +36,7 @@ def test_index_serves_html(client):
 
 @pytest.mark.parametrize("path", [
     "/api/meta", "/api/calculate", "/api/scientific", "/api/mixing-curve",
-    "/api/states", "/api/trends", "/api/facts", "/api/sources",
+    "/api/states", "/api/trends", "/api/facts", "/api/sources", "/api/scope",
 ])
 def test_every_endpoint_answers(client, path):
     assert client.get(path).status_code == 200
@@ -568,13 +568,66 @@ def test_saffron_chains_are_not_offered_for_wings(client):
 
 
 def test_every_axis_names_its_own_question_and_x_axis(client):
-    axes = get(client, "/api/quality-axes")["axes"]
+    """Of the species that HAVE an axis. The rest are checked below.
+
+    This endpoint returns every active species since the picker has to offer
+    every one of them, so the uniqueness check has to run over the answered
+    ones -- three unasked questions are three nulls, not three collisions.
+    """
+    axes = [a for a in get(client, "/api/quality-axes")["axes"]
+            if a["has_axis"]]
     assert len(axes) >= 2
     questions = {a["question"] for a in axes}
     assert len(questions) == len(axes), "two species share a question"
     for a in axes:
         assert a["x_label"], a["slug"]
         assert a["x_kind"] in ("continuous", "classes")
+
+
+def test_the_picker_offers_every_active_species(client):
+    """Three of six species used to be missing from "Does size matter?".
+
+    They had no `quality_axis` row, the endpoint inner-joined it, and they
+    dropped out of the payload entirely -- so the view claiming to grade
+    "every species" showed three chips and said nothing about the other three.
+    An absent answer is a finding about the corpus; an absent chip is a lie
+    about it.
+    """
+    from counting_chicken_wings import db as dbm
+
+    conn = dbm.connect()
+    try:
+        active = {r["slug"] for r in conn.execute(
+            "SELECT slug FROM species WHERE active = 1")}
+    finally:
+        conn.close()
+
+    axes = {a["slug"]: a for a in get(client, "/api/quality-axes")["axes"]}
+    assert set(axes) == active
+
+    unasked = [a for a in axes.values() if not a["has_axis"]]
+    assert unasked, "fixture assumption: some species has no size question yet"
+    for a in unasked:
+        # Nothing borrowed from the species next to it in the list.
+        assert a["question"] is None and a["x_label"] is None
+        assert a["x_kind"] is None
+        assert a["axis_rows"] == 0 and a["has_figures"] is False
+
+
+def test_a_species_with_no_size_question_is_not_an_error(client):
+    """200 with a null axis, not a 404.
+
+    The picker's own reason for omitting these species was that asking about
+    them raised a 404. An unasked question is data and has to be renderable;
+    only an unknown slug is a caller mistake.
+    """
+    d = get(client, "/api/bird-size", species="silkworm")
+    assert d["has_axis"] is False
+    assert d["axis"] is None
+    # Still named, so the view can say WHICH species has no question yet.
+    assert d["species"]["common_name"]
+    assert d["axis_bands"] == [] and d["has_figures"] is False
+    assert all(v is None for v in d["verdict"].values())
 
 
 def test_a_graded_species_does_not_borrow_weight_bands(client):
@@ -863,3 +916,172 @@ def test_both_endpoints_default_to_the_same_route(client):
     a = get(client, "/api/calculate", product="whole_wing")
     b = get(client, "/api/scientific", product="whole_wing", iterations=100)
     assert a["question"]["chain"] == b["question"]["chain"]
+
+
+# ---------------------------------------------------------------------------
+# Scope: which species a view is actually about
+#
+# The page offers twelve products across six species in one dropdown, and
+# eight of its eleven views answer for exactly one species. Picking "Silk
+# dress" and opening Trends showed broiler chickens with nothing marking them
+# as unrelated -- the DATA was already honest (nutrition returns an empty list
+# rather than borrowing chicken figures), so the gap was entirely in framing.
+#
+# These pin the one property that keeps the fix from rotting: a scope is read
+# off the rows the endpoint returned, never asserted. The day /api/trends
+# carries a second species its scope says two, with nobody remembering to
+# update a sentence.
+# ---------------------------------------------------------------------------
+
+SCOPED = ["/api/states", "/api/trends", "/api/seasonality", "/api/facts",
+          "/api/countries"]
+
+
+@pytest.mark.parametrize("path", SCOPED)
+def test_a_scoped_view_says_what_it_is_scoped_to(client, path):
+    d = get(client, path)
+    scope = d["scope"]
+    assert scope["species"], f"{path} reports no species"
+    assert scope["label"], f"{path} has nothing to print"
+    for sp in scope["species"]:
+        # Enough to compare against a selected product AND to name in prose.
+        for key in ("slug", "common_name", "individual_noun",
+                    "individual_plural"):
+            assert sp[key], f"{path}: species missing {key}"
+
+
+@pytest.mark.parametrize("path", SCOPED)
+def test_a_scope_names_only_species_the_corpus_has(client, path):
+    """A scope is a claim about the corpus and has to be checkable against it."""
+    from counting_chicken_wings import db as dbm
+
+    conn = dbm.connect()
+    try:
+        known = {r["slug"]: r["common_name"] for r in conn.execute(
+            "SELECT slug, common_name FROM species")}
+    finally:
+        conn.close()
+
+    for sp in get(client, path)["scope"]["species"]:
+        assert sp["slug"] in known
+        assert sp["common_name"] == known[sp["slug"]]
+
+
+def test_the_state_scope_matches_the_rows_the_state_view_draws(client):
+    """Read off the same view the endpoint charts, not written beside it."""
+    from counting_chicken_wings import db as dbm
+
+    d = get(client, "/api/states")
+    conn = dbm.connect()
+    try:
+        drawn = {r["slug"] for r in conn.execute(
+            """SELECT DISTINCT sp.slug FROM v_broiler_size_stat r
+               JOIN species sp ON sp.id = r.species_id
+               WHERE r.year = ? AND r.month IS NULL""", (d["year"],))}
+    finally:
+        conn.close()
+    assert {s["slug"] for s in d["scope"]["species"]} == drawn
+
+
+def test_the_fact_deck_is_scoped_by_domain_not_by_species(client):
+    """Facts hang off a domain, so the domain's label is the truer name.
+
+    Its species list still comes back, because that is what a caller compares
+    a selected product against -- but printing "Broiler chicken and Laying
+    hen" over a poultry deck would be narrower than the deck actually is.
+    """
+    from counting_chicken_wings import db as dbm
+
+    scope = get(client, "/api/facts")["scope"]
+    conn = dbm.connect()
+    try:
+        labels = {r["label"] for r in conn.execute("SELECT label FROM domain")}
+    finally:
+        conn.close()
+    assert scope["label"] in labels
+    assert len(scope["species"]) >= 1
+
+
+# ---------------------------------------------------------------------------
+# The anchor is computed, never named
+# ---------------------------------------------------------------------------
+
+
+def test_scope_reports_every_active_species(client):
+    from counting_chicken_wings import db as dbm
+
+    conn = dbm.connect()
+    try:
+        active = {r["slug"] for r in conn.execute(
+            "SELECT slug FROM species WHERE active = 1")}
+    finally:
+        conn.close()
+    assert {s["slug"] for s in get(client, "/api/scope")["species"]} == active
+
+
+def test_the_anchor_is_the_deepest_species_in_the_corpus(client):
+    """Derived from v_species_coverage, so it follows the data.
+
+    Written into the page instead, this claim would have been true the day it
+    was typed and wrong the day a second species filled in -- the same rot
+    that put "Israel cannot answer how many chickens" on the page once.
+    """
+    d = get(client, "/api/scope")
+    depths = sorted((s["depth"] for s in d["species"]), reverse=True)
+    assert d["anchor"] is not None, "fixture assumption: one species is deepest"
+    assert d["anchor"]["depth"] == depths[0]
+    assert depths[0] > depths[1], "no strict anchor, so none should be claimed"
+    # And it is a real row, not a synthesised one.
+    assert d["anchor"] in d["species"]
+
+
+def test_scope_labels_every_dimension_the_view_carries(client):
+    """A column added to v_species_coverage with no label is a silent gap.
+
+    The view is the source of truth for WHICH dimensions exist; api.py only
+    names them. A new column would otherwise reach the page as its own raw
+    identifier.
+    """
+    from counting_chicken_wings.api import _DIMENSION_LABELS
+
+    for dim in get(client, "/api/scope")["dimensions"]:
+        assert dim["key"] in _DIMENSION_LABELS, \
+            f"v_species_coverage.{dim['key']} has no English label"
+        assert dim["label"] == _DIMENSION_LABELS[dim["key"]]
+        assert isinstance(dim["species"], list)
+
+
+def test_a_tie_for_deepest_claims_no_anchor(client, tmp_path, monkeypatch):
+    """The property that lets the claim retire itself.
+
+    Two species at the same depth is not an anchor, and a tie-break would
+    invent one -- so the endpoint returns null and the page prints nothing.
+    Exercised against a stand-in view, because the real corpus has a clear
+    winner and this is exactly the case that will not stay reproducible.
+    """
+    import sqlite3
+
+    from counting_chicken_wings import api as apimod
+
+    db = tmp_path / "tie.db"
+    con = sqlite3.connect(db)
+    con.executescript(
+        """CREATE TABLE v_species_coverage (
+             id INTEGER, slug TEXT, common_name TEXT, individual_noun TEXT,
+             individual_plural TEXT, domain TEXT, loss_chain INT, products INT);
+           INSERT INTO v_species_coverage VALUES
+             (1,'a','A','a','as','d',1,1),
+             (2,'b','B','b','bs','d',1,1);"""
+    )
+    con.commit()
+    con.close()
+
+    def fake_connect():
+        c = sqlite3.connect(db)
+        c.row_factory = sqlite3.Row
+        return c
+
+    monkeypatch.setattr(apimod.dbm, "connect", fake_connect)
+    d = apimod.scope()
+    assert d["anchor"] is None
+    assert [s["depth"] for s in d["species"]] == [2, 2]
