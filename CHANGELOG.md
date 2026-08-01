@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## v1.15.0 — 2026-08-01
 ### A strapline for the three views that carry the page
 
 Eleven views, uniform weight, and the mixing simulator — the whole argument of
