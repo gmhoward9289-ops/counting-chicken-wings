@@ -263,6 +263,9 @@ async function sci() {
   const conf = $('#s-conf').value;
   const q = new URLSearchParams({
     count: $('#s-count').value || 12,
+    // Sent rather than left to the endpoint's default, so the product the
+    // chain list was filtered for is the product the server routes.
+    product: SCI_PRODUCT,
     chain: $('#s-chain').value,
     confidence_level: $('#s-ci').value,
     iterations: $('#s-iter').value,
@@ -369,10 +372,32 @@ async function sci() {
   }), CFG);
 }
 
+// The Scientific view has no product control: it analyses the headline
+// question, the same one the page opens on. Naming that here rather than
+// leaving it to the endpoint's own default means the chain list and the
+// request cannot disagree about which product is being asked about, which is
+// the whole of the bug below.
+const SCI_PRODUCT = 'whole_wing';
+
 function initSci() {
-  $('#s-chain').innerHTML = META.chains.map(c =>
-    `<option value="${c.slug}" ${c.is_default ? 'selected' : ''}>${c.label}</option>`
-  ).join('');
+  // The chain list belongs to the analysed product's SPECIES. `is_default` is
+  // per-species -- the schema's unique index enforces exactly that -- so
+  // rendering all 15 chains flat and marking each default `selected` left
+  // whichever sorted last in charge. Chains order by `is_default DESC, slug`,
+  // so the Scientific tab opened a chicken-wing question on "Commodity syrup"
+  // and offered "Commodity silk trade" and "Home garden" beside it. Picking
+  // one moved the wing answer by up to six chickens.
+  //
+  // This is the same fix the calculator got in syncChains(); Scientific never
+  // received it. The two now agree on the default for the same question,
+  // which they did not.
+  const p = META.products.find(x => x.slug === SCI_PRODUCT);
+  const mine = META.chains.filter(c =>
+    !c.species_slug || !p || c.species_slug === p.species_slug);
+  const pick = (mine.find(c => c.is_default) || mine[0] || {}).slug;
+  $('#s-chain').innerHTML = mine.map(c =>
+    `<option value="${c.slug}"${c.slug === pick ? ' selected' : ''}>${
+      c.label}</option>`).join('');
   ['s-count','s-chain','s-ci','s-conf','s-iter'].forEach(id => {
     $('#' + id).addEventListener('change', sci);
   });
