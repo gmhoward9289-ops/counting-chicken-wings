@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## v1.15.1 — 2026-08-01
 ### Say which species a view is answering for
 
 The Product dropdown offers twelve products across six species as equals, and
