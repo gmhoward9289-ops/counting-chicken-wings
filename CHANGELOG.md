@@ -1,5 +1,93 @@
 # Changelog
 
+## v1.16.0 — 2026-08-02
+
+### A branch can say how big its change is, without naming a number
+
+`release_check.py` diffs the corpus and the published answer, and
+`docs/VERSIONING.md` has always said outright that a new view, endpoint or CLI
+flag "takes the second digit under the rule and is invisible to it". Nothing
+could act on that. The automated verdict was the only input `next_version.py`
+had, so it was a ceiling as well as a floor — v1.15.1 shipped a new endpoint
+and a new database view under a third-digit bump because there was no way to
+say otherwise, and **MAJOR was unreachable entirely**, since `release_check`
+never returns it by design.
+
+A branch now writes one file under `.changes/`, carrying its changelog prose
+and an optional `bump:` of `third`, `second` or `major`:
+
+```markdown
+---
+bump: second
+---
+### What changed
+```
+
+**A level, never a number**, and that is the whole design. A number on a branch
+has to hope nobody takes it during review — v1.5.0 and v1.6.0 were both taken
+out from under a branch on 2026-07-30. A level is relative, so two branches may
+both declare `second` and neither collides; the number is still resolved at
+merge against the tag that exists then. A number in a `bump:` is refused with
+that history in the error.
+
+**It may only raise.** The resolved level is `max(computed, declared)`. A
+declaration below the corpus diff's floor is a warning and the floor wins,
+matching the rule `release_check` already enforced: over-bumping passes,
+under-bumping fails.
+
+### One file per branch, instead of one shared section
+
+Every branch appended to the same `## Unreleased` section, so every second
+branch open at once rebased through a conflict in the same paragraph — on a
+repo where eight sessions are routinely live, and the conflict this changeset's
+own PR hit an hour before it was written.
+
+`## Unreleased` is still read. A release that finds both a section and files
+merges them into one, so branches in flight keep working and nothing has to be
+migrated on a deadline.
+
+### `release_check` can see the public surface now
+
+The fourth signal, and the one this script's own docstring has been admitting
+it needed. Structure, volume and the published answer are all facts about the
+**corpus**, so a release that adds an endpoint or a CLI flag moves none of them
+— which is why v1.15.1 shipped `/api/scope` and a new database view under a
+third-digit bump when the rule wanted the second.
+
+It now diffs the routes and the CLI at both refs, in both directions:
+
+```
+  tables      35 -> 35
+  answers     12 product(s) compared, none moved
+  endpoints   19 -> 20
+  CLI surface 69 -> 69
+
+  - new endpoint(s): GET /api/scope
+
+  => SECOND required. 1.15.0 -> 1.15.1 is THIRD.
+```
+
+A removed endpoint, subcommand or flag is also the second digit — the same
+argument the removed-table rule already makes, one layer up from the data.
+
+**Routes are read from the source, not by importing the app.** The check runs
+where `pip install -e .` was used, which has no `gui` extra and therefore no
+FastAPI; an import-based probe would raise there, degrade to "not comparable",
+and silently never fire in the one place it matters. Reading the decorators
+also works at any base ref regardless of what is installed. The CLI is
+introspected by importing `build_parser()` in the base tree, which needs only
+argparse.
+
+Both probes report `None` rather than an empty list when they cannot read a
+ref, because "I could not compare" and "everything was deleted" must not be the
+same answer — the trap `answers_moved` already avoids for a product missing at
+the base. The human output says which of the two it is, since an empty reasons
+list looks identical either way and only one of them is reassuring.
+
+This complements `bump:` rather than replacing it: the surface signal catches
+what it can automatically, so a declaration is for the residue — a new page
+view, a changed response shape, anything whose capability lives in prose.
+
 ## v1.15.2 — 2026-08-02
 ### The distinct count has a variance decomposition, and almost none of it is there
 
