@@ -62,7 +62,7 @@ jobs:
           echo "operating on $(git rev-parse HEAD)"
           git log --oneline -1
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'   # CI pins 3.12; a different one is a different result
 
