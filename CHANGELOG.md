@@ -1,5 +1,90 @@
 # Changelog
 
+## Unreleased
+
+### The distinct count has a variance decomposition, and almost none of it is there
+
+`sensitivity()` has always answered "which loss stage moves the answer most?"
+with a one-at-a-time tornado. But it answers it about **required**, and the
+number this project is named after is **distinct** — for which nothing
+decomposed the uncertainty at all. Worse, the obvious fix was the wrong one:
+the mixing cascade takes a max over pools, a ratio, a product of retentions, a
+`(1 - share)^upi` and an iterative separation top-up, so its inputs interact
+and one-at-a-time would miss exactly the part that matters.
+
+**`model.variance_decomposition()`** varies every mixing input simultaneously
+across its own corpus band — nine stage pools plus the four scalar parameters —
+and attributes the variance in `distinct` among them, as Sobol first-order and
+total-order indices with a bootstrap interval on each. Saltelli's estimator for
+first-order, Jansen's for total, both hand-rolled on `random` and `math`: the
+project has one runtime dependency and already hand-rolls `_norm_cdf` and
+`_triangular_ppf` to keep it, and this is nine lines of arithmetic.
+
+**The result is a negative one, and it is the point.** Every mixing input
+varied at once moves the commodity answer by a standard deviation of about
+**2e-5 of a chicken**, on a mean of 11.99997. The cascade is saturated and the
+answer is pinned against its ceiling. The saturation claim has been in the
+corpus for a while as a threshold calculation; it is now measured on the
+quantity the claim is actually about, and `test_variance.py` pins it so it
+fails loudly if it ever stops holding. The paired control matters as much: the
+same call on `local_butcher` returns a standard deviation of 0.2 and a clear
+ranking, so the near-zero commodity figure is not an estimator returning zero
+for everything.
+
+Read the spread before the bars. Sobol indices are scale-free ratios that sum
+to about one, so they always fill the axis — the panel therefore leads with the
+absolute spread in words and treats the bars as a subdivision of it.
+
+**Two structural findings fall out.** Interactions are real: the first-order
+indices sum to only about 0.7, so nearly a third of the variance lives in
+interaction terms — the direct measured justification for not using OAT here,
+and it is a test rather than a comment. And **four of the nine pool estimates
+are structurally invisible**: `resolve_pool` reads only the largest pool in the
+cascade and the pool at the draw stage, so the cut-up line, combo bin, case
+pack and restaurant freezer bin score *exactly* zero. They are recorded, cited,
+and never read. The panel says so, because a zero bar otherwise reads as "this
+does not matter" when the truth is "this is not consulted".
+
+**`sensitivity()` now defends itself.** Its docstring makes the argument that
+OAT is not an approximation for the loss chain but exact — `required` is a pure
+product, so in log space it is exactly additive, `ST == S1` for every stage and
+there are no higher-order indices to find. A future reader who sees "one-at-a-
+time tornado" next to a Sobol analysis and reaches for consistency now finds
+the reason not to.
+
+**Supporting changes.** `db.load_mixing_param_bands()` surfaces the lo/mode/hi
+that `load_mixing_params` drops — `schema.sql` has said those columns exist so
+the Monte Carlo can resample them, and until now nothing read them.
+`Result.draw_units` / `draw_upi` report the units the cascade was actually
+asked in, so the decomposition can ask a saffron question in individual-shares
+without re-deriving the aggregate-unit condition that `test_aggregate_units.py`
+forbids each surface from deciding for itself. `run()`'s pool-jitter loop and
+the decomposition's sampler now share `_jitter_pools`, so the two cannot drift.
+
+`GET /api/variance` serves it, fetched concurrently with `/api/scientific`
+rather than bolted onto it — both cost a couple of seconds and in series every
+scientific-mode load would pay for both. It fails soft: losing one panel should
+not blank the view.
+
+### Two facts for ground beef
+
+The subject shipped with a taxonomy, a mixing cascade and tests, and no fact
+cards — the one acceptance criterion left open. Both are about the same
+tension. Hu et al. counted 411 to 1,367 animals per grind batch by DNA
+mark-recapture, which is the only measured mixing pool anywhere in this corpus
+and the strongest evidence the commingling model describes something real. And
+the model still answers "about one animal" for a single patty, because a patty
+is one draw from a homogenate and nobody has measured how many distinct parcels
+of trim survive into a quarter pound. Inventing that figure would produce a far
+better headline and would be the most dishonest number here.
+
+`test_aggregate_units.py` also picked up `ground_beef_patty`, `silkworm_cocoon`
+and `silk_necktie`, which landed after that file was written. Beef is the
+interesting case: a patty is emphatically a blend in the everyday sense and the
+aggregate flag is still correctly `False`, because the question that flag asks
+is arithmetic — does one unit need more than one individual to exist — not
+whether anything got mixed.
+
 ## v1.15.1 — 2026-08-01
 ### Say which species a view is answering for
 

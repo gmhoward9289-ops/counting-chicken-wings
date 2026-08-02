@@ -21,7 +21,7 @@ Three independent questions, deliberately never conflated:
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 from math import ceil, comb, erf, sqrt
 
 
@@ -890,6 +890,16 @@ class Result:
     # honest centre of the band AND is invariant under that reciprocal
     # transform (median(1/X) == 1/median(X), which is not true of the mean).
     required_estimator: str = "deterministic"
+    # The units the mixing cascade was actually asked in, after the
+    # aggregate-unit re-expression. For a wing these are just
+    # (units_requested, units_per_individual); for a gram of saffron they are
+    # (1,800 individual-shares, 1.0). Reported so that a caller wanting to
+    # run a SECOND analysis over the same cascade -- `variance_decomposition`
+    # is the one that exists -- can ask it the same question this run
+    # answered, instead of re-deriving the condition and getting it wrong.
+    # `test_aggregate_units.py` forbids that re-derivation by name.
+    draw_units: float = 0.0
+    draw_upi: float = 0.0
     # Raw Monte Carlo draws, kept for histograms. Empty unless requested.
     required_samples: list[float] = field(default_factory=list)
     distinct_samples: list[float] = field(default_factory=list)
@@ -963,6 +973,27 @@ def _correlated_pick(
     z = sqrt(group.rho) * shared + sqrt(1.0 - group.rho) * idio
     return _triangular_ppf(_norm_cdf(z), stage.survive_lo,
                             stage.survive_mode, stage.survive_hi)
+
+
+def _jitter_pools(
+    stages: list[MixingStage],
+    pools: list[float],
+) -> list[MixingStage]:
+    """Rebuild a cascade with new pool sizes, one per stage, in order.
+
+    Shared by the Monte Carlo in `run` and by `variance_decomposition`, and
+    that sharing is the point. Both need to take a resampled pool figure and
+    turn it back into something `draw_from_cascade` will accept, and the two
+    would eventually disagree about the clamp -- `max(1, int(...))`, which is
+    a floor rather than a round, so a sampled 4.9 is four individuals -- if
+    each kept its own copy. Only the sampling differs between the callers:
+    `run` draws from the rng, the decomposition inverts a quantile.
+    """
+    return [
+        MixingStage(slug=m.slug, label=m.label, pool=max(1, int(p)),
+                    mixing_kind=m.mixing_kind)
+        for m, p in zip(stages, pools)
+    ]
 
 
 def _percentile(sorted_vals: list[float], q: float) -> float:
@@ -1142,6 +1173,8 @@ def run(
         distinct_hi=distinct,
         container_units=container,
         paired_individuals=distinct_in_container,
+        draw_units=draw_units,
+        draw_upi=draw_upi,
         distinct_ceiling=(ceil(floor) if aggregate_units
                           else float(units_requested)),
         trace=trace,
@@ -1196,14 +1229,9 @@ def run(
             # Resample the mixing cascade too. Pool sizes are among the
             # softest numbers in the model, so holding them fixed would
             # understate the spread on the headline figure.
-            jittered = []
-            for m in mixing_stages:
-                lo, mode, hi = m.band()
-                p = max(1, int(_triangular(lo, mode, hi, rng)))
-                jittered.append(MixingStage(
-                    slug=m.slug, label=m.label, pool=p,
-                    mixing_kind=m.mixing_kind,
-                ))
+            jittered = _jitter_pools(mixing_stages, [
+                _triangular(*m.band(), rng) for m in mixing_stages
+            ])
             # Same draw as the deterministic pass, aggregate handling and
             # all. It is the same function precisely so it cannot differ.
             dist_s.append(_draw(jittered)[3])
@@ -1262,6 +1290,43 @@ def sensitivity(
     Mass-only stages come back with zero swing, correctly: they cannot move
     a count no matter how uncertain they are. That is a useful thing to see
     on the chart rather than something to hide.
+
+    OAT IS NOT A SHORTCUT HERE. IT IS EXACT, AND IT SHOULD NOT BE
+    "UPGRADED" TO A SOBOL ANALYSIS.
+    -------------------------------------------------------------
+    `required_individuals` divides the floor by each stage's survival
+    fraction in turn, so required = floor / prod(f_i) -- a pure product.
+    Take logs and it is exactly additive:
+
+        log required = log floor - sum_i log f_i
+
+    with d(log required)/d(log f_i) = -1 no matter what any other stage is
+    doing. A function with no interaction terms has no higher-order Sobol
+    indices to find: ST equals S1 for every stage, the first-order indices
+    sum to one, and swinging one stage across its band with the others held
+    at their modes recovers that stage's entire contribution. A
+    variance-based decomposition of this chain would spend N*(n+2) noisy
+    model evaluations reproducing what these 2n deterministic ones already
+    give exactly.
+
+    Three honest caveats, none of which changes that conclusion. The bars
+    are reported in linear individuals rather than in log space, so `share`
+    is a share of total SWING and only approximately a share of variance --
+    read it as "where is more research worth doing", which is what it is
+    for. `CorrelatedGroup` (#77) means the stages are not independent;
+    correlation changes how the variances add up, but it is a property of
+    the inputs rather than of the model's functional form, and the absence
+    of interaction terms survives it. And mass-only stages drop out of the
+    product entirely, which is why they register zero.
+
+    NONE OF THIS TRANSFERS TO `distinct`. The mixing cascade takes a max
+    over pools, a ratio, a product of retentions, a (1 - share)^upi and an
+    iterative separation top-up. It is not a product of factors and its
+    inputs genuinely interact: on the commodity cascade the first-order
+    indices sum to only about 0.7, so nearly a third of the variance lives
+    in interactions that a one-at-a-time sweep cannot see by construction.
+    That is `variance_decomposition`, below. Two different questions about
+    two different outputs, kept apart on purpose.
     """
     out: list[Sensitivity] = []
     for target in loss_stages:
@@ -1288,3 +1353,393 @@ def sensitivity(
         s.share = s.swing / total
     out.sort(key=lambda s: s.swing, reverse=True)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Variance decomposition
+# ---------------------------------------------------------------------------
+#
+# WHY THIS EXISTS SEPARATELY FROM `sensitivity`
+# ---------------------------------------------
+# `sensitivity` above answers "which loss stage moves `required` most?" by
+# one-at-a-time swings, and for that question OAT is not an approximation --
+# see its docstring. This answers a different question about a different
+# output: which mixing input moves `distinct`, the number the project is
+# named after? The mixing model takes a max over pools, a ratio, a product
+# of retentions, a (1 - share)^upi and an iterative separation top-up. It is
+# not a product of factors, its inputs genuinely interact, and OAT would
+# miss exactly the interaction that matters. So this is variance-based.
+#
+# Everything here is stdlib `random` and `math`. The project has one runtime
+# dependency (PyYAML) and hand-rolls `_norm_cdf` and `_triangular_ppf` to
+# keep it that way; pulling in numpy/scipy/SALib for an estimator that is
+# nine lines of arithmetic would be a poor trade.
+
+
+@dataclass
+class VarianceShare:
+    """One input's share of the variance in `distinct`.
+
+    Deliberately NOT the same shape as `Sensitivity`. That one reports a
+    swing measured in chickens on `required`; this one reports a
+    dimensionless share of variance in `distinct`. Two different questions,
+    two different outputs, kept apart so they cannot be read off one axis.
+    """
+    slug: str
+    label: str
+    kind: str                  # 'pool' | 'parameter'
+    confidence: str            # the input's own grade
+    first_order: float         # S1: this input acting alone
+    total_order: float         # ST: this input including its interactions
+    first_lo: float = 0.0      # bootstrap percentile band on S1
+    first_hi: float = 0.0
+    total_lo: float = 0.0      # ... and on ST
+    total_hi: float = 0.0
+    degenerate: bool = False   # lo == hi: no band, so nothing to propagate
+    inert: bool = False        # real band, but the model never reads it
+
+
+@dataclass
+class VarianceDecomposition:
+    output: str = "distinct"
+    mean: float = 0.0
+    variance: float = 0.0
+    sd: float = 0.0
+    sample_lo: float = 0.0     # observed spread, in individuals
+    sample_hi: float = 0.0
+    samples: int = 0           # N
+    evaluations: int = 0       # N * (n + 2)
+    bootstrap: int = 0
+    confidence_level: float = 0.90
+    seed: int | None = None
+    shares: list[VarianceShare] = field(default_factory=list)
+    sum_first_order: float = 0.0
+    sum_total_order: float = 0.0
+    notes: list[str] = field(default_factory=list)
+
+
+def _centre(fa: list[float], fb: list[float]) -> tuple[list[float],
+                                                       list[float],
+                                                       float, float]:
+    """Centre both output vectors on their joint mean, and return the variance.
+
+    THE CENTRING IS LOAD-BEARING AND IS NOT A STYLISTIC CHOICE.
+
+    On the commodity cascade `distinct` is about 12.0 and its variance is
+    about 4.5e-10. Forming products of uncentred values at that ratio is
+    almost pure floating-point cancellation: the first version of this code
+    returned a first-order index of -15138 for the distributor stage, and
+    -20818 for the sum. Subtracting the mean first returns +0.457, on
+    identical model evaluations. Anyone who re-derives these estimators from
+    a paper and drops the centring will conclude the model is broken.
+    """
+    n = len(fa)
+    mu = (sum(fa) + sum(fb)) / (2 * n)
+    a = [x - mu for x in fa]
+    b = [x - mu for x in fb]
+    var = (sum(x * x for x in a) + sum(x * x for x in b)) / (2 * n - 1)
+    return a, b, mu, var
+
+
+def _sobol_pair(a: list[float], b: list[float], ab: list[float],
+                var: float) -> tuple[float, float]:
+    """(first-order, total-order) for one input, from centred vectors.
+
+    S1 is Saltelli et al. (2010); ST is Jansen (1999). Both are the standard
+    estimators and both are chosen for the same reason: they are differences
+    between paired evaluations, so the shared part of the output cancels and
+    what survives is the part the input actually moved. That matters here
+    more than usual, because the shared part is essentially all of it.
+    """
+    if var <= 0.0:
+        return 0.0, 0.0
+    n = len(a)
+    s1 = sum(b[k] * (ab[k] - a[k]) for k in range(n)) / n / var
+    st = sum((a[k] - ab[k]) ** 2 for k in range(n)) / (2.0 * n) / var
+    return s1, st
+
+
+def _bootstrap_bands(
+    fa: list[float],
+    fb: list[float],
+    fabs: list[list[float]],
+    replicates: int,
+    confidence_level: float,
+    rng: random.Random,
+) -> list[tuple[float, float, float, float]]:
+    """Percentile bands on every index, by resampling the rows we already have.
+
+    No extra model evaluations: a bootstrap replicate re-uses the same
+    (A, B, AB) triples with rows drawn with replacement. One index set is
+    drawn per replicate and shared across all inputs, which is both cheaper
+    and more honest -- the inputs' indices are estimated from the same rows,
+    so their errors are correlated and resampling them independently would
+    understate that.
+
+    The project publishes an interval on every figure it publishes. An index
+    quoted bare would be the only number in scientific mode without one.
+    """
+    n = len(fa)
+    n_in = len(fabs)
+    if replicates <= 0 or n < 2:
+        return [(0.0, 0.0, 0.0, 0.0)] * n_in
+
+    firsts: list[list[float]] = [[] for _ in range(n_in)]
+    totals: list[list[float]] = [[] for _ in range(n_in)]
+    for _ in range(replicates):
+        idx = [rng.randrange(n) for _ in range(n)]
+        ra = [fa[k] for k in idx]
+        rb = [fb[k] for k in idx]
+        a, b, mu, var = _centre(ra, rb)
+        for i in range(n_in):
+            rab = [fabs[i][k] - mu for k in idx]
+            s1, st = _sobol_pair(a, b, rab, var)
+            firsts[i].append(s1)
+            totals[i].append(st)
+
+    tail = (1.0 - confidence_level) / 2.0
+    out = []
+    for i in range(n_in):
+        f = sorted(firsts[i])
+        t = sorted(totals[i])
+        out.append((
+            _percentile(f, tail), _percentile(f, 1.0 - tail),
+            _percentile(t, tail), _percentile(t, 1.0 - tail),
+        ))
+    return out
+
+
+def variance_decomposition(
+    mixing_stages: list[MixingStage],
+    param_bands: dict[str, tuple[str, float, float, float, str]],
+    units_requested: int,
+    units_per_individual: float,
+    samples: int = 1024,
+    seed: int | None = 12345,
+    bootstrap: int = 200,
+    confidence_level: float = 0.90,
+    base_params: MixingParams | None = None,
+) -> VarianceDecomposition:
+    """Sobol first- and total-order indices for `distinct`, over mixing inputs.
+
+    Every mixing input is varied simultaneously across its own corpus band --
+    the pool size of each stage, plus the scalar parameters -- and the
+    variance in the resulting `distinct` is attributed among them.
+
+      first-order (S1)  the share this input would own if it were the only
+                        thing uncertain.
+      total-order (ST)  its share including every interaction it takes part
+                        in. ST above S1 IS the interaction, and the gap is
+                        the whole reason this is not a tornado.
+
+    `param_bands` maps a `MixingParams` field name to
+    (label, lo, mode, hi, confidence). Any field absent from it is held at
+    `base_params` rather than defaulted, because `MixingParams()` is the
+    inert configuration and silently swapping a corpus figure for zero would
+    move the answer while looking like an omission.
+
+    WHAT THIS WILL TELL YOU ON THE COMMODITY CASCADE, AND HOW TO READ IT
+    -------------------------------------------------------------------
+    The indices are scale-free ratios that sum to about one; they cannot all
+    be near zero and it is a mistake to expect them to be. What is near zero
+    is the VARIANCE: about 2e-5 of a chicken, on a mean of 11.99997. The
+    cascade is saturated, the answer is pinned against its ceiling, and the
+    shares merely divide a quantity that has already vanished. Read
+    `sd` first and the bars second, or the chart says the opposite of what
+    the numbers say.
+
+    On a route that is not saturated -- `local_butcher` -- the same call
+    returns a standard deviation of about 0.2 of a chicken and the shares
+    become real research priorities. Same chart, opposite reading, and the
+    `notes` say which case you are in rather than leaving you to guess.
+
+    ONE ASSUMPTION WORTH DISTRUSTING
+    --------------------------------
+    Sobol indices in this form require the inputs to be independent, and
+    these are probably not. `separation_efficiency` and
+    `adjacency_retention_random` both describe how roughly the line treats
+    two units of the same individual, and `cascade_retention` already
+    multiplies them together. #77 established that this project does not
+    silently assert zero correlation between loss stages; asserting it
+    between mixing parameters is the same move, and it is recorded in
+    `notes` rather than buried here. Correlated inputs need a different
+    estimator (Kucherenko), which is a larger piece of work.
+    """
+    rng = random.Random(seed)
+    base = base_params or MixingParams()
+    pnames = sorted(param_bands)
+    field_names = {f.name for f in fields(MixingParams)}
+
+    # (label, kind, confidence, lo, mode, hi) per swept input, pools first.
+    inputs: list[tuple[str, str, str, str, float, float, float]] = []
+    for m in mixing_stages:
+        lo, mode, hi = m.band()
+        inputs.append((m.slug, m.label, "pool", m.confidence,
+                       float(lo), float(mode), float(hi)))
+    for name in pnames:
+        label, lo, mode, hi, conf = param_bands[name]
+        inputs.append((name, label, "parameter", conf,
+                       float(lo), float(mode), float(hi)))
+
+    dec = VarianceDecomposition(
+        samples=samples, bootstrap=bootstrap, seed=seed,
+        confidence_level=confidence_level,
+    )
+    n_in = len(inputs)
+    if n_in == 0 or samples < 2:
+        dec.notes.append("No mixing inputs to decompose.")
+        return dec
+
+    unknown = [p for p in pnames if p not in field_names]
+    if unknown:
+        dec.notes.append(
+            f"Ignoring {len(unknown)} parameter(s) with no matching field on "
+            f"MixingParams: {', '.join(unknown)}."
+        )
+    missing = sorted(field_names - set(pnames))
+    if missing:
+        dec.notes.append(
+            f"{len(missing)} mixing parameter(s) were not swept and are held "
+            f"fixed: {', '.join(missing)}. Their contribution to the spread "
+            f"is therefore not measured rather than measured as zero."
+        )
+
+    n_pool = len(mixing_stages)
+
+    def evaluate(u: list[float]) -> float:
+        pools = [_triangular_ppf(u[i], inputs[i][4], inputs[i][5],
+                                 inputs[i][6]) for i in range(n_pool)]
+        kw = {}
+        for j, name in enumerate(pnames):
+            if name in field_names:
+                col = inputs[n_pool + j]
+                kw[name] = _triangular_ppf(u[n_pool + j], col[4], col[5],
+                                           col[6])
+        params = replace(base, **kw) if kw else base
+        return draw_from_cascade(
+            _jitter_pools(mixing_stages, pools),
+            units_requested, units_per_individual, params,
+        )[3]
+
+    # Two independent sample matrices, and the n cross-matrices that take one
+    # column from the other. Plain pseudo-random rather than a Sobol or Latin
+    # hypercube sequence: those converge faster but break the i.i.d. rows the
+    # bootstrap above depends on, and the model is cheap enough (about 20us a
+    # call) that buying the error bar with extra samples is the better deal.
+    mat_a = [[rng.random() for _ in range(n_in)] for _ in range(samples)]
+    mat_b = [[rng.random() for _ in range(n_in)] for _ in range(samples)]
+    fa = [evaluate(row) for row in mat_a]
+    fb = [evaluate(row) for row in mat_b]
+
+    fabs: list[list[float]] = []
+    for i in range(n_in):
+        col = []
+        for k in range(samples):
+            row = list(mat_a[k])
+            row[i] = mat_b[k][i]
+            col.append(evaluate(row))
+        fabs.append(col)
+
+    a, b, mu, var = _centre(fa, fb)
+    bands = _bootstrap_bands(fa, fb, fabs, bootstrap, confidence_level, rng)
+
+    for i, (slug, label, kind, conf, lo, mode, hi) in enumerate(inputs):
+        s1, st = _sobol_pair(a, b, [x - mu for x in fabs[i]], var)
+        degenerate = lo >= hi
+        dec.shares.append(VarianceShare(
+            slug=slug, label=label, kind=kind, confidence=conf,
+            first_order=s1, total_order=st,
+            first_lo=bands[i][0], first_hi=bands[i][1],
+            total_lo=bands[i][2], total_hi=bands[i][3],
+            degenerate=degenerate,
+            # A non-degenerate input whose total-order index is EXACTLY zero
+            # was not merely unimportant, it was never read: every AB
+            # evaluation returned the A value bit-for-bit. `resolve_pool`
+            # consults only the largest pool in the cascade and the pool at
+            # the draw stage, so a middling stage can be recorded, sourced,
+            # and structurally invisible. That is worth saying out loud
+            # rather than rendering as a very short bar.
+            inert=(not degenerate and st == 0.0 and s1 == 0.0),
+        ))
+
+    dec.mean = mu
+    dec.variance = var
+    dec.sd = sqrt(var) if var > 0 else 0.0
+    dec.sample_lo = min(min(fa), min(fb))
+    dec.sample_hi = max(max(fa), max(fb))
+    dec.evaluations = samples * (n_in + 2)
+    dec.sum_first_order = sum(s.first_order for s in dec.shares)
+    dec.sum_total_order = sum(s.total_order for s in dec.shares)
+    dec.shares.sort(key=lambda s: s.total_order, reverse=True)
+
+    dec.notes.extend(_variance_notes(dec, mixing_stages, units_requested,
+                                     units_per_individual))
+    return dec
+
+
+def _variance_notes(
+    dec: VarianceDecomposition,
+    mixing_stages: list[MixingStage],
+    units_requested: int,
+    units_per_individual: float,
+) -> list[str]:
+    """The findings, computed from the run rather than asserted about it.
+
+    Each of these was a sentence someone would otherwise have written into
+    the UI by hand and left there while the corpus moved underneath it.
+    """
+    notes: list[str] = []
+
+    if mixing_stages:
+        # The stream is the LARGEST pool, so its worst case -- the low end of
+        # the largest band -- is the least-saturated cascade the corpus
+        # admits. Same test `saturation_threshold` is already used for in
+        # test_scientific.py, applied to the same quantity.
+        worst_stream = max(s.band()[0] for s in mixing_stages)
+        thresh = saturation_threshold(units_requested, units_per_individual)
+        if worst_stream >= thresh:
+            notes.append(
+                f"Saturated: even the smallest pool this cascade's bands "
+                f"admit ({worst_stream:,}) is above the saturation threshold "
+                f"of {thresh:,}, so the answer is pinned against its ceiling "
+                f"and there is almost no variance left for any input to own. "
+                f"The shares say which input owns what little remains. They "
+                f"do not say the answer is uncertain."
+            )
+        else:
+            notes.append(
+                f"Not saturated: the cascade's smallest admissible stream "
+                f"({worst_stream:,}) is below the saturation threshold of "
+                f"{thresh:,}, so the pool figures genuinely move the answer "
+                f"and these shares are a research priority ranking."
+            )
+
+    n_inert = sum(1 for s in dec.shares if s.inert)
+    if n_inert:
+        notes.append(
+            f"{n_inert} of {len(dec.shares)} inputs score exactly zero "
+            f"because the model never reads them: `resolve_pool` uses only "
+            f"the largest pool in the cascade and the pool at the draw "
+            f"stage. The rest are recorded and cited, and structurally "
+            f"invisible. That is a zero by construction, not a finding."
+        )
+
+    n_deg = sum(1 for s in dec.shares if s.degenerate)
+    if n_deg:
+        notes.append(
+            f"{n_deg} input(s) have no band recorded at all (lo == hi), so "
+            f"they have no uncertainty to propagate and score zero for that "
+            f"reason rather than because they do not matter. On a chain with "
+            f"a pool override this is usually the override collapsing the "
+            f"band (#116), not the corpus lacking one."
+        )
+
+    notes.append(
+        "These indices assume the inputs are independent, and they are "
+        "probably not: separation efficiency and adjacency retention both "
+        "describe how roughly the line treats two units of one individual, "
+        "and the model already multiplies them together. Correlation would "
+        "move share between inputs; it would not create variance that is "
+        "not there."
+    )
+    return notes

@@ -803,3 +803,54 @@ facts:
     source: pubmed-multi-silkworm-cocoon
     placement: learning
     surprise: 4
+
+  - slug: beef-the-only-pool-anyone-has-ever-counted
+    headline: One mixing pool in this corpus was measured, and it took DNA to do it
+    body: >-
+      Every cascade here rests on an estimate of how many animals are in the
+      pool. Nobody in poultry, eggs, saffron or maple measures that, because
+      nobody has a reason to, so the audit prints `project-estimate-mixing`
+      against pool after pool and it has always been the softest joint in the
+      model.
+
+      Ground beef is the one exception. Hu et al. profiled DNA markers in six
+      commercial grind batches and estimated animal abundance by mark-recapture
+      - the same technique used to count fish in a lake, pointed at a hamburger.
+      They found an average of 411 to 1,367 animals present per batch. That is a
+      pool size counted rather than asserted, measured in the product itself, by
+      the only method that can see through a grinder.
+
+      It matters well beyond beef. The commingling model claims that ordinary
+      food is a blend of a great many animals, and for five of six subjects that
+      claim rests on reasoning about how the trade works. Here it rests on
+      somebody reading the DNA and finding the animals were there.
+    source: plos-hu-2012-grind-batch
+    placement: both
+    surprise: 5
+
+  - slug: beef-the-answer-is-one-and-that-is-the-honest-answer
+    headline: The batch held a thousand cattle; the model still says your patty holds one
+    body: >-
+      Ask this project how many cattle are in a hamburger and it says about one,
+      which reads like the model failing at the exact moment it should be most
+      impressive. It is not. It is the model refusing to make something up.
+
+      The two numbers answer different questions. The batch your patty came out
+      of held somewhere between 411 and 1,367 animals - that is the pool, and it
+      is counted. Your patty is one share of a homogenate drawn from that pool,
+      so the draw model has exactly one draw to work with, and one draw can be
+      accounted for by one animal. To get a bigger number the model would need a
+      figure for how many distinct parcels of trim survive into a single quarter
+      pound. Nobody has measured that. Grinding is the most total mixer in the
+      corpus precisely because it destroys the individual, which is the same
+      reason the question is so hard to answer from the other end.
+
+      Wings work differently: six chickens is anatomy, and no supply chain can
+      argue with it. A patty has no anatomical floor at all - its floor of one is
+      only the observation that one animal is physically sufficient, reachable
+      only on the home-ground route where nothing commingles. Inventing a
+      parcels-per-patty figure would produce a far better headline and would be
+      the single most dishonest number in the corpus.
+    source: nrc-2002-ground-beef-risk
+    placement: learning
+    surprise: 4

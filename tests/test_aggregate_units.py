@@ -173,6 +173,17 @@ def test_the_analysis_route_holds_it_too(client, slug):
     ("saffron_gram", True),       # 1/150th of a gram per flower
     ("table_egg", False),         # 288 a year, and an egg has one mother
     ("maple_syrup_gallon", True),  # about a quart per tree per season
+    # The two domains that landed after this file was written. Beef is the
+    # interesting one: a patty is emphatically a blend in the everyday sense --
+    # it is the most thoroughly commingled thing in the corpus -- and this test
+    # still says False, correctly. The question here is not "was it mixed", it
+    # is "does one unit need more than one individual to exist at all". One
+    # steer yields about 670 patties, so it does not. Mixing is the cascade's
+    # business; this flag is about arithmetic, and conflating the two is the
+    # bug the file exists to prevent.
+    ("ground_beef_patty", False),  # ~670 patties from one animal's lean trim
+    ("silkworm_cocoon", False),   # exactly 1 per worm, the hard floor
+    ("silk_necktie", True),       # 1/150th of a tie per worm
 ])
 def test_whether_a_unit_is_a_blend_is_read_off_the_figures(conn, slug,
                                                            expected):
