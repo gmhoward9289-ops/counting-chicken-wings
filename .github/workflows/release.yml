@@ -52,9 +52,16 @@ jobs:
       # rename an `## Unreleased` section that still holds the FIRST merge's
       # prose -- publishing it a second time under a second number. Starting
       # from master's tip collapses the pair correctly instead: whichever run
-      # goes first releases everything unreleased, and the second finds no
-      # `## Unreleased` section, computes nothing, and exits having done
+      # goes first releases everything unreleased, and the second finds
+      # nothing left to release, computes nothing, and exits having done
       # nothing because there is genuinely nothing left to do.
+      #
+      # `.changes/` inherits that property rather than complicating it, and
+      # arrives at it more directly: the first run merges every changeset it
+      # finds and DELETES them in the same commit, so the second run's tree
+      # has an empty directory. "What is unreleased" is a fact about the tree
+      # at the moment of the run, which is exactly what starting from
+      # master's tip exists to establish.
       - name: Work from the current tip of master
         run: |
           git fetch --tags --force origin master
@@ -81,9 +88,15 @@ jobs:
       # It also ends the race docs/VERSIONING.md warns about. A branch that
       # names a number has to hope no one else takes it during review -- v1.5.0
       # and v1.6.0 were both taken out from under a branch on 2026-07-30. A
-      # branch now writes `## Unreleased` and no number at all, so whichever
-      # merge lands first takes the next one and the second computes its own
-      # against a base that has already moved.
+      # branch now writes a `.changes/` entry and no number at all, so
+      # whichever merge lands first takes the next one and the second computes
+      # its own against a base that has already moved.
+      #
+      # A branch MAY name a bump LEVEL (`bump: second`) in that file, and that
+      # is race-free for the same reason a number is not: a level is relative
+      # and gets resolved HERE, against the tag that exists now. It can only
+      # raise what release_check computed, never lower it -- see
+      # docs/VERSIONING.md.
       - name: Decide this merge's version
         id: version
         run: |
@@ -93,7 +106,7 @@ jobs:
             echo "computed=yes" >> "$GITHUB_OUTPUT"
             echo "next=$next"    >> "$GITHUB_OUTPUT"
           else
-            echo "no '## Unreleased' section; falling back to pyproject.toml"
+            echo "nothing unreleased (no .changes/ entries, no '## Unreleased' section); falling back to pyproject.toml"
             echo "computed=no" >> "$GITHUB_OUTPUT"
           fi
 
@@ -209,14 +222,23 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          # Explicit pathspecs. `--apply` writes these two files and nothing
-          # else, and a stray file swept into a release commit is not a thing
-          # anyone reviews.
-          git add CHANGELOG.md pyproject.toml
+          # Explicit pathspecs. `--apply` writes these files and nothing else,
+          # and a stray file swept into a release commit is not a thing anyone
+          # reviews.
+          #
+          # `.changes/` is a DELETION: --apply merges each changeset's prose
+          # into the section above and unlinks the file. Belt and braces --
+          # `--apply` stages those deletions itself, precisely so this line
+          # cannot silently drop them in a later edit. Left unstaged the notes
+          # would ship, the files would stay on master, and the next release
+          # would publish every one of them a second time.
+          git add CHANGELOG.md pyproject.toml .changes
           git commit -m "Release v$VERSION" -m \
             "Number assigned at merge by .github/workflows/release.yml. Branches
-          write '## Unreleased' and never claim a number, so two merges landing
-          together cannot take the same one."
+          write a .changes/ entry and never claim a number, so two merges
+          landing together cannot take the same one. A branch may declare a
+          bump LEVEL, which can raise the computed floor and never lower it --
+          see docs/VERSIONING.md."
 
           # An earlier run for this same number may have left the branch
           # behind. Which of the two cases it is decides what to do, and
@@ -405,7 +427,7 @@ jobs:
         if: steps.need.outputs.go == 'yes' && steps.need.outputs.need_tag == 'yes'
         env:
           VERSION: ${{ steps.need.outputs.version }}
-          # Empty on the fallback path (no `## Unreleased`, nothing was
+          # Empty on the fallback path (nothing unreleased, so nothing was
           # recorded), where master already declares the version and its tip
           # is the right place for the tag.
           SHA: ${{ steps.landed.outputs.sha }}
