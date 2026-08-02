@@ -256,3 +256,150 @@ def test_latest_tag_ignores_a_prerelease_tag(repo, monkeypatch):
 
     monkeypatch.setattr(rc, "ROOT", repo)
     assert rc.latest_tag() == "v1.11.0"
+
+
+# ---------------------------------------------------------------------------
+# The public surface
+#
+# The fourth signal, and the one that closes the gap this script's own
+# docstring admits: structure, volume and the published answer are all facts
+# about the CORPUS, so a release that adds an endpoint moves none of them.
+# v1.15.1 shipped /api/scope and a new database view as a third-digit bump for
+# exactly that reason.
+# ---------------------------------------------------------------------------
+
+
+def surf(routes=None, cli=None):
+    return {"routes": routes, "cli": cli}
+
+
+def test_a_new_endpoint_is_minor():
+    """The v1.15.1 case, which nothing could see before."""
+    need, why = rc.required_bump(
+        BASE, BASE, {}, {},
+        surf(routes=["GET /api/meta"]),
+        surf(routes=["GET /api/meta", "GET /api/scope"]))
+    assert need == "second"
+    assert any("GET /api/scope" in r for r in why)
+
+
+def test_a_removed_endpoint_is_minor():
+    """Retraction breaks a caller outright -- the removed-table rule, one layer up."""
+    need, why = rc.required_bump(
+        BASE, BASE, {}, {},
+        surf(routes=["GET /api/meta", "GET /api/old"]),
+        surf(routes=["GET /api/meta"]))
+    assert need == "second"
+    assert any("REMOVED" in r and "/api/old" in r for r in why)
+
+
+def test_a_new_cli_flag_is_minor():
+    need, why = rc.required_bump(
+        BASE, BASE, {}, {},
+        surf(cli=["count", "count --pieces"]),
+        surf(cli=["count", "count --pieces", "count --scientific"]))
+    assert need == "second"
+    assert any("--scientific" in r for r in why)
+
+
+def test_an_unchanged_surface_justifies_nothing():
+    both = surf(routes=["GET /api/meta"], cli=["count"])
+    need, _ = rc.required_bump(BASE, BASE, {}, {}, both, both)
+    assert need == "none"
+
+
+def test_an_unreadable_surface_is_not_a_removal():
+    """`None` means "could not compare here", never "everything went away".
+
+    A base ref whose CLI cannot be introspected would otherwise be reported as
+    having had its entire surface deleted -- the same trap `answers_moved`
+    avoids for a product that does not exist at the base.
+    """
+    assert rc.surface_moved(surf(routes=None), surf(routes=["GET /a"])) == []
+    assert rc.surface_moved(surf(routes=["GET /a"]), surf(routes=None)) == []
+    assert rc.surface_moved(surf(cli=None), surf(cli=None)) == []
+
+
+def test_omitting_the_surface_behaves_exactly_as_before():
+    """The regression guard: every existing caller passes four arguments.
+
+    "I did not compare the surface" and "the surface did not change" must not
+    be the same argument, so the default is None rather than an empty list.
+    """
+    need, why = rc.required_bump(BASE, BASE, {"whole_wing": "6 12"},
+                                 {"whole_wing": "6 12"})
+    assert (need, why) == ("none", ["corpus identical"])
+
+
+# ---------------------------------------------------------------------------
+# The probes, against this tree
+# ---------------------------------------------------------------------------
+
+
+def test_routes_are_read_without_importing_the_app():
+    """release_check runs where `pip install -e .` gave it no FastAPI.
+
+    An import-based probe raises there, degrades to "not comparable", and
+    silently never fires in the one place it matters -- so the routes come
+    from the decorators in the source.
+    """
+    routes = rc.routes_in(ROOT)
+    assert routes, "no routes found in this tree"
+    assert "GET /api/scope" in routes
+    assert all(r.split(" ", 1)[0].isupper() for r in routes)
+    assert "fastapi" not in rc._ROUTE_RE.pattern
+
+
+def test_a_tree_without_the_api_reports_none_rather_than_empty(tmp_path):
+    assert rc.routes_in(tmp_path) is None
+
+
+def test_the_cli_probe_actually_works_on_this_tree():
+    """The failure mode of this whole feature is a probe that quietly returns None.
+
+    It happened on the first run: `getattr(action, "choices", {})` returns
+    None for an ordinary action -- the attribute exists and is None, so the
+    default never applies -- and `.items()` on that took the probe down at the
+    first flag it saw. Every ref then reported "CLI surface not comparable"
+    and the check silently did nothing.
+    """
+    cli = rc.cli_in(ROOT)
+    assert cli is not None, "the CLI probe failed; the check is silently off"
+    assert len(cli) > 20, f"suspiciously small CLI surface: {cli}"
+    assert "count" in cli, "subcommands are missing from the surface"
+    assert any(x.startswith("count --") for x in cli), \
+        "per-subcommand flags are missing from the surface"
+
+
+def _stub_tree(tmp_path, cli_source):
+    pkg = tmp_path / "src" / "counting_chicken_wings"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("")
+    (pkg / "cli.py").write_text(cli_source)
+    return tmp_path
+
+
+def test_the_cli_probe_reads_the_given_tree_not_the_installed_package(tmp_path):
+    """Otherwise every ref reports the CURRENT surface and nothing ever differs.
+
+    The check runs against a `git archive` of the base tag while an editable
+    install of HEAD is on the path. If the probe resolved to that install it
+    would compare the working tree against itself, report "no change" for
+    every release, and be worse than absent -- a green check that means
+    nothing.
+    """
+    tree = _stub_tree(tmp_path, "import argparse\n"
+                      "def build_parser():\n"
+                      "    p = argparse.ArgumentParser()\n"
+                      "    p.add_argument('--only-in-the-stub')\n"
+                      "    return p\n")
+    surface = rc.cli_in(tree)
+    assert surface is not None
+    assert "--only-in-the-stub" in surface
+    assert "count" not in surface, "read the installed package, not the tree"
+
+
+def test_a_tree_whose_cli_cannot_be_introspected_is_not_comparable(tmp_path):
+    """None, so surface_moved skips it rather than calling it a removal."""
+    tree = _stub_tree(tmp_path, "raise ImportError('older layout')\n")
+    assert rc.cli_in(tree) is None

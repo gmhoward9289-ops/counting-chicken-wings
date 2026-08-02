@@ -27,11 +27,37 @@ from the tag that exists, at the moment of merge, means every merge that
 carries an `## Unreleased` section gets its own release and none can be
 overtaken.
 
-WHICH DIGIT MOVES is not decided here. `release_check.py` already answers that
-by diffing the corpus -- new tables and domains take the second digit, more
-rows of an existing kind take the third -- and this only turns its verdict into
-a number. The scheme is MAJOR.MINOR.MINOR, not SemVer: the third digit is not
+WHICH DIGIT MOVES is answered by `release_check.py`, which diffs the corpus --
+new tables and domains take the second digit, more rows of an existing kind
+take the third -- and by the branch, which may RAISE that verdict and may not
+lower it. The scheme is MAJOR.MINOR.MINOR, not SemVer: the third digit is not
 a patch level and routinely carries data.
+
+WHY A BRANCH GETS A SAY AT ALL. `release_check` diffs the corpus and the
+published answer, and `docs/VERSIONING.md` says outright that a new view,
+endpoint or CLI flag "takes the second digit under the rule and is invisible
+to it". So the automated verdict is a FLOOR, not an answer, and until now
+nothing could raise it: v1.15.1 shipped an endpoint and a database view under
+a third-digit bump because there was no way to say otherwise. MAJOR was worse
+than under-reported -- it was unreachable, since `release_check` never returns
+it and this had no other input.
+
+The declaration is a LEVEL, never a number, and that distinction is the whole
+design. A number on a branch has to hope nobody takes it during review, which
+is how v1.5.0 and v1.6.0 were both taken out from under a branch on
+2026-07-30. Two branches may both declare `second` and neither collides,
+because a level is relative and gets resolved against the tag that exists at
+merge. This is the same rule changesets and release-please follow.
+
+WHERE IT IS WRITTEN. One file per branch under `.changes/`, carrying its own
+changelog prose and an optional `bump:`. Branches used to append to a single
+`## Unreleased` section, which meant every second branch open at once rebased
+through a conflict in the same paragraph -- on a repo where eight sessions are
+routinely live. A file per branch cannot conflict with another branch's file.
+
+`## Unreleased` is still read, so the two mechanisms overlap rather than
+switching over: a branch already in flight keeps working, and a release that
+finds both merges both.
 """
 
 from __future__ import annotations
@@ -39,6 +65,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import subprocess
 import sys
@@ -47,6 +74,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CHANGELOG = ROOT / "CHANGELOG.md"
 PYPROJECT = ROOT / "pyproject.toml"
+CHANGES = ROOT / ".changes"
 
 UNRELEASED = "## Unreleased"
 
@@ -55,6 +83,103 @@ UNRELEASED = "## Unreleased"
 # the corpus can be untouched while the code, the docs or the frontend all
 # moved, and "the numbers did not change" is not the same as "nothing shipped".
 LEVELS = ("none", "third", "second", "major")
+RANK = {level: i for i, level in enumerate(LEVELS)}
+
+# What a branch may declare. `none` is deliberately absent: a changeset file
+# exists because something shipped, and declaring that nothing did would be a
+# way to talk the floor DOWN, which no declaration is allowed to do.
+DECLARABLE = ("third", "second", "major")
+
+
+class Change:
+    """One branch's changelog entry, and the level it claims."""
+
+    def __init__(self, path: Path, level: str | None, body: str):
+        self.path, self.level, self.body = path, level, body
+
+    @property
+    def name(self) -> str:
+        return self.path.name
+
+
+def parse_change(text: str, name: str = "<changeset>") -> tuple[str | None, str]:
+    """Split a changeset into its declared level and its prose.
+
+    Frontmatter is optional -- a file that only carries prose declares
+    nothing and leaves the computed floor alone, which is the common case.
+
+    Every failure here is LOUD, and deliberately so. A declaration that is
+    silently ignored is worse than no declaration: the release ships under a
+    number somebody thinks they corrected. `bumps:` for `bump:` is the typo
+    this is really guarding, and it costs nothing to catch.
+    """
+    m = re.match(r"\A---[ \t]*\n(.*?)\n---[ \t]*\n?", text, re.S)
+    if not m:
+        return None, text.strip()
+
+    level = None
+    for line in m.group(1).splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        key, _, value = line.partition(":")
+        key, value = key.strip(), value.strip().strip("'\"")
+        if key != "bump":
+            raise SystemExit(
+                f"{name}: unknown frontmatter key {key!r}. "
+                f"The only key is 'bump', one of {', '.join(DECLARABLE)}.")
+        if re.match(r"^v?\d+(\.\d+)", value):
+            # The one mistake worth its own message, because it is the whole
+            # reason branches stopped naming versions in the first place.
+            raise SystemExit(
+                f"{name}: bump is a LEVEL, not a number -- got {value!r}. "
+                f"Use one of {', '.join(DECLARABLE)}. A branch that names a "
+                "number races every other branch open at the same time; "
+                "v1.5.0 and v1.6.0 were both taken out from under a branch "
+                "in review on 2026-07-30.")
+        if value not in DECLARABLE:
+            raise SystemExit(
+                f"{name}: bump must be one of {', '.join(DECLARABLE)}, "
+                f"got {value!r}.")
+        level = value
+
+    return level, text[m.end():].strip()
+
+
+def read_changes() -> list[Change]:
+    """Every changeset on disk, in a deterministic order.
+
+    Sorted by filename so the assembled section reads the same way whoever
+    runs it -- two entries landing in one release must not swap places
+    between a dry run and the real one.
+    """
+    if not CHANGES.is_dir():
+        return []
+    out = []
+    for path in sorted(CHANGES.glob("*.md")):
+        if path.name.upper() == "README.MD":
+            continue          # the convention's own documentation, not an entry
+        level, body = parse_change(path.read_text(), path.name)
+        out.append(Change(path, level, body))
+    return out
+
+
+def declared_level(changes: list[Change]) -> tuple[str | None, list[str]]:
+    """The strongest level any branch in this release declared, and who said so.
+
+    Strongest rather than first: two branches merging into one release each
+    describe their own change, and the release is the union of both. A
+    second-digit change does not become a third-digit one by travelling
+    alongside a typo fix.
+    """
+    reasons, best = [], None
+    for c in changes:
+        if not c.level:
+            continue
+        reasons.append(f"{c.name} declares {c.level}")
+        if best is None or RANK[c.level] > RANK[best]:
+            best = c.level
+    return best, reasons
 
 
 def unreleased(text: str | None = None) -> str | None:
@@ -132,10 +257,91 @@ def parse_verdict(stdout: str) -> tuple[str, list[str]]:
     return d.get("required", "none"), d.get("reasons", [])
 
 
+def stage_consumed(changes: list[Change]) -> None:
+    """Stage the changesets `--apply` just deleted.
+
+    A deletion has to be committed or it did not happen, and the release
+    commit stages explicit pathspecs -- deliberately, so a stray file cannot
+    be swept into a commit nobody reviews. That leaves a trap: the notes ship,
+    the files stay on master, and the NEXT release publishes every one of them
+    a second time.
+
+    Rather than depend on the workflow naming a path that a future edit could
+    drop, `--apply` stages its own deletions. The tool's contract becomes
+    "after this, the tree is ready to commit", which is the property the
+    caller actually wants.
+
+    Best-effort: this also runs on a developer's machine, where the changesets
+    may not be tracked yet and there may be no repository at all. A failure to
+    stage is not a failure to apply -- the files really are gone either way.
+    """
+    for c in changes:
+        subprocess.run(["git", "add", "--", str(c.path)],
+                       cwd=ROOT, capture_output=True)
+
+
+def resolve_level(computed: str, reasons: list[str],
+                  changes: list[Change]) -> tuple[str, list[str], str | None]:
+    """The level this release actually moves, after the branches have spoken.
+
+    A branch may RAISE the computed floor and may never lower it, which is the
+    property that makes the declaration safe to trust. `release_check` diffs
+    the corpus and the published answer; a declaration is a claim about the
+    part it is BLIND to -- a new view, endpoint or CLI flag -- and not a veto
+    over the part it is not. Somebody who writes `third` on a branch that
+    added a species has misread their own change, and the corpus diff is
+    right.
+
+    That direction is not new here either: `release_check` has always passed
+    over-bumping and failed under-bumping, for the same reason. Shipping a
+    bigger number than required is a judgement call; shipping a smaller one
+    silently breaks the promise that the number means something.
+
+    Returns the level, the reasons for `--explain`, and a warning to print
+    when a declaration was overruled.
+    """
+    declared, why = declared_level(changes)
+    if not declared:
+        return computed, reasons, None
+    if RANK[declared] > RANK[computed]:
+        return declared, reasons + why, None
+    if RANK[declared] < RANK[computed]:
+        note = (f"declared {declared}, but the corpus diff requires "
+                f"{computed}; releasing as {computed}")
+        return computed, reasons + why + [note], note
+    return computed, reasons + why, None
+
+
 def rewrite(version: str, text: str, today: str) -> str:
     """Give the `## Unreleased` section its number and its date."""
     return re.sub(rf"^{re.escape(UNRELEASED)}\s*$",
                   f"## v{version} — {today}", text, count=1, flags=re.M)
+
+
+def splice(version: str, text: str, today: str, bodies: list[str]) -> str:
+    """Write a release section carrying every changeset's prose.
+
+    Two shapes, because both can be true at once during the overlap:
+
+      * a `## Unreleased` section exists -- replace it wholesale, so a branch
+        still using the old mechanism and a branch using `.changes/` land in
+        ONE section rather than two claiming the same number.
+      * no such section -- insert a new one directly under `# Changelog`.
+
+    `rewrite` above still handles the legacy-only case untouched, so a release
+    with no changesets produces byte-identical output to before this existed.
+    """
+    body = "\n\n".join(b.strip() for b in bodies if b.strip()).strip()
+    section = f"## v{version} — {today}\n\n{body}\n"
+
+    pattern = rf"^{re.escape(UNRELEASED)}\s*$(.*?)(?=^## |\Z)"
+    if re.search(pattern, text, re.M | re.S):
+        return re.sub(pattern, section + "\n", text, count=1, flags=re.M | re.S)
+
+    m = re.search(r"\A(#\s+\S[^\n]*\n)", text)
+    if not m:
+        raise SystemExit("CHANGELOG.md has no '# ' title to insert under")
+    return text[:m.end()] + "\n" + section + "\n" + text[m.end():].lstrip("\n")
 
 
 def main() -> int:
@@ -144,12 +350,25 @@ def main() -> int:
     ap.add_argument("--explain", action="store_true")
     ap.add_argument("--apply", action="store_true",
                     help="write the number into CHANGELOG.md and pyproject.toml")
+    ap.add_argument("--lint", action="store_true",
+                    help="validate .changes/ declarations and exit")
     args = ap.parse_args()
 
+    # Parsing is the validation, and it raises. Doing it first means a typo in
+    # a `bump:` fails on the branch that wrote it rather than three merges
+    # later, in the middle of a release, where it is most expensive to find.
+    changes = read_changes()
+    if args.lint:
+        for c in changes:
+            print(f"{c.name}: {c.level or 'no declaration'}")
+        print(f"{len(changes)} changeset(s) OK")
+        return 0
+
     body = unreleased()
-    if not body:
+    if not body and not changes:
         if args.explain:
-            print("no '## Unreleased' section with content; nothing to release")
+            print("no '## Unreleased' section and no .changes/ entries; "
+                  "nothing to release")
         return 1
 
     base = args.base or latest_tag()
@@ -161,6 +380,13 @@ def main() -> int:
         # See LEVELS: a changelog entry means something shipped.
         level = "third"
         reasons = reasons + ["corpus unchanged, but there is a changelog entry"]
+
+    level, reasons, warning = resolve_level(level, reasons, changes)
+    if warning:
+        # Visible, never fatal. The floor already protects the number, and
+        # failing here would block a release over a judgement call.
+        print(f"::warning::{warning}" if os.environ.get("GITHUB_ACTIONS")
+              else f"NOTE: {warning}", file=sys.stderr)
 
     version = bump(base.lstrip("v"), level)
 
@@ -175,7 +401,18 @@ def main() -> int:
 
     if args.apply:
         today = dt.date.today().isoformat()
-        CHANGELOG.write_text(rewrite(version, CHANGELOG.read_text(), today))
+        text = CHANGELOG.read_text()
+        if changes:
+            # Legacy section first: it was written before any of these files,
+            # and a release holding both is one section, not two.
+            CHANGELOG.write_text(splice(
+                version, text, today,
+                ([body] if body else []) + [c.body for c in changes]))
+            for c in changes:
+                c.path.unlink()
+            stage_consumed(changes)
+        else:
+            CHANGELOG.write_text(rewrite(version, text, today))
         PYPROJECT.write_text(re.sub(
             r'^version\s*=\s*"[^"]+"', f'version = "{version}"',
             PYPROJECT.read_text(), count=1, flags=re.M))

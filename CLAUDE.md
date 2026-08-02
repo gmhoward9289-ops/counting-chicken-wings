@@ -115,10 +115,11 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
   because someone's existing citation is now wrong, and the changelog states old and new.
   The old rule ("all data changes are MINOR") took the project 1.0.0 → 1.7.0 in two days
   and made the middle number meaningless.
-- **Never write a version number on a branch — not in `pyproject.toml`, not in the
-  changelog heading.** Write your entry under `## Unreleased` and stop there. The
-  number is computed at merge by `tools/next_version.py`, from the tag that exists
-  plus `release_check.py`'s verdict on what actually changed.
+- **Write a LEVEL, never a number.** No version number on a branch — not in
+  `pyproject.toml`, not in a changelog heading. Put your entry in a new file under
+  `.changes/`, named after the branch, and stop there. The number is computed at
+  merge by `tools/next_version.py`, from the tag that exists plus
+  `release_check.py`'s verdict on what actually changed.
 
   This used to be a rule you had to remember to follow, and it did not survive
   contact with several sessions merging the same day: v1.5.0 and v1.6.0 were both
@@ -126,18 +127,40 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
   rebase and a sweep of the version string through three files. A branch that names
   no number cannot lose a race for one.
 
+  A file per branch rather than one shared `## Unreleased` section, because that
+  section conflicted between every pair of branches open at once. The section is
+  still read, so work already in flight keeps working.
+
+- **Declare a bump only for what the corpus diff cannot see.** Frontmatter
+  `bump: third | second | major` in your `.changes/` file. `release_check.py`
+  diffs the corpus and the published answer and is usually right on its own;
+  declare when the capability is a **new view, endpoint or CLI flag**, which it
+  is blind to, or when the change is **`major`**, which it never returns. A
+  declaration can only *raise* the computed floor — writing `third` over a
+  corpus diff that says `second` is a warning, and the floor wins.
+
+  A number in `bump:` is an error, not a shortcut: `bump: 1.16.0` is refused.
+  Levels are relative, so two branches declaring `second` do not collide.
+
+  ```bash
+  python tools/next_version.py --lint      # do the declarations parse?
+  python tools/next_version.py --explain   # what would this release as, and why?
+  ```
+
 **Versioning, tagging and releasing are all automatic — do not do any of them by
 hand.** `.github/workflows/release.yml` fires on every push to master and, when
-`CHANGELOG.md` carries an `## Unreleased` section with content:
+there is anything unreleased (a `.changes/` entry, or an `## Unreleased` section):
 
 1. syncs to the current tip of master, not the SHA that triggered the run;
-2. computes the number from the latest version tag and `release_check.py`'s verdict;
-3. rewrites `## Unreleased` to `## vX.Y.Z — <date>` and sets `pyproject.toml`;
+2. computes the number from the latest version tag, `release_check.py`'s verdict,
+   and any `bump:` a branch declared;
+3. merges every changeset into a `## vX.Y.Z — <date>` section, **deletes the
+   changeset files**, and sets `pyproject.toml`;
 4. **opens a pull request** with that commit and waits for it to squash-merge;
 5. tags the squash commit and publishes the GitHub release against it.
 
-So **the merge is the release**, and all you owe it is a written changelog section.
-A section that cannot be described fails the job rather than publishing an empty
+So **the merge is the release**, and all you owe it is a written changelog entry.
+An entry that cannot be described fails the job rather than publishing an empty
 release.
 
 Three consequences worth knowing:
