@@ -106,8 +106,29 @@ _SPECIES_COLUMNS = ("id", "slug", "common_name", "individual_noun",
                     "individual_plural", "domain")
 
 
+def _borrow_note(product_label: str, product_species: str,
+                 scope_species: str) -> str:
+    """What a view scoped to one species owes a reader who asked about another.
+
+    Composed HERE rather than in the page, and the reason is the constraint
+    issue #110 states outright: scope copy must be app copy or come from the
+    API. This is the second, and it is the better one -- every noun is the
+    corpus' own, so a renamed species renames the sentence.
+
+    The pattern is deliberately the one `/api/footprint.allocation_note`
+    already uses for the same situation one panel down ("...they are not this
+    product's to borrow"). Reusing the pattern rather than that string itself
+    is the one liberty taken, and it is forced: the footprint sentence is
+    written for its own panel -- "there is nothing HERE to allocate", "the
+    economic figures BELOW" -- and panel-relative deixis is exactly what does
+    not survive being hoisted to the tab level.
+    """
+    return (f"{product_label} is a {product_species} product, and nothing "
+            f"measured on {scope_species} is its to borrow.")
+
+
 @app.get("/api/scope")
-def scope():
+def scope(product: str | None = None):
     """Which species the corpus answers, in how many dimensions, and the anchor.
 
     The page's strapline needs to say that one species is the anchor dataset
@@ -120,6 +141,12 @@ def scope():
     present in the most dimensions. A tie returns `anchor: null` and the page
     prints nothing rather than picking one -- the day a second species reaches
     parity, the claim retires itself instead of becoming a lie.
+
+    `product` asks the second question the page has: given that this product is
+    selected, what should a view scoped to some OTHER species say? One
+    pre-composed sentence per species comes back in `selected.borrow_notes`, so
+    switching tabs costs no request and the page never composes the sentence
+    itself. See `_borrow_note`.
     """
     conn = dbm.connect()
     try:
@@ -150,9 +177,36 @@ def scope():
             if len(depths) == 1 or depths[0] > depths[1]:
                 anchor = max(species, key=lambda s: s["depth"])
 
+        selected = None
+        if product is not None:
+            try:
+                prod = dbm.get_product(conn, product)
+            except KeyError:
+                raise HTTPException(404, f"unknown product: {product}")
+            mine = next((s for s in species
+                         if s["slug"] == prod["species_slug"]), None)
+            selected = {
+                "slug": prod["slug"],
+                "label": prod["label"],
+                "species": prod["species_slug"],
+                "common_name": mine["common_name"] if mine else None,
+                # One sentence per species this product is NOT. Keyed by slug
+                # so a client holding a view's scope can look its own up
+                # without asking again on every tab switch, and so a species
+                # that gains a view needs no new field.
+                "borrow_notes": {
+                    s["slug"]: _borrow_note(
+                        prod["label"],
+                        mine["common_name"] if mine else prod["species_slug"],
+                        s["common_name"])
+                    for s in species if s["slug"] != prod["species_slug"]
+                },
+            }
+
         return {
             "anchor": anchor,
             "species": species,
+            "selected": selected,
             "dimensions": [
                 {"key": k, "label": _DIMENSION_LABELS.get(k, k),
                  "species": [s["slug"] for s in species if s["dimensions"][k]]}
