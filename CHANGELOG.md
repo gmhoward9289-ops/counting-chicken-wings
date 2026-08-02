@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## v1.15.2 — 2026-08-02
 ### The distinct count has a variance decomposition, and almost none of it is there
 
 `sensitivity()` has always answered "which loss stage moves the answer most?"
