@@ -9,7 +9,7 @@
 #   127.0.0.1:8101  ->  container :8000
 #
 # 8101 because 8100 is api-demo. Ports are recorded in
-# /Users/george/swamplink/CHECKPOINT.md; check it before claiming one.
+# ~/swamplink/CHECKPOINT.md; check it before claiming one.
 #
 # The image build runs the corpus build AND the citation audit (see
 # Dockerfile), and the audit exits non-zero on any uncited statistic. So a
