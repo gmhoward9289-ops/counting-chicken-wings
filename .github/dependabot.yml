@@ -1,32 +1,10 @@
-# NOTE: `version` below is Dependabot's CONFIG SCHEMA version, not this
-# project's version. It must be the integer 2 -- that is the only value
-# GitHub accepts. Setting it to the project's version (1.0) silently
-# disables Dependabot, because the file fails to parse.
-#
-# This project's own version lives in pyproject.toml. See docs/VERSIONING.md.
 version: 2
-
 updates:
-  # Python dependencies declared in pyproject.toml.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps"
-    groups:
-      # One PR for the whole dev toolchain rather than three. These only
-      # affect CI, so reviewing them together is proportionate.
-      dev-tooling:
-        patterns:
-          - "pytest*"
-          - "httpx*"
-
-  # Workflow files pin action versions, and those go stale silently.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
-    commit-message:
-      prefix: "ci"
+      interval: "weekly"
