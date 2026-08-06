@@ -74,7 +74,7 @@ the folk "1,000–1,600 m"; note the spread as a conflict if a second source giv
 the higher range.
 
 **Watch for:** total filament vs usable reelable length — this subject's
-fresh-vs-cured trap. State which the source means (NWE says the whole thread).
+fresh-vs-cured trap. State which the source means (NEW says the whole thread).
 **The unit is METRES.** The quote gives the same length twice, "300 to 900
 meters (1000 to 3000 feet)"; those are one measurement in two units, not a
 range from 300 to 3000. Report `value_lo: 300`, `value_hi: 900`,
