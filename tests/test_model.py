@@ -255,6 +255,96 @@ def test_monte_carlo_is_reproducible_with_a_seed():
 
 
 # ---------------------------------------------------------------------------
+# Resampling the scalar parameters too (#98)
+# ---------------------------------------------------------------------------
+
+SHORT_CASCADE = [
+    MixingStage("tray", "Butcher tray", 40, "random", pool_lo=4, pool_hi=160),
+]
+
+WIDE_PARAM_BANDS = {
+    "separation_efficiency": ("Separation efficiency", 0.5, 0.9, 0.99, "estimate"),
+    "adjacency_retention_random": (
+        "Adjacency retention", 0.1, 0.5, 0.9, "estimate"),
+}
+
+
+def test_omitting_param_bands_holds_parameters_at_the_fixed_value():
+    """No behaviour change for callers that do not yet pass param_bands --
+    only the corpus-wired call sites (cli.py, api.py) do."""
+    a = run(12, 2.0, [], SHORT_CASCADE, iterations=500, seed=7,
+            params=MixingParams(separation_efficiency=0.9))
+    b = run(12, 2.0, [], SHORT_CASCADE, iterations=500, seed=7,
+            params=MixingParams(separation_efficiency=0.9))
+    assert a.distinct_lo == pytest.approx(b.distinct_lo)
+    assert a.distinct_hi == pytest.approx(b.distinct_hi)
+
+
+def test_param_bands_widen_the_distinct_interval_on_local_butcher():
+    """The regression #98 exists to fix, against the real corpus rather than
+    a synthetic stage: local_butcher's short cascade (one separating stage,
+    one random stage, a small overridden pool) is where the parameters stop
+    being negligible next to pool-size uncertainty. Measured on the full
+    corpus: 0.61 to 0.92. A synthetic single-stage fixture cannot stand in
+    here -- separation_efficiency only does anything on a `separating` stage,
+    and the real chain's mix of mechanisms is the point being tested."""
+    from counting_chicken_wings import db as dbm
+    conn = dbm.connect()
+    mixing = dbm.load_mixing_stages(conn, "local_butcher")
+    params = dbm.load_mixing_params(conn)
+    bands = dbm.load_mixing_param_bands(conn)
+    without = run(12, 2.0, [], mixing, iterations=3000, seed=7, params=params)
+    with_bands = run(12, 2.0, [], mixing, iterations=3000, seed=7,
+                     params=params, param_bands=bands)
+    width_without = without.distinct_hi - without.distinct_lo
+    width_with = with_bands.distinct_hi - with_bands.distinct_lo
+    assert width_with > width_without
+
+
+def test_param_bands_do_not_widen_the_saturated_commodity_route():
+    """The other half of the same finding: the commodity cascade's pool-size
+    uncertainty already dominates it completely, so resampling four more
+    inputs into an already-saturated model should not manufacture spread
+    that is not there. Measured: 0.00003 to 0.00006 -- both effectively
+    zero, neither a meaningful change from the other."""
+    from counting_chicken_wings import db as dbm
+    conn = dbm.connect()
+    mixing = dbm.load_mixing_stages(conn, "commodity_foodservice")
+    params = dbm.load_mixing_params(conn)
+    bands = dbm.load_mixing_param_bands(conn)
+    with_bands = run(12, 2.0, [], mixing, iterations=3000, seed=7,
+                     params=params, param_bands=bands)
+    width_with = with_bands.distinct_hi - with_bands.distinct_lo
+    assert width_with < 1e-3
+
+
+def test_param_bands_do_not_move_the_deterministic_point_estimate():
+    """Only the Monte Carlo band should widen. The single reported `distinct`
+    a caller gets with iterations=0 is still the mode-pinned pass."""
+    fixed_params = MixingParams(separation_efficiency=0.9)
+    without = run(12, 2.0, [], SHORT_CASCADE, params=fixed_params)
+    with_bands = run(12, 2.0, [], SHORT_CASCADE, params=fixed_params,
+                     param_bands=WIDE_PARAM_BANDS)
+    assert without.distinct_mean == pytest.approx(with_bands.distinct_mean)
+
+
+def test_a_missing_param_stays_at_its_fixed_value():
+    """param_bands need not cover every MixingParams field -- the docstring
+    promises the rest stay at `params`, not at MixingParams()'s inert zero."""
+    partial_bands = {"separation_efficiency": WIDE_PARAM_BANDS[
+        "separation_efficiency"]}
+    fixed = MixingParams(separation_efficiency=0.9,
+                          adjacency_retention_random=0.5)
+    res = run(12, 2.0, [], SHORT_CASCADE, iterations=200, seed=3,
+              params=fixed, param_bands=partial_bands, keep_samples=True)
+    # Every draw used the same untouched adjacency_retention_random, so the
+    # samples must show real spread from the swept parameter without the
+    # unswept one silently reverting to MixingParams()'s default of 0.0,
+    # which would itself change the answer and hide as "just resampling".
+    assert res.distinct_lo < res.distinct_hi
+
+
+# ---------------------------------------------------------------------------
 # Boneless wings -- many units per individual
 # ---------------------------------------------------------------------------
 

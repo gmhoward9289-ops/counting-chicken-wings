@@ -153,6 +153,9 @@ def cmd_count(args) -> int:
         # From the corpus, never from a module constant. Omitting this turns
         # every mixing mechanism off -- see model.MixingParams.
         params=dbm.load_mixing_params(conn),
+        # Lets the Monte Carlo loop resample these too (#98), not just pool
+        # sizes.
+        param_bands=dbm.load_mixing_param_bands(conn),
     )
 
     # ---- the answer ----------------------------------------------------
