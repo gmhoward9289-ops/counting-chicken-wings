@@ -202,7 +202,7 @@ def test_no_tag_at_all_reads_as_none_rather_than_empty_string(monkeypatch):
 
 def test_every_version_in_the_real_changelog_parses_as_three_digits():
     import re
-    text = nv.CHANGELOG.read_text()
+    text = nv.CHANGELOG.read_text(encoding="utf-8")
     for v in re.findall(r"^## v(\S+)", text, re.M):
         assert len(v.split(".")) == 3, f"{v} is not MAJOR.MINOR.MINOR"
 
@@ -326,7 +326,7 @@ def test_changesets_are_read_in_a_deterministic_order(tmp_path, monkeypatch):
     """Two entries must not swap places between a dry run and the real one."""
     monkeypatch.setattr(nv, "CHANGES", tmp_path)
     for name in ("zeta.md", "alpha.md", "middle.md"):
-        (tmp_path / name).write_text(f"### {name}\n")
+        (tmp_path / name).write_text(f"### {name}\n", encoding="utf-8")
     assert [c.name for c in nv.read_changes()] == \
         ["alpha.md", "middle.md", "zeta.md"]
 
@@ -334,8 +334,8 @@ def test_changesets_are_read_in_a_deterministic_order(tmp_path, monkeypatch):
 def test_the_conventions_own_readme_is_not_an_entry(tmp_path, monkeypatch):
     """`.changes/README.md` documents the mechanism; it is not a release note."""
     monkeypatch.setattr(nv, "CHANGES", tmp_path)
-    (tmp_path / "README.md").write_text("# how to write one\n")
-    (tmp_path / "real.md").write_text("### Real\n")
+    (tmp_path / "README.md").write_text("# how to write one\n", encoding="utf-8")
+    (tmp_path / "real.md").write_text("### Real\n", encoding="utf-8")
     assert [c.name for c in nv.read_changes()] == ["real.md"]
 
 
@@ -428,15 +428,15 @@ def applied(tmp_path, monkeypatch):
     """
     changes = tmp_path / ".changes"
     changes.mkdir()
-    (changes / "README.md").write_text("# the convention\n")
+    (changes / "README.md").write_text("# the convention\n", encoding="utf-8")
     (changes / "a-thing.md").write_text(
-        "---\nbump: second\n---\n### A thing\n\nProse about it.\n")
-    (changes / "b-thing.md").write_text("### B thing\n\nMore prose.\n")
+        "---\nbump: second\n---\n### A thing\n\nProse about it.\n", encoding="utf-8")
+    (changes / "b-thing.md").write_text("### B thing\n\nMore prose.\n", encoding="utf-8")
 
     changelog = tmp_path / "CHANGELOG.md"
-    changelog.write_text(CHANGELOG)
+    changelog.write_text(CHANGELOG, encoding="utf-8")
     pyproject = tmp_path / "pyproject.toml"
-    pyproject.write_text('[project]\nversion = "1.15.1"\n')
+    pyproject.write_text('[project]\nversion = "1.15.1"\n', encoding="utf-8")
 
     monkeypatch.setattr(nv, "CHANGES", changes)
     monkeypatch.setattr(nv, "CHANGELOG", changelog)
@@ -451,13 +451,13 @@ def applied(tmp_path, monkeypatch):
 
 def test_apply_takes_the_declared_level_not_the_computed_one(applied):
     _, changelog, pyproject = applied
-    assert 'version = "1.16.0"' in pyproject.read_text()
-    assert "## v1.16.0" in changelog.read_text()
+    assert 'version = "1.16.0"' in pyproject.read_text(encoding="utf-8")
+    assert "## v1.16.0" in changelog.read_text(encoding="utf-8")
 
 
 def test_apply_merges_every_body_into_one_section(applied):
     _, changelog, _ = applied
-    text = changelog.read_text()
+    text = changelog.read_text(encoding="utf-8")
     assert text.count("## v1.16.0") == 1
     for wanted in ("### Something shipped", "### A thing", "### B thing"):
         assert wanted in text, f"{wanted} was dropped"
@@ -475,7 +475,7 @@ def test_apply_consumes_the_changesets(applied):
 
 def test_apply_leaves_older_releases_alone(applied):
     _, changelog, _ = applied
-    assert "## v1.11.0 — 2026-07-31" in changelog.read_text()
+    assert "## v1.11.0 — 2026-07-31" in changelog.read_text(encoding="utf-8")
 
 
 def test_apply_stages_the_deletions_it_made(tmp_path, monkeypatch):
@@ -491,7 +491,7 @@ def test_apply_stages_the_deletions_it_made(tmp_path, monkeypatch):
     changes = tmp_path / ".changes"
     changes.mkdir()
     entry = changes / "gone.md"
-    entry.write_text("### Gone\n\nProse.\n")
+    entry.write_text("### Gone\n\nProse.\n", encoding="utf-8")
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
     subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
                     "commit", "-qm", "seed"], cwd=tmp_path, check=True)

@@ -76,7 +76,7 @@ DOC = ("Saffron is harvested by hand. Approximately 150 to 200 flowers are "
 
 def test_quote_found_when_present(tmp_path):
     d = tmp_path / "doc.txt"
-    d.write_text(DOC)
+    d.write_text(DOC, encoding="utf-8")
     ok, _ = rb.quote_in_document(
         "Approximately 150 to 200 flowers are required to produce one gram", d)
     assert ok
@@ -85,7 +85,7 @@ def test_quote_found_when_present(tmp_path):
 def test_fabricated_quote_is_rejected(tmp_path):
     """The failure mode this whole design exists to catch."""
     d = tmp_path / "doc.txt"
-    d.write_text(DOC)
+    d.write_text(DOC, encoding="utf-8")
     ok, why = rb.quote_in_document(
         "roughly 400 flowers are required to produce one gram", d)
     assert not ok
@@ -102,7 +102,7 @@ def test_missing_document_is_rejected(tmp_path):
 
 def test_empty_quote_is_rejected(tmp_path):
     d = tmp_path / "doc.txt"
-    d.write_text(DOC)
+    d.write_text(DOC, encoding="utf-8")
     assert not rb.quote_in_document("", d)[0]
     assert not rb.quote_in_document("   ", d)[0]
 
@@ -112,7 +112,7 @@ def test_typography_differences_are_forgiven(tmp_path):
     glyphs. PDF extraction mangles both, and rejecting honest quotes over that
     would teach us to distrust the gate."""
     d = tmp_path / "doc.txt"
-    d.write_text("The  crocus\nhas three stigmas — always three.")
+    d.write_text("The  crocus\nhas three stigmas — always three.", encoding="utf-8")
     ok, _ = rb.quote_in_document("The crocus has three stigmas - always three.", d)
     assert ok
 
@@ -120,7 +120,7 @@ def test_typography_differences_are_forgiven(tmp_path):
 def test_digits_are_not_forgiven(tmp_path):
     """Typography folding must not extend to the number itself."""
     d = tmp_path / "doc.txt"
-    d.write_text("about 170 flowers per gram")
+    d.write_text("about 170 flowers per gram", encoding="utf-8")
     assert not rb.quote_in_document("about 180 flowers per gram", d)[0]
 
 
@@ -146,7 +146,7 @@ def test_verify_rejects_human_only_grades(tmp_path, monkeypatch, grade):
     out.mkdir(parents=True)
     doc_dir = tmp_path / "inbox" / "test"
     doc_dir.mkdir(parents=True)
-    (doc_dir / "d.txt").write_text(DOC)
+    (doc_dir / "d.txt").write_text(DOC, encoding="utf-8")
 
     (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
         "field": "flowers_per_gram",
@@ -155,7 +155,7 @@ def test_verify_rejects_human_only_grades(tmp_path, monkeypatch, grade):
         "document": "inbox/test/d.txt",
         "quote": "Approximately 150 to 200 flowers are required",
         "verified_by": None,
-    }]}))
+    }]}), encoding="utf-8")
 
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
@@ -173,14 +173,14 @@ def test_verify_rejects_preset_verified_by(tmp_path, monkeypatch):
     out.mkdir(parents=True)
     doc_dir = tmp_path / "inbox" / "test"
     doc_dir.mkdir(parents=True)
-    (doc_dir / "d.txt").write_text(DOC)
+    (doc_dir / "d.txt").write_text(DOC, encoding="utf-8")
 
     (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
         "field": "f", "value_mode": 170, "confidence": "industry",
         "document": "inbox/test/d.txt",
         "quote": "Approximately 150 to 200 flowers are required",
         "verified_by": "cooper",
-    }]}))
+    }]}), encoding="utf-8")
 
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
@@ -194,7 +194,7 @@ def test_verify_accepts_a_clean_batch(tmp_path, monkeypatch):
     out.mkdir(parents=True)
     doc_dir = tmp_path / "inbox" / "test"
     doc_dir.mkdir(parents=True)
-    (doc_dir / "d.txt").write_text(DOC)
+    (doc_dir / "d.txt").write_text(DOC, encoding="utf-8")
 
     # Carries lo/hi as a real banded row would. The mode is interpolated
     # between the quoted bounds, which is legitimate -- the band is what the
@@ -206,7 +206,7 @@ def test_verify_accepts_a_clean_batch(tmp_path, monkeypatch):
         "confidence": "industry", "document": "inbox/test/d.txt",
         "quote": "Approximately 150 to 200 flowers are required",
         "agreement": "2/2", "verified_by": None,
-    }]}))
+    }]}), encoding="utf-8")
 
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
@@ -222,7 +222,7 @@ def test_value_without_a_quote_is_rejected(tmp_path, monkeypatch):
     out.mkdir(parents=True)
     (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [
         {"field": "f", "value_mode": 170, "confidence": "industry"},
-    ]}))
+    ]}), encoding="utf-8")
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
     monkeypatch.setattr(rb, "trial_build", lambda files: (True, "skipped"))
@@ -237,7 +237,7 @@ def test_accept_refuses_without_the_verified_marker(tmp_path, monkeypatch):
     batch = "batch-95-test"
     out = tmp_path / "outbox" / batch
     out.mkdir(parents=True)
-    (out / "findings.yaml").write_text("findings: []\n")
+    (out / "findings.yaml").write_text("findings: []\n", encoding="utf-8")
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "DATA", tmp_path / "data")
     with pytest.raises(SystemExit, match="has not passed verify"):
@@ -318,7 +318,7 @@ SPEC = """# Batch 42 — test
 
 def _spec(tmp_path):
     p = tmp_path / "batch-42-test.md"
-    p.write_text(SPEC)
+    p.write_text(SPEC, encoding="utf-8")
     return parse_spec(p)
 
 
@@ -354,7 +354,7 @@ def test_parse_spec_yields_nothing_without_urls(tmp_path):
     """Batches 02 and 03 deliberately have no URLs. Zero items is correct and
     must fail loudly rather than fetch nothing and look successful."""
     p = tmp_path / "batch-43-empty.md"
-    p.write_text("### Item 1 — f\n\n**Question:** Q?\n\nNo urls here.\n")
+    p.write_text("### Item 1 — f\n\n**Question:** Q?\n\nNo urls here.\n", encoding="utf-8")
     assert parse_spec(p)["items"] == []
 
 
@@ -662,7 +662,7 @@ def _scout_env(tmp_path, monkeypatch, remote):
 
     batches = tmp_path / "batches"
     batches.mkdir()
-    (batches / "batch-44-scout.md").write_text(SCOUT_SPEC)
+    (batches / "batch-44-scout.md").write_text(SCOUT_SPEC, encoding="utf-8")
     monkeypatch.setattr(rb, "BATCHES", batches)
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
 
@@ -783,13 +783,13 @@ def test_a_bare_row_is_a_warning_and_not_a_failure(tmp_path, monkeypatch):
     doc = tmp_path / "inbox" / "d.txt"
     doc.parent.mkdir(parents=True)
     doc.write_text("Dairy products 367 34 9 75 21 109 30\n"
-                   "Fluid milk 109 13 12 22 20 35 32\n")
+                   "Fluid milk 109 13 12 22 20 35 32\n", encoding="utf-8")
     (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
         "field": "chain_loss", "value_lo": 12, "value_mode": 20,
         "unit": "percent", "confidence": "industry",
         "document": "inbox/d.txt",
         "quote": "Fluid milk 109 13 12 22 20 35 32",
-    }]}))
+    }]}), encoding="utf-8")
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
     monkeypatch.setattr(rb, "trial_build", lambda files: (True, "skipped"))
@@ -825,13 +825,13 @@ def test_a_walled_document_fails_verify(tmp_path, monkeypatch):
     out.mkdir(parents=True)
     doc = tmp_path / "inbox" / "pmc.txt"
     doc.parent.mkdir(parents=True)
-    doc.write_text(PMC_WALL)
+    doc.write_text(PMC_WALL, encoding="utf-8")
     (out / "findings.yaml").write_text(yaml.safe_dump({"findings": [{
         "field": "milk_yield_per_cow_day", "value_mode": 123.61,
         "unit": "litres", "confidence": "industry",
         "document": "inbox/pmc.txt",
         "quote": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov",
-    }]}))
+    }]}), encoding="utf-8")
     monkeypatch.setattr(rb, "OUTBOX", tmp_path / "outbox")
     monkeypatch.setattr(rb, "RESEARCH", tmp_path)
     monkeypatch.setattr(rb, "trial_build", lambda files: (True, "skipped"))
@@ -842,7 +842,7 @@ def test_a_walled_document_fails_verify(tmp_path, monkeypatch):
 
 def test_the_wall_check_names_the_wall_not_the_quote(tmp_path):
     doc = tmp_path / "pmc.txt"
-    doc.write_text(PMC_WALL)
+    doc.write_text(PMC_WALL, encoding="utf-8")
     walled, why = rb.document_is_a_wall(doc)
     assert walled
     assert "not a document" in why
@@ -850,7 +850,7 @@ def test_the_wall_check_names_the_wall_not_the_quote(tmp_path):
 
 def test_a_real_document_is_not_a_wall(tmp_path):
     doc = tmp_path / "d.txt"
-    doc.write_text(GOOD_BODY)
+    doc.write_text(GOOD_BODY, encoding="utf-8")
     assert not rb.document_is_a_wall(doc)[0]
 
 
@@ -861,10 +861,10 @@ def test_a_missing_document_is_not_reported_as_a_wall(tmp_path):
 
 
 def test_walled_documents_finds_the_wall_among_real_sources(tmp_path):
-    (tmp_path / "a.txt").write_text(GOOD_BODY)
-    (tmp_path / "b.txt").write_text(PMC_WALL)
+    (tmp_path / "a.txt").write_text(GOOD_BODY, encoding="utf-8")
+    (tmp_path / "b.txt").write_text(PMC_WALL, encoding="utf-8")
     (tmp_path / "sub").mkdir()
-    (tmp_path / "sub" / "c.txt").write_text(GOOD_BODY)
+    (tmp_path / "sub" / "c.txt").write_text(GOOD_BODY, encoding="utf-8")
     found = rb.walled_documents(tmp_path)
     assert [p.name for p, _ in found] == ["b.txt"]
 
@@ -913,7 +913,7 @@ def test_a_walled_fetch_still_keeps_the_document(tmp_path, monkeypatch):
     _runner_mod, path = _fetch_body(monkeypatch, tmp_path,
                                     PMC_WALL.encode(), PMC_URL)
     assert path is not None and path.exists()
-    assert "reCAPTCHA" in path.read_text()
+    assert "reCAPTCHA" in path.read_text(encoding="utf-8")
 
 
 def test_a_real_document_is_fetched_without_a_wall_warning(tmp_path,

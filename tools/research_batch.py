@@ -510,7 +510,7 @@ def verify(batch: str) -> int:
 
     for f in files:
         try:
-            doc = yaml.safe_load(f.read_text()) or {}
+            doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         except yaml.YAMLError as e:
             failures.append(f"{f.name}: unparseable YAML -- {e}")
             continue
@@ -612,7 +612,7 @@ def verify(batch: str) -> int:
         return 1
 
     print(f"\nPASSED. {batch} is safe to accept.")
-    (OUTBOX / batch / ".verified").write_text("ok\n")
+    (OUTBOX / batch / ".verified").write_text("ok\n", encoding="utf-8")
     return 0
 
 
@@ -732,7 +732,7 @@ def accept(batch: str) -> int:
         dst = ACCEPTED / f"{batch}-{f.name}"
         shutil.copy(f, dst)
         promoted.append(dst)
-        doc = yaml.safe_load(f.read_text()) or {}
+        doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         rows += [r for _, r in rows_of(doc)
                  if isinstance(r, dict) and "quote" in r]
 

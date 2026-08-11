@@ -214,7 +214,7 @@ def test_no_surface_keeps_its_own_copy_of_the_condition():
     import counting_chicken_wings
     root = pathlib.Path(counting_chicken_wings.__file__).parent
     for mod in ("cli.py", "api.py"):
-        text = (root / mod).read_text()
+        text = (root / mod).read_text(encoding="utf-8")
         assert "aggregate_units=" not in text, (
             f"{mod} decides aggregate_units for itself again"
         )

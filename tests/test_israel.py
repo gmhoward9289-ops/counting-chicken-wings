@@ -448,8 +448,8 @@ def test_the_industry_file_is_separate_from_the_generated_one():
     """
     from pathlib import Path
     data = Path(__file__).resolve().parents[1] / "data"
-    generated = (data / "output_israel.yaml").read_text()
-    curated = (data / "output_israel_industry.yaml").read_text()
+    generated = (data / "output_israel.yaml").read_text(encoding="utf-8")
+    curated = (data / "output_israel_industry.yaml").read_text(encoding="utf-8")
     assert "do not" in generated.lower() and "parse_cbs_israel" in generated
     assert "head_slaughtered" not in generated
     assert "head_slaughtered" in curated

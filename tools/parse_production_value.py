@@ -69,7 +69,7 @@ def parse(lines: list[str], a: int, b: int) -> dict[str, list[float]]:
 
 
 def main(path: str) -> int:
-    lines = open(path).read().splitlines()
+    lines = open(path, encoding="utf-8").read().splitlines()
     bounds = find_tables(lines)
     if not bounds:
         print("no broiler tables found", file=sys.stderr)

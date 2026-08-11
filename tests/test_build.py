@@ -39,11 +39,13 @@ def test_build_is_idempotent(tmp_path):
     """Rebuilding must replace, never append."""
     path = tmp_path / "out.db"
     build(path)
-    first = sqlite3.connect(path).execute(
-        "SELECT COUNT(*) FROM source").fetchone()[0]
+    conn = sqlite3.connect(path)
+    first = conn.execute("SELECT COUNT(*) FROM source").fetchone()[0]
+    conn.close()
     build(path)
-    second = sqlite3.connect(path).execute(
-        "SELECT COUNT(*) FROM source").fetchone()[0]
+    conn = sqlite3.connect(path)
+    second = conn.execute("SELECT COUNT(*) FROM source").fetchone()[0]
+    conn.close()
     assert first == second
 
 
@@ -119,7 +121,7 @@ def test_no_statistic_lacks_a_citation(db):
 def test_unknown_source_slug_is_rejected(tmp_path):
     """A typo'd citation must fail the build, not silently pass."""
     conn = sqlite3.connect(tmp_path / "t.db")
-    conn.executescript(buildmod.SCHEMA.read_text())
+    conn.executescript(buildmod.SCHEMA.read_text(encoding="utf-8"))
     b = Builder(conn)
     b.source["real-source"] = 1
     with pytest.raises(BuildError, match="unknown source"):
@@ -128,7 +130,7 @@ def test_unknown_source_slug_is_rejected(tmp_path):
 
 def test_known_source_slug_resolves(tmp_path):
     conn = sqlite3.connect(tmp_path / "t.db")
-    conn.executescript(buildmod.SCHEMA.read_text())
+    conn.executescript(buildmod.SCHEMA.read_text(encoding="utf-8"))
     b = Builder(conn)
     b.source["real-source"] = 7
     assert b.src("real-source", "ctx") == 7
@@ -137,7 +139,7 @@ def test_known_source_slug_resolves(tmp_path):
 def test_missing_source_is_passed_through_as_none(tmp_path):
     """Optional citations stay optional; NOT NULL columns catch the rest."""
     conn = sqlite3.connect(tmp_path / "t.db")
-    conn.executescript(buildmod.SCHEMA.read_text())
+    conn.executescript(buildmod.SCHEMA.read_text(encoding="utf-8"))
     assert Builder(conn).src(None, "ctx") is None
 
 

@@ -129,7 +129,7 @@ def test_version_comes_from_the_file_not_from_installed_metadata():
 def test_every_released_version_in_the_real_changelog_has_a_usable_title():
     """Regression net for the actual file: every heading must resolve."""
     import re
-    text = rn.CHANGELOG.read_text()
+    text = rn.CHANGELOG.read_text(encoding="utf-8")
     versions = re.findall(r"^## v(\d+\.\d+\.\d+)\b", text, re.M)
     assert versions, "no version headings found"
     for v in versions:

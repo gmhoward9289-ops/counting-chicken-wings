@@ -231,13 +231,12 @@ def export(out_dir: Path, db_path: Path | None = None) -> list[Path]:
             # No comment header in the CSV: a leading '#' line breaks every
             # spreadsheet import. Provenance lives in the .txt twin and in
             # the source column on each row.
-            csv_path.write_text(_csv(cols, rows))
+            csv_path.write_text(_csv(cols, rows), encoding="utf-8")
             written.append(csv_path)
 
             txt_path = out_dir / f"{spec['name']}.txt"
             txt_path.write_text(
-                f"{header}\n\n{_txt(cols, rows)}"
-            )
+                f"{header}\n\n{_txt(cols, rows)}", encoding="utf-8")
             written.append(txt_path)
 
             index.append((spec["name"], len(rows), spec["title"]))
@@ -270,7 +269,7 @@ def export(out_dir: Path, db_path: Path | None = None) -> list[Path]:
         "                  others are suppressed for disclosure.",
         "",
     ]
-    readme.write_text("\n".join(lines))
+    readme.write_text("\n".join(lines), encoding="utf-8")
     written.append(readme)
     return written
 

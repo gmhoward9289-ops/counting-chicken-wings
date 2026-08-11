@@ -417,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
     text = render(output, value, inventory, district_year, districts)
 
     if "--check" in argv:
-        current = OUT.read_text() if OUT.exists() else ""
+        current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
         # The retrieval date is in the header and changes daily; comparing it
         # would report drift on every run for no reason.
         strip = lambda t: "\n".join(  # noqa: E731
@@ -430,7 +430,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{OUT.name} matches CBS")
         return 0
 
-    OUT.write_text(text)
+    OUT.write_text(text, encoding="utf-8")
     print(f"wrote {OUT.relative_to(ROOT)}: "
           f"{len(output)} output years, {len(inventory)} inventory years, "
           f"{len(districts)} district rows")
