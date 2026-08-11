@@ -171,10 +171,19 @@ def test_harmonic_regression_needs_a_complete_year():
 
 
 def test_harmonic_regression_bootstrap_ci_brackets_a_noiseless_amplitude():
+    """Residuals here are floating-point noise (~1e-14), not real signal, and
+    its sign varies by platform/Python build -- CI on Linux/3.12 saw
+    ci_hi == 9.99999999999998, a hair under 10.0, where this dev environment
+    (Windows/3.14) saw a hair over. A strict bracket assertion is exactly
+    the kind of false failure the corpus's own honesty rules warn against:
+    treating platform-dependent float noise as a real measurement. abs=1e-6
+    is generous next to that noise floor and still tight enough to catch a
+    genuine regression in the bootstrap."""
     values = [10 * math.sin(2 * math.pi * t / 12) + 100 for t in range(12)]
     fit = seas.harmonic_regression(values, bootstrap=500, seed=7)
     assert fit.ci_lo is not None and fit.ci_hi is not None
-    assert fit.ci_lo <= 10.0 <= fit.ci_hi
+    assert fit.ci_lo == pytest.approx(10.0, abs=1e-6)
+    assert fit.ci_hi == pytest.approx(10.0, abs=1e-6)
     assert fit.ci_hi - fit.ci_lo < 1.0, "residuals are ~0, so the CI should be tight"
 
 
