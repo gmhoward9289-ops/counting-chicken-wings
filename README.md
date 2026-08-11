@@ -281,8 +281,8 @@ Latest release and what moved in it: [CHANGELOG.md](CHANGELOG.md). The version
 is not repeated here — it went stale twice, and `GET /api/version` is the only
 answer that is true of the deployment rather than of a file.
 
-Live at https://counting-chicken-wings.onrender.com/ (free tier; a first visit
-may wait ~20s for a cold start).
+Live at https://wings.swamplink.com/ (moved off Render's free tier; always
+on, no cold start).
 
 Corpus figures are in [Honesty about the data](#honesty-about-the-data) above,
 generated from the audit. They are not repeated here — two hand-kept copies of
