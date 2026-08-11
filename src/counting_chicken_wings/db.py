@@ -383,7 +383,7 @@ def load_mixing_stages(conn, chain_slug: str) -> list[MixingStage]:
         SELECT ms.slug, ms.label, ms.mixing_kind, ms.description,
                ms.confidence, src.slug AS source_slug,
                COALESCE(scs.pool_override, ms.pool_mode) AS pool,
-               ms.pool_lo, ms.pool_hi, scs.pool_override
+               ms.pool_lo, ms.pool_mode, ms.pool_hi, scs.pool_override
         FROM supply_chain sc
         JOIN supply_chain_stage scs ON scs.supply_chain_id = sc.id
         JOIN mixing_stage ms        ON ms.id = scs.mixing_stage_id
@@ -398,11 +398,13 @@ def load_mixing_stages(conn, chain_slug: str) -> list[MixingStage]:
         # A per-chain override replaces the point value, so its band has to
         # be rescaled rather than inherited -- otherwise a butcher's 40-bird
         # tray would sample against the plant-scale 2,000-60,000 range.
+        # Rescale proportionally so the override keeps the default band's
+        # SHAPE: an override of 40 against a default 500/2,000/8,000 band
+        # samples a 10-160 range, not a single point at 40.
         if r["pool_override"] is not None:
-            scale = r["pool"] / max(1, r["pool_lo"] or r["pool"])
-            lo = max(1, int(r["pool"] / max(scale, 1.0)))
-            hi = r["pool"]
-            lo, hi = min(lo, r["pool"]), max(hi, r["pool"])
+            mode = r["pool_mode"] or r["pool_override"]
+            lo = max(1, round(r["pool_override"] * (r["pool_lo"] or mode) / mode))
+            hi = max(lo, round(r["pool_override"] * (r["pool_hi"] or mode) / mode))
         else:
             lo, hi = r["pool_lo"], r["pool_hi"]
         out.append(MixingStage(
