@@ -493,8 +493,31 @@ jobs:
       # undeployed site would be strictly worse than saying so and leaving a
       # one-click `workflow_dispatch` to a human. A warning is an annotation
       # on a green run, which is the honest shape of "released, not deployed".
+      #
+      # CONDITION IS `go`, NOT `landed.sha != ''` -- the second version of
+      # this bug, hit on v1.19.0 the same day this comment block already
+      # described the first one. `landed` only sets `sha` when THIS run
+      # itself opened and waited on a version PR (`computed == 'yes'`). A run
+      # that finds the version already on master -- because an earlier run's
+      # PR merged, but that earlier run never reached this step, or GitHub
+      # never fired a `push` event for its own merge, which is the exact
+      # failure this whole file exists to route around -- has `computed=no`
+      # and `landed.sha` empty, but can still have `go=yes` from `Does this
+      # version still need a tag or a release?`. That run tagged and released
+      # v1.19.0 correctly and then skipped this step, silently, because
+      # `landed.sha` was never set. Observed: v1.18.0 stayed live for ~50
+      # minutes after v1.19.0 was tagged and released, and nothing was red.
+      #
+      # `go` is exactly the signal Tag and Release already use, and it is
+      # correct here for the same reason: this step should run whenever this
+      # job did release work, full stop, regardless of which earlier step
+      # (or which earlier RUN) is the reason `need_tag`/`need_release` came
+      # back yes. By the time this step's condition is evaluated, Tag and
+      # Release have either succeeded or the job has already failed and
+      # skipped everything after -- so `go == 'yes'` here cannot mean
+      # "nothing was actually released."
       - name: Deploy the release
-        if: steps.need.outputs.go == 'yes' && steps.landed.outputs.sha != ''
+        if: steps.need.outputs.go == 'yes'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.need.outputs.version }}
