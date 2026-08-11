@@ -1,5 +1,104 @@
 # Changelog
 
+## v1.19.0 — 2026-08-11
+
+### The Monte Carlo loop resamples the mixing parameters it has bands for
+
+PR #96 moved separation efficiency, scoop size, and both adjacency-retention
+parameters into the audited `model_parameter` table, each with a lo/mode/hi
+band. The pool sizes beside them were resampled every iteration; these four
+were held at the mode regardless of `iterations`, so the reported interval on
+`distinct` reflected pool-size uncertainty only. Disclosed in `model.run`'s
+docstring rather than hidden — filed as #98, fixed here.
+
+`run(..., param_bands=db.load_mixing_param_bands(conn))` now resamples all
+four independently each iteration, the same triangular-band sampling already
+used for pools. Independently, not jointly: `separation_efficiency` and
+`adjacency_retention_random` both describe line handling quality and are
+probably correlated in reality, the same caveat `variance_decomposition`
+already records about the same two inputs. A correlated estimator is a
+larger piece of work than this fix; an uncorrelated resample is still
+strictly more honest than not resampling at all.
+
+Measured effect, `distinct_hi - distinct_lo` before/after across every named
+supply chain:
+
+| chain | before | after |
+|---|---:|---:|
+| commodity_foodservice | 0.00003 | 0.00006 |
+| grocery_retail | 0.00003 | 0.00055 |
+| commodity_spice | 0.00003 | 0.00345 |
+| home_ground_beef | 0.00000 | 0.00000 |
+| whole_bird_home | 0.00000 | 0.00000 |
+| commercial_carton | 0.00055 | 0.01488 |
+| commodity_syrup | 0.00030 | 0.14401 |
+| commodity_ground_beef | 0.02962 | 0.78659 |
+| commodity_silk | 0.00008 | 0.34011 |
+| handreeled_silk | 0.00206 | 0.82321 |
+| farmers_market | 0.08044 | 0.40631 |
+| local_butcher | 0.61326 | 0.92321 |
+| sugarhouse_direct | 0.15582 | 0.70913 |
+| garden_saffron | 0.80441 | 1.79423 |
+| backyard_eggs | 3.58378 | 3.52092 |
+
+**This is not the negative result the issue considered likely.** The
+saturated commodity routes barely move, as expected — pool-size uncertainty
+already dominates them completely. Every other route widens, several
+substantially, because the parameters carry real uncertainty the model had
+been silently omitting on routes where they are not negligible next to the
+pool. `backyard_eggs` narrowed marginally (3.58 to 3.52), within the noise of
+a finite-sample Monte Carlo estimate at this pool size.
+
+No change for any caller that does not pass `param_bands` — the CLI and API
+call sites now do; nothing else changes behavior. The single deterministic
+`distinct` figure returned at `iterations=0` is unaffected either way, since
+it stays pinned at the mode regardless.
+
+### Seasonality states its identification limit outright, and adds harmonic regression alongside the three heuristics
+
+`seasonality.py` was aware in spirit that one year of twelve monthly points
+cannot separate a season from a trend — the `wrap_share` proxy exists
+precisely because of it — but the module never said so in those words, and
+`NOISE_CEILING`/`PERSISTENCE_FLOOR`/`TREND_WRAP_SHARE` are all calibrated
+against twelve *independent* random draws, which is the wrong null for a
+smooth, persistent physical series. Filed as #80.
+
+**The limit is now stated explicitly**, in the module docstring and as a new
+top-level `identification_limit` field on `/api/seasonality`: any twelve
+points are consistent with infinitely many season/trend decompositions, and
+this becomes a genuinely identified question only with 3+ years of monthly
+data, which the corpus does not yet hold.
+
+**Harmonic regression is added alongside the three existing heuristics, not
+replacing them.** `seasonality.harmonic_regression` fits
+`y_t = a*sin(2*pi*t/12) + b*cos(2*pi*t/12) + c*t + d` by ordinary least
+squares (Gaussian elimination, no numpy dependency) and tests the seasonal
+amplitude `sqrt(a^2 + b^2)` against a trend-only null via an exact F-test —
+no scipy either: `F(2, d2)` reduces to `Beta(d2/2, 1)`, whose CDF is
+elementary, so the p-value is closed-form. Every `Seasonality` for a
+complete year now carries a `harmonic` field (amplitude, phase month,
+p-value, and an optional bootstrap confidence interval on the amplitude),
+exposed at `/api/seasonality` per-region and nationally.
+
+Trend and season are separated by construction here, unlike `wrap_share`'s
+proxy, and the test needs no simulation-calibrated constant. It is still a
+second lens on the *same* single short series, not independent confirmation
+— the module docstring and the new `identification_limit` field say so, so
+a caller cannot read agreement between `verdict` and a low `harmonic.p_value`
+as two pieces of evidence when it is one.
+
+**The iid-null calibration issue is documented as a known limitation, not
+silently recalibrated.** The three heuristic thresholds are permissive by an
+unknown factor because their null assumes independence and a time series has
+none; quantifying the size of that bias needs a validated AR(1)-null
+simulation this module does not yet run, and shipping a recalibration
+without validating it against the real corpus risks a wrong number with more
+apparent rigor than the one it replaced. Recorded in the module docstring as
+an open item rather than guessed at.
+
+No published headline count moves — `verdict.affects_count` is still
+`false`, unchanged. New endpoint fields only.
+
 ## v1.18.0 — 2026-08-11
 
 ### A pool override rescales its uncertainty band instead of collapsing it
