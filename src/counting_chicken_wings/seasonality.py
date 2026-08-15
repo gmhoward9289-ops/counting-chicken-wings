@@ -16,11 +16,40 @@ not support, which is the failure this project exists to prevent.
 Everything here is derived at call time from cited rows and never stored, for
 the same reason `v_dressing_yield` and `v_output_derived_weight` are views: a
 derived figure that is written down can drift from its parents.
+
+STRUCTURAL LIMIT, STATED OUTRIGHT (#80): one year of twelve monthly points
+cannot separate a season from a trend. Any twelve points are consistent with
+infinitely many season/trend decompositions -- this is not a defect in the
+three heuristics below, it is a fact about the data the corpus currently
+holds. `_classify`'s verdict and `harmonic_regression`'s F-test are two
+different lenses pointed at the same single, short, unreplicated series, not
+two independent confirmations of each other. Both would improve, together,
+the day the corpus holds a second year: with 3+ years the seasonal question
+becomes genuinely identified and `harmonic_regression` stops being a second
+lens on the same limitation and starts being a real test.
+
+THE THREE HEURISTIC THRESHOLDS ASSUME AN IID NULL, AND A TIME SERIES IS NOT
+IID. `NOISE_CEILING`, `PERSISTENCE_FLOOR`, and `TREND_WRAP_SHARE` are each
+calibrated against twelve INDEPENDENT random draws (see the comments beside
+each below). Monthly average bird weight is a smooth, persistent physical
+quantity -- neighbouring months resemble each other more than twelve
+independent draws would -- so the correct null has positive autocorrelation,
+not none. An autocorrelated null produces smoother-looking noise, which is
+closer to what these thresholds are trying to rule OUT, so calibrating
+against iid noise makes the thresholds more permissive than they should be:
+some swings that would fail a proper AR(1)-null test pass these. The
+direction of the bias is known; its size is not, because quantifying it
+needs a simulation this module does not yet run. Recorded here as a known
+limitation rather than silently recalibrated, because a recalibration done
+without validating it against the real corpus risks shipping a wrong number
+with more apparent rigor than the number it replaced.
 """
 
 from __future__ import annotations
 
+import random
 import statistics
+from math import atan2, cos, pi, sin
 from dataclasses import dataclass, field
 
 MONTH_NAMES = (
@@ -109,6 +138,10 @@ class Seasonality:
     explanation: str = ""
     source_slug: str | None = None
     notes: list[str] = field(default_factory=list)
+    # A second, independent lens on the same twelve points (#80). Not a
+    # second series -- see the module docstring on why this cannot be read
+    # as independent confirmation of `verdict` above.
+    harmonic: "HarmonicFit | None" = None
 
     @property
     def peak_month_name(self) -> str:
@@ -152,6 +185,177 @@ def wrap_share(values: list[float]) -> float:
     steps = [abs(values[(i + 1) % n] - values[i]) for i in range(n)]
     total = sum(steps)
     return steps[-1] / total if total else 0.0
+
+
+# ---------------------------------------------------------------------------
+# Harmonic regression (#80)
+#
+# The standard tool for exactly this question, run ALONGSIDE the three
+# heuristics above rather than replacing them, so the two can be compared on
+# the real corpus. Fits
+#
+#     y_t = a*sin(2*pi*t/12) + b*cos(2*pi*t/12) + c*t + d
+#
+# by ordinary least squares and tests the seasonal amplitude
+# sqrt(a^2 + b^2) against a model with the sin/cos terms dropped (c*t + d
+# only), via an F-test. Trend (c*t) and season (a, b) are separated by
+# construction here, rather than by the wrap_share proxy above -- and no
+# simulation-calibrated constant is needed, because the F-test's null
+# distribution is exact.
+#
+# No numpy/scipy in this project's dependencies, so both the least-squares
+# solve and the F-distribution tail are done by hand below rather than
+# imported. Gaussian elimination for the first; for the second, the F(2, d2)
+# survival function has a closed form because two seasonal parameters (a, b)
+# means d1=2, and F(2, d2) reduces to Beta(d2/2, 1), whose CDF is elementary:
+#
+#     P(F >= f) = (1 + 2f/d2) ** (-d2/2)
+# ---------------------------------------------------------------------------
+
+def _solve_normal_equations(cols: list[list[float]], y: list[float]) -> list[float]:
+    """OLS coefficients for y ~ cols, by Gaussian elimination on X'X.
+
+    `cols` is the design matrix given column-major (one list per regressor),
+    all the same length as `y`. No pivoting: every design matrix this module
+    builds is a fixed, well-conditioned trigonometric/linear basis over 12
+    equally-spaced points, never user-supplied, so a numerically pathological
+    case cannot reach here.
+    """
+    k = len(cols)
+    n = len(y)
+    xtx = [[sum(cols[i][t] * cols[j][t] for t in range(n)) for j in range(k)]
+           for i in range(k)]
+    xty = [sum(cols[i][t] * y[t] for t in range(n)) for i in range(k)]
+
+    # Augmented matrix, forward elimination, back substitution.
+    aug = [row[:] + [xty[i]] for i, row in enumerate(xtx)]
+    for col in range(k):
+        pivot_row = max(range(col, k), key=lambda r: abs(aug[r][col]))
+        aug[col], aug[pivot_row] = aug[pivot_row], aug[col]
+        pivot = aug[col][col]
+        for r in range(col + 1, k):
+            factor = aug[r][col] / pivot
+            for c in range(col, k + 1):
+                aug[r][c] -= factor * aug[col][c]
+    beta = [0.0] * k
+    for r in range(k - 1, -1, -1):
+        s = aug[r][k] - sum(aug[r][c] * beta[c] for c in range(r + 1, k))
+        beta[r] = s / aug[r][r]
+    return beta
+
+
+def _residual_sum_of_squares(cols: list[list[float]], y: list[float],
+                              beta: list[float]) -> float:
+    n = len(y)
+    fitted = [sum(cols[i][t] * beta[i] for i in range(len(cols)))
+              for t in range(n)]
+    return sum((y[t] - fitted[t]) ** 2 for t in range(n))
+
+
+@dataclass
+class HarmonicFit:
+    """One region's year, read through harmonic regression instead of the
+    three heuristics above. A second lens on the SAME single short series
+    (see the module docstring), not independent confirmation of it."""
+
+    amplitude: float = 0.0
+    phase_month: float = 0.0
+    p_value: float = 1.0
+    ci_lo: float | None = None
+    ci_hi: float | None = None
+    confidence_level: float = 0.90
+    bootstrap: int = 0
+    seed: int | None = None
+    notes: list[str] = field(default_factory=list)
+
+
+def harmonic_regression(
+    values: list[float | None],
+    bootstrap: int = 0,
+    seed: int | None = None,
+    confidence_level: float = 0.90,
+) -> HarmonicFit | None:
+    """Fit y_t = a*sin(2*pi*t/12) + b*cos(2*pi*t/12) + c*t + d and test the
+    seasonal amplitude sqrt(a^2 + b^2) against a trend-only null via an
+    F-test.
+
+    Returns None when fewer than 12 months are present -- the fit needs an
+    equally-spaced annual cycle and a partial year is not one, the same
+    restriction `_classify` applies to the three heuristics.
+
+    `bootstrap > 0` adds a percentile confidence interval on the amplitude
+    by residual resampling: refit `bootstrap` times against the fitted trend
+    plus a with-replacement resample of the observed residuals, and report
+    the `confidence_level` central interval of the resulting amplitudes.
+    With `bootstrap=0` (the default) `ci_lo`/`ci_hi` stay `None` -- the point
+    estimate and p-value do not need it and it is not free to compute.
+    """
+    present = [v for v in values if v is not None]
+    if len(present) != 12:
+        return HarmonicFit(notes=[
+            f"Only {len(present)} of 12 months are published; harmonic "
+            f"regression needs a complete, equally-spaced year."
+        ])
+
+    n = 12
+    t = list(range(n))
+    s_col = [sin(2 * pi * i / 12) for i in t]
+    c_col = [cos(2 * pi * i / 12) for i in t]
+    t_col = [float(i) for i in t]
+    one_col = [1.0] * n
+
+    full_cols = [s_col, c_col, t_col, one_col]
+    trend_cols = [t_col, one_col]
+
+    beta_full = _solve_normal_equations(full_cols, present)
+    beta_trend = _solve_normal_equations(trend_cols, present)
+
+    a, b = beta_full[0], beta_full[1]
+    amplitude = (a * a + b * b) ** 0.5
+    # atan2(a, b) because the fitted term is a*sin + b*cos; the peak of
+    # A*sin(x + phi) form sits where the derivative is zero, which resolves
+    # to this angle. Reported as a fractional month index for the caller to
+    # round or interpret, not forced into a named month here.
+    phase_month = (atan2(a, b) * 12 / (2 * pi)) % 12
+
+    rss_full = _residual_sum_of_squares(full_cols, present, beta_full)
+    rss_trend = _residual_sum_of_squares(trend_cols, present, beta_trend)
+
+    df1, df2 = 2, n - 4
+    if rss_full <= 0:
+        p_value = 0.0
+    else:
+        f_stat = ((rss_trend - rss_full) / df1) / (rss_full / df2)
+        f_stat = max(0.0, f_stat)
+        # Closed form for d1=2 -- see the section docstring above.
+        p_value = (1 + 2 * f_stat / df2) ** (-df2 / 2)
+
+    fit = HarmonicFit(
+        amplitude=amplitude, phase_month=phase_month, p_value=p_value,
+        confidence_level=confidence_level, bootstrap=bootstrap, seed=seed,
+    )
+
+    if bootstrap > 0:
+        rng = random.Random(seed)
+        fitted_trend_season = [
+            sum(full_cols[i][k] * beta_full[i] for i in range(4))
+            for k in range(n)
+        ]
+        residuals = [present[k] - fitted_trend_season[k] for k in range(n)]
+        amps = []
+        for _ in range(bootstrap):
+            resampled = [rng.choice(residuals) for _ in range(n)]
+            y_star = [fitted_trend_season[k] + resampled[k] for k in range(n)]
+            beta_star = _solve_normal_equations(full_cols, y_star)
+            amps.append((beta_star[0] ** 2 + beta_star[1] ** 2) ** 0.5)
+        amps.sort()
+        tail = (1.0 - confidence_level) / 2.0
+        lo_idx = max(0, min(len(amps) - 1, round(tail * (len(amps) - 1))))
+        hi_idx = max(0, min(len(amps) - 1,
+                             round((1.0 - tail) * (len(amps) - 1))))
+        fit.ci_lo, fit.ci_hi = amps[lo_idx], amps[hi_idx]
+
+    return fit
 
 
 def _classify(
@@ -223,8 +427,17 @@ def analyse(
     values: list[float | None],
     unit: str = "lb",
     source_slug: str | None = None,
+    harmonic_bootstrap: int = 0,
+    harmonic_seed: int | None = None,
 ) -> Seasonality:
-    """Describe one region's year. `values` is twelve entries, January first."""
+    """Describe one region's year. `values` is twelve entries, January first.
+
+    `harmonic_bootstrap` and `harmonic_seed` pass straight through to
+    `harmonic_regression` for the confidence interval on the seasonal
+    amplitude (#80). Default 0 skips the bootstrap -- the point estimate and
+    p-value are always computed for a full year, but the interval is not
+    free and most callers do not need it.
+    """
     if len(values) != 12:
         raise ValueError(f"expected 12 monthly values, got {len(values)}")
 
@@ -254,6 +467,8 @@ def analyse(
         sm = smooth(full)
         s.persistence = (max(sm) - min(sm)) / s.swing if s.swing else 0.0
         s.wrap_share = wrap_share(full)
+        s.harmonic = harmonic_regression(
+            full, bootstrap=harmonic_bootstrap, seed=harmonic_seed)
     s.verdict, s.explanation = _classify(
         s.signal_ratio, s.persistence, s.wrap_share, s.months_present)
 

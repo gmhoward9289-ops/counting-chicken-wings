@@ -50,7 +50,7 @@ def project_version(text: str | None = None) -> str:
     install reports whatever it was last installed at, which is exactly the
     stale answer that makes a release land under the wrong number.
     """
-    text = PYPROJECT.read_text() if text is None else text
+    text = PYPROJECT.read_text(encoding="utf-8") if text is None else text
     m = re.search(r'^version\s*=\s*"([^"]+)"', text, re.M)
     if not m:
         raise SystemExit("no version in pyproject.toml")
@@ -63,7 +63,7 @@ def section(version: str, text: str | None = None) -> str:
     Headings look like `## v1.10.0 — 2026-07-30`; the date is not matched, so
     a correction to a release date does not break the lookup.
     """
-    text = CHANGELOG.read_text() if text is None else text
+    text = CHANGELOG.read_text(encoding="utf-8") if text is None else text
     pattern = rf"^## v{re.escape(version)}\b.*?$(.*?)(?=^## |\Z)"
     m = re.search(pattern, text, re.M | re.S)
     if not m:

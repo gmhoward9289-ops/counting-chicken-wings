@@ -31,7 +31,7 @@ from update_readme import replace_block  # noqa: E402
 
 def test_readme_block_matches_the_corpus(tmp_path):
     """The generated block in README.md agrees with the database."""
-    text = README.read_text()
+    text = README.read_text(encoding="utf-8")
     assert STATS_BEGIN in text, "README lost its generated markers"
     expected = replace_block(text, stats_block())
     assert text == expected, (
@@ -46,7 +46,7 @@ def test_no_stale_hand_written_counts_outside_the_block():
     A second copy is how the Status section came to disagree with the section
     two screens above it.
     """
-    text = README.read_text()
+    text = README.read_text(encoding="utf-8")
     start = text.find(STATS_BEGIN)
     end = text.find(STATS_END) + len(STATS_END)
     outside = text[:start] + text[end:]

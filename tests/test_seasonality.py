@@ -136,6 +136,76 @@ def test_no_published_months():
     assert s.trough_month == 0
 
 
+# ---------------------------------------------------------------------------
+# Harmonic regression (#80): a second lens on the same twelve points
+# ---------------------------------------------------------------------------
+
+def test_harmonic_regression_recovers_a_known_amplitude_and_phase():
+    """Constructed by hand rather than via sine_year(), so the expected
+    phase is known independently of the fit: sin(2*pi*(t-3)/12) peaks where
+    (t-3)/12 = 1/4, i.e. t=6, by construction."""
+    values = [10 * math.sin(2 * math.pi * (t - 3) / 12) + 100
+              for t in range(12)]
+    fit = seas.harmonic_regression(values)
+    assert fit.amplitude == pytest.approx(10.0, abs=1e-6)
+    assert fit.phase_month == pytest.approx(6.0, abs=1e-6)
+    assert fit.p_value < 1e-6
+
+
+def test_harmonic_regression_does_not_call_a_pure_trend_seasonal():
+    """Trend and season are separated by construction, unlike wrap_share's
+    proxy -- a pure ramp must score near-zero amplitude and a p-value with
+    no evidence against the null."""
+    values = [100.0 + 2.0 * t for t in range(12)]
+    fit = seas.harmonic_regression(values)
+    assert fit.amplitude == pytest.approx(0.0, abs=1e-6)
+    assert fit.p_value == pytest.approx(1.0, abs=1e-6)
+
+
+def test_harmonic_regression_needs_a_complete_year():
+    values = [100.0] * 11 + [None]
+    fit = seas.harmonic_regression(values)
+    assert fit.amplitude == 0.0
+    assert fit.p_value == 1.0
+    assert any("11 of 12" in n for n in fit.notes)
+
+
+def test_harmonic_regression_bootstrap_ci_brackets_a_noiseless_amplitude():
+    """Residuals here are floating-point noise (~1e-14), not real signal, and
+    its sign varies by platform/Python build -- CI on Linux/3.12 saw
+    ci_hi == 9.99999999999998, a hair under 10.0, where this dev environment
+    (Windows/3.14) saw a hair over. A strict bracket assertion is exactly
+    the kind of false failure the corpus's own honesty rules warn against:
+    treating platform-dependent float noise as a real measurement. abs=1e-6
+    is generous next to that noise floor and still tight enough to catch a
+    genuine regression in the bootstrap."""
+    values = [10 * math.sin(2 * math.pi * t / 12) + 100 for t in range(12)]
+    fit = seas.harmonic_regression(values, bootstrap=500, seed=7)
+    assert fit.ci_lo is not None and fit.ci_hi is not None
+    assert fit.ci_lo == pytest.approx(10.0, abs=1e-6)
+    assert fit.ci_hi == pytest.approx(10.0, abs=1e-6)
+    assert fit.ci_hi - fit.ci_lo < 1.0, "residuals are ~0, so the CI should be tight"
+
+
+def test_harmonic_regression_without_bootstrap_leaves_ci_none():
+    fit = seas.harmonic_regression(sine_year())
+    assert fit.bootstrap == 0
+    assert fit.ci_lo is None and fit.ci_hi is None
+
+
+def test_analyse_wires_harmonic_regression_in_for_a_full_year():
+    s = seas.analyse("Sineland", 2025, sine_year())
+    assert s.harmonic is not None
+    assert s.harmonic.amplitude > 0
+    assert s.harmonic.p_value < 0.05
+
+
+def test_analyse_leaves_harmonic_none_for_a_partial_year():
+    values = [10.0] * 11 + [None]
+    s = seas.analyse("Partialand", 2025, values)
+    assert s.harmonic is None
+
+
 def test_sparkline_shows_a_gap_as_a_gap():
     values = sine_year()
     values[0] = None
@@ -344,6 +414,26 @@ def test_seasonality_classification_is_graded_as_our_judgement():
     # The weights are surveyed; the verdict about their shape is not.
     assert d["national"]["confidence"] == "estimate"
     assert d["concordance"]["peak"]["confidence"] == "estimate"
+
+
+def test_seasonality_endpoint_states_the_identification_limit():
+    """#80: the one-year-cannot-separate-season-from-trend limit must be
+    stated on the surface, not left implicit in the verdict text."""
+    d = TestClient(app).get("/api/seasonality").json()
+    limit = d["identification_limit"].lower()
+    assert "one year" in limit
+    assert "season" in limit and "trend" in limit
+
+
+def test_seasonality_endpoint_carries_harmonic_regression_per_region():
+    d = TestClient(app).get("/api/seasonality").json()
+    assert d["national"]["harmonic"] is not None
+    assert "p_value" in d["national"]["harmonic"]
+    for region in d["regions"]:
+        if region["months_present"] == 12:
+            assert region["harmonic"] is not None
+        else:
+            assert region["harmonic"] is None
 
 
 def test_seasonality_404s_for_a_year_with_no_monthly_data():

@@ -33,7 +33,7 @@ def _linked(doc, ext):
 @pytest.fixture(scope="module")
 def doc():
     """The page itself, exactly as served."""
-    return (STATIC / "index.html").read_text()
+    return (STATIC / "index.html").read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -49,7 +49,7 @@ def html(doc):
     living in the stylesheet would read as a page with no headline rule at
     all, and the tests would pass by finding nothing to object to.
     """
-    return "\n".join([doc] + [p.read_text() for p in
+    return "\n".join([doc] + [p.read_text(encoding="utf-8") for p in
                               _linked(doc, "css") + _linked(doc, "js")])
 
 
@@ -78,7 +78,7 @@ def script(doc):
     saying "this used to be hardcoded" is the opposite of a violation.
     """
     blocks = re.findall(r"<script>(.*?)</script>", doc, re.S)
-    blocks += [p.read_text() for p in _linked(doc, "js")]
+    blocks += [p.read_text(encoding="utf-8") for p in _linked(doc, "js")]
     assert blocks, "could not find any script"
     js = "\n".join(blocks)
     js = re.sub(r"/\*.*?\*/", "", js, flags=re.S)     # block comments

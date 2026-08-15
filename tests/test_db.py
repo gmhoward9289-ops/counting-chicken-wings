@@ -236,6 +236,18 @@ def test_overridden_pool_band_is_rescaled_not_inherited(conn):
         assert hi <= max(mode * 10, mode + 1), s.slug
 
 
+def test_a_smaller_override_still_produces_a_band_not_a_point(conn):
+    """The bug this regresses: clamping the rescale to 1.0 collapsed a
+    below-default override to lo == mode == hi -- no band at all, on
+    exactly the case an override exists to model (#116)."""
+    stages = dbm.load_mixing_stages(conn, "local_butcher")
+    overridden = [s for s in stages if s.pool < 500]
+    assert overridden, "expected at least one overridden stage under 500"
+    for s in overridden:
+        lo, mode, hi = s.band()
+        assert lo < hi, s.slug
+
+
 def test_unknown_chain_loads_nothing(conn):
     assert dbm.load_mixing_stages(conn, "not_a_chain") == []
 

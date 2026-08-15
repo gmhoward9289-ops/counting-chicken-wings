@@ -159,7 +159,7 @@ def read_changes() -> list[Change]:
     for path in sorted(CHANGES.glob("*.md")):
         if path.name.upper() == "README.MD":
             continue          # the convention's own documentation, not an entry
-        level, body = parse_change(path.read_text(), path.name)
+        level, body = parse_change(path.read_text(encoding="utf-8"), path.name)
         out.append(Change(path, level, body))
     return out
 
@@ -184,7 +184,7 @@ def declared_level(changes: list[Change]) -> tuple[str | None, list[str]]:
 
 def unreleased(text: str | None = None) -> str | None:
     """The `## Unreleased` body, or None when there is nothing to release."""
-    text = CHANGELOG.read_text() if text is None else text
+    text = CHANGELOG.read_text(encoding="utf-8") if text is None else text
     m = re.search(rf"^{re.escape(UNRELEASED)}\s*$(.*?)(?=^## |\Z)",
                   text, re.M | re.S)
     if not m:
@@ -401,21 +401,21 @@ def main() -> int:
 
     if args.apply:
         today = dt.date.today().isoformat()
-        text = CHANGELOG.read_text()
+        text = CHANGELOG.read_text(encoding="utf-8")
         if changes:
             # Legacy section first: it was written before any of these files,
             # and a release holding both is one section, not two.
             CHANGELOG.write_text(splice(
                 version, text, today,
-                ([body] if body else []) + [c.body for c in changes]))
+                ([body] if body else []) + [c.body for c in changes]), encoding="utf-8")
             for c in changes:
                 c.path.unlink()
             stage_consumed(changes)
         else:
-            CHANGELOG.write_text(rewrite(version, text, today))
+            CHANGELOG.write_text(rewrite(version, text, today), encoding="utf-8")
         PYPROJECT.write_text(re.sub(
             r'^version\s*=\s*"[^"]+"', f'version = "{version}"',
-            PYPROJECT.read_text(), count=1, flags=re.M))
+            PYPROJECT.read_text(encoding="utf-8"), count=1, flags=re.M), encoding="utf-8")
         print(f"applied v{version}", file=sys.stderr)
     return 0
 

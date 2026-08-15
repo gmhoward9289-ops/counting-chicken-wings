@@ -233,7 +233,7 @@ def repo(tmp_path):
     _git(tmp_path, "init", "-q", ".")
     _git(tmp_path, "config", "user.email", "t@example.invalid")
     _git(tmp_path, "config", "user.name", "t")
-    (tmp_path / "f").write_text("one")
+    (tmp_path / "f").write_text("one", encoding="utf-8")
     _git(tmp_path, "add", "-A")
     _git(tmp_path, "commit", "-qm", "one")
     _git(tmp_path, "tag", "-a", "v1.11.0", "-m", "release")
@@ -241,7 +241,7 @@ def repo(tmp_path):
 
 
 def test_latest_tag_ignores_a_marker_tag(repo, monkeypatch):
-    (repo / "f").write_text("two")
+    (repo / "f").write_text("two", encoding="utf-8")
     _git(repo, "commit", "-qam", "work after the release")
     _git(repo, "tag", "snapshot/demo")          # newer than v1.11.0
 
@@ -250,7 +250,7 @@ def test_latest_tag_ignores_a_marker_tag(repo, monkeypatch):
 
 
 def test_latest_tag_ignores_a_prerelease_tag(repo, monkeypatch):
-    (repo / "f").write_text("three")
+    (repo / "f").write_text("three", encoding="utf-8")
     _git(repo, "commit", "-qam", "more work")
     _git(repo, "tag", "-a", "v1.12.0-rc.1", "-m", "preview")
 
@@ -374,8 +374,8 @@ def test_the_cli_probe_actually_works_on_this_tree():
 def _stub_tree(tmp_path, cli_source):
     pkg = tmp_path / "src" / "counting_chicken_wings"
     pkg.mkdir(parents=True)
-    (pkg / "__init__.py").write_text("")
-    (pkg / "cli.py").write_text(cli_source)
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "cli.py").write_text(cli_source, encoding="utf-8")
     return tmp_path
 
 

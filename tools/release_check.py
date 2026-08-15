@@ -99,7 +99,7 @@ def latest_tag() -> str:
 def version_of(ref: str | None = None) -> str:
     """The version pyproject declares, at a ref or in the working tree."""
     text = (sh("git", "show", f"{ref}:pyproject.toml", cwd=ROOT) if ref
-            else (ROOT / "pyproject.toml").read_text())
+            else (ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     m = re.search(r'^version\s*=\s*"([^"]+)"', text, re.M)
     if not m:
         raise SystemExit(f"no version in pyproject.toml at {ref or 'HEAD'}")
@@ -225,7 +225,7 @@ def routes_in(tree: Path) -> list[str] | None:
     if not src.is_file():
         return None
     return sorted({f"{m.group(1).upper()} {m.group(2)}"
-                   for m in _ROUTE_RE.finditer(src.read_text())})
+                   for m in _ROUTE_RE.finditer(src.read_text(encoding="utf-8"))})
 
 
 def cli_in(tree: Path) -> list[str] | None:

@@ -271,7 +271,15 @@ def test_the_butcher_has_variance_worth_decomposing(conn, bands, base):
     dec = _run(conn, bands, base, "local_butcher")
     assert dec.sd > 0.05, f"sd={dec.sd:.3e}"
     assert any(n.startswith("Not saturated") for n in dec.notes)
-    assert dec.shares[0].total_order > 0.5
+    # Threshold was 0.5 before #116: `separation` and `restaurant_freezer`
+    # were reported `degenerate` (a collapsed override band contributes zero
+    # variance), so the dominant input's share was inflated. Fixed, both
+    # carry real variance now (~0.39, ~0.35) and dilute the top share to
+    # ~0.49 -- still dominant, no longer alone. A regression back to the
+    # collapsed band would push this back over 0.5 with shares[1]/[2] at 0.
+    assert dec.shares[0].total_order > 0.4
+    assert not any(s.degenerate for s in dec.shares), \
+        "local_butcher should have no degenerate inputs after #116"
 
 
 def test_interaction_is_present_in_the_mixing_model(conn, bands, base):

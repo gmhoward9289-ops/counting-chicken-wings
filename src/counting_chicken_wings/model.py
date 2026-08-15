@@ -1023,6 +1023,7 @@ def run(
     anatomical: bool = True,
     floor_source: str | None = None,
     params: MixingParams | None = None,
+    param_bands: dict[str, tuple[str, float, float, float, str]] | None = None,
     correlated_groups: list[CorrelatedGroup] | None = None,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
@@ -1077,13 +1078,34 @@ def run(
     omitting them applies no mechanism at all rather than a stale default.
     See `MixingParams` for why there is no Python copy of the shipped values.
 
-    NOT YET RESAMPLED BY THE MONTE CARLO. Each parameter carries a lo/mode/hi
-    band in the corpus for exactly that purpose and the loop below still
-    holds them at the mode, so the reported interval understates the spread
-    on the distinct figure by however much these contribute. The pool sizes
-    beside them ARE resampled. Wiring that up is a known open item.
+    `param_bands` (from `db.load_mixing_param_bands`) is the same four
+    parameters with their lo/mode/hi bands, and is what lets the Monte Carlo
+    loop resample them (#98) the same way it already resamples pool sizes.
+    Omitting it holds every parameter at `params`' fixed value for every
+    iteration, as it always has -- the deterministic pass above is
+    unaffected either way; it stays pinned at the mode regardless, because a
+    single reported figure has to come from somewhere fixed.
 
-    Pass it explicitly only to test the branch itself.
+    Sampled independently. `separation_efficiency` and
+    `adjacency_retention_random` both describe how roughly the line treats
+    two units of the same individual and are probably correlated in reality
+    -- the same caveat `variance_decomposition` records about the same two
+    inputs. Asserting independence here is the same simplification, made in
+    the same place, for the same reason: a correlated estimator is a larger
+    piece of work than this fix, and an uncorrelated resample is still
+    strictly more honest than not resampling at all.
+
+    Measured effect (#98), before/after `distinct_hi - distinct_lo` across
+    every named supply chain: the saturated commodity routes barely move
+    (commodity_foodservice 0.00003 to 0.00006; grocery_retail similarly
+    tiny), exactly as expected -- pool-size uncertainty already dominates
+    them completely, leaving the parameters nothing to add. Every other
+    route widens, several substantially: local_butcher 0.61 to 0.92,
+    commodity_ground_beef 0.03 to 0.79, handreeled_silk 0.002 to 0.82,
+    garden_saffron 0.80 to 1.79. This is not the negative result the issue
+    that opened this considered likely -- the parameters carry real,
+    previously-unreported uncertainty on most non-commodity routes, not just
+    on local_butcher.
     """
     # Derived from the data before the window rewrites anything, because the
     # question "is a unit a blend?" is about the product's natural output,
@@ -1133,7 +1155,7 @@ def run(
         draw_units, draw_upi = units_requested, units_per_individual
         drawn_label = f"{units_requested} units"
 
-    def _draw(stages):
+    def _draw(stages, use_params=None):
         """One pass of the mixing cascade, in whatever unit the question is
         being asked in.
 
@@ -1144,8 +1166,14 @@ def run(
         --iterations 2000` and `/api/scientific` reported 12 flowers for a
         floor of 1,800 -- the same contradiction the shares fix exists to
         remove, surviving in the path nobody re-ran.
+
+        `use_params` lets the Monte Carlo pass substitute a per-iteration
+        jittered `MixingParams` (#98) without disturbing the deterministic
+        pass above, which must stay pinned at the mode.
         """
-        return draw_from_cascade(stages, draw_units, draw_upi, params)
+        return draw_from_cascade(stages, draw_units, draw_upi,
+                                  use_params if use_params is not None
+                                  else params)
 
     container, distinct_in_container, notes, distinct = _draw(mixing_stages)
 
@@ -1232,9 +1260,23 @@ def run(
             jittered = _jitter_pools(mixing_stages, [
                 _triangular(*m.band(), rng) for m in mixing_stages
             ])
+            # Resample the scalar parameters too (#98), independently of
+            # each other and of the pools -- the same band-sampling as
+            # above, applied to separation efficiency, scoop size, and
+            # both adjacency-retention parameters instead of pool sizes.
+            # `replace` starts from `base` so any field absent from
+            # `param_bands` keeps its fixed value rather than reverting to
+            # MixingParams()'s inert zero.
+            mc_params = (
+                replace(params or MixingParams(), **{
+                    name: _triangular(lo, mode, hi, rng)
+                    for name, (_, lo, mode, hi, _) in param_bands.items()
+                })
+                if param_bands else params
+            )
             # Same draw as the deterministic pass, aggregate handling and
             # all. It is the same function precisely so it cannot differ.
-            dist_s.append(_draw(jittered)[3])
+            dist_s.append(_draw(jittered, mc_params)[3])
 
         req_s.sort()
         dist_s.sort()

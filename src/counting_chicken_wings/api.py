@@ -422,6 +422,9 @@ def calculate(
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
             # From the corpus -- see model.MixingParams.
             params=dbm.load_mixing_params(conn),
+            # Lets the Monte Carlo loop resample these too (#98), not just
+            # pool sizes.
+            param_bands=dbm.load_mixing_param_bands(conn),
             correlated_groups=dbm.load_correlated_groups(
                 conn, prod["species_slug"]),
         )
@@ -586,6 +589,9 @@ def scientific(
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
             # From the corpus -- see model.MixingParams.
             params=dbm.load_mixing_params(conn),
+            # Lets the Monte Carlo loop resample these too (#98), not just
+            # pool sizes.
+            param_bands=dbm.load_mixing_param_bands(conn),
             correlated_groups=dbm.load_correlated_groups(
                 conn, prod["species_slug"]),
         )
@@ -1127,6 +1133,21 @@ def output(
         conn.close()
 
 
+def _harmonic_payload(h: seas.HarmonicFit | None) -> dict | None:
+    if h is None:
+        return None
+    return {
+        "amplitude": h.amplitude,
+        "phase_month": h.phase_month,
+        "p_value": h.p_value,
+        "ci_lo": h.ci_lo,
+        "ci_hi": h.ci_hi,
+        "confidence_level": h.confidence_level,
+        "bootstrap": h.bootstrap,
+        "notes": h.notes,
+    }
+
+
 def _seasonality_payload(s: seas.Seasonality) -> dict:
     return {
         "region": s.region,
@@ -1154,6 +1175,9 @@ def _seasonality_payload(s: seas.Seasonality) -> dict:
         "sparkline": seas.sparkline(s.values),
         "source_slug": s.source_slug,
         "notes": s.notes,
+        # A second lens on the same twelve points, not a second series --
+        # see "identification_limit" at the top level of this payload.
+        "harmonic": _harmonic_payload(s.harmonic),
     }
 
 
@@ -1325,6 +1349,23 @@ def seasonality(year: int | None = None, species: str = "broiler"):
                 "trough": _concordance_payload(trough),
             },
             "national_month_ranks": month_ranks,
+            # Stated outright rather than left to be inferred from the
+            # verdict text (#80): one year of twelve monthly points cannot
+            # separate a season from a trend. `verdict` and `harmonic` above
+            # are two lenses on that same single short series, not
+            # independent confirmations of each other -- see the module
+            # docstring in seasonality.py for the full reasoning.
+            "identification_limit": (
+                "One year of monthly data cannot separate a season from a "
+                "trend -- any twelve points are consistent with infinitely "
+                "many season/trend decompositions. The verdict above and "
+                "the harmonic-regression p-value on each region are two "
+                "different statistical lenses on the same single, "
+                "unreplicated year, not independent evidence for each "
+                "other. This becomes a genuinely identified question with "
+                "3+ years of monthly data, which the corpus does not yet "
+                "hold."
+            ),
             "sources": [
                 _source_payload(sources[s]) for s in slugs if s in sources
             ],

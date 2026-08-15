@@ -188,7 +188,7 @@ def test_eggs_invert_the_wing_relationship():
 def _fresh_db(tmp_path):
     p = tmp_path / "t.db"
     c = sqlite3.connect(p)
-    c.executescript(SCHEMA.read_text())
+    c.executescript(SCHEMA.read_text(encoding="utf-8"))
     c.execute("INSERT INTO source (slug,title,publisher,retrieved_on,"
               "source_type) VALUES ('s','t','p','2026-01-01','government')")
     c.execute("INSERT INTO domain (slug,label) VALUES ('d','D')")
@@ -366,7 +366,7 @@ def test_no_source_file_reads_the_shared_table_directly():
         # build.py legitimately writes to the table; everyone else reads views.
         if p.name == "build.py":
             continue
-        text = p.read_text()
+        text = p.read_text(encoding="utf-8")
         for clause in ("FROM regional_size_stat", "JOIN regional_size_stat"):
             if clause in text:
                 offenders.append(f"{p.name}: {clause}")

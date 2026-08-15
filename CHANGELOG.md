@@ -1,5 +1,177 @@
 # Changelog
 
+## v1.19.1 — 2026-08-11
+
+### `release.yml`'s Deploy step now fires on any release work, not just a same-run merge
+
+The second version of a bug this file's own comments already described once:
+`Deploy the release` was gated on `steps.landed.outputs.sha != ''`, which is
+only set when the SAME run opened and waited on a version PR. A run that
+finds the version already on master — because an earlier run's PR merged,
+but GitHub never raised a `push` event for that merge (the exact
+`GITHUB_TOKEN` limitation this file already routes around for the PR-open
+step) — has `computed=no` and `landed.sha` empty, but can still have
+`go=yes` and correctly tag and release. That run then skipped Deploy
+silently. Observed on v1.19.0: the release was tagged and published, and
+the live site kept serving v1.18.0 for roughly 50 minutes with nothing
+anywhere reporting a failure.
+
+`Deploy the release` now runs on `steps.need.outputs.go == 'yes'`, the same
+condition `Tag` and `Release` already use, since by the time this step's
+condition is evaluated those two have either succeeded or the job has
+already failed and skipped everything after.
+
+## v1.19.0 — 2026-08-11
+
+### The Monte Carlo loop resamples the mixing parameters it has bands for
+
+PR #96 moved separation efficiency, scoop size, and both adjacency-retention
+parameters into the audited `model_parameter` table, each with a lo/mode/hi
+band. The pool sizes beside them were resampled every iteration; these four
+were held at the mode regardless of `iterations`, so the reported interval on
+`distinct` reflected pool-size uncertainty only. Disclosed in `model.run`'s
+docstring rather than hidden — filed as #98, fixed here.
+
+`run(..., param_bands=db.load_mixing_param_bands(conn))` now resamples all
+four independently each iteration, the same triangular-band sampling already
+used for pools. Independently, not jointly: `separation_efficiency` and
+`adjacency_retention_random` both describe line handling quality and are
+probably correlated in reality, the same caveat `variance_decomposition`
+already records about the same two inputs. A correlated estimator is a
+larger piece of work than this fix; an uncorrelated resample is still
+strictly more honest than not resampling at all.
+
+Measured effect, `distinct_hi - distinct_lo` before/after across every named
+supply chain:
+
+| chain | before | after |
+|---|---:|---:|
+| commodity_foodservice | 0.00003 | 0.00006 |
+| grocery_retail | 0.00003 | 0.00055 |
+| commodity_spice | 0.00003 | 0.00345 |
+| home_ground_beef | 0.00000 | 0.00000 |
+| whole_bird_home | 0.00000 | 0.00000 |
+| commercial_carton | 0.00055 | 0.01488 |
+| commodity_syrup | 0.00030 | 0.14401 |
+| commodity_ground_beef | 0.02962 | 0.78659 |
+| commodity_silk | 0.00008 | 0.34011 |
+| handreeled_silk | 0.00206 | 0.82321 |
+| farmers_market | 0.08044 | 0.40631 |
+| local_butcher | 0.61326 | 0.92321 |
+| sugarhouse_direct | 0.15582 | 0.70913 |
+| garden_saffron | 0.80441 | 1.79423 |
+| backyard_eggs | 3.58378 | 3.52092 |
+
+**This is not the negative result the issue considered likely.** The
+saturated commodity routes barely move, as expected — pool-size uncertainty
+already dominates them completely. Every other route widens, several
+substantially, because the parameters carry real uncertainty the model had
+been silently omitting on routes where they are not negligible next to the
+pool. `backyard_eggs` narrowed marginally (3.58 to 3.52), within the noise of
+a finite-sample Monte Carlo estimate at this pool size.
+
+No change for any caller that does not pass `param_bands` — the CLI and API
+call sites now do; nothing else changes behavior. The single deterministic
+`distinct` figure returned at `iterations=0` is unaffected either way, since
+it stays pinned at the mode regardless.
+
+### Seasonality states its identification limit outright, and adds harmonic regression alongside the three heuristics
+
+`seasonality.py` was aware in spirit that one year of twelve monthly points
+cannot separate a season from a trend — the `wrap_share` proxy exists
+precisely because of it — but the module never said so in those words, and
+`NOISE_CEILING`/`PERSISTENCE_FLOOR`/`TREND_WRAP_SHARE` are all calibrated
+against twelve *independent* random draws, which is the wrong null for a
+smooth, persistent physical series. Filed as #80.
+
+**The limit is now stated explicitly**, in the module docstring and as a new
+top-level `identification_limit` field on `/api/seasonality`: any twelve
+points are consistent with infinitely many season/trend decompositions, and
+this becomes a genuinely identified question only with 3+ years of monthly
+data, which the corpus does not yet hold.
+
+**Harmonic regression is added alongside the three existing heuristics, not
+replacing them.** `seasonality.harmonic_regression` fits
+`y_t = a*sin(2*pi*t/12) + b*cos(2*pi*t/12) + c*t + d` by ordinary least
+squares (Gaussian elimination, no numpy dependency) and tests the seasonal
+amplitude `sqrt(a^2 + b^2)` against a trend-only null via an exact F-test —
+no scipy either: `F(2, d2)` reduces to `Beta(d2/2, 1)`, whose CDF is
+elementary, so the p-value is closed-form. Every `Seasonality` for a
+complete year now carries a `harmonic` field (amplitude, phase month,
+p-value, and an optional bootstrap confidence interval on the amplitude),
+exposed at `/api/seasonality` per-region and nationally.
+
+Trend and season are separated by construction here, unlike `wrap_share`'s
+proxy, and the test needs no simulation-calibrated constant. It is still a
+second lens on the *same* single short series, not independent confirmation
+— the module docstring and the new `identification_limit` field say so, so
+a caller cannot read agreement between `verdict` and a low `harmonic.p_value`
+as two pieces of evidence when it is one.
+
+**The iid-null calibration issue is documented as a known limitation, not
+silently recalibrated.** The three heuristic thresholds are permissive by an
+unknown factor because their null assumes independence and a time series has
+none; quantifying the size of that bias needs a validated AR(1)-null
+simulation this module does not yet run, and shipping a recalibration
+without validating it against the real corpus risks a wrong number with more
+apparent rigor than the one it replaced. Recorded in the module docstring as
+an open item rather than guessed at.
+
+No published headline count moves — `verdict.affects_count` is still
+`false`, unchanged. New endpoint fields only.
+
+## v1.18.0 — 2026-08-11
+
+### A pool override rescales its uncertainty band instead of collapsing it
+
+`db.load_mixing_stages` clamped the rescale factor for any per-chain pool
+override to a floor of 1.0, which is a no-op in exactly the case an override
+exists for: making a pool *smaller* than the plant-scale default. A
+40-bird butcher's tray reported `lo == mode == hi == 40` — no band at all —
+instead of sampling a butcher-scale range.
+
+Every overridden stage now rescales the default band proportionally, keeping
+its shape rather than its absolute size:
+
+| chain | stage | old band | new band |
+|---|---|---|---|
+| `local_butcher` | separation | 40–40–40 | 4–40–160 |
+| `local_butcher` | restaurant_freezer | 40–40–40 | 6–40–200 |
+| `farmers_market` | egg_collection | 500–500–500 | 25–500–2000 |
+| `farmers_market` | egg_farm_cooler | 500–500–500 | 17–500–2000 |
+| `backyard_eggs` | egg_collection | 6–6–6 | 1–6–24 |
+
+The headline commodity-route figures are unaffected — those chains carry no
+overrides. `local_butcher`'s and the two egg routes' reported intervals
+widen; the point estimate (`pool`, and therefore the headline `distinct`
+figure for that route) does not move.
+
+`variance_decomposition` (#78) had been reporting these inputs as
+`degenerate: true`, which made the collapse visible but was a mitigation, not
+a fix — a degenerate input contributes no variance, so `local_butcher`'s
+dominant Sobol share was inflated by every other overridden stage scoring
+zero. Fixed, `separation` and `restaurant_freezer` both carry real variance
+now and neither is degenerate.
+
+### Tests and tools now state their encoding instead of inheriting the platform default
+
+`pytest` could not complete on Windows: several test fixtures and tools called
+`Path.read_text()` / `.write_text()` / `open()` with no `encoding` argument, so
+Windows fell back to the locale codepage (cp1252 on COOPER) and choked on the
+UTF-8 bytes the corpus deliberately carries — sparkline block characters,
+Hebrew research documents, and em dashes throughout the data files.
+
+Every bare call site across `tools/`, `src/`, and `tests/` now passes
+`encoding="utf-8"` explicitly. The corpus was always UTF-8 by design; relying
+on the platform to guess it was the bug, not the content.
+
+Also fixed in passing: `test_build_is_idempotent` left its first `sqlite3`
+connection open across the rebuild, which is silently fine on Linux but raises
+`PermissionError` on Windows when `build()` tries to unlink the still-open
+file. Both connections are now closed explicitly.
+
+No published figure changes; this is test and tooling infrastructure only.
+
 ## v1.17.1 — 2026-08-02
 
 ### `release.yml` describes the mechanism it actually runs
