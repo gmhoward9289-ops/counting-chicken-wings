@@ -1,0 +1,470 @@
+# Source library -- Mexican poultry.
+#
+# Produced 2026-08-16, mirroring the format and discipline of
+# ../poultry-israel.yaml: every URL below was actually fetched and its
+# outcome recorded, live or dead, because a dead source costs the next
+# attempt the same hour it cost this one.
+#
+# THE ROUTE THAT ACTUALLY WORKED, stated up front because it is not the
+# route the plan assumed going in:
+#
+#   * SIAP's own web portals -- infosiap.siap.gob.mx and
+#     nube.agricultura.gob.mx -- are UNREACHABLE from this environment.
+#     infosiap.siap.gob.mx does not resolve in DNS at all. nube.agricultura.
+#     gob.mx resolves (52.203.155.94) but refuses the connection on 443 for
+#     every path tried, http and https alike. This is the same shape of
+#     failure Israel's Ministry of Agriculture hit (403 to every automated
+#     fetcher) -- a portal that exists and that a human with a browser could
+#     probably reach, but that a plain fetch cannot. NOT resolved by this
+#     pass; flagged as the highest-value target left, exactly as the
+#     Israeli Ministry of Agriculture was.
+#   * web.archive.org is blocked outright by the fetch tool in this
+#     environment ("Claude Code is unable to fetch from web.archive.org"),
+#     so an archived snapshot of the SIAP portal was not a fallback either.
+#   * SIAP's data DOES reach the corpus, just secondhand: a USDA Foreign
+#     Agricultural Service GAIN report (government, English, PDF) quotes
+#     SIAP directly and cites it under its own production chart, and a
+#     peer-reviewed Mexican academic journal article separately quotes a
+#     specific dated SIAP publication (9 de octubre de 2020) for a 2019
+#     figure. Both are loaded; neither is SIAP's own page, and that
+#     remove is recorded on both source entries in sources.yaml.
+#   * PDF text extraction needed PyMuPDF (`fitz`) directly -- the WebFetch
+#     tool's own text extraction returned "binary content, cannot read" for
+#     both PDFs tried, but the same file downloaded and saved by WebFetch's
+#     side-effect landed on disk, and `fitz.open(path).get_text()` on it
+#     produced full clean text. Unlike Israel's OECD-FAO PDF, this is
+#     ordinary embedded text, not a custom font encoding -- the blocker was
+#     the fetch tool's own summarizer refusing binary, not the PDF itself.
+#   * The taxonomy trap the task asked to resolve is real and is resolved
+#     below, by a trade-press source that states it in one sentence: "carne
+#     de ave" (poultry meat) includes chicken AND turkey; "carne de pollo"
+#     (chicken meat) is chicken only. Every figure loaded into
+#     data/output_mexico.yaml is a "carne de pollo" / "Meat, Chicken" figure,
+#     never the broader "ave" aggregate -- checked against each source's own
+#     wording before loading, not assumed.
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Mexico+City_Mexico_MX2024-0040.pdf
+  title: 'Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 828130
+  subjects: [poultry, mexico, broiler, trade]
+  covers:
+    - broiler_meat_output_tonnes    # "Meat, Chicken" PSD table, not aggregate poultry
+    - imports_exports_tonnes
+    - self_sufficiency_derivable    # production / total supply, both in the same table
+    - per_capita_consumption_kg     # 37.75 kg 2024, but see the per-capita trap below
+    - state_ranking_ordinal         # named, not percentaged
+    - tif_inspection_count          # 121 federally-inspected plants, 85% of slaughter
+  does_not_cover:
+    - head_slaughtered              # no bird count anywhere in the report
+    - average_live_weight
+    - standing_flock_head           # only a relative ranking of flock SIZE, not a number,
+                                     # and that ranking is for ALL POULTRY (it names Jalisco
+                                     # first because Jalisco leads egg-layer population too)
+    - state_level_tonnage           # ranking is ordinal ("Veracruz, then Aguascalientes,
+                                     # then Jalisco...") with no percentages or absolute
+                                     # figures per state
+  confidence_ceiling: industry
+  notes: >-
+    Dated 2024-09-04, by Gustavo Lara / Susan Karimiha. WebFetch's own text
+    extraction refused the PDF as binary; the same file was saved to disk by
+    the tool as a side effect and `fitz` (PyMuPDF) extracted it cleanly --
+    18,275 characters, ordinary embedded text, no font-encoding trap.
+
+    Table 1 (Chicken Meat PSD): Production 3,888 thousand MT (2023, both
+    "USDA Official" and "New Post" columns agree) and 3,985 thousand MT
+    (2024, "New Post" -- matches the prose "3.99 MMT"). 2025 is a FORECAST
+    (4,085 thousand MT / "4.09 MMT") and is not loaded. Total supply 2023:
+    4,894 thousand MT. Imports 2023: 1,006 thousand MT; 2024 estimated
+    960,000 MT. Exports 2024 estimated 4,000 MT.
+
+    SELF-SUFFICIENCY, and it is arithmetic already sitting in this one
+    table rather than an outside computation: 3,888 / 4,894 = 79.4% for
+    2023. Two independent sources (bmeditores 79.6%, avicola.com.mx ~80%)
+    land within a point of this, which is why self-sufficiency ships as a
+    fact and the per-capita figure below does not.
+
+    CAVEAT CARRIED TO CONFIDENCE GRADE: the table itself is annotated
+    "Note: Not official USDA data" and directs a reader to PSD Online for
+    the official figure. This is a Post estimate reconciling SIAP and
+    trade data, not a direct quote of a SIAP publication -- one step
+    further from the primary measurement than CBS's own tables were for
+    Israel. Loaded at confidence=industry rather than measured for exactly
+    that reason, even though the publisher (USDA FAS) is a government
+    body and source_type is 'government'.
+
+    STATE RANKING SPLITS IN TWO, and conflating the two would misstate
+    which crop each ranks: "Puebla, Veracruz, Aguascalientes, and Querétaro
+    follow Jalisco in flock size. These five states account for 50 percent
+    of Mexico's poultry population" is FLOCK SIZE (all poultry, since
+    Jalisco leads egg-laying hens too) -- NOT chicken meat production.
+    Separately: "For chicken meat production, Veracruz is the leading
+    state, followed by Aguascalientes, Jalisco, Querétaro, and, to a lesser
+    extent, Durango, Chiapas, Guanajuato, and Puebla. These eight states
+    represent 70 percent of Mexico's total chicken meat production" IS the
+    broiler-specific ranking, and is the one carried into a fact. Ordinal
+    only -- no percentages given, so no per-state tonnage is loaded.
+
+    PER-CAPITA CONSUMPTION TRAP: "estimated per capita consumption was
+    37.75 kg for chicken" in 2024. This is one of five mutually
+    inconsistent Mexican per-capita chicken figures found in this pass
+    (22.4 / 28.7 / 34.5 / 35.82 / 37.75 kg, spanning different sources and
+    years) -- see the dead-end-style entry at the foot of this file. Not
+    loaded, on the same reasoning Israel's population stayed NULL.
+
+    TIF (Tipo Inspección Federal): 121 federally-inspected poultry plants;
+    industry estimates 85% of 2024 slaughter runs through them, up from
+    83% in 2023 -- the closest thing found to an FSIS-equivalent structural
+    fact, loaded as a fact rather than a rate because no rejection or
+    condemnation RATE is given, the same gap Israel's kosher inspection hit.
+
+- url: https://www.redalyc.org/journal/674/67472343005/67472343005.pdf
+  title: >-
+    Distribución regional de carne de pollo en México: Una aplicación de las
+    condiciones Karush-Kuhn-Tucker
+  publisher: >-
+    Investigación y Ciencia, Universidad Autónoma de Aguascalientes
+    (Rebollar-Rebollar, S., 2021)
+  kind: peer_reviewed
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 813742
+  subjects: [poultry, mexico, broiler, subnational, peer_reviewed]
+  covers:
+    - broiler_meat_output_tonnes_2019
+    - state_shares_2019             # percentages, unlike the GAIN report's ordinal-only
+    - per_capita_consumption_2019   # another entry in the per-capita trap, not loaded
+    - import_volume_2019
+    - import_entry_points_2019      # not loaded -- out of scope, recorded for completeness
+  does_not_cover:
+    - head_slaughtered
+    - subnational_full_table        # names only the top 4 states; the other ~28 are not
+                                     # given even in aggregate, so this cannot become a
+                                     # districts: block the way Israel's 47-region CBS
+                                     # table could
+  confidence_ceiling: measured
+  notes: >-
+    Same extraction path as the GAIN report: WebFetch's summarizer refused
+    the PDF as binary; `fitz` on the saved file produced 31,899 characters
+    of clean text (Redalyc's PDFs are not font-encoded, unlike OECD-FAO's).
+
+    The number this project actually wanted: "En el mismo año México
+    produjo 3,447.6 miles de toneladas de carne de pollo (Servicio de
+    Información Agroalimentaria y Pesquera, 9 de octubre de 2020) auspiciada
+    por Veracruz con 11.7%, Jalisco con 11.6%, Aguascalientes con 11.5% y
+    Querétaro con 10.3%." -- 3,447,600 tonnes of CHICKEN meat (carne de
+    pollo, not the "ave" aggregate) for 2019, with a SIAP publication date
+    named precisely enough to be a real citation rather than a paraphrase,
+    even though the SIAP page itself could not be reached directly. Loaded
+    at confidence=measured on that basis -- a peer-reviewed paper naming a
+    specific dated government publication is closer to the primary source
+    than an attaché report's own Post-level estimate.
+
+    Also carries, from UNA (15 de octubre de 2020), for cross-context only
+    and NOT loaded as a corpus figure: 2019 apparent national consumption
+    4,121,000 t, per-capita 28.7 kg (pollo) vs pork 16 kg vs beef 18 kg,
+    imports 550,000 t (76% leg-and-thigh), 2008-2019 CAGR 2.8%/yr, and import
+    entry-point shares (68% through the Nuevo León/Tamaulipas/Coahuila
+    corridor, 32% through the Baja California/Sonora/Chihuahua corridor).
+    The 28.7 kg is the earliest data point in the per-capita trap below.
+
+    STATE PERCENTAGES ARE FOR 2019, NOT 2023-24. A later trade-press source
+    (bmeditores, below) gives 2024 percentages in a different order
+    (Jalisco ahead of Aguascalientes) from the GAIN report's 2023-24
+    ordinal ranking (Aguascalientes ahead of Jalisco) -- a real conflict
+    between two sources describing the SAME recent years, not resolved by
+    this 2019 figure, which predates both and is not in conflict with
+    either on its own terms.
+
+- url: https://bmeditores.mx/avicultura/panorama-de-la-industria-de-la-carne-de-ave-en-mexico
+  title: Panorama de la industria de la carne de ave en México
+  publisher: BM Editores
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, mexico, taxonomy, subnational]
+  covers:
+    - taxonomy_definition          # THE source for the broiler-vs-aggregate resolution
+    - state_shares_2024
+    - self_sufficiency_2023
+    - per_capita_trap_entry
+  does_not_cover:
+    - primary_citation             # does not itself name SIAP/UNA table numbers by date;
+                                     # read as trade-press synthesis, not a primary quote
+  confidence_ceiling: industry
+  notes: >-
+    THE TAXONOMY SOURCE. States explicitly: "Carne de ave (poultry meat):
+    Includes chicken, poultry products/pasta, and turkey" against "Carne de
+    pollo (chicken meat): Specific to chicken only." This is exactly the
+    distinction the task asked to resolve, and every figure this project
+    loads is deliberately the "pollo" reading, checked against each
+    source's own wording rather than assumed.
+
+    2024 state shares: Veracruz 13.6%, Jalisco 11.5%, Aguascalientes 10.7%,
+    Querétaro 9.8%, Durango 7.4% (top five = 53.1%, matching UNA's own
+    "53.1 por ciento" figure found separately). NOT loaded as a districts:
+    table -- see the note on the GAIN report entry for why this conflicts
+    with GAIN's ordinal ranking on the Jalisco/Aguascalientes order, and
+    why that conflict is left unresolved rather than picked a winner.
+
+    2023 self-sufficiency: 79.6% domestic / 20.4% imports, corroborating
+    the GAIN report's own table arithmetic (79.4%) to within 0.2 points --
+    the reason self-sufficiency ships as a fact and per-capita does not.
+
+    Also carries a 2023 per-capita figure of 22.4 kg "OCDE/FAO data" --
+    the outlier in the per-capita trap, roughly a third BELOW every other
+    source found (28.7-37.75 kg). Likely a different definitional basis
+    (OECD-FAO outlooks report retail-weight consumption, other sources
+    report a mix of carcass-equivalent apparent consumption) but this was
+    not chased to ground, the same discipline Israel's plan applied to its
+    own per-capita spread. Not loaded.
+
+- url: https://una.org.mx/industria/
+  title: Industria (statistics page)
+  publisher: Unión Nacional de Avicultores (UNA)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, mexico, industry_structure]
+  covers:
+    - weekly_throughput_estimate    # ~39.3 million chickens/week, 2025
+    - production_2025_forecast
+    - per_capita_trap_entry
+    - state_ranking_2025
+  does_not_cover:
+    - head_slaughtered_annual       # a weekly snapshot, not an annual enumeration -- see
+                                     # notes for why it is not annualized into a table row
+  confidence_ceiling: industry
+  notes: >-
+    "approximately 39.3 million chickens per week" (2025) is the closest
+    thing to a bird count found anywhere in this pass -- UNA's own trade
+    body, not enumerated. DELIBERATELY NOT loaded as a head_slaughtered
+    row: annualizing it (×52) would assert a constant weekly throughput
+    across the year that nobody published, compounding an unsourced
+    assumption on top of an already-unenumerated figure. Loaded instead as
+    a fact, in the units UNA actually reported (per week), rather than a
+    number this project manufactured by multiplying.
+
+    Also gives 2025 production 4.07 million t (not loaded -- the GAIN
+    report's audited PSD figure is preferred for the corpus and this would
+    duplicate a forecast year), per-capita 35.82 kg 2025 (per-capita trap,
+    not loaded), and a 2025 state list (Veracruz, Querétaro, Aguascalientes,
+    "La Laguna" -- a region straddling Coahuila/Durango, not itself a
+    state -- and Jalisco) that does not cleanly map onto SIAP's own
+    state-level units and is not loaded for that reason.
+
+- url: https://cna.org.mx/avicultura-mexicana-una-industria-de-altos-vuelos/
+  title: Avicultura mexicana, una industria de altos vuelos
+  publisher: Consejo Nacional Agropecuario (CNA)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, mexico, industry_structure]
+  covers:
+    - global_rank_claim_conflict
+    - per_capita_trap_entry
+    - state_ranking_corroboration
+  does_not_cover:
+    - state_level_tonnage
+  confidence_ceiling: industry
+  notes: >-
+    2021 figures: "Mexico ranks as the 1st producer of poultry carcass meat
+    worldwide" -- which flatly CONTRADICTS the GAIN report and UNA's own
+    "sixth largest poultry producer globally" claim found elsewhere in this
+    pass. Recorded as a second headline trap alongside per-capita, and
+    resolved the same way: neither claim ships as a corpus fact. The
+    likely cause is the same kind of definition drift Israel's per-capita
+    spread had (carcass meat vs total poultry products; a Mexico-specific
+    "1st in the world" claim about ONE product category vs a "6th largest
+    producer overall" claim), but this was not chased to ground either.
+
+    Per-capita 2021: chicken meat 34.5 kg, eggs 24.1 kg -- another
+    per-capita trap entry. State ranking for chicken meat (Veracruz,
+    Jalisco, Aguascalientes, Querétaro, Durango) corroborates the ORDER
+    used by bmeditores's 2024 figures and diverges from the GAIN report's
+    2023-24 ordinal ranking in the same Jalisco/Aguascalientes place --
+    now three of four state-ranking sources agreeing with each other and
+    one (GAIN) disagreeing on that one pair. Not enough to overrule GAIN's
+    government-sourced ranking, and not enough to trust the trade-press
+    consensus over it either -- left as an open, documented conflict.
+
+- url: https://avicola.com.mx/estadisticas-de-produccion-avicola-en-mexico-2025/
+  title: Estadísticas de Producción Avícola en México 2025
+  publisher: avicola.com.mx
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, mexico, eggs, self_sufficiency]
+  covers:
+    - self_sufficiency_corroboration
+    - egg_self_sufficiency          # a DIFFERENT product; not conflated with chicken meat
+    - state_ranking_corroboration
+  does_not_cover:
+    - broiler_specific_tonnage      # cites overall poultry tonnage, not carne-de-pollo
+                                     # specifically, for its headline numbers
+  confidence_ceiling: industry
+  notes: >-
+    Corroborates self-sufficiency ("satisface casi el 80 por ciento de la
+    demanda interna") and Mexico ranking fifth in broiler meat globally --
+    which itself is one more datapoint in the "which rank" confusion above
+    (GAIN says sixth). Also states 99.9% egg self-sufficiency, which is
+    EGGS, a different product from chicken meat, and is not loaded or
+    conflated with the chicken-meat self-sufficiency fact.
+
+- url: https://www.gob.mx/agricultura/articulos/pollos-gallinas-y-la-avicultura-en-mexico
+  title: Pollos, gallinas y la avicultura en México
+  publisher: Secretaría de Agricultura y Desarrollo Rural (SADER)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, mexico, taxonomy]
+  covers:
+    - taxonomy_definitions          # pollo de engorda / gallina / guajolote, in SADER's
+                                     # own consumer-facing words
+  does_not_cover:
+    - current_statistics            # a 2014 production figure and state leaders only;
+                                     # not used for any loaded number
+  confidence_ceiling: industry
+  notes: >-
+    A SADER consumer-education article, not a statistical table. Held for
+    corroborating the taxonomy split in plain government language: "pollo
+    de engorda" (broiler) is explicitly the meat-production bird, distinct
+    from "gallina" (laying hen, further split by breed weight) and
+    "guajolote/pavo" (turkey). Confirms bmeditores's taxonomy distinction
+    independently rather than resting the whole taxonomy resolution on one
+    trade-press source. States Aguascalientes led chicken meat production
+    in 2014, which is a THIRD year's ranking, again with Aguascalientes
+    near or at the top -- consistent with it never dropping out of the top
+    two or three across 2014, 2019, 2021, 2023-24, whichever state runs
+    ahead of it.
+
+# ---------------------------------------------------------------- dead ends
+#
+# Recorded deliberately, per poultry-israel.yaml's own rule: an absence is
+# the expensive half of a source-library entry.
+
+- url: http://infosiap.siap.gob.mx/repoAvance_siap_gb/pecAvanceEdo.jsp
+  title: Avance de la producción pecuaria por estado (SIAP)
+  publisher: Servicio de Información Agroalimentaria y Pesquera (SIAP)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [mexico, poultry, subnational]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    DNS failure: "getaddrinfo ENOTFOUND infosiap.siap.gob.mx". This is the
+    portal that would answer the state-level "carne en canal de ave"
+    question directly and completely -- it is SIAP's dedicated by-state
+    livestock production report, described in every search result as
+    covering exactly this. Unreachable from this environment by any fetch
+    tried (http, https, direct IP was not attempted). Same shape of
+    failure as Israel's Ministry of Agriculture 403: the highest-value
+    target left, needing a human with a browser rather than an automated
+    fetch. `pecResumen.jsp` and `pecAvanceProd.jsp` on the same host fail
+    identically and are not separately logged.
+
+- url: https://nube.agricultura.gob.mx/cierre_pecuario/
+  title: Anuario Estadístico de la Producción Ganadera
+  publisher: SIAP / Secretaría de Agricultura y Desarrollo Rural
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [mexico, poultry, subnational]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    Resolves in DNS (52.203.155.94) but refuses the TCP connection on 443
+    for every path tried under this host: /cierre_pecuario/,
+    /avance_pecuario/, and /datosAbiertos/Pecuario.php all fail identically
+    ("connect ECONNREFUSED"), both as https:// and as a bare http://
+    retry. This is SIAP's modern data-portal successor to the infosiap.*
+    host above and would likely carry the same by-state figures; still
+    unreachable, still the same open question.
+
+- url: https://web.archive.org/web/2024/http://infosiap.siap.gob.mx/repoAvance_siap_gb/pecAvanceEdo.jsp
+  title: Wayback Machine snapshot of the SIAP by-state portal
+  publisher: Internet Archive
+  kind: aggregator
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [mexico, poultry]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    Not a source failure but a tool failure worth recording anyway: the
+    fetch tool in this environment refuses web.archive.org outright
+    ("Claude Code is unable to fetch from web.archive.org"), so an archived
+    snapshot was not an available fallback for either SIAP host above.
+
+- url: https://www.elsitioavicola.com/poultrynews/34470/produccian-comercio-y-consumo-avacola-de-maxico-para-2023-y-2024/
+  title: Producción, Comercio y Consumo Avícola de México para 2023 y 2024
+  publisher: El Sitio Avícola (5m Publishing / The Poultry Site network)
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 403
+  subjects: [mexico, poultry]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    403 to this fetcher. A search-result summary of the same article
+    (quoted in docs/MEXICO-PLAN.md) gave a 2024 forecast of 3.9 MMT
+    production, 2% growth, and a top-six-state 60% concentration figure --
+    consistent with, and not independently verified beyond, the other
+    sources actually loaded. Not used as a citation because the page
+    itself was never actually read.
+
+- url: https://avinews.com/panorama-del-mercado-de-la-carne-de-ave-en-mexico/
+  title: Panorama del mercado de la carne de ave en México
+  publisher: aviNews
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 403
+  subjects: [mexico, poultry]
+  covers: []
+  does_not_cover: [everything]
+  notes: 403 to this fetcher, on both attempts. Not used for anything.
+
+- url: https://una.org.mx/indicadores-economicos/
+  title: Indicadores Económicos
+  publisher: Unión Nacional de Avicultores (UNA)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [mexico, poultry]
+  covers: []
+  does_not_cover:
+    - actual_data                   # a landing page linking to PDF monthly/weekly
+                                     # reports; the reports themselves were not opened
+  notes: >-
+    Reachable but contains no statistics of its own -- an index page for a
+    "Compendio de Indicadores Económicos del Sector Avícola 2017" and
+    monthly/weekly PDF reports. Not chased further in this pass; a
+    legitimate next target if more UNA-sourced figures are wanted later.
+
+# ------------------------------------------- per-capita trap, all sources
+#
+# Five figures for the same claim, spanning three orders of citation
+# quality, none loaded. Recorded together because the pattern itself -- not
+# any one number -- is the finding, exactly as Israel's five-figure spread
+# was the finding there.
+#
+#   22.4 kg  (2023, bmeditores, "OCDE/FAO data")
+#   28.7 kg  (2019, UNA via Rebollar-Rebollar 2021, peer-reviewed citation)
+#   34.5 kg  (2021, CNA)
+#   35.82 kg (2025, UNA, own industria page)
+#   37.75 kg (2024, USDA FAS GAIN, "estimated")
+#
+# A ~70% spread across five sources describing the same country and a
+# similar span of years is not five measurements of one quantity; it is
+# evidence that "per-capita chicken consumption" is not one definition in
+# this literature (apparent consumption vs retail purchases vs a
+# carcass-weight basis are the likely axes, as with Israel), and no single
+# reading is safe to publish as Mexico's number. country.population stays
+# NULL for MEX for the same reason it stayed NULL for ISR: it is the
+# denominator of a claim this project cannot yet make honestly.

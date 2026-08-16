@@ -1,0 +1,80 @@
+# Mexican broiler ("carne de pollo") meat output.
+#
+# Hand-curated, unlike data/output_israel.yaml, because there is no single
+# machine-parseable Mexican publication behind these figures the way CBS's
+# xlsx tables were behind Israel's. Every number here traces to
+# docs/research/library/poultry-mexico.yaml and docs/MEXICO-PLAN.md.
+#
+# TAXONOMY, checked for every row below rather than assumed: Mexican
+# statistical usage separates "carne de ave" (poultry meat, includes
+# turkey) from "carne de pollo" (chicken meat only). Every figure in this
+# file is the "pollo" reading - the USDA FAS GAIN report's own PSD table is
+# titled "Meat, Chicken" specifically, and the 2019 peer-reviewed figure is
+# captioned "carne de pollo" in the paper's own words. Neither is promoted
+# from a broader "ave" aggregate.
+#
+# WHAT IS DELIBERATELY NOT HERE, and why:
+#
+#   head_slaughtered   - no enumerated count found. UNA reports "~39.3
+#                        million chickens per week" (2025, industry), kept
+#                        as a fact rather than annualized: multiplying by
+#                        52 would assert a constant weekly rate nobody
+#                        published.
+#   inventory_eoy      - no national standing-flock total found. The GAIN
+#                        report ranks flock SIZE by state, but that ranking
+#                        is for ALL POULTRY (Jalisco leads it partly via
+#                        egg layers), not broiler-specific, and gives no
+#                        absolute number regardless.
+#   output_value       - no aggregate peso figure for chicken meat output
+#                        specifically was found; several sources give
+#                        value for the whole livestock or feed sector,
+#                        which is a different, larger category.
+#   districts (state
+#     breakdown)       - SIAP genuinely publishes this, but its portals
+#                        were unreachable from this research environment
+#                        (see docs/research/library/poultry-mexico.yaml).
+#                        The partial pictures that ARE reachable disagree
+#                        with each other on state rank for 2023-24 (bmeditores
+#                        and CNA rank Jalisco ahead of Aguascalientes; the
+#                        GAIN report ranks Aguascalientes ahead of Jalisco),
+#                        so no districts: block is built from them - see
+#                        docs/MEXICO-PLAN.md, "The subnational question".
+
+species: broiler
+country: MEX
+
+national:
+  # 2019, from a peer-reviewed paper citing a specific dated SIAP
+  # publication (9 de octubre de 2020) that this project could not reach
+  # directly. Graded measured rather than industry on the strength of that
+  # citation - closer to SIAP's own figure than a secondhand estimate.
+  - measure: meat_output
+    unit: tonnes
+    confidence: measured
+    source: rebollar-rebollar-2021-carne-pollo-kkt
+    notes: >-
+      Carne de pollo (chicken meat) specifically, per the paper's own
+      wording - not the broader "carne de ave" aggregate. Citing SIAP,
+      9 de octubre de 2020.
+    years:
+      - {year: 2019, value: 3447600, provisional: 0}
+
+  # 2023-2024, from the USDA FAS GAIN report's PSD table, which quotes
+  # SIAP under its own production chart but is one step removed from a
+  # direct SIAP publication - the table itself is annotated "Not official
+  # USDA data". Graded industry rather than measured for that reason, even
+  # though the publisher is a government body.
+  - measure: meat_output
+    unit: tonnes
+    confidence: industry
+    source: usda-fas-gain-mx2024-0040
+    notes: >-
+      "Meat, Chicken" PSD category specifically - broiler-only, not the
+      "ave" aggregate. 2024 is still an in-year estimate at the report's
+      publication date (2024-09-04); loaded provisional. 2025's 4,085
+      thousand MT is a FORECAST in the same table and is deliberately not
+      loaded here - this project loads reported/estimated actuals, not
+      projections.
+    years:
+      - {year: 2023, value: 3888000, provisional: 0}
+      - {year: 2024, value: 3985000, provisional: 1}

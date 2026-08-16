@@ -890,3 +890,102 @@ facts:
     source: lone-mountain-carcass-grading
     placement: learning
     surprise: 3
+  # ---- Mexico ---------------------------------------------------------------
+  # Second country after Israel. See docs/MEXICO-PLAN.md. Each fact is either
+  # checkable against a loaded figure or explicitly graded industry/trade
+  # press - the same discipline the Israel facts follow.
+
+  - slug: mexico-ave-vs-pollo-taxonomy
+    headline: "Mexico's own statistics split poultry meat two ways"
+    body: >-
+      Mexican agricultural statistics report "carne de ave" (poultry meat)
+      as a category that includes both chicken and turkey, and "carne de
+      pollo" (chicken meat) as chicken alone. A national poultry-meat total
+      would overstate this project's broiler figure by whatever share
+      turkey contributes - so every Mexican number this project publishes
+      is checked against a source's own wording and is specifically the
+      "pollo" reading, never the broader "ave" aggregate.
+    source: bmeditores-panorama-carne-ave
+    placement: learning
+    surprise: 3
+
+  - slug: mexico-self-sufficiency-eighty-percent
+    headline: Mexico makes about four in five of its own chickens
+    body: >-
+      In 2023, Mexico produced 3,888,000 tonnes of chicken meat against a
+      total domestic supply (production plus imports) of 4,894,000 tonnes -
+      about 79.4% self-sufficiency, with the remaining fifth arriving
+      mostly from the United States (about 86% of 2023 imports) and Brazil
+      (about 14%). Two independently reported trade-press figures land
+      within a point of the same number (79.6% and "almost 80%"), which is
+      why this is one of the few Mexican figures in this project confident
+      enough to publish as a headline.
+
+      This is the opposite shape from Israel, which the corpus already
+      describes as a net surplus producer - Mexico runs the more ordinary
+      pattern of a large producer that still imports a meaningful share of
+      what it eats.
+    source: usda-fas-gain-mx2024-0040
+    placement: both
+    surprise: 3
+
+  - slug: mexico-veracruz-consistent-state-leader
+    headline: The same state has led Mexican chicken production in every recent ranking
+    body: >-
+      Veracruz was Mexico's top chicken-meat-producing state in 2019
+      (11.7% of national output, per a peer-reviewed citation of SIAP), in
+      2021 (per the national agricultural council), and again in 2023-24
+      (per the USDA's own attaché report), with Aguascalientes, Jalisco,
+      Querétaro and Durango rotating through the next few places across
+      every year checked in this research pass. The one earlier year
+      checked, 2014, named a different leader - Aguascalientes, per a
+      SADER article - so the streak is "every ranking since 2019", not
+      forever.
+
+      The exact order of that second tier is NOT settled: sources
+      describing the same 2023-24 period disagree on whether Aguascalientes
+      or Jalisco ranks second, and this project deliberately does not pick
+      a side - see docs/MEXICO-PLAN.md. What is consistent across every
+      source from 2019 onward is Veracruz in first place and the same five
+      or six states making up roughly half to two-thirds of national output.
+    source: usda-fas-gain-mx2024-0040
+    placement: learning
+    surprise: 2
+
+  - slug: mexico-weekly-throughput-not-annualized
+    headline: Mexico's own poultry trade body counts birds by the week, not the year
+    body: >-
+      The Unión Nacional de Avicultores (UNA) - Mexico's national poultry
+      producers' association - reports approximately 39.3 million chickens
+      processed per week as of 2025. This project deliberately does not
+      multiply that by 52 to produce an annual head count: doing so would
+      assert a constant weekly rate that nobody has published, on top of a
+      figure that is already an industry estimate rather than a government
+      enumeration. So Mexico, like Israel, currently has no bird count in
+      this corpus - the reason is different (a rate that resists honest
+      annualization, rather than a measurement nobody took at all), but the
+      caution is the same.
+    source: una-industria-2025
+    placement: learning
+    surprise: 3
+
+  - slug: mexico-tif-inspection-not-fsis-equivalent
+    headline: Only some Mexican poultry plants answer to a federal inspector
+    body: >-
+      Mexico's Tipo Inspección Federal (TIF) system federally certifies
+      slaughter and processing plants; industry estimated that about 85% of
+      2024 poultry slaughter ran through TIF-certified plants (121 of them
+      nationally), up from about 83% in 2023. The remaining slaughter runs
+      through state or municipal inspection, or none at all.
+
+      Unlike Israel's kosher bedikah inspection, which the corpus already
+      describes as a loss stage with no US analogue, TIF coverage is a
+      question of which SHARE of the national supply is inspected at all,
+      not what an inspector rejects - and no rejection or condemnation rate
+      for either TIF or non-TIF slaughter was found in this research pass.
+      Described here rather than modelled as a loss stage, for the same
+      reason Israel's bedikah is described and not quantified: a number
+      here would be invented, not sourced.
+    source: usda-fas-gain-mx2024-0040
+    placement: learning
+    surprise: 3
