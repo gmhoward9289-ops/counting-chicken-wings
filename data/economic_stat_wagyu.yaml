@@ -1,0 +1,133 @@
+# Wagyu economic/husbandry stats that don't fit resources.yaml's
+# poultry-specific footprint block. Loaded by build.py's resources() via a
+# small additive loop over data/economic_stat_*.yaml -- see that file for
+# why: husbandry_stat_year (which holds poultry's comparable 47-day
+# cycle_days figure) has no confidence column, and this is a single
+# industry-grade citation, not annual NCC/NASS survey data. economic_stat
+# has confidence/source_id/notes built in and was the correct existing
+# table; it had simply never been populated for a second domain.
+
+economics:
+  domain: livestock
+  stats:
+    - slug: wagyu_days_on_feed
+      label: Wagyu finishing period (days on feed)
+      # Kept in the source's own unit (months), not silently converted to
+      # days -- a unit conversion this project didn't verify against the
+      # source is exactly the kind of quiet arithmetic the drying/curing
+      # lessons warn against, even for something as simple as months->days.
+      # The day-scale comparison against poultry's 47-day cycle_days belongs
+      # in prose, not in a converted value_lo/mode/hi.
+      value_lo: null
+      value_mode: 30
+      value_hi: null
+      unit: months
+      basis: finishing period, from start of high-energy feeding to slaughter
+      confidence: industry
+      source: gotoh-2018-wagyu-review
+      notes: >-
+        Quote: "Moreover, it takes 30 months to complete the Wagyu fattening
+        process." Consistent with the same paper's separately-stated 28-30
+        month slaughter-age range and 29.2-month mean. Single-model result
+        (gemma4-32k only; qwen2.5-coder:7b returned nothing for this item),
+        so `verify` correctly flagged it needs_human -- accepted here on the
+        strength of internal consistency with the rest of the same document,
+        not on model agreement. batch-03-wagyu, accepted 2026-08-15 -- see
+        docs/research/accepted/batch-03-wagyu-REVIEW.md.
+
+    # ------------------------------------------------------------------
+    # Round 2 (2026-08-16): the four figures recovered by re-reading the
+    # same fetched documents directly, after round 1's COOPER pass returned
+    # only days_on_feed. See batch-03-wagyu-REVIEW-round2.md. Three "how
+    # much beef do you get" numbers land here and NONE share a denominator
+    # -- do not average them, plot them on one axis, or treat them as
+    # agreeing/disagreeing. Each basis field names its own denominator.
+    # ------------------------------------------------------------------
+
+    - slug: wagyu_carcass_yield_pct
+      label: Japanese Black carcass yield (live weight to carcass weight)
+      value_lo: null
+      # 476 / 756 = 62.96%. The source states the two weights, not the
+      # percentage -- the ratio is computed here. A human could reasonably
+      # promote this to `derived` (a ratio of two measured figures in a
+      # peer-reviewed review paper); left at `industry` pending that call,
+      # per the project rule that extraction passes do not self-assign
+      # measured or derived.
+      value_mode: 62.96
+      value_hi: null
+      unit: '% of live weight remaining as carcass weight'
+      basis: at slaughter, 756 kg live / 476 kg carcass, 29.2 months mean age
+      confidence: industry
+      source: gotoh-2018-wagyu-review
+      notes: >-
+        Quote (verbatim, including the document's own OCR artifact "cat
+        tle", per the verbatim gate): "The mean body and carcass weights of
+        Japanese Black cat tle at slaughter were 756 kg and 476 kg,
+        respectively, at 29.2 months of age," batch-03-wagyu round 2,
+        human-read with no second model -- see
+        docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
+
+    - slug: beef_dressing_pct_us_fed
+      label: US fed cattle dressing percentage (comparison figure)
+      value_lo: 60
+      value_mode: null
+      value_hi: 64
+      unit: '% of live weight remaining as hot carcass (dressing percentage)'
+      basis: majority of US fed cattle; program mean 64% (Mississippi Farm to Feedlot, 1993-2007)
+      confidence: industry
+      source: msstate-ext-beef-grades
+      notes: >-
+        Quote: "It typi­cally ranges from 60 to 64 percent for the
+        majority of fed cattle and averaged 64 percent for the Mississippi
+        Farm to Feedlot program cattle from 1993 through 2007." Generic
+        American fed beef, NOT wagyu-specific -- included as the cattle
+        analogue of the broiler's measured 75.67% dressing yield, per the
+        batch spec. The same 60-64 range is stated independently in
+        msstate-ext-beef-yield (a different MSU publication) and implied by
+        SDSU's 63% worked example. batch-03-wagyu round 2 -- see
+        docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
+
+    - slug: beef_saleable_meat_pct_carcass
+      label: US beef saleable meat (boneless trimmed, share of carcass weight)
+      value_lo: null
+      value_mode: 65
+      value_hi: null
+      unit: '% of carcass weight yielded as boneless, trimmed beef'
+      basis: SDSU worked example, 1200 lb steer at 63% dressing; also ~40% of live weight
+      confidence: industry
+      source: sdsu-ext-fed-steer-yield
+      notes: >-
+        Quote: "So, in other words, you start with a 1200 pound steer,
+        which has a dressing percent of 63%, so that you have a 750 pound
+        carcass. From that you will get about 65% of the carcass weight, or
+        roughly 490 pounds, as boneless, trimmed beef. If you look at that
+        as a percentage of the live weight of the steer you started with,
+        it is approximately 40% of the live weight." One hypothetical
+        worked carcass, not an industry-wide survey -- the same SDSU
+        example already cited by ground beef's patty yield and loss chain.
+        Do NOT average against beef_retail_cuts_pct_ctbrc below: %CTBRC
+        measures a narrower cut set (round/loin/rib/chuck only, excludes
+        ground beef and other trim) and is not the same denominator.
+        batch-03-wagyu round 2 -- see
+        docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
+
+    - slug: beef_retail_cuts_pct_ctbrc
+      label: USDA Yield Grade closely trimmed boneless retail cuts (%CTBRC)
+      value_lo: 45.4
+      value_mode: null
+      value_hi: 52.3
+      unit: '% of carcass weight as closely trimmed boneless retail cuts, round/loin/rib/chuck only'
+      basis: USDA Yield Grades 5 (<45.4%) through 1 (>52.3%), 1996 grading standard
+      confidence: industry
+      source: beefresearch-org-beef-grading
+      notes: >-
+        Quote (cells stitched from separate rows of a scraped HTML table;
+        each cell verbatim, ellipses mark omitted rows): "Table 1 .
+        Expected Yields of Closely Trimmed, Boneless Retail Cuts (% CTBRC)
+        and Total Retail Cuts (% Total Yield) for Each USDA Yield Grade ...
+        1 >52.3 ≥80 ... 5 <45.4 <65" The companion %Total Yield column
+        (all retail cuts including ground beef, <65 to >=80) is a different
+        denominator. Directionally consistent with SDSU's 65% figure
+        without being comparable to it -- different cut sets.
+        batch-03-wagyu round 2 -- see
+        docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.

@@ -1,0 +1,49 @@
+# Vanilla loss chain. Merged with loss_chain.yaml at build time.
+#
+# One stage, one figure: batch-02-vanilla's only accepted finding.
+# `applies_to: mass`, same shape as maple's boiling stage and saffron's
+# drying -- curing concentrates mass and does not change a bean count, so
+# model.affects_count() correctly refuses to let this stage move a count
+# question. There is no product row yet to move anyway (see
+# taxonomy_vanilla.yaml); this stage is recorded now so it exists the moment
+# a sourced units_per_individual lands.
+
+stages:
+  - slug: vanilla_curing
+    domain: horticulture
+    label: Curing (green pods to cured beans)
+    # 10 and 20 are taken by saffron's field_loss and drying stages in this
+    # same domain -- UNIQUE(domain_id, sequence).
+    sequence: 30
+    phase: processing
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Freshly harvested green vanilla pods are cured -- killed, sweated, and
+      slow-dried -- before they become the cured beans sold as vanilla. The
+      process concentrates mass; it does not remove or downgrade individual
+      pods.
+    notes: >-
+      Recorded at confidence=industry, not derived, for the same reason
+      maple's boiling and saffron's drying are: the source states a trade
+      ratio directly ("About 6 kg of green pods produce 1 kg of cured
+      beans"), and inverting a stated ratio into a surviving fraction is
+      arithmetic on a rule of thumb, not a computation from measured figures.
+      'derived' in this project means computed from MEASURED figures, the
+      way dressing yield falls out of two NASS totals -- this ratio has no
+      measured counterpart.
+    factors:
+      - species: vanilla_orchid
+        # 1 kg cured / 6 kg green = 0.16667. lo = mode = hi deliberately: the
+        # source gives one point figure ("About 6 kg..."), not a range, and
+        # this project does not invent a band a source did not state.
+        survive_lo: 0.16667
+        survive_mode: 0.16667
+        survive_hi: 0.16667
+        confidence: industry
+        source: vanilla-package-of-practice-2021
+        notes: >-
+          Quote: "About 6 kg of green pods produce 1 kg of cured beans."
+          batch-02-vanilla, accepted 2026-08-15 -- see
+          docs/research/accepted/batch-02-vanilla-REVIEW.md.
