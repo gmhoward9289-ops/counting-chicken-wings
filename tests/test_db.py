@@ -41,6 +41,16 @@ def test_list_products_puts_active_species_first(conn):
     assert actives == sorted(actives, reverse=True)
 
 
+def test_list_products_sorts_by_display_name_within_activity(conn):
+    """Pickers render this list verbatim, so the source prefixes must group:
+    'Chicken: Bone-in wing' next to 'Chicken: Egg', not scattered by slug."""
+    rows = dbm.list_products(conn)
+    for chunk in (True, False):
+        names = [(r["display_name"] or r["label"]).lower()
+                 for r in rows if bool(r["active"]) is chunk]
+        assert names == sorted(names)
+
+
 def test_active_products_carry_a_prefixed_display_name(conn):
     """Every picker entry leads with its source: 'Chicken: Bone-in wing'.
 

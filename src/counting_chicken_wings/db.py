@@ -101,7 +101,9 @@ def list_products(conn) -> list[sqlite3.Row]:
                   s.common_name AS species, s.slug AS species_slug,
                   s.individual_plural, s.active
            FROM product p JOIN species s ON s.id = p.species_id
-           ORDER BY s.active DESC, p.slug"""
+           ORDER BY s.active DESC,
+                    COALESCE(p.display_name, p.label) COLLATE NOCASE,
+                    p.slug"""
     ).fetchall()
 
 
