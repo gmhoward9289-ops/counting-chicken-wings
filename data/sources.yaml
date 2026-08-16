@@ -1379,3 +1379,204 @@
     score -- the four-factor lowest-of rule belongs to the separate meat
     quality grade (1-5). See
     docs/research/accepted/batch-03-wagyu-findings-round2.yaml.
+  # ---- Mexico ---------------------------------------------------------------
+  # Second country after Israel. See docs/MEXICO-PLAN.md and
+  # docs/research/library/poultry-mexico.yaml for the full research trail.
+
+- slug: usda-fas-gain-mx2024-0040
+  title: 'Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Mexico+City_Mexico_MX2024-0040.pdf
+  published_on: '2024-09-04'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A US government attaché report, not Mexico's own statistical agency, but
+    the only route this project found into current Mexican production
+    figures at all: SIAP's own portals (infosiap.siap.gob.mx,
+    nube.agricultura.gob.mx) were unreachable from this research
+    environment - DNS failure on the first, connection refused on the
+    second, for every path tried. See docs/research/library/poultry-mexico
+    for the full record.
+
+    Its PSD Table 1 is titled "Meat, Chicken" specifically - the
+    broiler-only reading, checked against the report's own wording rather
+    than assumed, because Mexican usage separately reports "carne de ave"
+    (poultry, including turkey) as a broader aggregate that must not be
+    conflated with it. Production: 3,888 thousand MT (2023) and 3,985
+    thousand MT (2024, still an in-year estimate at publication - loaded
+    provisional). 2025's 4,085 thousand MT is a FORECAST and is not loaded.
+
+    CONFIDENCE DELIBERATELY CAPPED AT INDUSTRY, not measured, even though
+    the publisher is a government body. The report's own PSD table carries
+    the footnote "Note: Not official USDA data" and directs readers to PSD
+    Online for the reconciled figure - this is a Post-level estimate
+    reconciling SIAP and trade data, one step further from the primary
+    measurement than a government agency's own published table.
+
+    SELF-SUFFICIENCY is arithmetic already sitting in this table: 3,888 /
+    4,894 (total supply, 2023) = 79.4%, corroborated within a point by two
+    independent trade-press figures (bmeditores 79.6%, avicola.com.mx
+    ~80%) - which is why it ships as a fact and per-capita consumption does
+    not.
+
+    STATE RANKING SPLITS IN TWO, and conflating them would misattribute
+    which crop each describes. "Puebla, Veracruz, Aguascalientes, and
+    Querétaro follow Jalisco in flock size... 50 percent of Mexico's
+    poultry population" is ALL POULTRY (Jalisco leads it partly via egg
+    layers), not broiler-specific. Separately, "For chicken meat
+    production, Veracruz is the leading state, followed by Aguascalientes,
+    Jalisco, Querétaro, and, to a lesser extent, Durango, Chiapas,
+    Guanajuato, and Puebla" (70% of national output across the eight) IS
+    broiler-specific and is the ranking used in the state-concentration
+    fact - ordinal only, since no percentages are given here.
+
+    Also carries, NOT loaded as corpus figures: per-capita consumption
+    "37.75 kg for chicken" (2024, one of five mutually inconsistent
+    Mexican per-capita figures found in this pass - see the plan's headline
+    section), imports (2024 est. 960,000 MT, down 4.57% from 2023's
+    1,006,000 MT; 86% from the US, ~14% from Brazil in 2023), exports
+    (2024 est. 4,000 MT), and TIF (federally-inspected) slaughter coverage
+    - 121 plants, an estimated 85% of 2024 slaughter, up from 83% in 2023.
+
+- slug: rebollar-rebollar-2021-carne-pollo-kkt
+  title: >-
+    Distribución regional de carne de pollo en México: Una aplicación de las
+    condiciones Karush-Kuhn-Tucker
+  publisher: >-
+    Investigación y Ciencia, Universidad Autónoma de Aguascalientes
+    (Rebollar-Rebollar, S.)
+  url: https://www.redalyc.org/journal/674/67472343005/67472343005.pdf
+  published_on: '2021-07-23'
+  retrieved_on: '2026-08-16'
+  source_type: peer_reviewed
+  notes: >-
+    A peer-reviewed agricultural-economics paper, cited here for one fact it
+    reports rather than for its own Karush-Kuhn-Tucker market-optimization
+    findings: "En el mismo año México produjo 3,447.6 miles de toneladas de
+    carne de pollo (Servicio de Información Agroalimentaria y Pesquera, 9 de
+    octubre de 2020) auspiciada por Veracruz con 11.7%, Jalisco con 11.6%,
+    Aguascalientes con 11.5% y Querétaro con 10.3%." - 3,447,600 tonnes of
+    CHICKEN meat (carne de pollo, explicitly not the broader "ave"
+    aggregate) for 2019, citing a specific dated SIAP publication this
+    project could not reach directly.
+
+    GRADED MEASURED, not industry, on the strength of that specific
+    citation: a peer-reviewed paper naming a dated primary-source
+    publication is closer to SIAP's own figure than a secondhand attaché
+    estimate is. The state percentages (Veracruz, Jalisco, Aguascalientes,
+    Querétaro) are for 2019 specifically and are not extended to later
+    years - a 2024 trade-press figure gives a different state order for
+    Jalisco vs. Aguascalientes, and that conflict is documented in
+    docs/MEXICO-PLAN.md rather than resolved by preferring this older,
+    non-conflicting figure.
+
+    Also carries, from UNA (15 de octubre de 2020), NOT loaded as a corpus
+    figure: apparent national consumption 4,121,000 t (2019), per-capita
+    28.7 kg (pollo) vs 16 kg pork vs 18 kg beef - one more entry in the
+    per-capita trap - and imports of 550,000 t (76% leg-and-thigh cuts).
+
+- slug: bmeditores-panorama-carne-ave
+  title: Panorama de la industria de la carne de ave en México
+  publisher: BM Editores
+  url: https://bmeditores.mx/avicultura/panorama-de-la-industria-de-la-carne-de-ave-en-mexico
+  retrieved_on: '2026-08-16'
+  source_type: trade_press
+  notes: >-
+    THE TAXONOMY SOURCE for this project's Mexico work: states explicitly
+    that "Carne de ave (poultry meat): Includes chicken, poultry
+    products/pasta, and turkey" against "Carne de pollo (chicken meat):
+    Specific to chicken only." Every figure this project loads for Mexico
+    is checked against this distinction before loading.
+
+    2024 state shares for chicken meat (NOT loaded as a districts: table -
+    see docs/MEXICO-PLAN.md): Veracruz 13.6%, Jalisco 11.5%, Aguascalientes
+    10.7%, Querétaro 9.8%, Durango 7.4% (top five = 53.1%). This ORDER
+    conflicts with the USDA FAS GAIN report's own ordinal ranking for
+    essentially the same years, which places Aguascalientes ahead of
+    Jalisco - a real, unresolved conflict between two sources, not a
+    rounding difference.
+
+    2023 self-sufficiency 79.6% domestic / 20.4% imports - corroborates the
+    GAIN report's own table arithmetic (79.4%) within 0.2 points, which is
+    why self-sufficiency ships as a fact.
+
+    Also carries a 2023 per-capita figure of 22.4 kg "OCDE/FAO data" - the
+    low outlier in the per-capita trap, roughly a third below every other
+    figure found. Not loaded.
+
+- slug: una-industria-2025
+  title: Industria (statistics page)
+  publisher: Unión Nacional de Avicultores (UNA)
+  url: https://una.org.mx/industria/
+  retrieved_on: '2026-08-16'
+  source_type: trade_body
+  notes: >-
+    Trade body, not a statistical agency - figures here never exceed
+    `industry` confidence. "approximately 39.3 million chickens per week"
+    (2025) is the nearest thing to a bird count found in this pass and is
+    loaded as a FACT in UNA's own weekly units, deliberately NOT
+    annualized (×52) into a head_slaughtered row: that would assert a
+    constant weekly rate nobody published, compounding an unsourced
+    assumption on top of an already-unenumerated industry figure.
+
+    Also gives 2025 production 4.07 million t (not loaded - the GAIN
+    report's PSD figure is preferred and this would duplicate a forecast
+    year), per-capita 35.82 kg 2025 (per-capita trap, not loaded), and a
+    2025 state list including "La Laguna" - a cross-state region spanning
+    Coahuila and Durango, not itself a SIAP administrative unit - which
+    does not map cleanly onto state-level data and is not loaded.
+
+- slug: cna-avicultura-altos-vuelos-2021
+  title: Avicultura mexicana, una industria de altos vuelos
+  publisher: Consejo Nacional Agropecuario (CNA)
+  url: https://cna.org.mx/avicultura-mexicana-una-industria-de-altos-vuelos/
+  retrieved_on: '2026-08-16'
+  source_type: trade_body
+  notes: >-
+    2021 figures. Claims "Mexico ranks as the 1st producer of poultry
+    carcass meat worldwide", which contradicts the USDA FAS GAIN report
+    and UNA's own "sixth largest poultry producer globally" claim -
+    recorded in docs/MEXICO-PLAN.md as a second headline trap alongside
+    per-capita consumption, and NOT loaded as a corpus claim in either
+    direction.
+
+    Per-capita 2021: chicken meat 34.5 kg (per-capita trap, not loaded),
+    eggs 24.1 kg (a different product, not loaded here at all). State
+    ranking for chicken meat (Veracruz, Jalisco, Aguascalientes, Querétaro,
+    Durango) agrees with bmeditores's 2024 ordering and disagrees with the
+    GAIN report's ordering on the same Jalisco/Aguascalientes pair -
+    contributing to, not resolving, that conflict.
+
+- slug: avicola-com-mx-estadisticas-2025
+  title: Estadísticas de Producción Avícola en México 2025
+  publisher: avicola.com.mx
+  url: https://avicola.com.mx/estadisticas-de-produccion-avicola-en-mexico-2025/
+  retrieved_on: '2026-08-16'
+  source_type: trade_press
+  notes: >-
+    Corroborates self-sufficiency ("satisface casi el 80 por ciento de la
+    demanda interna", 2024-25) and reports Mexico fifth-largest in broiler
+    meat globally - one more entry in the world-rank confusion documented
+    in docs/MEXICO-PLAN.md (GAIN says sixth, CNA says first). Also states
+    99.9% egg self-sufficiency - EGGS, a different product, not conflated
+    with the chicken-meat self-sufficiency fact this source otherwise
+    corroborates.
+
+- slug: sader-pollos-gallinas-avicultura
+  title: Pollos, gallinas y la avicultura en México
+  publisher: Secretaría de Agricultura y Desarrollo Rural (SADER)
+  url: https://www.gob.mx/agricultura/articulos/pollos-gallinas-y-la-avicultura-en-mexico
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A SADER consumer-education article, not a statistical table - held
+    purely for its taxonomy language, corroborating bmeditores's carne de
+    ave/carne de pollo split independently: "pollo de engorda" (broiler) is
+    explicitly the meat bird, distinct from "gallina" (laying hen, split by
+    breed weight) and "guajolote/pavo" (turkey, a separate species,
+    seasonal holiday consumption). States Aguascalientes led chicken meat
+    production in 2014 - a third year (after 2019, 2021, 2023-24) in which
+    Aguascalientes sits at or near the top of the state ranking, though
+    never loaded as a table figure since only the leader is named, not a
+    percentage.

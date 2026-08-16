@@ -152,7 +152,7 @@ def test_population_is_null_so_no_per_capita_claim_can_be_made(conn):
     rows = conn.execute(
         "SELECT iso3, population FROM country ORDER BY iso3"
     ).fetchall()
-    assert {r["iso3"] for r in rows} == {"ISR", "USA"}
+    assert {r["iso3"] for r in rows} >= {"ISR", "USA"}
     assert all(r["population"] is None for r in rows)
 
 
