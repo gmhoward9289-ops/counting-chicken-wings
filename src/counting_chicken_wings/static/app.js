@@ -795,44 +795,122 @@ function initSci() {
 }
 
 // ---- mixing simulator
+//
+// Its own product selection rather than the page-wide PRODUCT/adoptProduct
+// pair the calculator and Nutrition & impact share: those two stay in sync
+// because comparing "what does the calculator say" against "what does
+// Nutrition say" for the SAME product is the point. The simulator answers a
+// different question -- "how does pooling behave for this product's own
+// anatomy" -- and is more useful able to hold a different product than
+// whichever one the calculator happens to be showing, the same way
+// Scientific already holds its own #s-count independent of #count.
 let CURVE = null;
+let mixSeq = 0;
+let mixYRange = [0, 1];
+
 async function initMix() {
-  // The curve is drawn at the endpoint's default units_per_individual, which
-  // is two -- the headline product's anatomy. Same situation as Scientific:
-  // pinned by this page, so the marker comes from that product's species.
-  VIEW_SCOPE.mix = productScope(HEADLINE_PRODUCT);
-  CURVE = await api('/api/mixing-curve?draw=12');
+  const active = META.products.filter(p => p.active);
+  $('#mix-product').innerHTML = active.map(p =>
+    `<option value="${p.slug}"${p.slug === HEADLINE_PRODUCT ? ' selected' : ''
+      }>${p.label}</option>`).join('');
+
+  const syncWindow = () => {
+    const p = active.find(x => x.slug === $('#mix-product').value);
+    $('#mix-window-wrap').hidden = !p || p.yield_mode !== 'recurring';
+  };
+  $('#mix-product').addEventListener('change', syncWindow);
+  $('#mix-product').addEventListener('input', syncWindow);
+  syncWindow();
+
+  ['mix-count', 'mix-product', 'mix-window-days'].forEach(id => {
+    $('#' + id).addEventListener('change', loadMixCurve);
+  });
+
+  await loadMixCurve();
+}
+
+async function loadMixCurve() {
+  const mine = ++mixSeq;
+  const slug = $('#mix-product').value || HEADLINE_PRODUCT;
+  VIEW_SCOPE.mix = productScope(slug);
+
+  const q = new URLSearchParams({
+    count: numOrDefault('mix-count', 12),
+    product: slug,
+  });
+  const windowDays = $('#mix-window-days').value;
+  if (windowDays) q.set('window_days', windowDays);
+
+  $('#pool').disabled = true;
+  let d;
+  try {
+    d = await api('/api/mixing-curve?' + q);
+  } catch (err) {
+    if (mine !== mixSeq) return;
+    $('#mixnote').textContent =
+      `Could not load this product's mixing curve. (${err.message})`;
+    CURVE = null;
+    return;
+  }
+  if (mine !== mixSeq) return;   // a newer request already landed
+  CURVE = d;
+
+  const noun = d.individual_plural || 'individuals';
+  $('#poolnoun').textContent = noun;
+  $('#poolnoun2').textContent = noun;
+
   const xs = CURVE.points.map(p => p.pool);
   const ys = CURVE.points.map(p => p.distinct);
+  // min/max rather than assuming floor <= ceiling: a recurring product with
+  // a below-1-per-day rate (same-day eggs at the product's own default
+  // window) reports a floor ABOVE its ceiling -- see model.floor_individuals
+  // vs. recurring_floor's hard bound -- and a signed gap would have padded
+  // the wrong side or gone negative.
+  const yLo = Math.min(CURVE.floor, CURVE.ceiling, ys[0]);
+  const yHi = Math.max(CURVE.floor, CURVE.ceiling, ys[ys.length - 1]);
+  const pad = Math.max(1, (yHi - yLo) * 0.15);
+  const yRange = [yLo - pad, yHi + pad];
+  mixYRange = yRange;
   Plotly.newPlot('mixchart', [
     { x: xs, y: ys, mode: 'lines', line: { color: CH.stamp, width: 3 },
-      name: 'distinct chickens', hovertemplate:
-      '%{x:,} chickens in pool<br>%{y:.4f} distinct<extra></extra>' },
+      name: `distinct ${noun}`, hovertemplate:
+      `%{x:,} ${noun} in pool<br>%{y:.4f} distinct<extra></extra>` },
     { x: [xs[0], xs[xs.length-1]], y: [CURVE.ceiling, CURVE.ceiling],
       mode: 'lines', line: { color: CH.faint, dash: 'dot', width: 1 },
-      name: 'ceiling (12)', hoverinfo: 'skip' },
+      name: `ceiling (${fmtDistinct(CURVE.ceiling, CURVE.ceiling)})`,
+      hoverinfo: 'skip' },
     { x: [xs[0], xs[xs.length-1]], y: [CURVE.floor, CURVE.floor],
       mode: 'lines', line: { color: CH.faint, dash: 'dot', width: 1 },
-      name: 'floor (6)', hoverinfo: 'skip' },
+      name: `floor (${(+CURVE.floor).toFixed(2)})`, hoverinfo: 'skip' },
   ], Object.assign({}, PLOT, {
       xaxis: Object.assign({}, PLOT.xaxis, { type: 'log',
-        title: 'chickens in the pool (log scale)' }),
-      yaxis: Object.assign({}, PLOT.yaxis, { title: 'distinct chickens',
-        range: [5.5, 12.5], tickformat: '.2f' }),
+        title: `${noun} in the pool (log scale)` }),
+      yaxis: Object.assign({}, PLOT.yaxis, { title: `distinct ${noun}`,
+        range: yRange, tickformat: '.2f' }),
       showlegend: false,
     }), CFG);
   $('#mixnote').textContent = CURVE.note;
   $('#pool').max = CURVE.points.length - 1;
+  $('#pool').value = 0;
   $('#pool').disabled = false;   // was disabled until CURVE resolved
   mixMove();
+  renderScope();
 }
+
 function mixMove() {
   if (!CURVE) return;
   const p = CURVE.points[+$('#pool').value];
+  const noun = (p.pool === 1 ? CURVE.individual_noun : CURVE.individual_plural)
+    || 'individuals';
   $('#poollabel').textContent = p.pool.toLocaleString();
+  $('#poolnoun2').textContent = noun;
   $('#mixout').textContent = fmtDistinct(p.distinct, CURVE.ceiling);
+  $('#mixoutnote').textContent =
+    `distinct ${CURVE.individual_plural || 'individuals'} in ${CURVE.count} ${
+      CURVE.unit_name || 'units'}`;
   Plotly.relayout('mixchart', {
-    shapes: [{ type: 'line', x0: p.pool, x1: p.pool, y0: 5.5, y1: 12.5,
+    shapes: [{ type: 'line', x0: p.pool, x1: p.pool,
+               y0: mixYRange[0], y1: mixYRange[1],
                line: { color: CH.stampSoft, width: 2 } }]
   });
 }

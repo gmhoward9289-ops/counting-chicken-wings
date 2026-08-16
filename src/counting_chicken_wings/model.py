@@ -167,6 +167,40 @@ def unit_is_aggregate(
     return natural < 1.0
 
 
+def mixing_draw_scale(
+    units_requested: float,
+    units_per_individual: float,
+    floor: float,
+    aggregate_units: bool = False,
+    mixing_subunits_per_unit: float | None = None,
+) -> tuple[float, float, str]:
+    """Re-express a question at the granularity the mixing draw actually
+    needs, and return (draw_units, draw_upi, drawn_label).
+
+    Extracted from `run()` so `/api/mixing-curve` can draw the same curve
+    the headline answer is built from, for any product, instead of a
+    wing-only approximation that ignored both re-expressions below.
+
+      aggregate_units             one unit is a BLEND of many individuals'
+                                   output (a gram of saffron) -- re-express
+                                   in individual-shares, see `run()`.
+      mixing_subunits_per_unit    one unit is a homogenate of many smaller
+                                   already-blended particles (a ground beef
+                                   patty) -- re-express at the sub-unit
+                                   scale, see `run()`.
+      neither                     the unit is already the atomic thing the
+                                   draw assumes (a wing): unchanged.
+    """
+    if aggregate_units:
+        shares = max(1, ceil(floor))
+        return shares, 1.0, f"{shares:,} individual-shares"
+    if mixing_subunits_per_unit and mixing_subunits_per_unit > 1:
+        draw_units = units_requested * mixing_subunits_per_unit
+        draw_upi = units_per_individual * mixing_subunits_per_unit
+        return draw_units, draw_upi, f"{draw_units:,.0f} mixing sub-units"
+    return units_requested, units_per_individual, f"{units_requested} units"
+
+
 def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     """C(total-removed, drawn) / C(total, drawn), computed without big ints.
 
@@ -1143,39 +1177,11 @@ def run(
         anatomical=anatomical, floor_source=floor_source,
     )
 
-    if aggregate_units:
-        # A continuous product's unit is an AGGREGATE, and that breaks the
-        # assumption the pooling formula rests on: that every contributing
-        # individual gave at least one WHOLE unit. A wing belongs to exactly
-        # one chicken, so drawing twelve wings is twelve draws. One gram of
-        # saffron is the combined stigma mass of about 150 flowers, so
-        # "draw one unit" is not one draw -- it is 150 of them, and asking
-        # the formula for one draw returned "a gram came from about 1
-        # flower" while the floor said 150. Two numbers from the same run
-        # contradicting each other.
-        #
-        # Fix: re-express the question in INDIVIDUAL-SHARES, one share per
-        # contributing individual, so units_per_individual becomes 1 and the
-        # formula's assumption holds again. Nothing about the mixing maths
-        # changes; only the unit it is asked in.
-        shares = max(1, ceil(floor))
-        draw_units, draw_upi = shares, 1.0
-        drawn_label = f"{shares:,} individual-shares"
-    elif mixing_subunits_per_unit and mixing_subunits_per_unit > 1:
-        # The mirror-image error, and the one a 2026-08 audit caught in
-        # ground beef: a unit here is not one intact thing traceable to at
-        # most one individual, it is a homogenate of many already-blended
-        # sub-units. Treating "1 patty = 1 draw" silently assumes it is a
-        # single indivisible piece from one animal, which is exactly the
-        # WING assumption and exactly what grinding destroys. Re-express the
-        # draw at the sub-unit (particle) scale instead -- the pooling
-        # formula does not change, only the granularity it is asked at.
-        draw_units = units_requested * mixing_subunits_per_unit
-        draw_upi = units_per_individual * mixing_subunits_per_unit
-        drawn_label = f"{draw_units:,.0f} mixing sub-units"
-    else:
-        draw_units, draw_upi = units_requested, units_per_individual
-        drawn_label = f"{units_requested} units"
+    draw_units, draw_upi, drawn_label = mixing_draw_scale(
+        units_requested, units_per_individual, floor,
+        aggregate_units=aggregate_units,
+        mixing_subunits_per_unit=mixing_subunits_per_unit,
+    )
 
     def _draw(stages, use_params=None):
         """One pass of the mixing cascade, in whatever unit the question is
