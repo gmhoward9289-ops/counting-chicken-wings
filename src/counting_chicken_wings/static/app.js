@@ -839,11 +839,25 @@ function mixMove() {
 $('#pool').oninput = mixMove;
 
 // ---- states
-const ABBR = {Alabama:'AL',Arkansas:'AR',Delaware:'DE',Georgia:'GA',
-  Illinois:'IL',Iowa:'IA',Kentucky:'KY',Louisiana:'LA',Maryland:'MD',
-  Mississippi:'MS',Missouri:'MO','New Jersey':'NJ','New York':'NY',
-  'North Carolina':'NC',Ohio:'OH',Oklahoma:'OK',Pennsylvania:'PA',
-  'South Carolina':'SC',Tennessee:'TN',Texas:'TX',Vermont:'VT',Virginia:'VA'};
+//
+// All 50 postal codes, not just the ones the annual survey happens to
+// publish. This used to carry only the ~22 states NASS reports individually,
+// and any state outside that map -- including every census-only state added
+// below -- was silently dropped from the choropleth with no error anywhere.
+const ABBR = {
+  Alabama:'AL', Alaska:'AK', Arizona:'AZ', Arkansas:'AR', California:'CA',
+  Colorado:'CO', Connecticut:'CT', Delaware:'DE', Florida:'FL', Georgia:'GA',
+  Hawaii:'HI', Idaho:'ID', Illinois:'IL', Indiana:'IN', Iowa:'IA',
+  Kansas:'KS', Kentucky:'KY', Louisiana:'LA', Maine:'ME', Maryland:'MD',
+  Massachusetts:'MA', Michigan:'MI', Minnesota:'MN', Mississippi:'MS',
+  Missouri:'MO', Montana:'MT', Nebraska:'NE', Nevada:'NV',
+  'New Hampshire':'NH', 'New Jersey':'NJ', 'New Mexico':'NM',
+  'New York':'NY', 'North Carolina':'NC', 'North Dakota':'ND', Ohio:'OH',
+  Oklahoma:'OK', Oregon:'OR', Pennsylvania:'PA', 'Rhode Island':'RI',
+  'South Carolina':'SC', 'South Dakota':'SD', Tennessee:'TN', Texas:'TX',
+  Utah:'UT', Vermont:'VT', Virginia:'VA', Washington:'WA',
+  'West Virginia':'WV', Wisconsin:'WI', Wyoming:'WY',
+};
 
 async function initStates() {
   const d = await api('/api/states');
@@ -855,7 +869,13 @@ async function initStates() {
   msg.hidden = !d.message;
   msg.textContent = d.message || '';
   const rows = d.regions.filter(r => ABBR[r.region]);
-  Plotly.newPlot('statemap', [{
+  const census = (d.census && d.census.regions) || [];
+  // Only the states the annual survey has NOTHING to say for this year --
+  // the presence-only trace exists precisely to fill that gap, never to
+  // duplicate a state the size-colored trace already carries.
+  const presence = census.filter(c => c.presence_only && ABBR[c.region]);
+
+  const traces = [{
     type: 'choropleth', locationmode: 'USA-states',
     locations: rows.map(r => ABBR[r.region]),
     z: rows.map(r => r.avg_size),
@@ -863,7 +883,34 @@ async function initStates() {
     hovertemplate: '%{text}<extra></extra>',
     colorscale: [[0, CH.scaleLo], [0.5, CH.amber], [1, CH.scaleHi]],
     colorbar: { title: 'lb', thickness: 12 },
-  }], Object.assign({}, PLOT, {
+  }];
+
+  if (presence.length) {
+    // A flat fill, not part of the size colourscale -- these states have no
+    // avg_size or volume to speak for their colour, and folding them into the
+    // same scale would let a reader read a weight into a cell that has none.
+    // Its own colorbar is suppressed so a reader is not offered a legend for
+    // one solid colour.
+    traces.push({
+      type: 'choropleth', locationmode: 'USA-states',
+      locations: presence.map(c => ABBR[c.region]),
+      z: presence.map(() => 1),
+      zmin: 0, zmax: 1,
+      colorscale: [[0, CH.grey], [1, CH.grey]],
+      showscale: false,
+      text: presence.map(c =>
+        `${c.region}<br>Census of Agriculture ${d.census.census_year}` +
+        `<br>${c.operations != null ? c.operations.toLocaleString() +
+          ' operations' : 'operations not reported'}` +
+        `<br>${c.sales_head != null ? c.sales_head.toLocaleString() +
+          ' sold' : 'sales not reported'}` +
+        `<br>${c.inventory != null ? c.inventory.toLocaleString() +
+          ' inventory' : 'inventory not reported'}`),
+      hovertemplate: '%{text}<extra></extra>',
+    });
+  }
+
+  Plotly.newPlot('statemap', traces, Object.assign({}, PLOT, {
     geo: { scope: 'usa', bgcolor: 'rgba(0,0,0,0)',
            lakecolor: 'rgba(0,0,0,0)', subunitcolor: CH.line },
   }), CFG);
@@ -877,6 +924,31 @@ async function initStates() {
        <td class="num">${r.volume ? (r.volume/1000).toLocaleString(
           undefined,{maximumFractionDigits:0}) + ' M lb' : '—'}</td></tr>`
     ).join('') + '</table>';
+
+  const censusNote = $('#states-census-note');
+  if (censusNote) {
+    censusNote.textContent = d.census && d.census.census_year
+      ? `Census of Agriculture ${d.census.census_year}. Sales, operations ` +
+        'and inventory only -- no average weight is published at this ' +
+        'scale, so none is shown.'
+      : '';
+  }
+  const censusTable = $('#states-census-table');
+  if (censusTable) {
+    censusTable.innerHTML = !presence.length ? '' :
+      `<table><tr><th>State (presence only)</th>
+        <th class="num">Operations</th><th class="num">Inventory</th>
+        <th class="num">Sold</th></tr>` +
+      presence.map(c =>
+        `<tr><td>${c.region}</td>
+         <td class="num">${c.operations != null
+            ? c.operations.toLocaleString() : '—'}</td>
+         <td class="num">${c.inventory != null
+            ? c.inventory.toLocaleString() : '—'}</td>
+         <td class="num">${c.sales_head != null
+            ? c.sales_head.toLocaleString() : '—'}</td></tr>`
+      ).join('') + '</table>';
+  }
 }
 
 // ---- by country

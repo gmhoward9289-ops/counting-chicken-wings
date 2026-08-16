@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- resource footprint per bird
-# generated: 2026-07-29
+# generated: 2026-08-16
 # PER BIRD. Allocate by mass share before charging to one cut -- wings are ~7.3% of live weight
 # ---------------------------------------------------------------------------------------------
 

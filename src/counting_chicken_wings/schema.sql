@@ -1121,6 +1121,17 @@ FROM regional_size_stat r
 JOIN species s ON s.id = r.species_id
 WHERE s.slug = 'layer_hen';
 
+-- Same reasoning as the two views above, applied to regional_census_stat
+-- instead of regional_size_stat: that table is a single species today, but
+-- nothing stops a second one landing in it, and a caller that forgot
+-- `WHERE species = ...` would silently blend two species' sales_head and
+-- inventory into one map. Read this view, never the raw table.
+CREATE VIEW v_broiler_census_stat AS
+SELECT r.*
+FROM regional_census_stat r
+JOIN species s ON s.id = r.species_id
+WHERE s.slug = 'broiler';
+
 -- Dressing yield derived, never stored, so it cannot drift from the NASS
 -- totals it comes from.
 CREATE VIEW v_dressing_yield AS

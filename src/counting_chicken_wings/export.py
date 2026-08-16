@@ -81,6 +81,18 @@ EXPORTS: list[dict] = [
         "note": "USDA NASS. Only states NASS publishes individually appear",
     },
     {
+        "name": "states_census",
+        "title": "broiler presence by state, Census of Agriculture",
+        "sql": """SELECT region, census_year, sales_head, operations,
+                         inventory
+                  FROM v_broiler_census_stat ORDER BY region""",
+        "note": ("USDA Census of Agriculture, five-yearly, ALL 50 states -- "
+                 "no state is suppressed here. sales_head is a sales count, "
+                 "not the head_slaughtered/certified_klb in states.csv; the "
+                 "two are different USDA programmes and must not be summed "
+                 "or averaged together"),
+    },
+    {
         "name": "states_monthly",
         "title": "average live weight by state and month",
         "sql": """SELECT region, year, month, avg_size AS avg_live_weight_lb
@@ -265,8 +277,11 @@ def export(out_dir: Path, db_path: Path | None = None) -> list[Path]:
         "                  to one cut.",
         "  quality_defects degrade quality without removing product, so they",
         "                  are not part of the loss chain.",
-        "  states          only states USDA publishes individually appear;",
-        "                  others are suppressed for disclosure.",
+        "  states          only states USDA's annual survey publishes",
+        "                  individually appear here; others are suppressed",
+        "                  for disclosure. states_census has all 50, from a",
+        "                  different, five-yearly programme -- do not merge",
+        "                  the two: sales_head is not head_slaughtered.",
         "",
     ]
     readme.write_text("\n".join(lines), encoding="utf-8")

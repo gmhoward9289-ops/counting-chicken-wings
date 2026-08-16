@@ -1,0 +1,1660 @@
+# (o>  counting chicken wings -- average live weight by state and month
+# generated: 2026-08-16
+# USDA NASS. A month NASS suppresses is an ABSENT ROW, never a zero. The swing across these months is not a season on its own for any state -- see GET /api/seasonality
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+[1]
+  region: Alabama
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 5.62
+
+[2]
+  region: Alabama
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 5.44
+
+[3]
+  region: Alabama
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 5.5
+
+[4]
+  region: Alabama
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 5.48
+
+[5]
+  region: Alabama
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 5.58
+
+[6]
+  region: Alabama
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 5.64
+
+[7]
+  region: Alabama
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 5.64
+
+[8]
+  region: Alabama
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 5.63
+
+[9]
+  region: Alabama
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 5.64
+
+[10]
+  region: Alabama
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 5.57
+
+[11]
+  region: Alabama
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 5.58
+
+[12]
+  region: Alabama
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 5.56
+
+[13]
+  region: Arkansas
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 7.44
+
+[14]
+  region: Arkansas
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 7.3
+
+[15]
+  region: Arkansas
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 7.31
+
+[16]
+  region: Arkansas
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 7.28
+
+[17]
+  region: Arkansas
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 7.38
+
+[18]
+  region: Arkansas
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 7.39
+
+[19]
+  region: Arkansas
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 7.33
+
+[20]
+  region: Arkansas
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 7.36
+
+[21]
+  region: Arkansas
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 7.47
+
+[22]
+  region: Arkansas
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 7.51
+
+[23]
+  region: Arkansas
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 7.48
+
+[24]
+  region: Arkansas
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 7.36
+
+[25]
+  region: Delaware
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 7.63
+
+[26]
+  region: Delaware
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 7.65
+
+[27]
+  region: Delaware
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 7.62
+
+[28]
+  region: Delaware
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 7.64
+
+[29]
+  region: Delaware
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 7.72
+
+[30]
+  region: Delaware
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 7.52
+
+[31]
+  region: Delaware
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 7.66
+
+[32]
+  region: Delaware
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 7.68
+
+[33]
+  region: Delaware
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 7.85
+
+[34]
+  region: Delaware
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 7.84
+
+[35]
+  region: Delaware
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 7.72
+
+[36]
+  region: Delaware
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 7.76
+
+[37]
+  region: Georgia
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.21
+
+[38]
+  region: Georgia
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.19
+
+[39]
+  region: Georgia
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.06
+
+[40]
+  region: Georgia
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.1
+
+[41]
+  region: Georgia
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.14
+
+[42]
+  region: Georgia
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.09
+
+[43]
+  region: Georgia
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.22
+
+[44]
+  region: Georgia
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.2
+
+[45]
+  region: Georgia
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.34
+
+[46]
+  region: Georgia
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.19
+
+[47]
+  region: Georgia
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.16
+
+[48]
+  region: Georgia
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.22
+
+[49]
+  region: Illinois
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.44
+
+[50]
+  region: Illinois
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.51
+
+[51]
+  region: Illinois
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.26
+
+[52]
+  region: Illinois
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.39
+
+[53]
+  region: Illinois
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.35
+
+[54]
+  region: Illinois
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.4
+
+[55]
+  region: Illinois
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.52
+
+[56]
+  region: Illinois
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.45
+
+[57]
+  region: Illinois
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.5
+
+[58]
+  region: Illinois
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.53
+
+[59]
+  region: Illinois
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.43
+
+[60]
+  region: Illinois
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.32
+
+[61]
+  region: Iowa
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 5.32
+
+[62]
+  region: Iowa
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 5.2
+
+[63]
+  region: Iowa
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 5.28
+
+[64]
+  region: Iowa
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 4.99
+
+[65]
+  region: Iowa
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 5.52
+
+[66]
+  region: Iowa
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 5.59
+
+[67]
+  region: Iowa
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 5.41
+
+[68]
+  region: Iowa
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 5.54
+
+[69]
+  region: Iowa
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 5.16
+
+[70]
+  region: Iowa
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 5.34
+
+[71]
+  region: Iowa
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 5.72
+
+[72]
+  region: Iowa
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 5.44
+
+[73]
+  region: Kentucky
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.89
+
+[74]
+  region: Kentucky
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.74
+
+[75]
+  region: Kentucky
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.64
+
+[76]
+  region: Kentucky
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.61
+
+[77]
+  region: Kentucky
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.7
+
+[78]
+  region: Kentucky
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.62
+
+[79]
+  region: Kentucky
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.46
+
+[80]
+  region: Kentucky
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 7.3
+
+[81]
+  region: Kentucky
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.9
+
+[82]
+  region: Kentucky
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.92
+
+[83]
+  region: Kentucky
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.98
+
+[84]
+  region: Kentucky
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.87
+
+[85]
+  region: Louisiana
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 7.06
+
+[86]
+  region: Louisiana
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.72
+
+[87]
+  region: Louisiana
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.78
+
+[88]
+  region: Louisiana
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.7
+
+[89]
+  region: Louisiana
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.89
+
+[90]
+  region: Louisiana
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.96
+
+[91]
+  region: Louisiana
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.85
+
+[92]
+  region: Louisiana
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.92
+
+[93]
+  region: Louisiana
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.89
+
+[94]
+  region: Louisiana
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.89
+
+[95]
+  region: Louisiana
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.78
+
+[96]
+  region: Louisiana
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.95
+
+[97]
+  region: Maryland
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.63
+
+[98]
+  region: Maryland
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.57
+
+[99]
+  region: Maryland
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.55
+
+[100]
+  region: Maryland
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.54
+
+[101]
+  region: Maryland
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.68
+
+[102]
+  region: Maryland
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.54
+
+[103]
+  region: Maryland
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.33
+
+[104]
+  region: Maryland
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.6
+
+[105]
+  region: Maryland
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.5
+
+[106]
+  region: Maryland
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.35
+
+[107]
+  region: Maryland
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.18
+
+[108]
+  region: Maryland
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.2
+
+[109]
+  region: Mississippi
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.68
+
+[110]
+  region: Mississippi
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.7
+
+[111]
+  region: Mississippi
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.68
+
+[112]
+  region: Mississippi
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.72
+
+[113]
+  region: Mississippi
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.64
+
+[114]
+  region: Mississippi
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.79
+
+[115]
+  region: Mississippi
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.57
+
+[116]
+  region: Mississippi
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.72
+
+[117]
+  region: Mississippi
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.73
+
+[118]
+  region: Mississippi
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.79
+
+[119]
+  region: Mississippi
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.66
+
+[120]
+  region: Mississippi
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.65
+
+[121]
+  region: Missouri
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 5.44
+
+[122]
+  region: Missouri
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 5.55
+
+[123]
+  region: Missouri
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 5.46
+
+[124]
+  region: Missouri
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 5.5
+
+[125]
+  region: Missouri
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 5.45
+
+[126]
+  region: Missouri
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 5.56
+
+[127]
+  region: Missouri
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 5.47
+
+[128]
+  region: Missouri
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 5.52
+
+[129]
+  region: Missouri
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 5.63
+
+[130]
+  region: Missouri
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 5.61
+
+[131]
+  region: Missouri
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 5.48
+
+[132]
+  region: Missouri
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 5.52
+
+[133]
+  region: New Jersey
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 5.64
+
+[134]
+  region: New Jersey
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 5.34
+
+[135]
+  region: New Jersey
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 5.45
+
+[136]
+  region: New Jersey
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 5.27
+
+[137]
+  region: New Jersey
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 5.78
+
+[138]
+  region: New Jersey
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 5.35
+
+[139]
+  region: New Jersey
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 5.14
+
+[140]
+  region: New Jersey
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 5.39
+
+[141]
+  region: New Jersey
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 5.35
+
+[142]
+  region: New Jersey
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 5.27
+
+[143]
+  region: New Jersey
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 5.45
+
+[144]
+  region: New Jersey
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 5.18
+
+[145]
+  region: New York
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 5.22
+
+[146]
+  region: New York
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 5.1
+
+[147]
+  region: New York
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 5.07
+
+[148]
+  region: New York
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 5.02
+
+[149]
+  region: New York
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 5.11
+
+[150]
+  region: New York
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 5.08
+
+[151]
+  region: New York
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 5.19
+
+[152]
+  region: New York
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 5.16
+
+[153]
+  region: New York
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 5.19
+
+[154]
+  region: New York
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 5.18
+
+[155]
+  region: New York
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 5.16
+
+[156]
+  region: New York
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 5.11
+
+[157]
+  region: North Carolina
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 8.54
+
+[158]
+  region: North Carolina
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 8.56
+
+[159]
+  region: North Carolina
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 8.41
+
+[160]
+  region: North Carolina
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 8.34
+
+[161]
+  region: North Carolina
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 8.59
+
+[162]
+  region: North Carolina
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 8.39
+
+[163]
+  region: North Carolina
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 8.32
+
+[164]
+  region: North Carolina
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 8.25
+
+[165]
+  region: North Carolina
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 8.58
+
+[166]
+  region: North Carolina
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 8.28
+
+[167]
+  region: North Carolina
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 8.44
+
+[168]
+  region: North Carolina
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 8.33
+
+[169]
+  region: Ohio
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 4.51
+
+[170]
+  region: Ohio
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 4.5
+
+[171]
+  region: Ohio
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 4.46
+
+[172]
+  region: Ohio
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 4.57
+
+[173]
+  region: Ohio
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 4.58
+
+[174]
+  region: Ohio
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 4.57
+
+[175]
+  region: Ohio
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 4.75
+
+[176]
+  region: Ohio
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 4.79
+
+[177]
+  region: Ohio
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 4.74
+
+[178]
+  region: Ohio
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 4.64
+
+[179]
+  region: Ohio
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 4.65
+
+[180]
+  region: Ohio
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 4.74
+
+[181]
+  region: Oklahoma
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 7.8
+
+[182]
+  region: Oklahoma
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 8.0
+
+[183]
+  region: Oklahoma
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 8.03
+
+[184]
+  region: Oklahoma
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 8.15
+
+[185]
+  region: Oklahoma
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 8.51
+
+[186]
+  region: Oklahoma
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 7.95
+
+[187]
+  region: Oklahoma
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 8.13
+
+[188]
+  region: Oklahoma
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 8.15
+
+[189]
+  region: Oklahoma
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 8.14
+
+[190]
+  region: Oklahoma
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 8.09
+
+[191]
+  region: Oklahoma
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 8.29
+
+[192]
+  region: Oklahoma
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 8.02
+
+[193]
+  region: Pennsylvania
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 5.61
+
+[194]
+  region: Pennsylvania
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 5.66
+
+[195]
+  region: Pennsylvania
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 5.73
+
+[196]
+  region: Pennsylvania
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 5.82
+
+[197]
+  region: Pennsylvania
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 5.79
+
+[198]
+  region: Pennsylvania
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 5.71
+
+[199]
+  region: Pennsylvania
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 5.74
+
+[200]
+  region: Pennsylvania
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 5.93
+
+[201]
+  region: Pennsylvania
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 5.94
+
+[202]
+  region: Pennsylvania
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 5.81
+
+[203]
+  region: Pennsylvania
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 5.74
+
+[204]
+  region: Pennsylvania
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 5.59
+
+[205]
+  region: South Carolina
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 7.28
+
+[206]
+  region: South Carolina
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.93
+
+[207]
+  region: South Carolina
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 7.19
+
+[208]
+  region: South Carolina
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 7.07
+
+[209]
+  region: South Carolina
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 7.33
+
+[210]
+  region: South Carolina
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 7.29
+
+[211]
+  region: South Carolina
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 7.4
+
+[212]
+  region: South Carolina
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 7.25
+
+[213]
+  region: South Carolina
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 7.5
+
+[214]
+  region: South Carolina
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 7.64
+
+[215]
+  region: South Carolina
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 7.37
+
+[216]
+  region: South Carolina
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 7.2
+
+[217]
+  region: Tennessee
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.21
+
+[218]
+  region: Tennessee
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.14
+
+[219]
+  region: Tennessee
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.01
+
+[220]
+  region: Tennessee
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.05
+
+[221]
+  region: Tennessee
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.16
+
+[222]
+  region: Tennessee
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.14
+
+[223]
+  region: Tennessee
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.09
+
+[224]
+  region: Tennessee
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.19
+
+[225]
+  region: Tennessee
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.29
+
+[226]
+  region: Tennessee
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.21
+
+[227]
+  region: Tennessee
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.15
+
+[228]
+  region: Tennessee
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.15
+
+[229]
+  region: Texas
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.93
+
+[230]
+  region: Texas
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.93
+
+[231]
+  region: Texas
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.96
+
+[232]
+  region: Texas
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.98
+
+[233]
+  region: Texas
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.98
+
+[234]
+  region: Texas
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.57
+
+[235]
+  region: Texas
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.9
+
+[236]
+  region: Texas
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.96
+
+[237]
+  region: Texas
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 7.02
+
+[238]
+  region: Texas
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 7.08
+
+[239]
+  region: Texas
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 7.05
+
+[240]
+  region: Texas
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.92
+
+[241]
+  region: United States
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.65
+
+[242]
+  region: United States
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.57
+
+[243]
+  region: United States
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.55
+
+[244]
+  region: United States
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.55
+
+[245]
+  region: United States
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.64
+
+[246]
+  region: United States
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.59
+
+[247]
+  region: United States
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.59
+
+[248]
+  region: United States
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.65
+
+[249]
+  region: United States
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.73
+
+[250]
+  region: United States
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.7
+
+[251]
+  region: United States
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.64
+
+[252]
+  region: United States
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.6
+
+[253]
+  region: Vermont
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.64
+
+[254]
+  region: Vermont
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.57
+
+[255]
+  region: Vermont
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.54
+
+[256]
+  region: Vermont
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.52
+
+[257]
+  region: Vermont
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.61
+
+[258]
+  region: Vermont
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.57
+
+[259]
+  region: Vermont
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.68
+
+[260]
+  region: Vermont
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.64
+
+[261]
+  region: Vermont
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.7
+
+[262]
+  region: Vermont
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.7
+
+[263]
+  region: Vermont
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.65
+
+[264]
+  region: Vermont
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.61
+
+[265]
+  region: Virginia
+  year: 2025
+  month: 1
+  avg_live_weight_lb: 6.36
+
+[266]
+  region: Virginia
+  year: 2025
+  month: 2
+  avg_live_weight_lb: 6.19
+
+[267]
+  region: Virginia
+  year: 2025
+  month: 3
+  avg_live_weight_lb: 6.2
+
+[268]
+  region: Virginia
+  year: 2025
+  month: 4
+  avg_live_weight_lb: 6.24
+
+[269]
+  region: Virginia
+  year: 2025
+  month: 5
+  avg_live_weight_lb: 6.43
+
+[270]
+  region: Virginia
+  year: 2025
+  month: 6
+  avg_live_weight_lb: 6.4
+
+[271]
+  region: Virginia
+  year: 2025
+  month: 7
+  avg_live_weight_lb: 6.31
+
+[272]
+  region: Virginia
+  year: 2025
+  month: 8
+  avg_live_weight_lb: 6.37
+
+[273]
+  region: Virginia
+  year: 2025
+  month: 9
+  avg_live_weight_lb: 6.49
+
+[274]
+  region: Virginia
+  year: 2025
+  month: 10
+  avg_live_weight_lb: 6.42
+
+[275]
+  region: Virginia
+  year: 2025
+  month: 11
+  avg_live_weight_lb: 6.24
+
+[276]
+  region: Virginia
+  year: 2025
+  month: 12
+  avg_live_weight_lb: 6.28

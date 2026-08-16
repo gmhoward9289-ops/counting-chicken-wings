@@ -1,0 +1,354 @@
+# (o>  counting chicken wings -- broiler presence by state, Census of Agriculture
+# generated: 2026-08-16
+# USDA Census of Agriculture, five-yearly, ALL 50 states -- no state is suppressed here. sales_head is a sales count, not the head_slaughtered/certified_klb in states.csv; the two are different USDA programmes and must not be summed or averaged together
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+[1]
+  region: Alabama
+  census_year: 2022
+  sales_head: 1183808730
+  operations: 2140
+  inventory: 216491903
+
+[2]
+  region: Alaska
+  census_year: 2022
+  sales_head: 11666
+  operations: 48
+  inventory: 4057
+
+[3]
+  region: Arizona
+  census_year: 2022
+  sales_head: 14754
+  operations: 43
+  inventory: 3741
+
+[4]
+  region: Arkansas
+  census_year: 2022
+  sales_head: 1045855386
+  operations: 1924
+  inventory: 205552568
+
+[5]
+  region: California
+  census_year: 2022
+  sales_head: 313662311
+  operations: 460
+  inventory: 50781157
+
+[6]
+  region: Colorado
+  census_year: 2022
+  sales_head: 757594
+  operations: 321
+  inventory: 118209
+
+[7]
+  region: Connecticut
+  census_year: 2022
+  sales_head: 223640
+  operations: 149
+  inventory: 51667
+
+[8]
+  region: Delaware
+  census_year: 2022
+  sales_head: 242072919
+  operations: 588
+  inventory: 50458117
+
+[9]
+  region: Florida
+  census_year: 2022
+  sales_head: 64995839
+  operations: 415
+  inventory: 12259925
+
+[10]
+  region: Georgia
+  census_year: 2022
+  sales_head: 1300052315
+  operations: 2018
+  inventory: 231349257
+
+[11]
+  region: Hawaii
+  census_year: 2022
+  sales_head: 8918
+  operations: 25
+  inventory: 12768
+
+[12]
+  region: Idaho
+  census_year: 2022
+  sales_head: 11815
+  operations: 155
+  inventory: 12403
+
+[13]
+  region: Illinois
+  census_year: 2022
+  sales_head: 1121454
+  operations: 548
+  inventory: 288560
+
+[14]
+  region: Indiana
+  census_year: 2022
+  sales_head: 51943087
+  operations: 715
+  inventory: 8174313
+
+[15]
+  region: Iowa
+  census_year: 2022
+  sales_head: 16718903
+  operations: 693
+  inventory: 2914861
+
+[16]
+  region: Kansas
+  census_year: 2022
+  sales_head: 33822
+  operations: 252
+  inventory: 19300
+
+[17]
+  region: Kentucky
+  census_year: 2022
+  sales_head: 262581637
+  operations: 796
+  inventory: 48826967
+
+[18]
+  region: Louisiana
+  census_year: 2022
+  sales_head: 135838909
+  operations: 310
+  inventory: 27083927
+
+[19]
+  region: Maine
+  census_year: 2022
+  sales_head: 351860
+  operations: 264
+  inventory: 133684
+
+[20]
+  region: Maryland
+  census_year: 2022
+  sales_head: 277949940
+  operations: 682
+  inventory: 60567658
+
+[21]
+  region: Massachusetts
+  census_year: 2022
+  sales_head: 177113
+  operations: 180
+  inventory: 36805
+
+[22]
+  region: Michigan
+  census_year: 2022
+  sales_head: 12609876
+  operations: 1332
+  inventory: 2277900
+
+[23]
+  region: Minnesota
+  census_year: 2022
+  sales_head: 41793592
+  operations: 1028
+  inventory: 7767645
+
+[24]
+  region: Mississippi
+  census_year: 2022
+  sales_head: 668652465
+  operations: 1057
+  inventory: 124374849
+
+[25]
+  region: Missouri
+  census_year: 2022
+  sales_head: 316092128
+  operations: 966
+  inventory: 56614738
+
+[26]
+  region: Montana
+  census_year: 2022
+  sales_head: 133389
+  operations: 91
+  inventory: 95107
+
+[27]
+  region: Nebraska
+  census_year: 2022
+  sales_head: 90851080
+  operations: 200
+  inventory: 15912621
+
+[28]
+  region: Nevada
+  census_year: 2022
+  sales_head: 2366
+  operations: 14
+  inventory: 887
+
+[29]
+  region: New Hampshire
+  census_year: 2022
+  sales_head: 115753
+  operations: 147
+  inventory: 19994
+
+[30]
+  region: New Jersey
+  census_year: 2022
+  sales_head: 311102
+  operations: 147
+  inventory: 52074
+
+[31]
+  region: New Mexico
+  census_year: 2022
+  sales_head: 3955
+  operations: 77
+  inventory: 6292
+
+[32]
+  region: New York
+  census_year: 2022
+  sales_head: 1538860
+  operations: 703
+  inventory: 460277
+
+[33]
+  region: North Carolina
+  census_year: 2022
+  sales_head: 972408186
+  operations: 2058
+  inventory: 193951790
+
+[34]
+  region: North Dakota
+  census_year: 2022
+  sales_head: 22391
+  operations: 82
+  inventory: 40292
+
+[35]
+  region: Ohio
+  census_year: 2022
+  sales_head: 123982907
+  operations: 1510
+  inventory: 20002853
+
+[36]
+  region: Oklahoma
+  census_year: 2022
+  sales_head: 220548594
+  operations: 670
+  inventory: 41322273
+
+[37]
+  region: Oregon
+  census_year: 2022
+  sales_head: 18594126
+  operations: 629
+  inventory: 3526079
+
+[38]
+  region: Pennsylvania
+  census_year: 2022
+  sales_head: 229556622
+  operations: 1493
+  inventory: 39986947
+
+[39]
+  region: Rhode Island
+  census_year: 2022
+  sales_head: 86722
+  operations: 34
+  inventory: 21881
+
+[40]
+  region: South Carolina
+  census_year: 2022
+  sales_head: 236547011
+  operations: 645
+  inventory: 54050467
+
+[41]
+  region: South Dakota
+  census_year: 2022
+  sales_head: 77046
+  operations: 125
+  inventory: 40795
+
+[42]
+  region: Tennessee
+  census_year: 2022
+  sales_head: 189393169
+  operations: 664
+  inventory: 35712972
+
+[43]
+  region: Texas
+  census_year: 2022
+  sales_head: 709585824
+  operations: 2086
+  inventory: 146162793
+
+[44]
+  region: Utah
+  census_year: 2022
+  sales_head: 13691
+  operations: 132
+  inventory: 8018
+
+[45]
+  region: Vermont
+  census_year: 2022
+  sales_head: 467308
+  operations: 274
+  inventory: 102822
+
+[46]
+  region: Virginia
+  census_year: 2022
+  sales_head: 292409636
+  operations: 1009
+  inventory: 55500718
+
+[47]
+  region: Washington
+  census_year: 2022
+  sales_head: 25904999
+  operations: 395
+  inventory: 5226564
+
+[48]
+  region: West Virginia
+  census_year: 2022
+  sales_head: 70182475
+  operations: 334
+  inventory: 10796272
+
+[49]
+  region: Wisconsin
+  census_year: 2022
+  sales_head: 56724981
+  operations: 1179
+  inventory: 8493377
+
+[50]
+  region: Wyoming
+  census_year: 2022
+  sales_head: 6525
+  operations: 70
+  inventory: 3813

@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- loss chain
-# generated: 2026-07-29
+# generated: 2026-08-16
 # survive_* are SURVIVING fractions, not loss fractions. applies_to='mass' stages cannot change a unit count
 # ----------------------------------------------------------------------------------------------------------
 
@@ -20,6 +20,36 @@
 
 [2]
   sequence: 10
+  slug: beef_dressing
+  label: Dressing (live weight to hot carcass)
+  phase: slaughter
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.6
+  survive_mode: 0.62
+  survive_hi: 0.64
+  confidence: industry
+  source: msstate-ext-beef-yield
+
+[3]
+  sequence: 10
+  slug: maple_boiling
+  label: Boiling (sap to syrup)
+  phase: processing
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.0116
+  survive_mode: 0.0233
+  survive_hi: 0.0581
+  confidence: industry
+  source: uvm-jones-rule-86
+
+[4]
+  sequence: 10
   slug: saffron_field_loss
   label: Flowers not picked in time
   phase: harvest
@@ -33,7 +63,22 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[3]
+[5]
+  sequence: 10
+  slug: silk_breeding_stock
+  label: Cocoons kept for breeding
+  phase: harvest
+  applies_to: individual
+  optional: 1
+  default_enabled: 0
+  product: all
+  survive_lo: 0.9
+  survive_mode: 0.95
+  survive_hi: 0.98
+  confidence: estimate
+  source: project-estimate-unsourced
+
+[6]
   sequence: 15
   slug: layer_mortality
   label: Layer flock mortality
@@ -48,7 +93,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[4]
+[7]
   sequence: 20
   slug: transport_doa
   label: Transport dead-on-arrival
@@ -63,7 +108,22 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[5]
+[8]
+  sequence: 20
+  slug: beef_carcass_to_packaged
+  label: Carcass to packaged beef
+  phase: processing
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.65
+  survive_mode: 0.7
+  survive_hi: 0.75
+  confidence: industry
+  source: sdsu-ext-fed-steer-yield
+
+[9]
   sequence: 20
   slug: saffron_drying
   label: Drying
@@ -78,7 +138,7 @@
   confidence: industry
   source: ufifas-hs661-saffron
 
-[6]
+[10]
   sequence: 30
   slug: postmortem_condemnation
   label: Post-mortem condemnation
@@ -93,7 +153,7 @@
   confidence: measured
   source: nass-poultry-slaughter-2025
 
-[7]
+[11]
   sequence: 40
   slug: wing_damage
   label: Wing damage and downgrade
@@ -108,7 +168,7 @@
   confidence: study
   source: wing-injuries-loading
 
-[8]
+[12]
   sequence: 45
   slug: egg_checks
   label: Checks (cracked shell, membrane intact)
@@ -123,7 +183,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[9]
+[13]
   sequence: 46
   slug: egg_leakers
   label: Leakers, dirties and loss
@@ -138,7 +198,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[10]
+[14]
   sequence: 50
   slug: grading_downgrade
   label: Grading and trim loss
@@ -153,7 +213,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[11]
+[15]
   sequence: 60
   slug: further_processing
   label: Further processing and marinade pickup
@@ -168,7 +228,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[12]
+[16]
   sequence: 70
   slug: distribution_shrink
   label: Distribution shrink (mass)
@@ -183,7 +243,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[13]
+[17]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -198,7 +258,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[14]
+[18]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -213,7 +273,7 @@
   confidence: estimate
   source: cold-chain-transport-trade
 
-[15]
+[19]
   sequence: 72
   slug: retail_shrink
   label: Supermarket shrink
@@ -228,7 +288,7 @@
   confidence: measured
   source: ers-supermarket-loss
 
-[16]
+[20]
   sequence: 73
   slug: egg_transit_breakage
   label: In-transit breakage
@@ -243,7 +303,7 @@
   confidence: industry
   source: eggs-unlimited-breakage
 
-[17]
+[21]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -258,7 +318,7 @@
   confidence: industry
   source: refed-foodservice
 
-[18]
+[22]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -273,7 +333,7 @@
   confidence: industry
   source: refed-foodservice
 
-[19]
+[23]
   sequence: 76
   slug: egg_kitchen_breakage
   label: Kitchen and consumer breakage
@@ -288,7 +348,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[20]
+[24]
   sequence: 80
   slug: cook_loss
   label: Cook loss
@@ -303,7 +363,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[21]
+[25]
   sequence: 90
   slug: plate_waste
   label: Post-consumer plate waste
