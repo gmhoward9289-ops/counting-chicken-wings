@@ -1,3 +1,8 @@
 [codespell]
-ignore-words-list = trough,unparseable,re-uses,pre-empted
+# The foreign-language entries are not typos: the corpus quotes German
+# (ist, oder, Presse), Portuguese (Anual, Parana), and French-derived
+# English (attache, unaccented in ASCII-only YAML) source titles and
+# wording verbatim -- correcting a quoted source's own words would break
+# the provenance the quotes exist to carry.
+ignore-words-list = trough,unparseable,re-uses,pre-empted,attache,ist,oder,presse,anual,parana
 skip = ./.git

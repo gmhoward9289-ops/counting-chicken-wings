@@ -1126,6 +1126,29 @@ facts:
     source: abpa-annual-report-2026
     placement: learning
     surprise: 3
+
+  - slug: brazil-per-capita-consumption
+    headline: Brazilians eat more chicken per person than Canadians - by the industry's own count
+    body: >-
+      ABPA's Annual Report 2026 puts Brazilian per-capita chicken
+      consumption at 46.7 kilograms per person for 2025 - about a third
+      more than Canada's 35.64 kg government-published "disappearance"
+      figure, though the two are not strictly comparable: Canada's is a
+      government supply-side calculation, Brazil's is the poultry trade
+      body's own decade-long series.
+
+      It ships as a fact for the same reason Canada's does: the source
+      publishes the ratio itself, dated to a named year, so no population
+      denominator needs to be loaded or assumed here (population stays
+      NULL for Brazil as for every non-US country). It carries 'industry'
+      grade where Canada's carries a government pedigree - the difference
+      between AAFC saying it and ABPA saying it - and, unlike Mexico's
+      five mutually contradictory per-capita figures or Israel's
+      dead-link world-ranking claim, no competing Brazilian figure
+      surfaced to contest it.
+    source: abpa-annual-report-2026
+    placement: both
+    surprise: 3
   # ---- China ------------------------------------------------------------
   # Fifth country. See docs/CHINA-PLAN.md. Every fact here is checked
   # against a source's own wording for the 禽肉 (all-poultry) vs. 鸡肉/肉鸡
@@ -1142,7 +1165,8 @@ facts:
       document. Every chicken-SPECIFIC figure in this corpus therefore
       comes from a source one step removed from China's own statistical
       agency: USDA's FAS attaché reports, which quote a "Meat, Chicken"
-      PSD table their own cover page annotates "Not official USDA data".
+      PSD table annotated "Not official USDA data" (the note sits directly
+      under the table itself).
       This is the same shape of gap Mexico's SIAP left, for a different
       reason - not unreachable, but aggregated across species in the one
       place this project could reach it directly.
@@ -1217,7 +1241,10 @@ facts:
       Computed here from the same PSD table's production and total-supply
       rows, the same way Canada's self-sufficiency was computed from two
       AAFC figures rather than published as a ratio directly - carried as
-      a fact rather than an output_stat_year row for that reason.
+      a fact rather than an output_stat_year row for that reason. The 2024
+      and 2025 inputs come from the cited CH2025-0170 table; the 2023
+      inputs (14,800 / 15,556 thousand tonnes) come from the prior
+      edition, CH2024-0108, whose sources.yaml entry records them.
     source: usda-fas-gain-ch2025-0170
     placement: both
     surprise: 3
@@ -1292,9 +1319,8 @@ facts:
       calorie-basis food self-sufficiency rate (38% the same year), which
       covers every food category at once and is not specific to chicken.
 
-      Domestic production itself is a genuine twelve-year streak: 2023 was
-      the twelfth consecutive record year for Japanese chicken meat output,
-      reaching 1.69 million tonnes on a bone-in-equivalent basis.
+      Domestic production itself reached 1.69 million tonnes in FY2023 on
+      a bone-in-equivalent basis, per the same Food Balance Sheet.
     source: maff-shokuryo-jukyuhyo-r5
     placement: result
     surprise: 2

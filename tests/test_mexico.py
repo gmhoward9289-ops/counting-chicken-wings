@@ -201,19 +201,33 @@ def test_no_world_rank_claim_leaked_into_the_corpus(conn):
     Mexico's rank, and the plan is explicit that no version of this claim
     should ship.
 
-    Scoped to Mexico's own facts (slug prefix), not the whole corpus: China's
-    research pass found exactly one world-rank claim with no competing
-    figure ("world's second largest producer", USDA FAS) rather than
-    Mexico's three-way conflict, and docs/CHINA-PLAN.md is explicit that
-    THAT claim is safe to publish. This test guards against Mexico's specific
-    contested claim leaking back in, not against every country ever
-    publishing a rank.
+    Corpus-wide with an explicit allowlist, not scoped to Mexico's slugs.
+    (An earlier version rescoped this to `slug LIKE 'mexico%'` when China's
+    legitimately-sourced "world's second largest producer" claim arrived --
+    but that silently converted a global invariant into a one-country one,
+    so any FUTURE country's unsourced rank claim would have shipped
+    unchallenged.) A rank claim is publishable only when one source states
+    it with no competing figure -- China's qualifies (USDA FAS, no
+    conflict; see docs/CHINA-PLAN.md), Brazil's production-vs-export
+    superlative distinction qualifies (ABPA's own World Market table) --
+    and each such fact must be named here deliberately, with the citation
+    burden the parametrized fact tests already enforce.
     """
-    hits = conn.execute(
-        "SELECT COUNT(*) FROM fact "
-        "WHERE body LIKE '%largest%producer%' AND slug LIKE 'mexico%'"
-    ).fetchone()[0]
-    assert hits == 0
+    allowed = {
+        "china-second-largest-producer",
+        "brazil-largest-exporter-not-largest-producer",
+    }
+    offenders = {
+        r["slug"] for r in conn.execute(
+            "SELECT slug FROM fact WHERE body LIKE '%largest%producer%'"
+            " OR body LIKE '%biggest%producer%'"
+        )
+    } - allowed
+    assert not offenders, (
+        f"unvetted world-rank claim(s) in fact bodies: {sorted(offenders)} - "
+        "either the claim is contested (remove it) or it is singly sourced "
+        "(add the slug to the allowlist here, deliberately)"
+    )
 
 
 # -- the facts ------------------------------------------------------------------

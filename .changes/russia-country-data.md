@@ -1,6 +1,3 @@
----
-bump: second
----
 ### Russia joins the corpus, thin and honestly graded
 
 `GET /api/output/RUS` now answers the wing question for Russia, at

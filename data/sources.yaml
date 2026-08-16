@@ -2248,8 +2248,10 @@
     see docs/research/library/poultry-japan.yaml for the exact URLs.
 
     Table 5(1), "飼養戸数・羽数" (farms and rearing/inventory bird count):
-    144,859 thousand birds nationally as of 2024-02-01, across 2,050 farms,
-    up 2.4% year on year. This is a STANDING-FLOCK snapshot (inventory_eoy),
+    144,859 thousand birds nationally as of 2024-02-01 (up 2.4% year on
+    year), across 2,050 farms (down 2.4% year on year -- the farm-count and
+    bird-count columns move in opposite directions and must not be swapped).
+    This is a STANDING-FLOCK snapshot (inventory_eoy),
     not throughput — the same distinction NASS draws for the US and the same
     one Mexico's plan could not resolve at all. Independently corroborates
     the USDA FAS GAIN report's "approximately 145 million birds... up two
