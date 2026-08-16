@@ -1,7 +1,7 @@
 # counting-chicken-wings
 
-+[![discussions](https://img.shields.io/github/discussions/gmhoward9289-ops/counting-chicken-wings)](https://github.com/gmhoward9289-ops/counting-chicken-wings/discussions)
-+
+[![discussions](https://img.shields.io/github/discussions/gmhoward9289-ops/counting-chicken-wings)](https://github.com/gmhoward9289-ops/counting-chicken-wings/discussions)
+
 **How many chickens does it take to make a dozen chicken wings?**
 
 The naive answer is 6. A chicken has two wings, so twelve wings is six chickens.
@@ -11,6 +11,10 @@ did *not* come from six chickens — they came from something closer to twelve
 different birds, and this program explains exactly why.
 
 > **It always takes 6 or more chickens. Never fewer. Usually close to 12.**
+
+The wing is the flagship question, not the whole corpus. The same arithmetic now
+runs on table eggs, ground beef, maple syrup, saffron and silk — see
+[Scope](#scope).
 
 ---
 
@@ -239,22 +243,24 @@ coverage and how much of the model still rests on estimates.
 ## Scope
 
 The question generalises to "how many X does it take to produce Y", and it is no
-longer only about chickens. Three subjects are live — broiler wings, table eggs,
-and saffron — and each answers the question by a different mechanism. Turkey is
-stubbed as an inactive species, waiting on figures rather than on code.
+longer only about chickens. Six subjects are live — broiler wings, table eggs,
+ground beef, maple syrup, saffron, and silk — and they do not all answer the
+question by the same mechanism. Vanilla is a species with a curing loss but no
+product yet, and turkey is stubbed as an inactive species; both wait on figures
+rather than on code.
 
 The abstraction splits three ways on yield:
 
 | Mode | Floor comes from | Subject |
 |---|---|---|
-| `countable` | anatomy — `ceil(n ÷ units_per_individual)`, the 6-or-more logic | a wing belongs to one bird; a crocus has exactly three stigmas |
-| `recurring` | a rate over **time** | a hen lays at most one egg a day, so a same-day dozen needs twelve hens |
-| `continuous` | a reported ratio, and the ceiling collapses onto the floor | one gram of saffron is the combined stigmas of ~150 flowers, so no unit traces to one individual |
+| `countable` | anatomy — `ceil(n ÷ units_per_individual)`, the 6-or-more logic | a wing belongs to one bird; a crocus has exactly three stigmas; one cocoon comes off one silkworm |
+| `recurring` | a rate over **time** | a hen lays at most one egg a day, so a same-day dozen needs twelve hens; a tapped maple yields a fraction of a gallon per season |
+| `continuous` | a reported ratio, and the ceiling collapses onto the floor | one gram of saffron is the combined stigmas of ~150 flowers, and a silk necktie is drawn from pooled filament, so no unit traces to one individual |
 
-The mixing model applies to all three: a gallon of milk from a bulk tank holds
-milk from hundreds of cows for exactly the reason a dozen wings comes from
-twelve chickens. Eggs are the case where it *cannot* apply — the floor has
-already risen to meet the ceiling, leaving mixing nothing to move.
+The mixing model applies to all three: a pound of ground beef holds trim from
+dozens of carcasses for exactly the reason a dozen wings comes from twelve
+chickens. Eggs are the case where it *cannot* apply — the floor has already
+risen to meet the ceiling, leaving mixing nothing to move.
 
 ## Honesty about the data
 
@@ -269,9 +275,9 @@ Corpus: **111 sources**, 93 facts, 12 products across 7 active species, 36 table
 <!-- END GENERATED -->
 
 The estimate share has risen as the corpus grew, and that is expected rather
-than a regression: wings rest on an enumerated federal survey, while eggs and
-saffron reach into subjects no agency counts. A figure with no NASS behind it is
-still worth holding if its grade says so.
+than a regression: wings rest on an enumerated federal survey, while saffron,
+silk and maple reach into subjects no US agency counts. A figure with no NASS
+behind it is still worth holding if its grade says so.
 
 The single biggest source of uncertainty is not a processing figure at all. It's
 whether "a dozen wings" means twelve whole wings or twelve menu pieces. That one
