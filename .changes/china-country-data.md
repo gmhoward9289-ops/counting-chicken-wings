@@ -1,6 +1,3 @@
----
-bump: second
----
 ### China joins the corpus — chicken meat output, industry grade, with an unresolved conflict named rather than hidden
 
 Added China (CHN) as a fifth country: national chicken meat production for

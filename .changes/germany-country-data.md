@@ -1,6 +1,3 @@
----
-bump: second
----
 ### Germany added: broiler slaughter and meat production, four years, `measured` grade
 
 Destatis's own annual "Fleischproduktion" press release isolates Jungmasthuhn

@@ -1,6 +1,3 @@
----
-bump: second
----
 ### Added Brazil
 
 Brazil (BRA) joins the corpus as a fifth country, at `measured` grade on
