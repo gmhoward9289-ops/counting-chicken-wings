@@ -130,6 +130,64 @@ products:
     # contain. The floor is 1 because one animal is enough, not because one is
     # typical.
     is_anatomical_constant: 0
+    # WHY THIS FIELD EXISTS -- READ BEFORE CHANGING units_per_individual ABOVE
+    # --------------------------------------------------------------------
+    # units_per_individual (670 patties/animal) is the right number for the
+    # FLOOR: it says how much of an animal one patty needs. It is the WRONG
+    # number for the mixing draw, and using it there is a 2026-08 bug this
+    # field fixes. The mixing formula treats "one draw" as one physically
+    # indivisible thing traceable to at most one individual -- true for a
+    # wing, false for a patty. A patty is not one intact 1/670th slice of one
+    # animal; it is a scoop of a slurry already blended, at the grinder, from
+    # every animal in that shift's combo bins. Drawing "1 unit" at
+    # patty-scale asked the pooling formula "how many animals gave me one
+    # 1/670th share", got the honest answer to THAT question (about one), and
+    # that got printed as the app's headline patty answer -- contradicting
+    # this project's own best-sourced figure one file over (the DNA-measured
+    # grind-batch pool of 411-1,367 animals, mixing_ground_beef.yaml).
+    #
+    # This field re-expresses the mixing draw at the grinder's actual
+    # granularity instead: how many separately-sourced particles make up one
+    # patty. Once the draw is that many draws instead of one, the SAME
+    # unmodified pooling formula that gives "6 chickens" for a dozen wings
+    # gives "most of the batch" for a patty -- which is what it should give,
+    # because that is what grinding actually does.
+    #
+    # THE NUMBER, AND WHY IT IS GRADED estimate RATHER THAN ANYTHING STRONGER
+    # --------------------------------------------------------------------
+    # No institutional source for "grams per grind particle" was found and
+    # verified. Checked and rejected: an MDPI paper describing a 2.4mm final
+    # grinding-plate disc (Berger et al. 2022, Applied Sciences 12(15):7377)
+    # could not be fetched past MDPI's bot-blocking (HTTP 403, confirmed with
+    # this project's own source-verify tooling) -- a citation nobody on this
+    # project has actually read does not belong here, however plausible the
+    # search-engine snippet looked.
+    #
+    # In its place: commercial meat-grinder plates are widely reported (trade
+    # and retailer pages, not a checked institutional source) to run roughly
+    # 3-10mm hole diameter across coarse-to-fine grinds. Taking 5mm as a round
+    # midpoint, modelling one particle as a short cylinder of that diameter
+    # (length = diameter) at ground beef's typical density of about 1.05
+    # g/cm^3 gives roughly 0.10 g per particle, and a 113.4g quarter-pound
+    # patty (0.25 lb, see below) is then about 1,100 particles.
+    #
+    #   1,100 = round(113.4 / (pi * (0.25)^2 * 0.5 * 1.05))
+    #
+    # This number is deliberately NOT precise, and the mixing model does not
+    # need it to be: saturation_threshold (model.py) is the project's own
+    # proof that once a draw count is large relative to the pool it is drawn
+    # from, the answer stops depending on the exact draw count at all. At
+    # 1,100 draws against a pool of 411-1,367, the batch is not fully
+    # saturated -- swept from 3mm to 10mm particles the answer moves within
+    # "most of the batch", never back toward "about one". That range, not the
+    # midpoint, is the actual claim: use the coarsest end (10mm, ~140
+    # particles/patty) as the conservative floor for this figure if a
+    # skeptical reading is wanted.
+    #
+    # A stronger citation for either the plate size or the particle-to-patty
+    # arithmetic is a real, worthwhile follow-up -- this comment is written so
+    # the next pass can replace the number without re-deriving the reasoning.
+    mixing_subunits_per_unit: 1100
     source: sdsu-ext-fed-steer-yield
     notes: >-
       "This 150 -185 pounds of lean trim would likely be packaged as ground

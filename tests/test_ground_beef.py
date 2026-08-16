@@ -123,6 +123,21 @@ def test_the_patty_claims_no_anatomical_constant():
     assert prod["yield_mode"] == "continuous"
 
 
+def test_the_corpus_carries_the_patty_granularity_fix():
+    conn = dbm.connect()
+    prod = dbm.get_product(conn, "ground_beef_patty")
+    assert prod["mixing_subunits_per_unit"] is not None
+    assert prod["mixing_subunits_per_unit"] > 1
+
+
+def test_a_wing_carries_no_subunit_granularity():
+    """NULL means the unit IS the atomic thing the draw assumes -- correct
+    for a wing, and it must stay that way."""
+    conn = dbm.connect()
+    prod = dbm.get_product(conn, "whole_wing")
+    assert prod["mixing_subunits_per_unit"] is None
+
+
 def test_ground_beef_has_its_own_supply_chain():
     """default_supply_chain has no cross-species fallback by design, so cattle
     cannot quietly inherit the wing cascade."""
@@ -180,3 +195,74 @@ def test_the_mass_chain_cannot_move_the_required_count():
                                   chain_slug="commodity_ground_beef")
     res = run(1, PATTIES_PER_ANIMAL, stages, BATCH, aggregate_units=True)
     assert res.required == pytest.approx(res.floor, rel=1e-9)
+
+
+# ---------------------------------------------------------------------------
+# The mixing draw at PATTY scale, not at ANIMAL-SHARE scale
+# ---------------------------------------------------------------------------
+#
+# Every test above forces `aggregate_units=True`, which is not what
+# production actually does for this product. `unit_is_aggregate(670)` is
+# False -- one animal's whole output (670 patties) is far MORE than one
+# unit, the opposite of saffron's "150 flowers per gram" -- so the real API
+# and CLI call `run()` with `aggregate_units` left to derive, and it derives
+# False. That path drew exactly 1 unit (one patty) from the mixing cascade,
+# treating the patty the way the model treats a wing: one indivisible thing
+# that can trace to at most one individual. It cannot -- a patty is a scoop
+# of an already-blended slurry -- and the tests above never caught it
+# because none of them exercise this branch. `mixing_subunits_per_unit`
+# fixes it by re-expressing the draw at the grinder's actual granularity
+# instead. See its comment in schema.sql and in taxonomy_ground_beef.yaml.
+
+PARTICLES_PER_PATTY = 1100.0
+
+
+def test_production_does_not_treat_a_patty_as_an_aggregate_unit():
+    """Pins the dispatch itself. If `unit_is_aggregate` ever starts treating
+    ground beef as an aggregate product, the fix below silently stops
+    applying and the patty answer reverts to 1 with no test noticing."""
+    from counting_chicken_wings.model import unit_is_aggregate
+    assert unit_is_aggregate(PATTIES_PER_ANIMAL) is False
+
+
+def test_one_patty_is_not_capped_at_one_animal_once_granularity_is_real():
+    """The actual bug, on the actual production code path: no
+    `aggregate_units` override, `mixing_subunits_per_unit` supplied the way
+    the API and CLI supply it from the corpus. A patty drawn from an
+    889-animal batch should land well above 1 and well below the full pool
+    -- this is a partial draw, not the whole batch."""
+    res = run(1, PATTIES_PER_ANIMAL, [], BATCH,
+              mixing_subunits_per_unit=PARTICLES_PER_PATTY)
+    assert res.distinct_ceiling > 1
+    assert 1.0 < res.distinct_mean < 889.0
+
+
+def test_the_ceiling_is_bounded_by_the_pool_not_by_the_unit_count():
+    """A patty can never be shown to contain more distinct animals than
+    existed in the batch it was drawn from, no matter how finely the draw
+    is expressed."""
+    res = run(1, PATTIES_PER_ANIMAL, [], BATCH,
+              mixing_subunits_per_unit=PARTICLES_PER_PATTY)
+    assert res.distinct_ceiling <= 889.0
+
+
+def test_a_bigger_particle_count_moves_the_answer_toward_the_pool():
+    """The saturation property the project's own `saturation_threshold`
+    relies on elsewhere: more, finer draws push distinct up toward the pool
+    size. Not asserting a specific value -- the exact particle count is an
+    estimate -- only the direction, which the fix does not get to be wrong
+    about."""
+    coarse = run(1, PATTIES_PER_ANIMAL, [], BATCH,
+                 mixing_subunits_per_unit=140.0)   # ~10mm particles
+    fine = run(1, PATTIES_PER_ANIMAL, [], BATCH,
+               mixing_subunits_per_unit=4200.0)    # ~3.2mm particles
+    assert coarse.distinct_mean < fine.distinct_mean
+
+
+def test_wings_are_untouched_by_the_granularity_fix():
+    """A wing is genuinely one indivisible piece from one bird --
+    `mixing_subunits_per_unit` must never be applied to it, and omitting the
+    argument (as every wing call site does) must reproduce the old
+    behaviour exactly."""
+    wings = run(12, 2.0, [], BATCH)
+    assert wings.distinct_ceiling == 12.0

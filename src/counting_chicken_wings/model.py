@@ -1025,6 +1025,7 @@ def run(
     params: MixingParams | None = None,
     param_bands: dict[str, tuple[str, float, float, float, str]] | None = None,
     correlated_groups: list[CorrelatedGroup] | None = None,
+    mixing_subunits_per_unit: float | None = None,
 ) -> Result:
     """Compute floor, required, and distinct for one question.
 
@@ -1071,6 +1072,15 @@ def run(
     each held their own copy of the condition, all three said
     `yield_mode == "continuous"`, and all three were wrong about maple on
     the same day.
+
+    `mixing_subunits_per_unit` is the mirror image of `aggregate_units`: it
+    says one unit is not itself the atomic thing the mixing draw assumes, but
+    a homogenate made of many smaller, already-blended particles (a ground
+    beef patty is not one intact slice of one animal; it is a scoop of a
+    slurry). Comes from `product.mixing_subunits_per_unit` -- see the field's
+    comment in schema.sql for why a wing does not need this and a patty does.
+    None (almost every product) leaves the draw at the unit's own scale, as
+    before.
 
     `params` carries the mixing model's scalar parameters -- separation
     efficiency, scoop size, adjacency retention. They live in
@@ -1151,6 +1161,18 @@ def run(
         shares = max(1, ceil(floor))
         draw_units, draw_upi = shares, 1.0
         drawn_label = f"{shares:,} individual-shares"
+    elif mixing_subunits_per_unit and mixing_subunits_per_unit > 1:
+        # The mirror-image error, and the one a 2026-08 audit caught in
+        # ground beef: a unit here is not one intact thing traceable to at
+        # most one individual, it is a homogenate of many already-blended
+        # sub-units. Treating "1 patty = 1 draw" silently assumes it is a
+        # single indivisible piece from one animal, which is exactly the
+        # WING assumption and exactly what grinding destroys. Re-express the
+        # draw at the sub-unit (particle) scale instead -- the pooling
+        # formula does not change, only the granularity it is asked at.
+        draw_units = units_requested * mixing_subunits_per_unit
+        draw_upi = units_per_individual * mixing_subunits_per_unit
+        drawn_label = f"{draw_units:,.0f} mixing sub-units"
     else:
         draw_units, draw_upi = units_requested, units_per_individual
         drawn_label = f"{units_requested} units"
@@ -1203,8 +1225,17 @@ def run(
         paired_individuals=distinct_in_container,
         draw_units=draw_units,
         draw_upi=draw_upi,
-        distinct_ceiling=(ceil(floor) if aggregate_units
-                          else float(units_requested)),
+        distinct_ceiling=(
+            ceil(floor) if aggregate_units
+            # A homogenate's ceiling is not "how many units you asked for"
+            # -- that is the wing assumption, and a patty is not one wing.
+            # It is bounded by the pool it was actually drawn from: you can
+            # never represent more individuals than existed upstream, no
+            # matter how finely the draw is expressed.
+            else min(float(draw_units), distinct_in_container)
+            if mixing_subunits_per_unit and mixing_subunits_per_unit > 1
+            else float(units_requested)
+        ),
         trace=trace,
         mixing_notes=notes,
         confidence_level=confidence_level,

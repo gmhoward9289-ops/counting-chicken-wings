@@ -206,6 +206,35 @@ CREATE TABLE product (
     -- floor a genuine floor rather than an average.
     is_anatomical_constant INTEGER NOT NULL DEFAULT 0,
 
+    -- How many physically-indivisible mixing sub-units make up ONE of this
+    -- product's units, when the product is a homogenate ground/blended at a
+    -- grain finer than the unit itself. NULL (the default, and correct for
+    -- every countable/atomic product) means the unit IS the atomic thing the
+    -- mixing draw assumes -- true for a wing, an egg, a stigma: each is one
+    -- indivisible piece traceable to exactly one individual, so "1 unit = 1
+    -- draw" is physically correct.
+    --
+    -- Grinding breaks that assumption. A ground-beef patty is not one intact
+    -- piece from one animal; it is a scoop of a slurry that was already
+    -- shredded and blended from hundreds of animals' trim before it was ever
+    -- formed. Drawing "1 unit = 1 draw" for a patty silently treats it like a
+    -- wing -- one atomic thing that can trace to at most one individual --
+    -- which is the exact category error a 2026-08 audit caught: the model
+    -- reported "at least 1 animal" as the PATTY'S headline answer, when the
+    -- only measured figure this corpus holds (Hu et al. 2012, DNA
+    -- mark-recapture) puts a whole grind BATCH at 411-1,367 animals. A patty
+    -- drawn from that batch at the batch's real mixing grain is not one
+    -- draw; it is thousands, and the same pooling formula that gives "6
+    -- chickens" for wings gives "most of the batch" once it is asked at the
+    -- right granularity.
+    --
+    -- This is set once per product, in the finer unit (e.g. grind particles
+    -- per patty), NOT re-derived from mass here -- the arithmetic belongs in
+    -- the taxonomy file next to its citation, same as every other figure in
+    -- this schema.
+    mixing_subunits_per_unit REAL CHECK (mixing_subunits_per_unit IS NULL
+                                          OR mixing_subunits_per_unit > 1),
+
     source_id           INTEGER NOT NULL REFERENCES source(id),
     notes               TEXT,
 

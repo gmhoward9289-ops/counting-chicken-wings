@@ -427,6 +427,7 @@ def calculate(
             param_bands=dbm.load_mixing_param_bands(conn),
             correlated_groups=dbm.load_correlated_groups(
                 conn, prod["species_slug"]),
+            mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
         )
 
         slugs = list({s.source_slug for s in res.trace if s.source_slug})
@@ -594,6 +595,7 @@ def scientific(
             param_bands=dbm.load_mixing_param_bands(conn),
             correlated_groups=dbm.load_correlated_groups(
                 conn, prod["species_slug"]),
+            mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
         )
 
         kept = [s for s in loss
@@ -728,6 +730,7 @@ def variance(
             anatomical=bool(prod["is_anatomical_constant"]),
             floor_source=dbm.product_source_slug(conn, prod["slug"]),
             params=params,
+            mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
         )
 
         dec = variance_decomposition(

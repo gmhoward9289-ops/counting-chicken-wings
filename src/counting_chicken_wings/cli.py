@@ -156,6 +156,7 @@ def cmd_count(args) -> int:
         # Lets the Monte Carlo loop resample these too (#98), not just pool
         # sizes.
         param_bands=dbm.load_mixing_param_bands(conn),
+        mixing_subunits_per_unit=product["mixing_subunits_per_unit"],
     )
 
     # ---- the answer ----------------------------------------------------

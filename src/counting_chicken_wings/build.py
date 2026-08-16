@@ -208,6 +208,7 @@ class Builder:
                 rate_label=p.get("rate_label"),
                 cap_note=p.get("cap_note"),
                 is_anatomical_constant=p.get("is_anatomical_constant", 0),
+                mixing_subunits_per_unit=p.get("mixing_subunits_per_unit"),
                 source_part=p.get("source_part"),
                 named_part=p.get("named_part"),
                 named_part_content=p.get("named_part_content", 1.0),
