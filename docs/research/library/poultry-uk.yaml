@@ -1,0 +1,343 @@
+# Source library — United Kingdom poultry.
+#
+# Produced by the manual pass of 2026-08-16, following the same workflow as
+# poultry-israel.yaml: search, verify every URL, then probe what each
+# document can actually answer. Every entry below was actually fetched
+# (curl or a real download) on the date shown — nothing here is a guess at
+# what a URL probably contains.
+#
+# Headline finding, and the opposite of Israel's: DEFRA publishes a real
+# head-slaughtered series, in head, government-graded, UK-wide, monthly
+# back to 1994. This is the UK's NASS-equivalent working exactly as hoped,
+# which is not what happened with CBS. The catch is recency, not existence:
+# since July 2025 DEFRA stopped publishing the England&Wales / Scotland /
+# Northern Ireland breakdown "to protect commercial confidentiality across
+# the nations" -- so a UK-wide total is available for every year, but a
+# constituent-nation split is only available for data before that cutoff,
+# and even then it was an England&Wales-vs-UK split, not a clean four-nation
+# one. That is why data/output_uk.yaml ships national totals only.
+
+- url: https://www.gov.uk/government/statistics/poultry-and-poultry-meat-statistics
+  title: Poultry and poultry meat statistics (collection page)
+  publisher: Department for Environment, Food & Rural Affairs (DEFRA)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, uk]
+  covers:
+    - links_to_current_datasets
+  does_not_cover:
+    - headline_figures_in_page_text   # the page is a links page, not a table
+  confidence_ceiling: measured
+  notes: >-
+    The collection page for DEFRA's monthly "Accredited Official Statistics"
+    poultry release. Two ODS spreadsheets are linked from the latest edition
+    (data for June 2026, published 23 July 2026):
+
+      poultry_slaughter_dataset_20260723.ods -- slaughter numbers, average
+      liveweights, poultry meat production
+      hatcheries_dataset_20260723.ods -- chicks/eggs placed by UK hatcheries
+
+    Both are real OpenDocument spreadsheets (a zip of XML, same shape as the
+    CBS .xlsx files), parsed here with the `odf` Python package rather than
+    openpyxl.
+
+- url: https://assets.publishing.service.gov.uk/media/6a5f4b72077674c806e04a21/poultry_slaughter_dataset_20260723.ods
+  title: >-
+    UK poultry slaughterings, weights and poultry meat production --
+    monthly dataset (published 2026-07-23)
+  publisher: Department for Environment, Food & Rural Affairs (DEFRA)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/vnd.oasis.opendocument.spreadsheet
+  bytes: 188202
+  subjects: [poultry, uk]
+  covers:
+    - head_slaughtered_per_year         # THE figure CBS could not provide
+    - head_slaughtered_per_month
+    - average_liveweight_per_bird       # England & Wales only, see caveat
+    - meat_production_tonnes_carcase_weight
+  does_not_cover:
+    - nation_level_breakdown_since_2025q3   # see notes
+    - average_liveweight_uk_wide            # liveweight survey is E&W only
+  confidence_ceiling: measured
+  notes: >-
+    Ten sheets: Cover_sheet, Information, Slaughterings_Monthly,
+    Slaughterings_Weekly_Averages, Slaughterings_Annual, Liveweights_Monthly,
+    Liveweights_Annual, Production_Monthly, Production_Weekly_Averages,
+    Production_Annual. Units stated on each sheet, not implied.
+
+    HEAD SLAUGHTERED, UK-wide, million birds, from Slaughterings_Annual
+    (column "Broilers UK"): 2024 = 1,131.6, 2023 = 1,118.3, 2022 = 1,100.3
+    (a 53-week statistical year, marked **), 2021 = 1,123.2, 2020 = 1,096.7.
+    2025 = 1,129.8 (the England & Wales sub-column is marked [c], confidential,
+    for 2025 -- only the UK total survives). Series runs back to 1994.
+
+    MEAT PRODUCTION, UK-wide, thousand tonnes carcase weight, from
+    Production_Annual (column "Broilers"): 2024 = 1,832.7, 2023 = 1,798.6,
+    2022 = 1,783.1, 2025 = 1,860.4 (provisional in effect -- DEFRA's own
+    figures are always subject to revision per the Information sheet).
+    Whole-bird-equivalent carcase weight, net of offal, per the sheet's own
+    footnote 1 -- so this is a stated, not assumed, weight basis, unlike the
+    Israeli CBS tonnage that never says live vs ready-to-cook.
+
+    AVERAGE LIVEWEIGHT is where a real caveat lives. Liveweights_Annual is
+    explicitly "Average Liveweights per bird at point of slaughter in
+    England & Wales" -- not UK-wide. 2024 = 2.3 kg, 2025 = 2.4 kg (broilers).
+    The Information sheet explains why: liveweight comes from "Defra's
+    monthly survey of England and Wales poultry slaughterhouses... around 26
+    respondents", with Scotland and Northern Ireland running their own
+    similar-but-separate surveys that are not merged into this column. So
+    the average liveweight figure is E&W-scoped where the head-slaughtered
+    and production figures are UK-wide -- a coverage mismatch to carry as a
+    caveat if the two are ever combined into a derived kg-per-head figure the
+    way Israel's industry weight was derived.
+
+    NATION BREAKDOWN CEASED, and the sheet documents it itself, in the
+    Information tab: "From July 2025 onwards only UK totals will be published
+    for the [poultry slaughter/hatcheries] data to protect commercial
+    confidentiality across the nations. No country breakdowns are available
+    for this dataset." Before that date the breakdown was England & Wales
+    (as one figure, from the FSA survey) versus UK total -- from which
+    Scotland+NI can be inferred by subtraction, but Scotland and Northern
+    Ireland were never reported individually in this file even before the
+    cutoff. So there has never been a clean four-nation split here, and there
+    is now no split at all. This is why data/output_uk.yaml carries national
+    rows only and no `districts:` block -- unlike Israel, which does have a
+    genuine subnational table.
+
+    METHODOLOGY CHANGED TWICE, and the sheet says so rather than leaving it
+    to be discovered: pre-July-2020 figures for England & Wales were modelled
+    from hatchery chick placements and import data using industry mortality
+    assumptions; from July 2020 they come from the Food Standards Agency's
+    own slaughterhouse survey; from January 2024 the "statistical month"
+    convention (a 5-4-4-week quarter pattern) was replaced with calendar
+    months. All three are flagged in the Information sheet as reasons not to
+    over-read month-to-month or pre/post comparisons.
+
+- url: https://assets.publishing.service.gov.uk/media/6a5f4b7e4b37944bd6b676b8/hatcheries_dataset_20260723.ods
+  title: UK chick and poultry placings -- monthly dataset (published 2026-07-23)
+  publisher: Department for Environment, Food & Rural Affairs (DEFRA)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/vnd.oasis.opendocument.spreadsheet
+  bytes: 187309
+  subjects: [poultry, uk]
+  covers:
+    - broiler_chicks_placed_head
+    - layer_chicks_placed_head
+    - turkey_poults_placed_head
+    - eggs_set_head
+    - gb_vs_ni_split_broiler_chicks    # through 2024 only, see notes
+  does_not_cover:
+    - head_slaughtered      # placements, not slaughter -- same Israel trap
+  confidence_ceiling: measured
+  notes: >-
+    UK_Placings_Annual: Commercial Broilers UK, million chicks: 2024 =
+    1,163.1, 2023 = 1,129.5, 2022 = 1,145.9, 2021 = 1,181.8. 2025 = 1,157.8
+    (UK total only; the GB/NI split is marked [c] confidential for 2025,
+    same pattern as the slaughter file).
+
+    A genuine constituent-level split DOES exist here for years through
+    2024 -- Commercial Broilers GB and Commercial Broilers NI as separate
+    columns (2024: GB 1,027.9m, NI 135.2m, summing to the UK 1,163.1m). This
+    is Great Britain versus Northern Ireland, not the four nations
+    (England/Scotland/Wales/NI), and it stops being published at exactly the
+    same July-2025 cutoff as the slaughter file. NOT loaded into
+    data/output_uk.yaml: chicks_placed is already a secondary/proxy measure
+    here (see the head-slaughtered figure above, which is what the project
+    needs), and loading a GB/NI split would need a new `region_level` value
+    the schema does not have (`'total','district','council'` only) for a
+    measure that is not the priority figure. Recorded here so a future pass
+    does not have to re-discover that the split exists and where it ends.
+
+    PLACEMENTS ARE NOT SLAUGHTER, same distinction as Israel's CBS quarterly
+    chicks_placed figure and worth restating precisely because DEFRA's own
+    numbers make the gap visible: 1,163.1m chicks placed in 2024 against
+    1,131.6m broilers slaughtered the same year is consistent with normal
+    grow-out mortality (~2.7%), not a discrepancy to explain away.
+
+- url: https://www.gov.uk/government/statistics/agriculture-in-the-united-kingdom-2024
+  title: Agriculture in the United Kingdom 2024
+  publisher: DEFRA (jointly with the devolved administrations' statisticians)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [uk, food_security, self_sufficiency]
+  covers:
+    - poultry_meat_self_sufficiency_ratio
+  does_not_cover:
+    - per_capita_consumption
+  confidence_ceiling: measured
+  notes: >-
+    Downloaded the full PDF (agriculture-in-the-uk-2024.pdf, 3.28 MB) and
+    read Table 14.2, "Food Production to Supply Ratio, 2022 to 2024", on the
+    page numbered 188 (PDF page 188 of 194). Poultry meat: 84% (2022), 82%
+    (2023), 83% (2024, provisional). Table 14.2's own footnote states this
+    ratio is calculated by VOLUME for individual products (unlike the
+    farmgate-value-based ratio used for the whole-food-chain headline
+    figure), so it is directly comparable to the head/tonnage figures above
+    rather than a different kind of number wearing the same name.
+
+    This is the UK's answer to the self-sufficiency question the Israel plan
+    flagged as "reported as a net surplus producer, which is unusual and
+    interesting" -- the UK is the opposite case, an 83% self-sufficient
+    importer of the remainder, which is the more typical shape and worth
+    stating as the contrast rather than assuming parity.
+
+- url: https://bulks-faostat.fao.org/production/Production_Crops_Livestock_E_All_Data.zip
+  title: FAOSTAT bulk download -- Production, Crops and Livestock (QCL)
+  publisher: FAO
+  kind: institutional
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/zip
+  bytes: 25138572
+  subjects: [poultry, international]
+  covers:
+    - chicken_meat_production_tonnes
+    - chicken_head_slaughtered
+    - chicken_carcase_weight_per_bird
+  does_not_cover:
+    - subnational_uk_data
+    - value_in_gbp
+  confidence_ceiling: institutional
+  notes: >-
+    OPEN NOW. This is the same URL ISRAEL-PLAN.md and poultry-israel.yaml
+    recorded as returning 403 on 2026-07-29; it returns 200 and a real
+    160 MB (uncompressed) zip on 2026-08-16. Whatever blocked it before is
+    not blocking it now -- worth re-trying on any future country rather than
+    assuming FAOSTAT stays closed.
+
+    UK is area code 229 ('826, "United Kingdom of Great Britain and Northern
+    Ireland"). Item 1058 is "Meat of chickens, fresh or chilled" -- this is
+    the FAOSTAT category that maps onto our broiler species, not item 1057
+    ("Chickens", which is stocks/live-bird data).
+
+    Element 5510 (Production, tonnes) for 2024: 1,852,000. Element 5321
+    (Producing Animals/Slaughtered, 1000 head) for 2024: 1,178,200 (i.e.
+    1,178.2 million head). Element 5424 (Yield/Carcass Weight, g/An) for
+    2024: 1,572 -- a derived figure, not an independent one, since it is
+    just production divided by head count in FAOSTAT's own methodology.
+
+    CROSS-CHECK AGAINST DEFRA, and it holds up well. DEFRA's broiler +
+    boiling fowl for 2024: head 1,131.6m + 24.7m = 1,156.3m against
+    FAOSTAT's 1,178.2m (1.9% apart); tonnes 1,832.7kt + 34.5kt = 1,867.2kt
+    against FAOSTAT's 1,852.0kt (0.8% apart). FAOSTAT's "chicken meat"
+    aggregates slightly differently than DEFRA's broiler/boiling-fowl split
+    (methodology and reporting-year cutoffs differ), so a few percent of
+    daylight between two independently-compiled series measuring
+    substantially the same thing is corroboration, not an error to chase
+    down further -- the same standard applied to Israel's marketing-vs-output
+    gap.
+
+    NOT LOADED as the primary figure, because DEFRA is the more granular,
+    UK-specific, and more current source (FAOSTAT's own methodology derives
+    partly from DEFRA/Eurostat submissions in any case). Recorded here as
+    the cross-check that makes DEFRA's number credible independent of
+    DEFRA's own revisions process, the same role CBS-vs-industry played for
+    Israel.
+
+- url: https://www.britishpoultry.org.uk/statistics/
+  title: British Poultry Council statistics page (guessed path)
+  publisher: British Poultry Council
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 404
+  subjects: [uk, poultry]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    DEAD. The BPC's public site does not have statistics at this path, and
+    a general web search for BPC-published head-count or production figures
+    returned only third parties (Wikipedia, trade press) summarising DEFRA's
+    own numbers rather than an independent BPC series. Recorded so the next
+    attempt does not re-guess this path. What BPC DOES do, per its Wikipedia
+    entry and DEFRA's own Information sheet, is interpret DEFRA's chick
+    placings data as a leading indicator for the industry -- it is a reader
+    of the government series, not an independent publisher of one, which
+    settles the "does BPC have its own numbers" question for this project.
+
+- url: https://ahdb.org.uk/poultry
+  title: AHDB poultry sector page (guessed path)
+  publisher: Agriculture and Horticulture Development Board (AHDB)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 404
+  subjects: [uk, poultry]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    DEAD path. AHDB's own site materials describe poultry (specifically
+    hatchery chick-placings data) as a feed-demand indicator for its
+    Cereals & Oilseeds sector -- AHDB does not run a poultry sector team the
+    way it runs pork/beef/dairy/cereals, and no AHDB-published poultry
+    production or slaughter series was found. Confirms DEFRA rather than
+    AHDB is the right primary for this project, mirroring the Israel plan's
+    expectation that DEFRA would be "the equivalent of NASS" for the UK.
+
+- url: https://www.fas.usda.gov/regions/united-kingdom
+  title: USDA FAS United Kingdom regional page
+  publisher: USDA Foreign Agricultural Service
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 403
+  subjects: [uk, trade]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    403 to every fetcher tried, WebFetch and curl with a browser user-agent
+    alike -- the same Akamai-style block ISRAEL-PLAN.md hit on
+    gov.il/moag.gov.il. Needs a human with a real browser, not a fetch.
+
+- url: https://apps.fas.usda.gov/psdonline/circulars/livestock_poultry.pdf
+  title: "Livestock and Poultry: World Markets and Trade"
+  publisher: USDA Foreign Agricultural Service
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 1482432
+  subjects: [uk, international, trade]
+  covers:
+    - beef_pork_swine_country_tables    # UK appears in these
+  does_not_cover:
+    - broiler_or_chicken_meat_tables    # the word "Broiler" never appears
+  confidence_ceiling: institutional
+  notes: >-
+    Downloaded and searched page by page. The document has full country
+    breakdown tables for beef, pork and swine (UK appears individually --
+    e.g. UK beef imports 390kt in 2024, pork imports 723kt) but NO chicken
+    or broiler table exists anywhere in the 22-page PDF -- the string
+    "Broiler" does not occur once. Chicken meat is apparently covered
+    elsewhere in USDA's output (the GAIN Poultry and Products Annual/
+    Semi-annual series, filed per-region rather than per-country) and not
+    in this particular world-markets circular. Recorded so a future pass
+    does not re-open this PDF expecting a poultry table.
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Search/GetAllGainReports
+  title: USDA FAS GAIN report search, queried for UK poultry
+  publisher: USDA Foreign Agricultural Service
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [uk, poultry, trade]
+  covers: []
+  does_not_cover:
+    - standalone_uk_poultry_gain_report
+  confidence_ceiling: institutional
+  notes: >-
+    No standalone "United Kingdom Poultry and Products" GAIN report exists,
+    the same finding ISRAEL-PLAN.md made for Israel ("Israel gets Grain and
+    Feed / Exporter Guide reports, where poultry appears only as feed
+    demand"). Post-Brexit, USDA's poultry-specific GAIN coverage of the UK
+    market is folded into the EU-wide "Poultry and Products Annual/
+    Semi-annual" reports filed from the Paris post, which discuss the UK as
+    a trade partner (e.g. "UK now the largest chicken meat supplier to the
+    EU") rather than publishing UK production statistics of its own. The
+    London post's own GAIN output covers food-and-agricultural-import
+    regulations and organic-market reports, not poultry production. So FAS
+    GAIN is confirmed as a trade-context source for the UK, not a production
+    source -- DEFRA and FAOSTAT remain the two production sources.
