@@ -1,0 +1,40 @@
+# Vanilla. Merged with taxonomy.yaml (and taxonomy_saffron.yaml, for the
+# horticulture domain) at build time.
+#
+# No `domains:` block here on purpose -- horticulture already exists,
+# declared once in taxonomy_saffron.yaml. Redeclaring it would violate the
+# domain slug's UNIQUE constraint at build time.
+#
+# WHY ONLY A SPECIES ROW, NO PRODUCT
+# -----------------------------------
+# batch-02-vanilla (2026-08-15) accepted exactly one figure:
+# green_to_cured_ratio (6 kg green pods per kg cured beans), which lives in
+# loss_chain_vanilla.yaml as a mass-stage loss factor. It never established
+# a sourced units_per_individual (beans, or gallons-equivalent, per vine per
+# season) -- flowers_per_bean=1 was dropped by human review because no
+# fetched document states the anatomical constant as a literal numeral, only
+# grammatically ("A flower gives a vanilla bean after hand pollination").
+#
+# `product.units_per_individual_lo/mode/hi` is NOT NULL in the schema, so a
+# product row cannot exist without inventing that number. This species row
+# exists so the loss stage below has somewhere to attach; a product row
+# should follow only once a real per-vine yield figure is sourced.
+
+species:
+  - slug: vanilla_orchid
+    domain: horticulture
+    common_name: Vanilla orchid
+    scientific_name: Vanilla planifolia
+    individual_noun: vine
+    individual_plural: vines
+    # No NASS equivalent -- the US grows essentially no commercial vanilla.
+    # Same absence-of-corpus shape as saffron, not a gap in our sourcing.
+    stat_category: null
+    active: 1
+    notes: >-
+      Species scientific name is Vanilla planifolia, confirmed present in the
+      source document backing the accepted figure (Package of Practice,
+      Vanilla Cultivation). The batch spec's own "Watch for" warned that
+      planifolia and tahitensis are different species with different yields
+      and must not be merged -- worth confirming rather than assuming, since
+      the accepted quote itself does not repeat the species name.

@@ -1,5 +1,84 @@
 # Changelog
 
+## v2.1.0 — 2026-08-16
+
+### Vanilla and wagyu research lands in the corpus
+
+The accepted findings of batch-02-vanilla and batch-03-wagyu (both rounds)
+move from review documents into `data/`:
+
+- **Vanilla** gets a species row (*Vanilla planifolia*, horticulture) and a
+  curing loss stage: about 6 kg of green pods per kg of cured beans, a
+  mass-basis stage that cannot move a count. No product row yet — no source
+  states a per-vine yield as a numeral, and the schema refuses a product
+  without one.
+- **Wagyu** husbandry and yield statistics populate `economic_stat` for a
+  second domain for the first time: the 30-month finishing period, the
+  Japanese Black carcass yield (62.96% of live weight, computed from
+  Gotoh's 756/476 kg weights), the generic US fed-cattle dressing range
+  (60–64%) as the comparison figure, SDSU's 65%-of-carcass saleable-meat
+  worked example, and the USDA Yield Grade %CTBRC range (45.4–52.3%).
+  Three "how much beef" figures, three different denominators, deliberately
+  never averaged.
+- **Two livestock facts** explain Japan's beef grading: "A5" is two grades
+  (yield letter, quality number), and BMS 8 of 12 is the floor of the
+  quality 5 that A5 requires. Facts can now carry a `domain:`; everything
+  existing defaults to poultry, untouched.
+- Four sources added (MSU beef-grades fact sheet, beefresearch.org's USDA
+  grading table, Lone Mountain's carcass-grading guide, Gotoh et al. 2018);
+  every figure above cites one and passes the audit.
+
+## v2.0.1 — 2026-08-16
+
+### The hypergeometric miss probability no longer loops once per unit removed
+
+`_ratio_choose` evaluated C(W-k, n)/C(W, n) as an explicit k-factor product
+in a Python loop. For products asked at particle granularity — a ground beef
+patty's mixing draw removes an individual animal's thousands of particles at
+a time — that loop ran thousands of iterations, under two calls per
+`expected_distinct_general`, under thousands of Monte Carlo resamples:
+`tests/test_aggregate_units.py` alone was measured burning 30+ CPU-minutes,
+all of it in this one function.
+
+The ratio is now evaluated in closed form as a difference of log-gamma
+terms when the loop would exceed 64 factors, which turns the pathological
+call from 8.3 ms into 2.4 µs (~3,400x) and brings that test file from 30+
+minutes to about 30 seconds. Below 64 factors the original loop is kept, so
+every headline path — wings remove 1 or 2 units — is bit-for-bit unchanged.
+Above it, the closed form agrees with the loop to within ~1e-8 relative
+error (worst case measured across container sizes up to 3,000,000), orders
+of magnitude below the model's own stated uncertainty. No published figure
+moves.
+
+## v2.0.0 — 2026-08-16
+
+### A ground beef patty's headline answer no longer treats it as one wing
+
+`ground_beef_patty` previously reported "at least 1 animal, ceiling 1" for a
+single quarter-pound patty — a floor that is arithmetically true and was being
+read, in front of a scientific audience, as the model's actual claim. The
+mixing draw was expressing a patty as one indivisible unit (the same
+assumption that is correct for a wing, which really is one intact piece from
+one bird), when a patty is a scoop of a slurry already blended, at the
+grinder, from every animal in that shift's combo bins. The corpus's own
+best-sourced figure — Hu et al. 2012's DNA-measured grind-batch pool of
+411-1,367 animals — was one file away and never reached the patty answer.
+
+`product.mixing_subunits_per_unit` re-expresses the mixing draw at the
+grinder's actual granularity instead of the unit's. Applied to
+`ground_beef_patty` with an `estimate`-grade particle count derived from
+commercial grind-plate hole sizes, a single patty now reports roughly 600
+distinct animals, bounded by the batch pool rather than by "how many patties
+you asked for." Every other product is unaffected — the new column is `NULL`
+by default, and the draw stays exactly as before wherever it is unset. Wings,
+eggs, saffron, silk, and maple were independently re-audited and none share
+the failure mode: each has an anatomically atomic unit for which "1 unit = 1
+draw" is physically correct.
+
+`bump: major` because this changes the meaning of an already-published
+headline figure, which `tools/release_check.py`'s corpus diff cannot detect on
+its own.
+
 ## v1.19.1 — 2026-08-11
 
 ### `release.yml`'s Deploy step now fires on any release work, not just a same-run merge

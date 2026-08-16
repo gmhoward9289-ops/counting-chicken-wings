@@ -1,0 +1,222 @@
+batch: batch-03-wagyu
+subject: wagyu
+round: 2
+extraction:
+  host: this session (frontier model reading fetched documents directly)
+  models: null
+  ran: '2026-08-16'
+  specified_by: human
+  gate: verify (verbatim quote against the returned document)
+  note: >-
+    Round 1 ran the normal COOPER pipeline (qwen2.5-coder:7b + gemma4-32k)
+    against the same six documents and returned only days_on_feed. This round
+    did not re-run COOPER; it re-read the same six documents in
+    docs/research/inbox/wagyu/ directly, on the review's own hypothesis that
+    the miss was an extraction-yield problem, not a sourcing problem. That
+    means the normal COOPER/human division of labour does not apply as
+    written here -- there is no second model to agree or disagree with, so
+    every quote below still needs a human "verified_by" pass, and every
+    derived ratio (marked below) still needs a human confidence promotion
+    per the project's own rule that COOPER-equivalent extraction may not
+    assign measured or derived.
+findings:
+- field: carcass_yield_pct
+  subject_qualifier: japanese_wagyu
+  value_lo: null
+  value_mode: 62.96
+  value_hi: null
+  unit: '% of live weight remaining as carcass weight (derived: 476 / 756)'
+  confidence: industry
+  document: inbox/wagyu/https-www-animbiosci-org-journal-view-php-doi-10-7c1b73c6.txt
+  # QUOTE CORRECTED BY HAND 2026-08-16, values untouched. Fable's adversarial
+  # review caught that the original quote silently repaired the document's
+  # own OCR artifact ("cat tle" -> "cattle") and swapped a trailing comma for
+  # a period -- both invisible edits that would fail the verbatim gate.
+  # Restored to the literal text of the fetched document, artifact and all.
+  quote: The mean body and carcass weights of Japanese Black cat tle at slaughter
+    were 756 kg and 476 kg, respectively, at 29.2 months of age,
+  agreement: human-read, no second pass
+  verified_by: null
+  notes: >-
+    62.96% is computed here (476/756), not stated as a percentage in the
+    source -- the source states the two weights. A human could reasonably
+    promote this to derived (it is a ratio of two measured figures in a
+    peer-reviewed review paper), but that promotion is intentionally left
+    undone here per the project's confidence-grading rule.
+- field: carcass_yield_pct
+  subject_qualifier: american_beef_generic
+  value_lo: 60
+  value_mode: null
+  value_hi: 64
+  unit: '% of live weight remaining as hot carcass (dressing percentage)'
+  confidence: industry
+  document: inbox/wagyu/https-extension-msstate-edu-publications-beef-gr-359d1259.txt
+  quote: It typi­cally ranges from 60 to 64 percent for the majority of fed cattle
+    and averaged 64 percent for the Mississippi Farm to Feedlot program cattle
+    from 1993 through 2007.
+  agreement: human-read, no second pass
+  verified_by: null
+  notes: >-
+    Generic American fed beef, not wagyu-specific -- included as the
+    comparison figure the spec asked for ("cattle analogue of the broiler's
+    measured 75.67% dressing yield"). A second, independent statement of the
+    same 62-64% range sits in the SDSU document (see saleable_meat_pct entry
+    below), for internal consistency.
+- field: saleable_meat_pct
+  subject_qualifier: american_beef_generic
+  value_lo: null
+  value_mode: 65
+  value_hi: null
+  unit: '% of carcass weight yielded as boneless, trimmed beef'
+  confidence: industry
+  document: inbox/wagyu/https-extension-sdstate-edu-how-much-meat-can-yo-7bbd1da6.txt
+  quote: 'So, in other words, you start with a 1200 pound steer, which has a
+    dressing percent of 63%, so that you have a 750 pound carcass. From that
+    you will get about 65% of the carcass weight, or roughly 490 pounds, as
+    boneless, trimmed beef. If you look at that as a percentage of the live
+    weight of the steer you started with, it is approximately 40% of the
+    live weight.'
+  agreement: human-read, no second pass
+  verified_by: null
+  notes: >-
+    Two bases in one quote, both worth keeping: 65% of carcass weight, and
+    40% of live weight. Neither is wagyu-specific -- this is the same
+    "generic fed steer" worked example already used in ground-beef's
+    packaged_beef_fraction_of_live_weight finding, reused here as the
+    saleable-meat comparison basis. Do not average this against the USDA
+    Yield Grade %CTBRC figures below -- they measure a narrower cut set
+    (round/loin/rib/chuck only, excludes ground beef and other trim) and are
+    not the same denominator.
+- field: saleable_meat_pct
+  subject_qualifier: usda_yield_grade_ctbrc
+  value_lo: 45.4
+  value_mode: null
+  value_hi: 52.3
+  unit: '% of carcass weight as closely trimmed boneless retail cuts from round/loin/rib/chuck
+    only (USDA Yield Grades 5 through 1)'
+  confidence: industry
+  document: inbox/wagyu/https-www-beefresearch-org-resources-product-qua-3cda73ba.txt
+  # QUOTE CORRECTED BY HAND 2026-08-16, values untouched. Fable's review
+  # caught that the table title had been silently normalized ("Table 1 ."
+  # in the source, with a space before the period, became "Table 1." here).
+  # Restored the source's own spacing. The numeric cells are stitched from
+  # separate table rows in a scraped HTML table (each cell is verbatim, the
+  # ellipses mark real omitted rows), which is unavoidable for tabular data.
+  quote: 'Table 1 . Expected Yields of Closely Trimmed, Boneless Retail Cuts (%
+    CTBRC) and Total Retail Cuts (% Total Yield) for Each USDA Yield Grade
+    ... 1 >52.3 ≥80 ... 5 <45.4 <65'
+  agreement: human-read, no second pass
+  verified_by: null
+  notes: >-
+    NCBA/beefresearch.org checkoff-funded fact sheet by Daryl Tatum PhD
+    (Colorado State), citing the 1996 USDA grading standard directly. Two
+    columns in the same table: %CTBRC (round/loin/rib/chuck only, <45.4 to
+    >52.3 across Yield Grades 5-1) and %Total Yield (all retail cuts
+    including ground beef, <65 to >=80). Neither basis matches SDSU's 65%
+    figure above exactly, because SDSU's worked example is one hypothetical
+    carcass rather than the industry-wide Yield Grade range -- consistent
+    with each other in direction and rough magnitude, not identical, and
+    that is expected given the different bases.
+- field: bms_scale_definition
+  value_lo: 1
+  value_mode: null
+  value_hi: 12
+  unit: BMS points (Beef Marbling Standard, Japan Meat Grading Association)
+  confidence: industry
+  target_table: quality_defect
+  document: inbox/wagyu/https-www-animbiosci-org-journal-view-php-doi-10-7c1b73c6.txt
+  # QUOTE REORDERED BY HAND 2026-08-16, text and values untouched. Fable's
+  # review caught that the two fragments were joined out of document order
+  # (the ellipsis implies omitted text in sequence, and this had the second
+  # fragment first). Reordered to match the source: "assigns both a yield
+  # grade..." appears before "Graders determine the BMS score...".
+  quote: 'assigns both a yield grade (A, B, or C) and a meat quality grade (1
+    to 5) ... Graders determine the BMS score (from 1 to 12) by comparing the
+    actual carcass marbling with the marbling standard photograph'
+  agreement: human-read, no second pass
+  verified_by: null
+  notes: >-
+    Resolves the spec's own "A5 is not a yield grade" watch item directly:
+    JMGA pairs a yield LETTER (A/B/C) with a quality NUMBER (1-5), and BMS
+    1-12 sits inside the quality score as one of four inputs (marbling; meat
+    color/brightness; meat firmness/texture; fat color/luster/quality -- the
+    quality grade takes the LOWEST of the four). A desirable grade fits the
+    quality_defect table's shape exactly as the spec hoped: an axis that
+    changes price and desirability without changing any count.
+- field: bms_scale_mapping
+  value_lo: null
+  value_mode: null
+  value_hi: null
+  unit: BMS-to-quality-grade mapping
+  confidence: industry
+  target_table: quality_defect
+  document: inbox/wagyu/https-www-lonemountaincattle-com-breeding-guide-979bb5cd.txt
+  quote: 'there are grades of beef yield going from A to C and the BMS scores
+    are noted by a designation of 1 to 5 (BMS scores of 8 to 12 are given a
+    5; BMS 5 through 7 are given a 4; etc). Note that the BMS grade is based
+    on a number of different factors... The most highly prized carcasses are
+    deemed an A-5 and the lowest grade is C-1.'
+  agreement: human-read, no second pass
+  verified_by: null
+  notes: >-
+    Commercial source (American Wagyu breeder), not JMGA itself or a
+    peer-reviewed paper -- graded industry, not higher, and its BMS->quality
+    mapping should be checked against Table 1 in the Gotoh review (same
+    numbers, independent restatement) before being treated as the
+    authoritative bucketing. Also states "a BMS 3 grade requires a minimum
+    of 21% IMF" as an anchor point, and separately that Japanese carcasses
+    are ribbed between the 6th/7th rib versus the US 12th/13th rib -- a
+    basis difference worth carrying into any US/Japan comparison note.
+    Fable's review flagged a specific conflation in this quote worth naming
+    rather than leaving to the "check against Gotoh" hedge above: this
+    source's own middle sentence attributes color, firmness and texture to
+    the BMS grade itself ("the BMS grade is based on a number of different
+    factors, including the amount of marbling; color; firmness and texture"),
+    but per Gotoh, BMS is a marbling-only score (1-12) and the four-factor
+    lowest-of rule belongs to the separate meat quality grade (1-5), not to
+    BMS. Use this source for the 8-12->5 / 5-7->4 bucketing and the 21% IMF
+    anchor; do not use it as the definition of what BMS measures.
+- field: marbling_vs_yield_tradeoff
+  value_lo: null
+  value_mode: null
+  value_hi: null
+  unit: null
+  confidence: null
+  document: null
+  quote: null
+  agreement: not found
+  verified_by: null
+  notes: >-
+    Still not found as a direct statement, across all six fetched documents.
+    The Mississippi State fact sheet treats marbling/quality-grade and
+    fat-thickness/yield-grade as two independently measured, independently
+    reported traits throughout, and never states a correlation between them.
+    Per the spec, "sources treat the axes as independent" is an acceptable
+    honest answer, and that is the finding this round is reporting rather
+    than a null.
+- field: feed_per_kg_beef
+  value_lo: null
+  value_mode: null
+  value_hi: null
+  unit: null
+  confidence: null
+  document: null
+  quote: null
+  agreement: rejected
+  verified_by: null
+  notes: >-
+    The beefresearch.ca "6:1 feed to gain ratio" sentence the round-1 review
+    flagged as present-but-unextracted turns out to be a hypothetical
+    teaching example, not a measured statistic: "Imagine two steer calves
+    placed on feed... Steer A consumes an average of 21 lbs (9.53 kg) DM per
+    day, which equates to a 6:1 feed to gain ratio." The two models were
+    right to decline it -- using it would have been a real quote answering
+    the wrong question (an illustration, not a survey result). The Gotoh
+    review does carry a genuine wagyu-specific total-feed figure -- "Total
+    feed consumption during fattening is normally 4,000 to 5,000 kg/head" --
+    but that is total feed per animal for the whole fattening period, not a
+    per-kg-of-beef efficiency ratio, and turning it into one would mean
+    dividing by the carcass-weight finding above, which is a derive step for
+    a human to decide on, not something to fold in here silently. Recorded
+    as a candidate for a human to combine, not as an accepted figure.
+proposed_sources: []

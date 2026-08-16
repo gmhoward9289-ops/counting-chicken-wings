@@ -656,11 +656,13 @@ class Builder:
 
     def facts(self):
         t = load("facts.yaml")
-        dom = self.domain.get("poultry")
         for f in t["facts"]:
+            # Per-fact domain, defaulting to poultry -- every fact predating
+            # batch-03-wagyu was a poultry fact and carries no key.
             self.ins(
                 "fact",
-                slug=f["slug"], domain_id=dom,
+                slug=f["slug"],
+                domain_id=self.domain.get(f.get("domain", "poultry")),
                 headline=f["headline"], body=f["body"].strip(),
                 placement=f["placement"], surprise=f.get("surprise", 3),
                 source_id=self.src(f["source"], f"fact {f['slug']}"),
@@ -746,6 +748,26 @@ class Builder:
                 source_id=self.src(s["source"], f"economic {s['slug']}"),
                 notes=s.get("notes"),
             )
+
+        # Additional domains' economic stats, one file per domain -- added
+        # for wagyu (2026-08-15) rather than threading a second domain into
+        # resources.yaml's single poultry-specific footprint block above.
+        # Purely additive: resources.yaml's own footprint/economics handling
+        # is untouched, so this cannot change what the poultry build inserts.
+        for p in sorted(DATA.glob("economic_stat_*.yaml")):
+            part = load(p.name) or {}
+            ec2 = part["economics"]
+            dom2 = self.domain[ec2["domain"]]
+            for s in ec2["stats"]:
+                self.ins(
+                    "economic_stat",
+                    domain_id=dom2, slug=s["slug"], label=s["label"],
+                    value_lo=s.get("value_lo"), value_mode=s.get("value_mode"),
+                    value_hi=s.get("value_hi"), unit=s["unit"],
+                    basis=s["basis"], confidence=s["confidence"],
+                    source_id=self.src(s["source"], f"economic {s['slug']}"),
+                    notes=s.get("notes"),
+                )
 
     def run(self):
         self.sources()

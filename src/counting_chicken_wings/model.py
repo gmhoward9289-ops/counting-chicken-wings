@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field, fields, replace
-from math import ceil, comb, erf, sqrt
+from math import ceil, comb, erf, exp, lgamma, sqrt
 
 
 # ---------------------------------------------------------------------------
@@ -201,24 +201,51 @@ def mixing_draw_scale(
     return units_requested, units_per_individual, f"{units_requested} units"
 
 
+# Below this many factors the explicit product is as cheap as four lgamma
+# calls and stays bit-for-bit what it always was -- which keeps every
+# headline path (wings: removed is 1 or 2) byte-identical. Above it the
+# closed form wins, and by the time `removed` is this large the ~1e-9
+# relative error of a log-gamma round trip is far below the model's own
+# uncertainty.
+_RATIO_LOOP_MAX = 64
+
+
 def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     """C(total-removed, drawn) / C(total, drawn), computed without big ints.
 
     Equals prod_{i=0}^{removed-1} (total-drawn-i) / (total-i), which is the
     probability that none of a specific individual's `removed` units are in
     a draw of `drawn` from `total`.
+
+    For large `removed` -- aggregate products asked at particle scale can
+    put thousands of an individual's units in the container -- the product
+    is evaluated in closed form as a ratio of gamma functions instead of a
+    Python loop, because this sits under the Monte Carlo resample loop and
+    was measured dominating entire test-suite runs (#141-adjacent perf).
     """
     if drawn > total:
         raise ValueError("cannot draw more units than the container holds")
-    r = 1.0
-    for i in range(removed):
-        denom = total - i
-        if denom <= 0:
-            return 0.0
-        r *= (total - drawn - i) / denom
-        if r <= 0.0:
-            return 0.0
-    return r
+    if removed <= _RATIO_LOOP_MAX:
+        r = 1.0
+        for i in range(removed):
+            denom = total - i
+            if denom <= 0:
+                return 0.0
+            r *= (total - drawn - i) / denom
+            if r <= 0.0:
+                return 0.0
+        return r
+
+    # prod_{i=0}^{removed-1} (total-drawn-i)/(total-i)
+    #   == [G(T-n+1)/G(T-n-r+1)] / [G(T+1)/G(T-r+1)]  in log space.
+    # The loop returns 0.0 as soon as a numerator factor reaches zero or
+    # below, i.e. whenever total - drawn < removed; same answer here.
+    if total - drawn - removed + 1.0 <= 0.0:
+        return 0.0
+    return exp(
+        lgamma(total - drawn + 1.0) - lgamma(total - drawn - removed + 1.0)
+        + lgamma(total - removed + 1.0) - lgamma(total + 1.0)
+    )
 
 
 def _miss_probability(
