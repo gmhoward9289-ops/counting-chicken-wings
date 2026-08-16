@@ -1867,9 +1867,9 @@ async function initImpact() {
   // built lazily, so arriving here after picking maple syrup on the calculator
   // used to reset the question to wings -- one half of the two-selections bug,
   // the other half being that changing it here never reached the calculator.
-  // (The default still matters: products come back ordered by slug, which puts
-  // "boneless_wing" first alphabetically, and boneless has no nutrition rows
-  // yet, so an implicit default would open on an empty panel.)
+  // (The default still matters: products come back sorted by display_name,
+  // so whatever sorts first is arbitrary and may have no nutrition rows —
+  // an implicit default could open on an empty panel.)
   $('#i-product').innerHTML = META.products
     .filter(p => p.active)
     .map(p => `<option value="${p.slug}"${
