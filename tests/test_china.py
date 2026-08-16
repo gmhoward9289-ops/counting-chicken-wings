@@ -138,7 +138,7 @@ def test_nbs_all_poultry_aggregate_did_not_leak_into_output_rows(conn):
     """
     hits = conn.execute(
         """SELECT COUNT(*) FROM output_stat_year
-           WHERE country_id=? AND value BETWEEN 26_000_000 AND 27_000_000""",
+           WHERE country_id=? AND value BETWEEN 26000000 AND 27000000""",
         (chn(conn),),
     ).fetchone()[0]
     assert hits == 0
