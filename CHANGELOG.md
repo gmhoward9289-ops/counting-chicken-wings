@@ -61,7 +61,7 @@ cover all poultry meat, not chicken specifically, and are deliberately not
 loaded as chicken statistics — the same taxonomy discipline already applied
 to Mexico. See `docs/GERMANY-PLAN.md` for the full research trail.
 
-### What changed
+### Japan added: shipped-not-slaughtered head count, 47 prefectures reconciling exactly
 
 Added Japan (JPN) as the fifth country in the corpus: a national broiler
 head count at `measured` grade (both a standing-flock inventory and an
