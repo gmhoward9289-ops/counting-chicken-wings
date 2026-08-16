@@ -2,7 +2,7 @@
 
 ## v2.5.0 — 2026-08-16
 
-### Fixed
+### The Sources page undercounted citations from 21 international sources
 
 - The Sources page reported "0 figures" for 21 of the sources the corpus
   actually cites — including every source behind the international data
