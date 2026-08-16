@@ -1,0 +1,44 @@
+batch: batch-02-vanilla
+subject: vanilla
+extraction:
+  host: COOPER
+  models:
+  - qwen2.5-coder:7b
+  - gemma4-32k
+  ran: '2026-08-15'
+  specified_by: human
+  gate: verify (verbatim quote against the returned document)
+findings:
+- field: green_to_cured_ratio
+  value_lo: null
+  value_mode: 6
+  value_hi: null
+  unit: kg green per kg cured
+  confidence: industry
+  document: inbox/vanilla/https-www-advancingnortheast-in-wp-content-uploa-5c7a220a.txt
+  quote: About 6 kg of green pods produce 1 kg of cured beans.
+  agreement: 2/2
+  verified_by: null
+proposed_sources: []
+# flowers_per_bean dropped by human review (2026-08-15): the quote --
+# "A flower gives a vanilla bean after hand pollination" -- supports the
+# anatomical constant (1) grammatically (singular "a flower"/"a bean") but
+# never states the numeral 1, so it cannot clear the mechanical bound-in-quote
+# gate at `industry` grade. `derived`/`measured` are human-only grades this
+# pipeline's own `verify` step rejects outright (see docs/research/README.md),
+# so recording this properly means a human entering it directly into data/ as
+# `derived`, citing this same quote -- not something the candidate/accept flow
+# can carry through. Left for a follow-up pass rather than forced through.
+#
+# curing_duration_days dropped by human review (2026-08-15): the extracted
+# quote -- "curing should be done within a week of harvesting the beans" --
+# answers a different question than asked. That is time from harvest to when
+# curing must BEGIN, not how long the curing process itself takes. The spec
+# expects curing to run months-long (the poultry contrast is 47 days), so a
+# 7-day figure attributed to "curing duration" is a misextraction, not a
+# borderline bound.
+#
+# beans_per_kg_cured, hand_pollination_window_hours, and labour_hours_per_kg
+# all returned no figure in any source -- reported as null results per the
+# spec's own instruction ("labour hours per kg... a null here is a real and
+# expected outcome"), not gaps to paper over.
