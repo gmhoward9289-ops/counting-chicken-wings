@@ -1,0 +1,182 @@
+# Source library — Japanese poultry.
+#
+# Produced 2026-08-16, following the workflow in ../SOURCE-LIBRARY.md: search,
+# verify every URL, then probe what each document can actually answer. Every
+# url below was actually fetched and its status recorded.
+#
+# THE ROUTE THAT ACTUALLY WORKED:
+#
+#   * e-Stat (Japan's official statistics portal, https://www.e-stat.go.jp/)
+#     does not expose a single queryable JSON API the way StatCan's WDS does
+#     for Canada, but its `stat-search/file-download` endpoint serves raw,
+#     unauthenticated .xlsx files directly. Fetched, saved locally, and
+#     parsed with openpyxl -- NOT read via WebFetch's own text summarizer,
+#     which cannot parse compressed XML inside a binary format and says so
+#     plainly when it fails. That honest failure mode is safer than what
+#     happened on MAFF's PDF food balance sheet (see below), where the
+#     summarizer produced a wrong number with no warning at all.
+#   * MAFF's own PDF reports (food balance sheet, self-sufficiency ratio)
+#     download cleanly (200 OK) and extract correctly through this project's
+#     PDF reader pointed at the saved file directly. WebFetch's PROMPTED
+#     SUMMARY of the same PDF, on the first attempt, reported a materially
+#     wrong production figure (1,240,000 tonnes against a correct 1,690,000)
+#     with no indication anything was wrong -- caught only by re-reading the
+#     source table directly and cross-checking against independent trade
+#     press covering the same MAFF release. This is the single most
+#     important operational finding of this research pass: a WebFetch
+#     summary of a binary document's exact numbers is a lead, not a citation,
+#     until verified against the primary table.
+#   * USDA FAS GAIN's Japan poultry report downloads and extracts the same
+#     way Mexico's and Canada's did -- no surprises there.
+
+- url: https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040226155&fileKind=0
+  title: "畜産統計調査 確報 令和６年畜産統計 ブロイラー — 5(1) 飼養戸数・羽数（全国農業地域・都道府県別）"
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF), via e-Stat
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/octet-stream (raw .xlsx, served without a filename extension)
+  subjects: [poultry, japan, inventory, government-survey]
+  covers:
+    - national_inventory_2024        # 144,859 thousand birds, 2024-02-01
+    - farm_count_2024                # 2,050 farms
+    - prefecture_level_inventory     # full 47-prefecture + 9-region breakdown
+    - year_over_year_change          # +2.4% inventory, MAFF's own column (5)
+  does_not_cover:
+    - throughput                     # this table is a census-date SNAPSHOT, not an annual flow
+    - weight_basis                   # a head count; no weight figure on this table at all
+  confidence_ceiling: measured
+  notes: >-
+    Raw .xlsx, not a rendered page -- WebFetch's own prompted summary
+    correctly declined to extract numbers from it ("binary/compressed...
+    cannot extract"), which is why this project instead saved the fetched
+    binary and parsed it with openpyxl. 76 data rows: national total, 9
+    regional-agricultural-bureau subtotals, and 47 prefectures, with
+    suppressed cells marked 'x' and zero/no-operation cells marked '-' --
+    both machine-distinguishable in the raw file, unlike a rendered HTML
+    table where the distinction can be lost to a text extractor.
+
+- url: https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040226158&fileKind=0
+  title: "畜産統計調査 確報 令和６年畜産統計 ブロイラー — 5(4) 出荷羽数規模別の出荷羽数（全国農業地域・都道府県別）"
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF), via e-Stat
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/octet-stream (raw .xlsx)
+  subjects: [poultry, japan, throughput, government-survey, prefecture-data]
+  covers:
+    - national_shipment_2024         # 731,847 thousand birds shipped, year to 2024-02-01
+    - prefecture_level_shipment      # full 47-prefecture + 9-region breakdown, exact reconciliation
+    - shipment_scale_distribution    # birds shipped broken out by farm-size bracket, not loaded (not needed)
+  does_not_cover:
+    - post_mortem_confirmation       # THE caveat: shipped is not independently verified as slaughtered
+    - weight_or_tonnage
+  confidence_ceiling: measured
+  notes: >-
+    Same route as the inventory table above (raw .xlsx via file-download,
+    parsed with openpyxl). Table's own note 2 clarifies the count includes
+    any operation shipping 3,000+ birds in the past year even with zero
+    birds on hand at the census date -- confirms this is a genuine ANNUAL
+    THROUGHPUT figure, not a second inventory snapshot, which is what makes
+    it usable as a head_slaughtered proxy at all (with the shipped-vs-
+    slaughtered caveat still standing -- see docs/JAPAN-PLAN.md).
+    Reconciles to the exact thousand against the published national total,
+    a cleaner partition than Canada's ±1-thousand-kg StatCan gap.
+
+- url: https://www.maff.go.jp/j/press/kanbo/anpo/attach/pdf/240808-4.pdf
+  title: 食料需給表 令和５年度 ("Food Balance Sheet, FY2023")
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  subjects: [poultry, japan, production, self-sufficiency, per-capita]
+  covers:
+    - chicken_meat_production_fy2022_fy2023   # 1,681 / 1,690 thousand tonnes
+    - chicken_meat_self_sufficiency_fy2022_fy2023  # 64% / 65%, weight basis
+    - chicken_meat_per_capita_supply_fy2022_fy2023  # 14.6 / 14.4 kg
+    - weight_basis_label              # "骨付き肉換算" per corroborating trade press, not stated ON this PDF itself
+  does_not_cover:
+    - head_count                      # this publication has no bird count at all
+    - prefecture_breakdown            # national figures only
+    - output_value_in_yen             # not published in this table
+  confidence_ceiling: measured
+  notes: >-
+    18-page PDF; the load-bearing figures are on the 参考１ (reference
+    table 1, page ~7) and 参考４ (reference table 4, page ~9) pages, not
+    the main FY2023/FY2022 balance-sheet grids on pages 6-7 (those give
+    the SAME production figure but not the year-over-year percent or the
+    self-sufficiency series in one place). CRITICAL OPERATIONAL NOTE: a
+    WebFetch prompted summary of this exact PDF, requested before this
+    project's own PDF reader was used, reported production as "1,240,000
+    tonnes" -- wrong by 27%, with no indication of uncertainty. The correct
+    figure (1,690,000 tonnes) was confirmed by reading the 参考１ table
+    directly and cross-checking against keimei.ne.jp's independent report
+    of the same MAFF release ("国内生産量（骨付き肉換算）は169万トン"). Any
+    number sourced from an AI summary of a binary document in this project
+    should be treated as unverified until read from the primary table.
+
+- url: https://www.maff.go.jp/j/tokei/kekka_gaiyou/tiku_toukei/r6/index.html
+  title: 畜産統計（令和6年2月1日現在）— summary landing page
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 403
+  content_type: null
+  subjects: [poultry, japan, dead-end]
+  covers: []
+  does_not_cover:
+    - everything   # 403 Forbidden to WebFetch; not chased further, since the e-Stat file-download route already answered directly
+  confidence_ceiling: null
+  notes: >-
+    A different maff.go.jp host/path pattern than the ones that worked
+    (240808-4.pdf, and the general maff.go.jp poultry-industry pages used
+    for other countries). Not investigated further -- the e-Stat raw-file
+    route made this page unnecessary, but recorded so a future pass does
+    not re-spend time on it expecting a different result.
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Tokyo_Japan_JA2024-0043.pdf
+  title: 'Japan: Poultry and Products Annual (GAIN Report JA2024-0043)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  subjects: [poultry, japan, cross-check, trade]
+  covers:
+    - broiler_population_citation     # ~145 million, 2024-02-01, +2% -- quotes MAFF, used as corroboration only
+    - psd_production_estimates        # "USDA Official" and "New Post" columns, DISAGREE with each other -- neither loaded
+    - weight_basis_corroboration      # "Chicken (bone-in)" RTC production table, Table 2
+    - import_trade_partner_breakdown  # Thailand, Brazil, China -- not loaded (not this project's current scope)
+  does_not_cover:
+    - prefecture_data
+    - a_single_authoritative_production_number   # its own two PSD columns disagree
+  confidence_ceiling: industry
+  notes: >-
+    10-page PDF, extracted cleanly with this project's PDF reader --
+    same successful route as the Mexico and Canada GAIN reports. Used here
+    only as a cross-check against primary MAFF tables this project also
+    read directly, unlike Mexico where GAIN was the primary route in at
+    all. 2025 figures in its own PSD table are "0" under "USDA Official"
+    and clearly-labelled forecasts under "New Post" -- not loaded, per this
+    project's standing rule against loading projections as actuals.
+
+- url: https://keimei.ne.jp/article/%E9%B6%8F%E5%8D%B596%EF%BC%85%E3%80%81%E9%B6%8F%E8%82%8964%EF%BC%85%E3%81%AF%E5%89%8D%E5%B9%B4%E5%BA%A6%E3%81%A8%E5%90%8C%E3%81%98%E3%80%80%E9%A3%9F%E6%96%99%E8%87%AA%E7%B5%A6%E7%8E%87.html
+  title: "鶏卵96％、鶏肉64％は前年度と同じ 食料自給率 (trade newsletter coverage of a MAFF release)"
+  publisher: 鶏鳴新聞 (Keimei Shimbun, poultry-industry trade newspaper)
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: text/html
+  subjects: [poultry, japan, self-sufficiency, corroboration]
+  covers:
+    - independent_confirmation_of_maff_production_figure   # "169万トン", "骨付き肉換算" -- the weight-basis label MAFF's own PDF does not state explicitly
+  does_not_cover:
+    - anything_not_already_in_the_primary_maff_pdf
+  confidence_ceiling: trade_press
+  notes: >-
+    Used purely to catch and correct the WebFetch summarization error
+    described in the food-balance-sheet entry above, and as the source of
+    the "骨付き肉換算" (bone-in meat equivalent) weight-basis label MAFF's
+    own PDF does not use verbatim. Never cited as the primary source for a
+    loaded figure -- the MAFF PDF is, once read directly.

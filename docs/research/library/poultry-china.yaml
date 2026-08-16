@@ -1,0 +1,316 @@
+# Source library -- Chinese poultry.
+#
+# Produced 2026-08-16, mirroring the format and discipline of
+# ../poultry-mexico.yaml: every URL below was actually fetched and its
+# outcome recorded, live or dead, because a dead source costs the next
+# attempt the same hour it cost this one.
+#
+# THE SHAPE OF THIS RESEARCH PASS, stated up front because it differs from
+# every prior country:
+#
+#   * China's National Bureau of Statistics (NBS) IS reachable -- unlike
+#     Mexico's SIAP or Israel's Ministry of Agriculture, there was no DNS
+#     failure, no connection refusal, no 403. The national communique loaded
+#     cleanly and is genuinely government-grade. And it STILL could not
+#     answer this project's question: NBS publishes poultry meat (禽肉) only
+#     as an all-species aggregate, with chicken (鸡肉/肉鸡) never broken out
+#     separately anywhere this pass found. Reachability and taxonomy fit
+#     turned out to be two independent problems, and China is the first
+#     country in this project where the primary source cleared the first
+#     hurdle and still failed the second.
+#   * Chicken-specific figures reached the corpus the same way Mexico's did
+#     -- via USDA FAS GAIN attaché reports, one step removed from the
+#     primary agency, each report's own PSD table captioned "Not official
+#     USDA data".
+#   * PDF text extraction needed PyMuPDF (`fitz`) directly, again -- the
+#     WebFetch tool's own text extraction refused every GAIN PDF as binary,
+#     but the same files it saved to disk as a side effect extracted
+#     cleanly. Third country running (after Mexico, and the same underlying
+#     tool behavior) where this exact workaround was needed.
+#   * A genuinely new failure mode: `tjj.shandong.gov.cn` (Shandong's own
+#     provincial statistics bureau, the presumptive top poultry province)
+#     served a TLS certificate for a DIFFERENT subdomain entirely
+#     (`*.ybj.shandong.gov.cn`), rejected outright by certificate hostname
+#     validation. Not the DNS failure, connection refusal, 403, or TLS
+#     handshake reset this project has hit before -- a fifth distinct shape
+#     of access failure, worth naming precisely so the next pass does not
+#     waste time re-diagnosing it as something else.
+#   * A real production-estimate conflict was found and is NOT resolved
+#     here: USDA's 15.35 million tonne 2024 chicken meat figure against
+#     China's National Broiler Industry Technology System's 22.11+ million
+#     tonne figure for the same year (via trade press, not read directly at
+#     its primary source). See docs/CHINA-PLAN.md, "The production-estimate
+#     conflict", for the full accounting.
+
+- url: https://www.stats.gov.cn/sj/zxfb/202502/t20250228_1958817.html
+  title: >-
+    中华人民共和国2024年国民经济和社会发展统计公报 (Statistical Communiqué of
+    the People's Republic of China on the 2024 National Economic and Social
+    Development)
+  publisher: National Bureau of Statistics of China (NBS)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: text/html
+  subjects: [poultry, china, macroeconomic, agriculture]
+  covers:
+    - poultry_meat_output_tonnes   # 禽肉 -- ALL poultry, chicken + duck + goose etc.
+    - yoy_growth_pct
+  does_not_cover:
+    - chicken_specific_output      # no 鸡肉/肉鸡 breakout anywhere in the document
+    - head_slaughtered             # production section is tonnage only, no bird count
+    - provincial_breakdown         # this is the national communique, not a regional one
+  confidence_ceiling: measured
+  notes: >-
+    THE PRIMARY GOVERNMENT SOURCE THIS PASS REACHED, and the clearest
+    illustration of the taxonomy trap the research brief warned about: "全年
+    猪牛羊禽肉产量9663万吨...禽肉产量2660万吨，增长3.8%" (full-year pork,
+    beef, mutton and poultry meat production 96.63 million tonnes...poultry
+    meat production 26.6 million tonnes, up 3.8%). 禽肉 sits in the same
+    sentence as the other three meats, aggregated across all poultry
+    species. Reachable does not mean chicken-specific -- this is a
+    genuinely different failure mode from every prior country in this
+    project, where the primary source was either reachable AND sufficient
+    (Canada, UK) or unreachable entirely (Mexico's SIAP, Israel's ministry
+    pages).
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Beijing_China+-+People's+Republic+of_CH2025-0170.pdf
+  title: 'China: Poultry and Products Annual (GAIN Report CH2025-0170)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 541363
+  subjects: [poultry, china, broiler, trade]
+  covers:
+    - chicken_meat_production_tonnes   # "Meat, Chicken" PSD table, chicken-specific
+    - imports_exports_tonnes
+    - self_sufficiency_derivable       # production / total supply, same table
+    - white_yellow_hybrid_broiler_share  # industry-structure detail, not itself a figure
+    - net_exporter_since_2024
+  does_not_cover:
+    - head_slaughtered                 # no bird count anywhere in the report
+    - average_live_weight
+    - standing_flock_head
+    - output_value_cny
+    - provincial_breakdown
+  confidence_ceiling: industry
+  notes: >-
+    Dated September 10, 2025, prepared by Jadon Marianetti and FAS China
+    staff. WebFetch's own text extraction refused the PDF as binary; the
+    same file was saved to disk by the tool as a side effect and `fitz`
+    (PyMuPDF) extracted it cleanly -- 23,339 characters, ordinary embedded
+    text, no font-encoding trap, the same pattern Mexico's GAIN PDF showed.
+
+    Table 1 ("Meat, Chicken" PSD, 1,000 MT): Production 15,350 (2024, "USDA
+    Official" and "New Post" agree -- a settled actual by this report's
+    date) and 16,200 (2025, "New Post" only -- still an in-year estimate,
+    loaded provisional). Total imports 477 (2024) / 430 (2025); total
+    exports 770 (2024) / 950 (2025); total supply 15,827 (2024) / 16,630
+    (2025). Self-sufficiency: 15,350/15,827 = 97.0% (2024), 16,200/16,630 =
+    97.4% (2025).
+
+    Structural detail: white broilers ~70% of total chicken meat
+    production, yellow broilers 17-20%, hybrid broilers 8-10% ("about five
+    years ago, white broilers made up only around 50 percent of
+    production").
+
+    CAVEAT CARRIED TO CONFIDENCE GRADE: the table itself is annotated "Note:
+    Not official USDA data", directing a reader to PSD Online for the
+    official figure -- the same remove as Mexico's GAIN report, and graded
+    industry for the same reason.
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Beijing_China+-+People's+Republic+of_CH2024-0108.pdf
+  title: 'China: Poultry and Products Annual (GAIN Report CH2024-0108)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 901772
+  subjects: [poultry, china, broiler, trade]
+  covers:
+    - chicken_meat_production_tonnes_2023   # settled actual, one year before CH2025-0170 starts
+    - imports_exports_tonnes_2023
+    - self_sufficiency_derivable_2023
+  does_not_cover:
+    - head_slaughtered
+    - average_live_weight
+    - standing_flock_head
+    - output_value_cny
+    - provincial_breakdown
+  confidence_ceiling: industry
+  notes: >-
+    Dated August 19, 2024, prepared by FAS China staff. Same PDF-extraction
+    route as CH2025-0170 (WebFetch refuses binary, `fitz` on the saved file
+    extracts cleanly -- 31,008 characters). Carried specifically for its
+    settled 2023 figure, since CH2025-0170's own table starts at 2024.
+
+    Table 1 ("Meat, Chicken" PSD, 1,000 MT), 2023 column: Production
+    14,800 ("USDA Official" and "New Post" agree). Total imports 756;
+    total supply 15,556; total exports 554. Self-sufficiency:
+    14,800/15,556 = 95.1%.
+
+- url: https://apps.fas.usda.gov/psdonline/circulars/livestock_poultry.pdf
+  title: >-
+    Livestock and Poultry: World Markets and Trade -- China Chicken Meat
+    Exports Continue to Soar in 2026, Surpassing Thailand
+  publisher: USDA Foreign Agricultural Service (FAS), World Agricultural
+    Outlook Board
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 1468108
+  subjects: [poultry, china, world_trade, rankings]
+  covers:
+    - world_rank_chicken_meat_production   # "world's second largest producer"
+    - per_capita_consumption_kg            # 11 kg/person, 2025, China
+    - net_exporter_status
+    - export_import_rank_2025              # 5th largest exporter, 13th largest importer
+  does_not_cover:
+    - chicken_specific_production_table    # narrative circular, not a PSD table itself
+    - provincial_breakdown
+  confidence_ceiling: industry
+  notes: >-
+    Dated April 9, 2026 -- a different USDA publication from the
+    country-specific GAIN reports, global in scope. THE SOURCE OF THIS
+    PROJECT'S ONE UNCONTESTED WORLD-RANK CLAIM: "China is the world's
+    second largest producer of chicken meat, significantly behind the
+    United States and often on par with Brazil." Unlike Mexico's
+    three-way rank conflict (6th/5th/1st, depending on source and product
+    definition), no second source contradicting this one surfaced in this
+    pass.
+
+    Per-capita: "China chicken consumption remains relatively low (11
+    kg/per capita)" for 2025, against pork (43 kg) and beef (8 kg) within
+    China, and the United States (55 kg), Japan (24 kg), Taiwan (42 kg)
+    elsewhere. SINGLE-SOURCE -- no independent Chinese domestic per-capita
+    figure was found to corroborate or conflict with it in this pass,
+    unlike Canada's uncontested AAFC figure or Mexico's five-way spread.
+
+    Also states China became a net chicken-meat exporter in 2024 (exports
+    $2.59 billion in 2025, nearly double 2020), ranked world's 5th largest
+    chicken-meat exporter and 13th largest importer in 2025.
+
+    PDF text extraction: WebFetch's own summarizer again refused the file
+    as binary; `fitz` on the saved file extracted 45,823 characters
+    cleanly.
+
+- url: https://www.agripost.cn/2025/02/17/chinas-broiler-industry-in-2024-white-feather-broilers-gain-market-share-as-yellow-feather-chickens-decline/
+  title: >-
+    China's Broiler Industry in 2024: White-Feather Broilers Gain Market
+    Share as Yellow-Feather Chickens Decline
+  publisher: AgriPost.CN, citing China's National Broiler Industry
+    Technology System (中国肉鸡产业技术体系)
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, china, broiler, headcount]
+  covers:
+    - broiler_headcount_2024          # the ONLY broiler-specific bird count found
+    - broiler_meat_output_by_breed_2024
+    - breed_mix_trend                 # white/yellow/small-white share shift
+  does_not_cover:
+    - stated_weight_basis             # does NOT say live vs. processed weight
+    - provincial_breakdown
+    - primary_report_itself           # cites the Technology System, is not that system's own page
+  confidence_ceiling: industry
+  notes: >-
+    THE HEAD COUNT AND THE CONFLICT, in one source. Total broiler output
+    14.84 billion birds (2024, +1.02% YoY): white-feather 9.03 billion
+    (+2.24%), yellow-feather 3.33 billion (-7.25%), small white-feather
+    2.48 billion (+9.36%). Meat output: white-feather 17.79 million tonnes
+    (72.17% of total), yellow-feather 4.32 million tonnes (17.53%) -- white
+    + yellow ALONE already sum to 22.11 million tonnes, 44% above
+    usda-fas-gain-ch2025-0170's 15.35 million tonne "Meat, Chicken" PSD
+    figure for the SAME year, and small white-feather tonnage is not even
+    included in that sum.
+
+    NEITHER this source NOR the USDA GAIN report states its weight basis
+    (live vs. processed/carcass-equivalent) explicitly -- checked directly
+    in both PDF/page texts, not assumed absent. This pass does NOT assert
+    which basis explains the gap; see docs/CHINA-PLAN.md, "The
+    production-estimate conflict", for the full discussion. NOT loaded as
+    this project's head_slaughtered figure for exactly this reason -- a
+    head count that cannot be reconciled with a compatible tonnage figure
+    would silently assert an unverified average bird weight if loaded
+    beside the tonnage this project DOES carry.
+
+    Two removes from a primary count: trade press (AgriPost.CN) citing a
+    national agricultural technology system (not a statistical agency) by
+    name, but this pass did not reach that system's own report directly --
+    flagged for a future pass, the same shape of gap Mexico's plan left
+    for SIAP's own portal.
+
+- url: http://tjj.shandong.gov.cn/art/2025/1/23/art_6109_10316111.html
+  title: 解读：2024年全省畜牧业生产总体平稳 (Interpretation: 2024 provincial
+    animal husbandry production overall stable)
+  publisher: Shandong Provincial Bureau of Statistics (山东省统计局)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: null
+  covers: []
+  does_not_cover:
+    - everything   # never successfully fetched
+  confidence_ceiling: null
+  notes: >-
+    NOT REACHED -- a genuinely new failure shape for this project. TLS
+    certificate hostname mismatch: the certificate served for
+    tjj.shandong.gov.cn is issued for `*.ybj.shandong.gov.cn` and
+    `ybj.shandong.gov.cn`, a completely different subdomain, rejected
+    outright by certificate hostname validation before any content
+    transfers. This is NOT the same failure as Canada's
+    www150.statcan.gc.ca TLS 1.3 handshake reset (fixed by forcing TLS
+    1.2) -- a cert/hostname mismatch is a configuration problem on the
+    server side that a TLS-version flag does not fix, and forcing an older
+    TLS version was not attempted in this pass. Flagged as the highest-
+    value next step for a Chinese subnational pass: Shandong is
+    consistently named (by secondary, unverified sources -- see below) as
+    China's leading poultry province by a wide margin, so its own bureau
+    would be the natural anchor for a provincial table if this failure
+    mode can be worked around.
+
+- url: https://www.feedandadditive.com/china-livestock-and-feed-market-analysis/
+  title: 'CHINA: Livestock and Feed Market Analysis'
+  publisher: Feed & Additive Magazine
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 403
+  covers: []
+  does_not_cover:
+    - everything   # 403, never read directly
+  confidence_ceiling: null
+  notes: >-
+    403 Forbidden to this fetcher. A "13.56 billion broilers slaughtered
+    in 2024" figure attributed to this outlet circulated in search-engine
+    result summaries, but the page itself was never independently read --
+    NOT cited anywhere in this project's sources.yaml or output files, the
+    same discipline that excluded El Sitio Avícola and aviNews from
+    Mexico's citations. If a future pass can reach this page directly, it
+    is worth checking whether its figure is the same 中国肉鸡产业技术体系
+    number agripost-cn-broiler-industry-2024 already carries (14.84
+    billion, close in order of magnitude but not identical) or a third,
+    independent count.
+
+- url: https://www.dxumu.com/86797.html
+  title: 国家统计局发布2024年度全国畜牧业数据（附2017-2024年度数据对比）
+  publisher: 大畜牧网 (Da Xumu Wang, a livestock-industry aggregator site)
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: null
+  covers: []
+  does_not_cover:
+    - everything   # never successfully fetched
+  confidence_ceiling: null
+  notes: >-
+    NOT REACHED -- connection refused (`ECONNREFUSED`) on every attempt.
+    Would-be secondary compilation of NBS provincial animal-husbandry data,
+    2017-2024. Not cited for that reason; the provincial figures quoted
+    in search-result summaries elsewhere (Shandong 490.2万吨 / 4.902
+    million tonnes 禽肉, 2024, +13.6%; Henan 149.41万吨 / 1.4941 million
+    tonnes, +4.8%) are NOT loaded anywhere in this project because (a) this
+    page itself was never independently read, and (b) both figures are for
+    禽肉 (all poultry), not chicken specifically, the same taxonomy gap
+    that blocks the national figure.

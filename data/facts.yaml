@@ -1050,3 +1050,427 @@ facts:
     source: usda-fas-gain-mx2024-0040
     placement: learning
     surprise: 3
+
+  # ---- Brazil ------------------------------------------------------------
+  # Fifth country. See docs/BRAZIL-PLAN.md. Unlike Mexico, Brazil's own
+  # statistical agency (IBGE) answers directly - the interesting finding
+  # here is not "can we reach the data" but "two real sources disagree,
+  # and only one fits in the schema".
+
+  - slug: brazil-two-national-headcounts-disagree
+    headline: Brazil has two real chicken headcounts for 2025, and they disagree by 17%
+    body: >-
+      IBGE, Brazil's statistics agency, counted 6.695 billion chickens
+      slaughtered in 2025 across federally-, state-, and municipally-
+      inspected plants combined. ABPA, the national poultry trade body,
+      reports 5.706 billion for the same year - but its own chart says
+      that figure is sourced to the Ministry of Agriculture and citing
+      FEDERAL inspection only, a narrower population than IBGE's.
+
+      This project loads IBGE's number: a direct government census-type
+      survey outranks a trade body's citation of a government figure one
+      step removed, the same rule that graded Mexico's USDA-sourced
+      figures below its peer-reviewed one. ABPA's figure is not discarded
+      - it is recorded in the source library and in docs/BRAZIL-PLAN.md,
+      because a number this project chooses not to load is still a number
+      worth explaining why.
+    source: ibge-sidra-1094-abate-frangos
+    placement: both
+    surprise: 4
+
+  - slug: brazil-south-exports-more-than-it-produces-share-of
+    headline: Southern Brazil ships a bigger share of exports than it does of production
+    body: >-
+      Paraná, Santa Catarina and Rio Grande do Sul together produce 57.9%
+      of Brazil's chicken meat but ship 77.3% of its chicken meat exports
+      - a gap ABPA states in its own words. Paraná alone accounts for
+      34.8% of national production and 40.76% of national exports.
+
+      The three southern states are not just where Brazil raises the most
+      chickens; they are disproportionately where Brazil's export-grade
+      plants sit, closer to the ports (Paranaguá, São Francisco do Sul,
+      Itajaí, Rio Grande) that ship 153 countries' worth of chicken meat
+      out of the country.
+    source: abpa-annual-report-2026
+    placement: both
+    surprise: 3
+
+  - slug: brazil-largest-exporter-not-largest-producer
+    headline: Brazil ships more chicken abroad than any country, without raising the most
+    body: >-
+      The United States and China both raise more chickens than Brazil
+      does (21.8 and 16.2 million tonnes of production in 2025, against
+      Brazil's 15.3 million, per ABPA's own World Chicken Meat Market
+      table) - but Brazil exports more chicken meat than any country on
+      Earth: 5.324 million tonnes to 153 countries in 2025, worth US$9.8
+      billion, a bit over a third of everything Brazil produces.
+
+      Being the biggest exporter and being the biggest producer are two
+      different superlatives, and Brazil holds only the second-place one
+      on production while leading the world on the other.
+    source: abpa-annual-report-2026
+    placement: both
+    surprise: 3
+
+  - slug: brazil-breeder-stock-not-broiler-flock
+    headline: "63 million housed hens in Brazil are not broilers at all"
+    body: >-
+      ABPA reports 63.0 million breeding hens ("matrizes de corte")
+      housed in 2025 - but these are parent stock, the hens that lay the
+      fertile eggs broiler chicks hatch from, not meat birds themselves.
+      Brazil has no published national standing-flock count for the
+      broiler population that IBGE and ABPA both count at slaughter -
+      the same absence Canada's supply-managed system produces for a
+      different structural reason, and the same absence this project
+      declines to paper over with an estimate for either country.
+    source: abpa-annual-report-2026
+    placement: learning
+    surprise: 3
+
+  - slug: brazil-per-capita-consumption
+    headline: Brazilians eat more chicken per person than Canadians - by the industry's own count
+    body: >-
+      ABPA's Annual Report 2026 puts Brazilian per-capita chicken
+      consumption at 46.7 kilograms per person for 2025 - about a third
+      more than Canada's 35.64 kg government-published "disappearance"
+      figure, though the two are not strictly comparable: Canada's is a
+      government supply-side calculation, Brazil's is the poultry trade
+      body's own decade-long series.
+
+      It ships as a fact for the same reason Canada's does: the source
+      publishes the ratio itself, dated to a named year, so no population
+      denominator needs to be loaded or assumed here (population stays
+      NULL for Brazil as for every non-US country). It carries 'industry'
+      grade where Canada's carries a government pedigree - the difference
+      between AAFC saying it and ABPA saying it - and, unlike Mexico's
+      five mutually contradictory per-capita figures or Israel's
+      dead-link world-ranking claim, no competing Brazilian figure
+      surfaced to contest it.
+    source: abpa-annual-report-2026
+    placement: both
+    surprise: 3
+  # ---- China ------------------------------------------------------------
+  # Fifth country. See docs/CHINA-PLAN.md. Every fact here is checked
+  # against a source's own wording for the 禽肉 (all-poultry) vs. 鸡肉/肉鸡
+  # (chicken-specific) distinction before being written, the same
+  # discipline Mexico's ave/pollo split established.
+
+  - slug: china-ave-vs-pollo-taxonomy
+    headline: China's own statistics agency does not publish a chicken-only figure
+    body: >-
+      The National Bureau of Statistics' national communique reports
+      poultry meat production (禽肉) as one number - 26.6 million tonnes for
+      2024, up 3.8% - covering chicken, duck, goose and other fowl
+      together, with no chicken-specific breakout anywhere in the
+      document. Every chicken-SPECIFIC figure in this corpus therefore
+      comes from a source one step removed from China's own statistical
+      agency: USDA's FAS attaché reports, which quote a "Meat, Chicken"
+      PSD table annotated "Not official USDA data" (the note sits directly
+      under the table itself).
+      This is the same shape of gap Mexico's SIAP left, for a different
+      reason - not unreachable, but aggregated across species in the one
+      place this project could reach it directly.
+    source: nbs-china-2024-communique
+    placement: learning
+    surprise: 3
+
+  - slug: china-second-largest-producer
+    headline: China makes the world's second-most chicken meat, and eats relatively little of it
+    body: >-
+      USDA's own global circular states plainly that "China is the world's
+      second largest producer of chicken meat, significantly behind the
+      United States and often on par with Brazil" - a rare case in this
+      project of a world-rank claim with no competing figure found (unlike
+      Mexico, where three sources gave three different ranks for the same
+      years). Yet China's per-capita chicken consumption is low for a top
+      producer: about 11 kg per person in 2025, against 43 kg of pork
+      within China itself, and far below the United States (55 kg), Japan
+      (24 kg) and Taiwan (42 kg). A country can lead world production and
+      still not be where the chicken is eaten - production scales with
+      population and export capacity, consumption per head does not follow
+      automatically.
+
+      This per-capita figure is carried at industry grade and is
+      single-source: no independent Chinese domestic figure was found in
+      this pass to corroborate or conflict with it, unlike Mexico's
+      five-way per-capita spread. That is a gap flagged for a future pass,
+      not a claim this project treats as settled the way Canada's
+      AAFC-sourced per-capita figure is.
+    source: usda-fas-livestock-poultry-wmt-2026-04
+    placement: both
+    surprise: 4
+
+  - slug: china-production-estimate-conflict
+    headline: Two credible counts of China's 2024 chicken meat disagree by nearly half
+    body: >-
+      USDA's FAS attaché report puts China's 2024 chicken meat production
+      at 15.35 million tonnes. China's own National Broiler Industry
+      Technology System, reported via trade press, puts white-feather and
+      yellow-feather broiler meat ALONE (excluding a third category, small
+      white-feather broilers, entirely) at 22.11 million tonnes for the
+      same year - 44% higher, before that third category is even added
+      in. Both describe chicken specifically, not the broader
+      all-poultry aggregate, so the taxonomy trap that explains many of
+      this project's other cross-source gaps does not explain this one.
+
+      Neither source states whether it is reporting live weight or
+      processed/carcass-equivalent weight - the same basis ambiguity this
+      project already tracks for Canada (StatCan vs. Chicken Farmers of
+      Canada) and the US (live vs. ready-to-cook) - and that is the most
+      likely explanation, but it was NOT confirmed in this research pass.
+      Recorded as an open, unresolved conflict rather than resolved by
+      picking a source: this project loads the USDA figure into its
+      output table (the more conservative, more precisely sourced of the
+      two), and states the larger industry estimate here rather than
+      silently dropping it.
+    source: agripost-cn-broiler-industry-2024
+    placement: both
+    surprise: 5
+
+  - slug: china-self-sufficiency
+    headline: China makes almost all the chicken it eats, and the share keeps rising
+    body: >-
+      Dividing production by total supply in the USDA FAS "Meat, Chicken"
+      PSD table gives 95.1% self-sufficiency for 2023, 97.0% for 2024, and
+      97.4% for 2025 - a rising share, and far closer to fully
+      self-sufficient than Mexico's ~79-80% or the UK's 83%. China became
+      a net chicken-meat exporter in 2024 for the first time in the
+      series, and both the export share of production and the import share
+      of consumption have stayed in the low single digits throughout.
+
+      Computed here from the same PSD table's production and total-supply
+      rows, the same way Canada's self-sufficiency was computed from two
+      AAFC figures rather than published as a ratio directly - carried as
+      a fact rather than an output_stat_year row for that reason. The 2024
+      and 2025 inputs come from the cited CH2025-0170 table; the 2023
+      inputs (14,800 / 15,556 thousand tonnes) come from the prior
+      edition, CH2024-0108, whose sources.yaml entry records them.
+    source: usda-fas-gain-ch2025-0170
+    placement: both
+    surprise: 3
+
+  - slug: china-broiler-headcount-not-loaded
+    headline: The one Chinese broiler head count found could not be reconciled with its own tonnage
+    body: >-
+      China's National Broiler Industry Technology System reports 14.84
+      billion broilers produced in 2024 (white-feather 9.03 billion,
+      yellow-feather 3.33 billion, small white-feather 2.48 billion) - the
+      only broiler-specific bird count this project found anywhere for
+      China. It is not loaded as this project's head_slaughtered figure,
+      because the same report's own meat-output tonnage for white and
+      yellow broilers alone (22.11 million tonnes) does not reconcile with
+      the production tonnage this project DOES load from USDA (15.35
+      million tonnes) - see china-production-estimate-conflict. Loading a
+      head count next to a tonnage figure it cannot be squared against
+      would imply a bird weight nobody actually measured.
+    source: agripost-cn-broiler-industry-2024
+    placement: learning
+  # Fifth country. See docs/JAPAN-PLAN.md.
+
+  - slug: japan-shipped-not-slaughtered
+    headline: "Japan's national chicken count measures a truck leaving, not a bird dying"
+    body: >-
+      MAFF's annual broiler figure - 731,847 thousand birds for the year
+      ending February 2024 - counts 出荷羽数, birds SHIPPED off the farm,
+      not a post-mortem count taken at the processing plant the way
+      Statistics Canada's registered-plant slaughter reports are. This
+      project loads it as head_slaughtered anyway, on the working
+      assumption that a broiler shipped from a Japanese farm has nowhere
+      else to go but immediate slaughter - but that assumption was not
+      independently checked against a separate post-mortem count, because
+      no such Japanese national count was found in this research pass.
+
+      This is the same family of caution as Canada's eviscerated-vs-live
+      weight basis and the UK's carcase-weight footnote: naming exactly
+      what a government number measures, rather than assuming every
+      country's "how many birds" answer was taken at the same point in the
+      supply chain.
+    source: maff-chikusan-toukei-broiler-2024
+    placement: learning
+    surprise: 3
+
+  - slug: japan-kyushu-tohoku-concentration
+    headline: Two regions produce three in four of Japan's chickens
+    body: >-
+      Kyushu alone accounts for 49.3% of Japan's broiler shipments and
+      Tohoku a further 24.6% - together 73.8% of the national total, per
+      MAFF's own 2024 prefecture-level count. Within Kyushu, Kagoshima
+      (21.8% of the NATIONAL total on its own) and Miyazaki (18.7%) are,
+      along with Tohoku's Iwate (16.7%), the three prefectures that between
+      them ship more than half of every broiler raised in the country -
+      three prefectures out of forty-seven.
+
+      This is a sharper concentration than the corpus has recorded for any
+      other country: Canada's largest province (Ontario) is 32.6% of that
+      country's head count, and the US spreads its top three states
+      (Georgia, Arkansas, Alabama) across a wider base.
+    source: maff-chikusan-toukei-broiler-2024
+    placement: both
+    surprise: 3
+
+  - slug: japan-self-sufficiency-65-percent
+    headline: Japan grows about two in three of its own chickens, and the number is rising
+    body: >-
+      Japan's chicken meat self-sufficiency ratio - domestic production
+      divided by domestic consumption, by weight - was 65% for FY2023, up
+      from 64% the year before and part of a longer climb from the high
+      50s a decade earlier, per MAFF's own Food Balance Sheet. This is a
+      DIFFERENT statistic from Japan's much more widely quoted overall
+      calorie-basis food self-sufficiency rate (38% the same year), which
+      covers every food category at once and is not specific to chicken.
+
+      Domestic production itself reached 1.69 million tonnes in FY2023 on
+      a bone-in-equivalent basis, per the same Food Balance Sheet.
+    source: maff-shokuryo-jukyuhyo-r5
+    placement: result
+    surprise: 2
+
+  - slug: japan-two-government-sources-agree-within-a-fraction
+    headline: A Japanese ministry and a US attaché independently landed within 0.2% of each other
+    body: >-
+      MAFF's own Food Balance Sheet puts 2023 Japanese chicken meat
+      production at 1,690 thousand tonnes. The USDA's Foreign Agricultural
+      Service, working independently from its own "New Post" estimate
+      rather than simply relaying MAFF's figure, put the same year at 1,686
+      thousand tonnes - 0.2% apart. Two publishers, two different
+      methodologies, the same year, landing four thousand tonnes apart out
+      of nearly 1.7 million: the kind of agreement that makes a figure
+      worth trusting rather than merely worth citing.
+    source: maff-shokuryo-jukyuhyo-r5
+    placement: learning
+    surprise: 3
+  - slug: germany-poultry-skin-included
+    headline: German chicken statistics count the skin -- almost nothing else's do
+    body: >-
+      Germany's official "Schlachtgewicht" (slaughter weight) definition
+      excludes skin for cattle, sheep, goats and horses, but poultry is one
+      of only two exceptions -- alongside pigs -- where the skin stays on
+      the reported figure. The government's own definition: "the plucked
+      and eviscerated body, without head, feet, neck, heart, liver or
+      gizzard" - eviscerated, but not skinned.
+
+      So Germany's 1.1-million-tonne broiler figure is closer in concept to
+      a whole roasting bird than to a skinless retail cut, and comparing it
+      directly to a country whose statistics quietly assume skin-off would
+      overstate that country's chickens by however much a chicken's skin
+      weighs. Germany's own statistics agency says plainly that there is no
+      single uniform Schlachtgewicht definition across species - this
+      project treats that as a warning worth repeating, not a technicality.
+    source: bmel-versorgungsbilanz-fleisch-doku
+    placement: learning
+    surprise: 4
+
+  - slug: germany-niedersachsen-half-the-flock
+    headline: Half of Germany's chicken housing sits in one state
+    body: >-
+      The 2020 Agricultural Census counted about 186.3 million housing
+      places for chickens nationwide, and Destatis states plainly that
+      poultry housing "is with 50% of all housing places especially
+      concentrated in Niedersachsen" (Lower Saxony) - one of sixteen German
+      states holding half the country's capacity.
+
+      This is a housing-capacity figure, not a slaughter-throughput one, and
+      it covers chickens broadly (broilers and laying hens together), not
+      broilers alone - the two caveats this project carries alongside it
+      rather than smoothing into a cleaner-sounding broiler-specific claim
+      the census does not actually make.
+    source: destatis-lz2020-viehhaltung-pm
+    placement: both
+    surprise: 3
+
+  - slug: germany-niedersachsen-2014-broiler-share
+    headline: A decade ago, Lower Saxony alone slaughtered more than half of Germany's broilers
+    body: >-
+      Niedersachsen's own state statistics office reported that in 2014 the
+      state accounted for 53.0% of German Jungmasthühner (broiler) slaughter
+      by head count, and 59.1% of national poultry slaughter by weight -
+      already a majority from one of sixteen states, a decade before the
+      2020 census's housing-capacity figure told a similar story from a
+      different angle.
+
+      Kept explicitly dated to 2014 rather than presented as current: this
+      is the most recent BROILER-SPECIFIC regional figure this project
+      could source for Germany, because Destatis's own poultry-slaughter
+      tables carry no state (Bundesland) breakdown at all in the years this
+      project could reach directly - see docs/GERMANY-PLAN.md.
+    source: niedersachsen-fleischerzeugung-1994-2014
+    placement: learning
+    surprise: 3
+
+  - slug: germany-selfsufficiency-hides-which-bird
+    headline: Germany's "100% self-sufficient in poultry" headline is not about chicken alone
+    body: >-
+      Germany's government reports poultry meat self-sufficiency at 100.4%
+      and per-capita poultry consumption at 13.6 kg, both for 2024 - but
+      both figures are for "Geflügelfleisch," which bundles chicken with
+      turkey, duck and goose. The same release says the year's growth was
+      driven "particularly" by chicken, without ever separating out a
+      chicken-only version of either headline number.
+
+      This project does not load either figure as a chicken statistic for
+      that reason - the same discipline Mexico's carne-de-ave/carne-de-pollo
+      distinction already established. A German reader asking "is Germany
+      self-sufficient in CHICKEN specifically" does not currently have a
+      sourced answer here, and neither does this project invent one.
+    source: ble-fleischbilanz-2025-pm
+    placement: learning
+    surprise: 3
+  # ---- Russia -----------------------------------------------------------
+  # Fifth country. See docs/RUSSIA-PLAN.md. Thinner than Mexico's coverage:
+  # only a 2020 GAIN report reaches chicken-specific figures at all, and the
+  # 2023-2024 conflict below is reported rather than resolved.
+
+  - slug: russia-poultry-not-broken-out-by-species
+    headline: "Russia's national statistics don't separate chicken from other poultry"
+    body: >-
+      Rosstat, Russia's federal statistics service, publishes a single
+      national line for "птица" (poultry: chicken, turkey, duck, and goose
+      together), with no chicken-only or broiler-only row at the national
+      level. That is a step behind even Mexico's "carne de ave" vs "carne de
+      pollo" split, where the broader poultry aggregate is at least
+      published separately from the chicken-specific one. The only source
+      this project could reach that isolates chicken meat specifically is a
+      2020 USDA attaché report, quoting 2019-2020 Rosstat data one step
+      removed from Rosstat's own publication - so this project's Russian
+      figures are older and thinner than its Mexican ones, not because
+      nobody looked harder, but because the underlying government
+      publication genuinely does not exist at that granularity.
+    source: usda-fas-gain-rs2020-0042
+    placement: both
+    surprise: 4
+
+  - slug: russia-2023-poultry-meat-three-way-conflict
+    headline: Three sources, three different numbers, one year
+    body: >-
+      For 2023 Russian poultry-meat production alone, this project found
+      three mutually inconsistent published totals: 5,339,467 tonnes
+      (Rosstat's own national workbook, all-poultry, slaughter weight),
+      5.34 million tonnes (a trade-press site, labelled "broiler meat" but
+      numerically indistinguishable from Rosstat's all-poultry figure), and
+      5.156 million tonnes (an industry-analytics site, again all-poultry,
+      not broiler-specific). None of the three is confirmed chicken-only,
+      and none of the three agrees with either of the others to within
+      3.5%. Rather than pick one, or split the difference, this project
+      reports none of them as a corpus figure and states the conflict
+      plainly - the same discipline Mexico's world-rank and per-capita
+      traps already established for this corpus.
+    source: tsenovik-imit-dinamika-2023
+    placement: learning
+    surprise: 4
+
+  - slug: russia-poultry-union-reports-all-poultry-not-broiler
+    headline: "Even Russia's own poultry trade body talks about all poultry, not just chicken"
+    body: >-
+      Rosptitsesoyuz, the Russian poultry producers' union, forecast 5.46
+      million tonnes of poultry meat (carcass weight, all farm categories)
+      for 2024 in its most recent public statement this project could
+      reach - and that figure, like Rosstat's own, is for poultry as a
+      whole, not chicken specifically. Rosptitsesoyuz's own website
+      (rosptitsesoyuz.ru) could not be reached at all from this research
+      environment (a DNS failure, the same shape of dead end Mexico's SIAP
+      portals hit), so even this figure reaches the corpus secondhand, via
+      press coverage of a spokesperson's remarks, not from the union's own
+      publication.
+    source: interfax-rosptitsesoyuz-2024-forecast
+    placement: learning
+    surprise: 2

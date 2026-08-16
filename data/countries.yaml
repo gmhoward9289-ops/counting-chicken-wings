@@ -106,3 +106,153 @@ countries:
       Canada) but is loaded as a fact rather than as this column, because it
       is already published as a ratio and this project performs no other
       calculation that would need a Canadian population estimate.
+
+  # Fifth country, and the second (after Canada) where the primary
+  # statistical agency answers directly rather than needing a secondhand
+  # attache report to stand in. See docs/BRAZIL-PLAN.md and
+  # docs/research/library/poultry-brazil.yaml.
+  - iso3: BRA
+    name: Brazil
+    native_mass_unit: kg
+    native_currency: BRL
+    notes: >-
+      IBGE (Instituto Brasileiro de Geografia e Estatistica) publishes a
+      genuine REST API (SIDRA) that isolates chicken slaughter, by state,
+      at 'measured' grade -- head count and carcass weight from the same
+      government census-type quarterly survey. A second, real,
+      industry-grade national head count exists from ABPA (the poultry
+      trade body, citing MAPA's federal-inspection-only figure) and
+      disagrees with IBGE's by about 17%; only IBGE's is loaded into the
+      database, since the schema allows one head_slaughtered value per
+      country per year -- ABPA's competing figure is documented rather
+      than dropped. See docs/BRAZIL-PLAN.md, "Two national head counts".
+
+      population stays NULL, same discipline as every other non-US
+      country here: a per-capita figure exists (46.7 kg/person, 2025,
+      ABPA) but is loaded as a fact rather than as this column.
+  # Sixth country. See docs/CHINA-PLAN.md and
+  # docs/research/library/poultry-china.yaml.
+  #
+  # Population NULL, same discipline as Israel/Mexico/Canada. China's own
+  # National Bureau of Statistics publishes poultry meat (禽肉) only as an
+  # all-species aggregate -- chicken, duck, goose and other fowl together --
+  # with no chicken-specific breakout anywhere in its national communique.
+  # Every chicken-specific figure this project loads for China is one step
+  # removed from NBS, via USDA FAS attaché reports whose own PSD table is
+  # captioned "Not official USDA data".
+  - iso3: CHN
+    name: China
+    native_mass_unit: kg
+    native_currency: CNY
+    notes: >-
+      China reports in tonnes and yuan, so every mass and value needs
+      deliberate conversion at load, as every non-US country's does.
+
+      Two Chinese-specific traps, both documented in docs/CHINA-PLAN.md.
+      First, the taxonomy split: NBS's own 禽肉 (poultry meat) aggregate
+      folds chicken in with duck and goose, and is never loaded as if it
+      were chicken-specific -- see the china-ave-vs-pollo-taxonomy fact.
+      Second, an unresolved production-estimate conflict: USDA's FAS
+      attaché report puts 2024 chicken meat production at 15.35 million
+      tonnes, while China's own National Broiler Industry Technology
+      System (reported via trade press) puts white- and yellow-feather
+      broiler meat ALONE at 22.11 million tonnes for the same year -- a
+      44% gap this pass could not resolve, most likely (but not confirmed)
+      a live-weight-versus-processed-weight basis difference. Recorded
+      side by side rather than adjudicated -- see
+      china-production-estimate-conflict.
+
+      USDA's own global circular states plainly that China is the world's
+      second largest chicken meat producer, "significantly behind the
+      United States and often on par with Brazil" -- unlike Mexico, no
+      competing world-rank claim was found. Per-capita consumption is low
+      for a top producer (about 11 kg/person, 2025, single-source, not
+      cross-validated) and self-sufficiency is high and rising (95.1% 2023
+      -> 97.4% 2025, derived from the same USDA table).
+  # Seventh country, and -- unlike Mexico -- one where the primary agency's
+  # own portal (e-Stat) answered directly for a national head count, a
+  # full 47-prefecture breakdown of it, and a production/self-sufficiency
+  # series, all at 'measured' grade. See docs/JAPAN-PLAN.md and
+  # docs/research/library/poultry-japan.yaml.
+  - iso3: JPN
+    name: Japan
+    native_mass_unit: kg
+    native_currency: JPY
+    notes: >-
+      MAFF's Livestock Statistics Survey publishes an annual broiler
+      SHIPMENT count (出荷羽数, not a post-mortem slaughter count) by
+      prefecture, and a separate standing-flock inventory census -- loaded
+      as head_slaughtered and inventory_eoy respectively, with the
+      shipped-vs-slaughtered basis distinction stated explicitly rather than
+      assumed away. MAFF's Food Balance Sheet separately publishes
+      production tonnage (bone-in-equivalent basis) and a weight-basis
+      self-sufficiency ratio for chicken meat specifically, cross-validated
+      within 0.2% against an independent USDA FAS GAIN estimate.
+
+      population stays NULL, same discipline as every other country in this
+      corpus: a genuine per-capita supply figure exists (14.4 kg/person,
+      FY2023, MAFF) but is loaded as a fact rather than as this column,
+      because it is already published as a ratio and this project performs
+      no other calculation that would need a Japanese population estimate.
+  # Eighth country. Destatis isolates Jungmasthuhn (broiler) from Suppenhuhn
+  # (spent hen) directly in its own annual press release, at 'measured'
+  # grade, for four consecutive years -- the strongest data position in
+  # this project after Canada's. See docs/GERMANY-PLAN.md and
+  # docs/research/library/poultry-germany.yaml.
+  - iso3: DEU
+    name: Germany
+    native_mass_unit: kg
+    native_currency: EUR
+    notes: >-
+      Germany reports in kilograms/tonnes and euros, so every mass and value
+      needs deliberate conversion at load, exactly as every non-US country
+      here does.
+
+      population stays NULL: BLE publishes a per-capita consumption figure
+      (13.6 kg, 2024) and a self-sufficiency ratio (100.4%, 2024), but both
+      are for "Geflügelfleisch" (all poultry meat -- chicken, turkey, duck,
+      goose combined), never narrowed to chicken alone anywhere this project
+      reached -- the same carne-de-ave/carne-de-pollo-shaped trap Mexico's
+      row already documents. Neither figure is loaded as a chicken statistic
+      for that reason.
+
+      No districts: table, and not for a Mexico-shaped access reason --
+      Destatis's own Fachserie 3 confirms poultry SLAUGHTER statistics carry
+      no Bundesland dimension at all; a Land-level breakdown exists only for
+      laying-hen HOUSING, a different bird category and a different concept.
+      Germany's real regional concentration (Niedersachsen/Lower Saxony) is
+      carried as two dated facts instead -- a 2020 census housing-capacity
+      share (50%, all Hühner) and an older but broiler-isolated 2014
+      slaughter share (53.0% of Jungmasthühner specifically) -- rather than
+      forced into a table the primary source does not publish.
+  # Ninth country. See docs/RUSSIA-PLAN.md and
+  # docs/research/library/poultry-russia.yaml. Rosstat, unlike StatCan or
+  # even SIAP, publishes NO national chicken-only line at all -- only a
+  # blended "птица" (all-poultry) total -- so this is closer to Mexico's
+  # shape (secondhand government data, thin coverage) than Canada's.
+  - iso3: RUS
+    name: Russia
+    native_mass_unit: kg
+    native_currency: RUB
+    notes: >-
+      Russia reports in kilograms/tonnes and rubles, so every mass and value
+      needs deliberate conversion at load, as for every non-US country here.
+
+      Rosstat's national livestock bulletins report a single "птица"
+      (poultry, all species) line with no chicken/broiler-only row --
+      unlike Mexico's "carne de ave" vs "carne de pollo" split, Rosstat does
+      not even publish the broader aggregate broken out by species
+      nationally. The only source reached that isolates chicken meat is a
+      2020 USDA FAS GAIN report (2019-2020 data; no newer Russia-specific
+      GAIN report exists). Trade press reports 2023-2024 figures labelled
+      "broiler" that are numerically indistinguishable from Rosstat's own
+      all-poultry total, and a third industry source gives yet a different
+      2023 total again -- a genuine, unresolved conflict, not adjudicated.
+
+      rosstat.gov.ru could not be reached directly from this research
+      environment (TLS certificate-trust failure on every fetch attempt,
+      not a DNS or connection failure); rosptitsesoyuz.ru failed at the DNS
+      level. See docs/research/library/poultry-russia.yaml for the full
+      access record.
+
+      population stays NULL, same discipline as every other country here.

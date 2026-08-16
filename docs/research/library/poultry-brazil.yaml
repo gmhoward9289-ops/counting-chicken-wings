@@ -1,0 +1,303 @@
+# Source library -- Brazilian poultry.
+#
+# Produced 2026-08-16, mirroring the format and discipline of
+# ../poultry-mexico.yaml and ../poultry-canada.yaml: every URL below was
+# actually fetched (or queried, for the IBGE API) and its outcome recorded.
+#
+# THE HEADLINE FINDING, stated up front because it is the opposite of
+# Mexico's: Brazil's NASS-equivalent (IBGE) IS reachable from this
+# environment, with a genuine machine-readable API (SIDRA), and IT
+# separates chicken ("frangos") from everything else and publishes head
+# count AND carcass weight, quarterly, by state (UF), with a real
+# machine-readable suppression flag ("X") for confidential state/quarter
+# cells. That is the StatCan shape (see poultry-canada.yaml), not the SIAP
+# shape -- Brazil is the second country in this project's international
+# work (after Canada) where the primary statistical agency answers
+# directly rather than needing a secondhand attache report to stand in.
+#
+# ABPA (the industry trade body -- Associacao Brasileira de Proteina
+# Animal) was ALSO reached directly, as a PDF, and turned out to carry a
+# second, independent state-level breakdown (both slaughter, sourced by
+# ABPA itself to MAPA/federal inspection, and EXPORTS, sourced to SECEX)
+# that is NOT loaded into output_stat_year because it would collide with
+# IBGE's rows under the schema's (species, country, region, year, measure)
+# uniqueness constraint -- see docs/BRAZIL-PLAN.md, "Two national head
+# counts, and why only one is loaded".
+
+- url: https://sidra.ibge.gov.br/tabela/1094
+  title: >-
+    Tabela 1094 -- Numero de informantes, Quantidade e Peso total das
+    carcacas dos frangos abatidos, no mes e no trimestre, por tipo de
+    inspecao (Pesquisa Trimestral do Abate de Animais)
+  publisher: Instituto Brasileiro de Geografia e Estatistica (IBGE)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/json
+  subjects: [poultry, brazil, broiler, subnational, government]
+  covers:
+    - head_slaughtered_2025_national       # summed from 4 published quarters
+    - meat_output_2025_national             # carcass weight, kg -> tonnes
+    - head_slaughtered_2025_by_state        # all 27 UF, 8 suppressed
+    - meat_output_2025_by_state
+  does_not_cover:
+    - live_weight                           # table reports CARCASS weight only
+    - output_value                          # no BRL figure in this table at all
+    - years_before_2025                     # this pass queried 2025 quarters only;
+                                             # the table itself covers 1997 Q1 - 2025 Q3
+                                             # (2025 Q4 apparently already published) per
+                                             # a search-result descriptor, so a longer
+                                             # series is reachable in a future pass
+  confidence_ceiling: measured
+  notes: >-
+    Queried via the SIDRA REST API (apisidra.ibge.gov.br/values/t/1094/...),
+    not the HTML table viewer -- the same "real API, not a scraped page"
+    shape that made Canada's StatCan pull clean. Confirmed via a raw JSON
+    spot-check (t/1094/n1/all/v/284,285/p/202501) that the table carries
+    exactly one row per variable per period at the national level (D4N =
+    "Total"), i.e. no double-counting across an inspection-type dimension
+    inside a single query -- important because the "por tipo de inspecao"
+    in the table's own title could otherwise be misread as meaning multiple
+    overlapping rows are returned by default.
+
+    Variable codes: 151 = Numero de informantes, 284 = Animais abatidos
+    (head), 285 = Peso total das carcacas (kg).
+
+    NATIONAL, summed from the four 2025 quarters (this project's own
+    arithmetic on IBGE's real quarterly counts -- IBGE does not itself
+    publish a 2025 annual total in this table, only quarters):
+    animals slaughtered 1,647,469,931 (Q1) + 1,641,006,289 (Q2) +
+    1,690,778,193 (Q3) + 1,716,210,882 (Q4) = 6,695,465,295 head. Carcass
+    weight 3,492,399,355 + 3,558,452,775 + 3,598,165,273 + 3,655,244,093 =
+    14,304,261,496 kg = 14,304,261 tonnes.
+
+    BY STATE (UF), same four-quarter sum, for the 19 states with published
+    (non-suppressed) values: Parana 2,299,336,111 head / 4,974,439 t,
+    Santa Catarina 918,216,434 / 1,913,851 t, Rio Grande do Sul 760,045,190
+    / 1,393,814 t, Sao Paulo 753,826,364 / 1,692,841 t, Goias 530,339,846 /
+    1,178,406 t, Minas Gerais 488,084,751 / 1,048,587 t, Mato Grosso
+    210,597,652 / 449,616 t, Mato Grosso do Sul 179,159,145 / 423,522 t,
+    Bahia 136,018,435 / 304,265 t, Pernambuco 76,344,838 / 170,098 t,
+    Espirito Santo 57,072,094 / 137,773 t, Para 56,234,740 / 129,831 t,
+    Ceara 40,119,129 / 74,792 t, Rio de Janeiro 36,914,303 / 63,932 t,
+    Paraiba 27,991,024 / 64,567 t, Tocantins 25,136,568 / 61,556 t,
+    Rondonia 17,848,745 / 44,193 t, Piaui 6,893,446 / 14,478 t, Maranhao
+    1,107,798 / 2,544 t.
+
+    SUPPRESSED (marked "X" in every 2025 quarter for both variables): Acre,
+    Amazonas, Roraima, Rio Grande do Norte, Alagoas, Sergipe, Distrito
+    Federal. Amapa is marked "..." (IBGE's "data not available" code,
+    distinct from "X" confidential-suppression; a validation pass on
+    2026-08-16 re-queried SIDRA and found the API returns three dots, not
+    the two-dot not-applicable code this entry originally recorded) in
+    every quarter -- loaded as suppressed=1 alongside the "X" states
+    rather than asserted as a true zero, because the code was not chased
+    to ground against IBGE's own documentation of what it means for this
+    specific table.
+
+    RECONCILIATION: the 19 published states sum to 14,143,105 tonnes
+    against a national total of 14,304,261 tonnes -- a gap of 161,156
+    tonnes (1.13%), attributable to the 8 suppressed/not-applicable states,
+    all of which are minor poultry producers (the largest of the eight,
+    Distrito Federal, is a small federal district). The equivalent head
+    gap is 74,178,682 (1.11% of the national total) -- both gaps land at
+    almost the same percentage, which is a sanity check that the
+    suppression pattern is coherent rather than a parsing error on one
+    side.
+
+- url: https://abpa-br.org/wp-content/uploads/2026/04/ABPA_Annual_Report_2026.pdf
+  title: ABPA Annual Report 2026 (covering 2025 data)
+  publisher: Associacao Brasileira de Proteina Animal (ABPA)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 43118449
+  subjects: [poultry, brazil, broiler, trade, subnational, industry]
+  covers:
+    - national_production_tonnes_2024_2025
+    - national_exports_tonnes_usd_2025
+    - per_capita_consumption_2015_2025
+    - gross_production_value_2025
+    - breeder_stock_housed_2025
+    - state_slaughter_share_2025          # sourced by ABPA itself to MAPA (federal-
+                                            # inspection only), NOT loaded -- see notes
+    - state_export_share_2025             # sourced by ABPA itself to SECEX
+    - world_ranking_2024_2025             # production and export rank vs other countries
+  does_not_cover:
+    - state_level_carcass_weight          # the by-UF chart gives head count and percentage
+                                            # share, not tonnes, for slaughter
+    - live_weight
+    - standing_flock_or_inventory_eoy
+  confidence_ceiling: industry
+  notes: >-
+    Found via the report's own download page (abpa-br.org/abpa-relatorio-anual/),
+    which lists a PDF per year back to 2015; the English-language 2026 edition
+    (ABPA_Annual_Report_2026.pdf, 43 MB) was fetched directly and read with
+    PyMuPDF (WebFetch's own tool refused the file for exceeding its 10 MB
+    content-length cap).
+
+    HEADLINE NATIONAL FIGURES, 2025, all captioned "Chicken Meat" (this
+    project's target species, not the "aves" aggregate ABPA also reports
+    separately for eggs/turkey/duck): production 15.289 million tonnes
+    (3rd largest producer in the world, behind USA 21.812M and China
+    16.200M, per the report's own World Chicken Meat Market table);
+    exports 5.324 million tonnes to 153 countries, US$9.8 billion in
+    revenue (largest exporter in the world, 34.82% of production);
+    per-capita consumption 46.7 kg/inhabitant; Gross Production Value R$
+    112.6 billion. 2024 production given cleanly in the same World Market
+    table as 14,972 thousand MT, letting this project load a genuine
+    two-year national series without contradicting IBGE's 2025 figure --
+    see "why only one 2025 figure is loaded" below.
+
+    TWO STATE-LEVEL CHARTS, each sourced by ABPA to a DIFFERENT government
+    body, and NEITHER loaded as a districts: row because both would
+    collide with the IBGE table above under this project's schema
+    (species+country+region+year+measure is unique, with no room for a
+    second source's competing figure for the same cell):
+
+      1. "Chicken Slaughtering by Federal Unit in 2025" -- sourced by ABPA
+         to "Ministry Of Agriculture And Livestock (MAPA), *Slaughtering
+         Under Federal Inspection". Total Brazil: 5.706 billion head --
+         NOTE this is federally-inspected slaughter ONLY, a narrower
+         population than IBGE's all-inspection-types total of 6.695
+         billion above (IBGE's table combines federal, state and municipal
+         inspection). Parana leads at 38.93% / 2.221 billion head, followed
+         by Santa Catarina 13.65% / 779 million, Rio Grande do Sul 13.13% /
+         749 million, Goias 9.20% / 525 million, Sao Paulo 8.28% / 472
+         million, Minas Gerais 5.93% / 338 million, Mato Grosso 3.68% / 210
+         million, Mato Grosso do Sul 3.01% / 172 million, Distrito Federal
+         0.93% / 53.1 million, Pernambuco 1.09% / 62.1 million, Bahia 0.61%
+         / 34.8 million, Espirito Santo 0.58% / 32.9 million, Rondonia
+         0.31% / 17.7 million, Paraiba 0.38% / 21.5 million, Para 0.17% /
+         9.9 million, plus 0.13% "Others".
+
+      2. "Brazilian Chicken Meat Exports by Federal Unit in 2025" --
+         sourced to SECEX (Brazil's foreign-trade secretariat). Parana
+         40.76% / 2,103,688 t, Santa Catarina 23.28% / 1,201,818 t, Rio
+         Grande do Sul 13.30% / 686,359 t -- "the three states that make up
+         the southern region of Brazil represent 77.3% of Brazilian chicken
+         meat exports" (ABPA's own framing, quoted verbatim). Followed by
+         Goias 5.29% / 272,908 t, Sao Paulo 6.41% / 330,828 t, Mato Grosso
+         do Sul 3.45% / 178,244 t, Minas Gerais 3.87% / 199,637 t, Mato
+         Grosso 1.93% / 99,639 t, Distrito Federal 1.46% / 75,241 t,
+         Espirito Santo 0.06% / 3,354 t, plus 0.19% / 10,047 t "Others".
+         Not loaded into output_stat_year for the same schema-collision
+         reason -- 'marketed'/'meat_output' rows for these regions and this
+         year already exist from IBGE -- and additionally because there is
+         no 'exports' measure in this project's schema at all (the closest
+         existing measure, 'marketed', is documented elsewhere in this
+         project as meaning domestic sales, not international export
+         volume, so reusing it would misstate what the number is).
+         Recorded here and in docs/BRAZIL-PLAN.md as prose/fact material
+         instead.
+
+    WHY ONLY ONE 2025 head_slaughtered / meat_output PAIR IS LOADED, AND
+    IT IS IBGE'S: the schema's unique index on (species, country, region,
+    year, measure) allows exactly one value per cell regardless of source,
+    so this project had to choose between IBGE's 6.695 billion head /
+    14.304 million tonnes (measured, all-inspection-types, reached
+    directly via IBGE's own API) and ABPA/MAPA's 5.706 billion head /
+    15.289 million tonnes (industry, federally-inspected-only for the head
+    figure, ABPA's own broader estimate for the tonnage figure -- these
+    two ABPA numbers are not even from the same population as each other).
+    IBGE wins on grade (measured vs industry) and is loaded for 2025;
+    ABPA's competing 2025 figures are documented here and in the plan as a
+    real, unresolved conflict rather than silently dropped. ABPA's 2024
+    production figure (14,972 thousand t) is loaded separately since it
+    does not collide with anything IBGE supplied for that year.
+
+    THE IMPLIED AVERAGE WEIGHT PER BIRD DIFFERS SHARPLY BETWEEN THE TWO
+    FIGURE SETS AND THIS IS NOT RESOLVED: IBGE's ratio is 14,304,261 t /
+    6,695,465 thousand head = 2.14 kg/head; ABPA's own implied ratio (its
+    tonnage figure divided by its OWN head figure, not mixed with IBGE's)
+    is 15,289,000 t / 5,706,000 thousand head = 2.68 kg/head. A plausible
+    but UNVERIFIED explanation: the ~1 billion extra head in IBGE's total
+    (state- and municipal-inspected birds MAPA's federal-only chart
+    excludes) skew smaller on average, since smaller regional/municipal
+    plants disproportionately serve smaller-format birds -- but this pass
+    did not chase that explanation to a citation, so it is offered as a
+    hypothesis in docs/BRAZIL-PLAN.md, not asserted as fact.
+
+    BREEDER STOCK: "Placement of Breeders (heads)" series on page 42 is
+    OCR-garbled in year-to-value alignment (a chart, not a table) and was
+    NOT used for that reason; a separate, cleanly-quoted secondhand figure
+    -- "Matrizes de corte (alojamento): 63.0 milhoes de cabecas" (2025) --
+    is used instead for a fact, citing this same report. Note "placement"
+    (chicks placed that year) and "alojamento" (birds currently housed, a
+    stock) are different concepts and are not conflated.
+
+- url: https://abpa-br.org/noticias/abpa-lanca-relatorio-anual-2026-com-dados-oficiais-da-avicultura-e-da-suinocultura-do-brasil/
+  title: >-
+    ABPA lanca Relatorio Anual 2026 com dados oficiais da avicultura e da
+    suinocultura do Brasil
+  publisher: Associacao Brasileira de Proteina Animal (ABPA)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, brazil, press_release]
+  covers:
+    - headline_figures_2025           # a press summary of the same numbers as the PDF
+  does_not_cover:
+    - state_breakdown                 # not repeated in the press release, only the PDF
+  confidence_ceiling: industry
+  notes: >-
+    The launch press release for the same Annual Report 2026 PDF above.
+    Fetched via WebFetch, which truncated the page content, and confirmed
+    instead through a secondary press pickup (noticiasagricolas.com.br)
+    that quotes the release's own figures verbatim: "Producao: 15,289
+    milhoes de toneladas", "Abates: 5,706 bilhoes de cabecas",
+    "Exportacoes: 5,324 milhoes de toneladas", "Receita de exportacoes:
+    US$ 9,8 bilhoes", "Matrizes de corte (alojamento): 63,0 milhoes de
+    cabecas", "Consumo per capita: 46,7 kg/hab". Every figure here matches
+    the PDF exactly, so this entry is a corroboration rather than an
+    independent source -- cited alongside the PDF in sources.yaml only
+    where the press summary was the more legible route to a specific quote.
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Brasilia_Brazil_BR2025-0038.pdf
+  title: 'Brazil: Poultry and Products Annual (GAIN Report BR2025-0038)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 1200000
+  subjects: [poultry, brazil, broiler, trade, subnational]
+  covers:
+    - national_production_forecast_2026
+    - state_share_h1_2025               # sourced by GAIN itself to IBGE, percentages only
+    - psd_table_2024_2025_2026
+  does_not_cover:
+    - full_year_2025_state_breakdown    # the state map is explicitly H1 2025 only
+    - head_slaughtered                  # no bird count anywhere in this report
+  confidence_ceiling: industry
+  notes: >-
+    Dated September 29, 2025, by Camila Aquino / approved Frederick Giles.
+    Read directly with PyMuPDF after WebFetch's own extraction gave
+    implausible figures on a first pass (7.70 / 4.06 million tonnes) that
+    turned out to be a misreading of the PSD table's columns, not the
+    report's real numbers -- corrected by re-extracting the table text
+    directly rather than trusting the tool's own summary. NOT used for any
+    loaded figure in this project because IBGE's own SIDRA data (above) is
+    both more current (full year 2025 vs this report's H1 2025 map) and a
+    step closer to the primary source (IBGE directly, vs GAIN quoting
+    IBGE) -- but kept in the library and cited in docs/BRAZIL-PLAN.md
+    because it independently CORROBORATES IBGE's regional concentration:
+    its own state map, captioned "Data Source: IBGE" for the first half of
+    2025, gives South region 58.48% and Parana 35.2% of national
+    production -- close to (and independently arrived at from) this
+    project's own IBGE-derived full-year 2025 figures of 57.9% (South
+    region: Parana+Santa Catarina+Rio Grande do Sul, computed here) and
+    34.8% (Parana alone). Two independent readings of IBGE data, one
+    secondhand (GAIN, H1) and one direct (this project's own API query,
+    full year), landing within a point of each other is a genuine
+    cross-check, not a coincidence.
+
+    PSD table (self-annotated "Source: Not Official USDA Data", so never
+    graded above industry regardless of the government publisher): 2025
+    "New Post" production 15,355 thousand MT, exports 5,000 thousand MT,
+    domestic consumption 10,355 thousand MT. 2024 production 15,000/15,000
+    thousand MT (USDA Official / New Post agree). 2026 forecast 15,800/
+    15,805 -- a forecast, not loaded, matching this project's convention
+    (Mexico's 2025 GAIN forecast was likewise excluded) of loading
+    reported/estimated actuals only.
