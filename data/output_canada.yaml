@@ -1,0 +1,150 @@
+# Canadian broiler figures, from Statistics Canada table 32-10-0118-01,
+# "Fowl and chicken meat production, weight and farm value" (Chicken
+# commodity only -- Fowl, i.e. spent laying hens, is a different line and is
+# not this project's species). Retrieved 2026-08-16 via StatCan's Web Data
+# Service API. See docs/CANADA-PLAN.md and
+# docs/research/library/poultry-canada.yaml for the full research trail.
+#
+# WHY THIS FILE LOOKS DIFFERENT FROM output_israel.yaml
+#
+# Israel's file exists to explain what CBS does NOT publish -- no head count
+# anywhere, so the project could not answer "how many chickens" from Israeli
+# government data alone. Canada is the opposite case: StatCan publishes both
+# head slaughtered and meat output, by province, from the same
+# census-based administrative survey, at 'measured' grade, for the same
+# year. This is the first country in this project (other than the US) where
+# that combination exists at government grade.
+#
+# WEIGHT BASIS: StatCan's own table footnotes never state whether "weight"
+# means live or eviscerated. A SEPARATE Agriculture and Agri-Food Canada
+# publication (aafc-chicken-industry-2026) states plainly that the 2025
+# figure is "eviscerated weight" -- so meat_output here is treated as
+# eviscerated, on that separate publication's authority, and the caveat is
+# carried in the source notes rather than asserted as StatCan's own claim.
+#
+# Nothing here is converted: StatCan reports in thousand kilograms and
+# thousand Canadian dollars. Thousand kilograms and tonnes are numerically
+# identical (1,000 kg = 1 tonne), so meat_output values below are given
+# directly in tonnes without any arithmetic; output_value is converted from
+# thousand dollars to CAD_million by dividing by 1,000, following the same
+# ILS_million convention Israel's file uses, so the two countries' value
+# figures are comparable at a glance without a reader doing the division.
+
+species: broiler
+country: CAN
+
+national:
+  # THE FIGURE ISRAEL NEVER HAD AT THIS GRADE. Sourced to reports of birds
+  # slaughtered in registered processing plants (StatCan survey methodology,
+  # record 5039) -- a genuine government enumeration, not an industry
+  # estimate. Five-year series shows the "fifth consecutive year-over-year
+  # increase" the Daily release describes.
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: statcan-32100118-fowl-chicken-2026
+    notes: >-
+      Chicken (broiler) only -- StatCan's "Fowl" line (spent laying hens and
+      other stewing birds) is excluded, unlike table 32-10-0117-01's blended
+      "Chicken (including stewing hen)" figure. Reported by StatCan in
+      thousand head; left in that unit rather than expanded, matching the
+      convention Israel's chicks_placed rows already use.
+    years:
+      - {year: 2021, value: 750419}
+      - {year: 2022, value: 769616}
+      - {year: 2023, value: 782999}
+      - {year: 2024, value: 786183}
+      - {year: 2025, value: 806000}
+
+  - measure: meat_output
+    unit: tonnes
+    confidence: measured
+    source: statcan-32100118-fowl-chicken-2026
+    notes: >-
+      Reported by StatCan in thousand kilograms; given here in tonnes
+      (numerically identical, no conversion arithmetic performed). Basis is
+      eviscerated weight per aafc-chicken-industry-2026, a separate
+      publication -- see that source's notes and docs/CANADA-PLAN.md.
+    years:
+      - {year: 2021, value: 1304644}
+      - {year: 2022, value: 1341896}
+      - {year: 2023, value: 1386774}
+      - {year: 2024, value: 1388386}
+      - {year: 2025, value: 1416554}
+
+  - measure: output_value
+    unit: CAD_million
+    confidence: measured
+    source: statcan-32100118-fowl-chicken-2026
+    notes: >-
+      Reported by StatCan in thousand Canadian dollars; converted here to
+      CAD_million by dividing by 1,000, matching the ILS_million convention
+      already used for Israel so the two currencies read the same shape.
+    years:
+      - {year: 2021, value: 3297.968}
+      - {year: 2022, value: 3775.631}
+      - {year: 2023, value: 4056.527}
+      - {year: 2024, value: 3970.951}
+      - {year: 2025, value: 4060.369}
+
+# Two districts blocks, one per measure, because Canada's provincial
+# breakdown exists for BOTH head_slaughtered and meat_output -- the same
+# concepts as the national rows, just broken out by province, unlike
+# Israel's districts block, which reports a different measurement entirely
+# (marketed quantity, not output). The loader defaults to 'marketed' only
+# when a block does not say otherwise, so Israel's file needs no change.
+#
+# THE RECONCILIATION IS EXACT, unlike Israel's 4.76% gap: the six named
+# provinces plus the Atlantic aggregate sum to precisely the national total,
+# because every level of this table is a partition of the same "birds
+# slaughtered in registered plants" concept. A 'total' row is included
+# alongside the six provinces and the Atlantic aggregate specifically so
+# that fact is checkable without re-deriving it from the national block.
+#
+# Atlantic is a StatCan-defined aggregate of Newfoundland and Labrador,
+# Prince Edward Island, Nova Scotia and New Brunswick -- loaded at
+# region_level='district' (reusing Israel's concept of an aggregate that
+# sits between the total and the named leaves) rather than 'province',
+# because it is not itself a province and counting it as a tenth province
+# would overstate how many provinces this table actually breaks out. The
+# four Atlantic provinces are loaded individually at region_level='province'
+# with no value and suppressed=1: StatCan's own securityLevelCode marks each
+# one confidential (too few registered plants per province to publish
+# without risking identifying a single operation), the same
+# presence-without-volume pattern CBS and NASS both use.
+districts:
+  - measure: head_slaughtered
+    source: statcan-32100118-fowl-chicken-2026
+    year: 2025
+    unit: thousand_head
+    regions:
+      - {region: 'CANADA', level: total, value: 806000}
+      - {region: 'Ontario', level: province, value: 262866}
+      - {region: 'Quebec', level: province, value: 218281}
+      - {region: 'British Columbia', level: province, value: 119133}
+      - {region: 'Alberta', level: province, value: 81067}
+      - {region: 'Manitoba', level: province, value: 37244}
+      - {region: 'Saskatchewan', level: province, value: 28591}
+      - {region: 'Atlantic', level: district, value: 58818}
+      - {region: 'Newfoundland and Labrador', level: province, parent: 'Atlantic', suppressed: 1}
+      - {region: 'Prince Edward Island', level: province, parent: 'Atlantic', suppressed: 1}
+      - {region: 'Nova Scotia', level: province, parent: 'Atlantic', suppressed: 1}
+      - {region: 'New Brunswick', level: province, parent: 'Atlantic', suppressed: 1}
+
+  - measure: meat_output
+    source: statcan-32100118-fowl-chicken-2026
+    year: 2025
+    unit: tonnes
+    regions:
+      - {region: 'CANADA', level: total, value: 1416554}
+      - {region: 'Ontario', level: province, value: 493780}
+      - {region: 'Quebec', level: province, value: 371268}
+      - {region: 'British Columbia', level: province, value: 197314}
+      - {region: 'Alberta', level: province, value: 139102}
+      - {region: 'Manitoba', level: province, value: 57973}
+      - {region: 'Saskatchewan', level: province, value: 48016}
+      - {region: 'Atlantic', level: district, value: 109102}
+      - {region: 'Newfoundland and Labrador', level: province, parent: 'Atlantic', suppressed: 1}
+      - {region: 'Prince Edward Island', level: province, parent: 'Atlantic', suppressed: 1}
+      - {region: 'Nova Scotia', level: province, parent: 'Atlantic', suppressed: 1}
+      - {region: 'New Brunswick', level: province, parent: 'Atlantic', suppressed: 1}

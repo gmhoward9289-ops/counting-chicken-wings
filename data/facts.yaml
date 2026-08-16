@@ -854,3 +854,64 @@ facts:
     source: nrc-2002-ground-beef-risk
     placement: learning
     surprise: 4
+
+  - slug: canada-per-capita-disappearance
+    headline: Chicken is Canada's most-eaten meat, and the number is government-dated
+    body: >-
+      Agriculture and Agri-Food Canada puts chicken's "per capita
+      disappearance" - the standard supply-side proxy for how much of a food
+      actually gets eaten - at 35.64 kilograms per person in 2025, ahead of
+      every other animal protein in the country.
+
+      "Disappearance" is kept rather than translated to "consumption"
+      because it means something narrower: total supply minus exports minus
+      the change in frozen stocks, not a measured intake figure. It is the
+      standard the industry itself uses, and it is the reason this figure
+      can ship as a dated fact where Israel's much-repeated "highest
+      per-capita consumer" claim could not - Israel's version traced to a
+      dead link, and every replacement disagreed with the others by up to
+      20%. Canada's traces to one government page, for one named year.
+    source: aafc-chicken-industry-2026
+    placement: both
+    surprise: 3
+
+  - slug: canada-quota-not-demand
+    headline: Canadian chicken farmers do not decide how many birds to raise
+    body: >-
+      Chicken Farmers of Canada sets a national base allocation every few
+      weeks, and provincial boards divide it into farm-level quota. A farmer
+      cannot simply raise more chickens because a market signal says to -
+      production is set in advance by a marketing board response to
+      projected demand, import levels, and (as 2025 showed) disease and
+      hatching-egg supply constraints, not the other way around.
+
+      This is the same kind of structural fact Israel's kosher slaughter
+      stage was for that country's plan: it changes what "how many chickens
+      does Canada raise" even means, rather than just changing an answer.
+      It is also why Canada has no published "standing flock" figure the
+      way Israel's or the US's inventories do - a quota-set system has no
+      equivalent census to publish, because the quota itself already states
+      the intended throughput.
+    source: cfc-annual-report-2025
+    placement: learning
+    surprise: 4
+
+  - slug: canada-two-weight-bases-one-report
+    headline: Canada's own chicken statistics do not agree on how to weigh a chicken
+    body: >-
+      Statistics Canada reports 2025 chicken production in what a separate
+      government page confirms is eviscerated weight - the dressed carcass,
+      after processing. Chicken Farmers of Canada's own annual report, in
+      the very same year, reports "average farm size" and producer price
+      per kilogram of LIVE weight - the bird before slaughter, which for a
+      broiler runs roughly 30% heavier than its eviscerated weight.
+
+      Two publishers, one country, one year, two different birds by weight -
+      and neither publication says so next to the number. This project
+      never combines the two: an average bird weight for Canada is derived
+      only from StatCan's own head count and StatCan's own tonnage, both
+      on the same (eviscerated) basis, precisely so this trap cannot enter
+      through the back door.
+    source: cfc-annual-report-2025
+    placement: learning
+    surprise: 4

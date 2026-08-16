@@ -631,23 +631,35 @@ class Builder:
                         notes=block.get("notes"),
                     )
 
+            # A single dict (Israel's original shape: one measure, "marketed")
+            # or a list of dicts (Canada's shape: a province breakdown exists
+            # for more than one measure -- head_slaughtered AND meat_output,
+            # from the same publisher). Wrapping the legacy dict into a
+            # one-element list keeps every existing output_*.yaml working
+            # unchanged.
             d = t.get("districts")
-            if d:
-                sid = self.src(d["source"], f"{path.name} districts")
-                for r in d["regions"]:
+            blocks = d if isinstance(d, list) else ([d] if d else [])
+            for block in blocks:
+                sid = self.src(block["source"], f"{path.name} districts")
+                # Defaults to 'marketed' for backward compatibility with
+                # Israel's file, which never states a measure because it only
+                # ever had one. Canada's provincial figures are not
+                # "marketed" in CBS's sense -- they are the same
+                # head_slaughtered / meat_output concepts as the national
+                # rows, just broken out by province -- so a country whose
+                # subnational data is a different measurement says so.
+                measure = block.get("measure", "marketed")
+                for r in block["regions"]:
                     supp = int(bool(r.get("suppressed")))
                     self.ins(
                         "output_stat_year",
                         species_id=sp, country_id=cid, region=r["region"],
                         region_level=r.get("level"),
-                        year=d["year"],
-                        # Marketed, not produced. Different measurement from
-                        # the national output figure, which is why the two do
-                        # not reconcile and why they are not the same measure.
-                        measure="marketed",
+                        year=block["year"],
+                        measure=measure,
                         value=None if supp else r.get("value"),
-                        unit=d["unit"],
-                        confidence=d.get("confidence", "measured"),
+                        unit=block["unit"],
+                        confidence=block.get("confidence", "measured"),
                         provisional=0, suppressed=supp,
                         source_id=sid,
                         notes=(f"in {r['parent']}" if r.get("parent")
