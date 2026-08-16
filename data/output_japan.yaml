@@ -1,0 +1,236 @@
+# Japanese broiler figures, from MAFF's own Livestock Statistics Survey
+# (畜産統計調査, via e-Stat) and Food Balance Sheet (食料需給表). Retrieved
+# 2026-08-16. See docs/JAPAN-PLAN.md and
+# docs/research/library/poultry-japan.yaml for the full research trail.
+#
+# WHY THIS FILE LOOKS DIFFERENT FROM MEXICO'S AND CLOSER TO CANADA'S
+#
+# Mexico's plan exists mostly to explain what SIAP could NOT be reached to
+# publish. Japan is the opposite: MAFF's own e-Stat portal answered directly,
+# for TWO separate national head counts (inventory AND an annual throughput
+# proxy) with a full 47-prefecture breakdown on the throughput figure, plus a
+# production-tonnage and self-sufficiency-ratio series from a second MAFF
+# publication (the Food Balance Sheet). Every national.yaml figure below was
+# read from a raw MAFF .xlsx or .pdf fetched directly from e-Stat / maff.go.jp
+# and parsed programmatically (openpyxl for the two Excel tables, this
+# project's PDF reader for the food balance sheet) -- not typed by hand from
+# a rendered web page and not taken secondhand from the USDA FAS GAIN report,
+# which is loaded here only as an independent CROSS-CHECK (see
+# usda-fas-gain-ja2024-0043 in sources.yaml).
+#
+# THE BASIS CAVEAT THE PROJECT BRIEF SPECIFICALLY ASKED FOR: MAFF's national
+# throughput figure is 出荷羽数 ("shipment number" -- birds shipped off the
+# farm within the past year), not a post-mortem processing-plant count the
+# way Statistics Canada's figure is. It is loaded as head_slaughtered on the
+# working assumption that a broiler shipped from a Japanese farm has no
+# destination other than immediate slaughter -- this project did not find
+# and did not chase a separate post-mortem count to verify that assumption
+# independently. See the source's own notes in sources.yaml for the full
+# reasoning, and do not silently treat this figure as equivalent in kind to
+# StatCan's registered-plant slaughter reports.
+#
+# WEIGHT BASIS: MAFF's production-tonnage figure (from the Food Balance
+# Sheet, not the Livestock Statistics Survey) is described by trade press as
+# "骨付き肉換算" (bone-in meat equivalent) -- corroborated independently by
+# the USDA FAS GAIN report's own "Chicken (bone-in)" RTC (ready-to-cook)
+# production table. Neither live weight nor a fully-eviscerated boneless
+# basis, unlike Canada's eviscerated StatCan figure or the UK's carcase-weight
+# DEFRA figure -- a third distinct basis in this project's small sample of
+# three, worth keeping straight rather than assuming any two countries share
+# a convention.
+#
+# UNITS: nothing here is converted or re-scaled. MAFF reports head counts in
+# 千羽 (thousand head) and production in 千トン (thousand tonnes) -- both
+# native scales are kept as-is (unit: thousand_head, unit: thousand_tonnes),
+# following the same no-silent-arithmetic rule Israel's and the UK's files
+# already establish, rather than expanded to head/tonnes the way Canada's
+# thousand-kilograms-to-tonnes conversion was (that conversion was safe only
+# because 1,000 kg and 1 tonne are numerically identical; 1,000 tonnes and 1
+# tonne are not).
+
+species: broiler
+country: JPN
+
+national:
+  # Table 5(1) of the Reiwa 6 Livestock Statistics Survey, "飼養戸数・羽数"
+  # (farms and rearing/inventory bird count), as of 2024-02-01. A STANDING
+  # FLOCK snapshot, not throughput -- the concept Mexico's plan could not
+  # source at all and Canada's plan explicitly noted as absent under supply
+  # management. Independently corroborates the USDA FAS GAIN report's own
+  # secondhand citation of this exact MAFF survey ("approximately 145
+  # million birds... up two percent") -- the primary table and the
+  # secondhand quote agree to within the GAIN report's own rounding.
+  - measure: inventory_eoy
+    unit: thousand_head
+    confidence: measured
+    source: maff-chikusan-toukei-broiler-2024
+    notes: >-
+      2,050 farms nationally as of 2024-02-01, up 2.4% year on year
+      (MAFF's own column (5) of table 5(1)). Only one year loaded -- this
+      project read the raw 2024 table directly rather than eyeballing prior
+      years off a chart in the GAIN report, and did not separately fetch
+      earlier years' Livestock Statistics tables this pass.
+    years:
+      - {year: 2024, value: 144859}
+
+  # Table 5(4), "出荷羽数規模別の出荷羽数" (shipment numbers by shipment-scale
+  # category). See the file header and the source's own notes in
+  # sources.yaml for the shipped-vs-slaughtered basis caveat -- named here
+  # rather than silently assumed equivalent to Canada's or the UK's
+  # registered-plant/FSA-survey head counts.
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: maff-chikusan-toukei-broiler-2024
+    notes: >-
+      731,847 thousand birds shipped nationally, annual figure ending with
+      the 2024-02-01 census. A clean partition: the nine regional-bureau
+      subtotals plus Hokkaido and Okinawa (each a single-prefecture region)
+      sum to exactly 731,847 -- see the districts: block below, and compare
+      to Canada's ±1-thousand rounding gap on the equivalent StatCan
+      reconciliation.
+    years:
+      - {year: 2024, value: 731847}
+
+  # Food Balance Sheet FY2023 (令和５年度食料需給表), 参考１ table, 鶏肉 row.
+  - measure: meat_output
+    unit: thousand_tonnes
+    confidence: measured
+    source: maff-shokuryo-jukyuhyo-r5
+    notes: >-
+      "国内生産量" (domestic production), bone-in meat equivalent basis (骨付
+      き肉換算) per trade press and corroborated by the USDA FAS GAIN
+      report's own RTC production table -- see the file header. FY2023
+      (令和５年度) is itself MAFF's preliminary figure (概算値), loaded
+      provisional; FY2022 (令和４年度) is MAFF's confirmed figure. Compare to
+      the independent USDA FAS GAIN "New Post" 2023 production estimate of
+      1,686 thousand MT (usda-fas-gain-ja2024-0043) -- 0.2% apart, two
+      publishers that did not derive one from the other.
+    years:
+      - {year: 2022, value: 1681, provisional: 0}
+      - {year: 2023, value: 1690, provisional: 1}
+
+  # Food Balance Sheet FY2023, 参考４ table, 鶏肉 row, weight-basis
+  # self-sufficiency ratio -- the same measure the UK's DEFRA figure loads,
+  # and the same "how much of our own chicken do we grow" question Mexico's
+  # plan could answer only via cross-validated trade press.
+  - measure: self_sufficiency_ratio
+    unit: percent
+    confidence: measured
+    source: maff-shokuryo-jukyuhyo-r5
+    notes: >-
+      Weight-basis production/domestic-consumption ratio for chicken meat
+      specifically -- NOT the more-quoted calorie-basis TOTAL food
+      self-sufficiency figure (38% for the same fiscal year), which is a
+      different statistic covering every food category at once. FY2023 is
+      MAFF's own preliminary figure (概算値), loaded provisional.
+    years:
+      - {year: 2022, value: 64, provisional: 0}
+      - {year: 2023, value: 65, provisional: 1}
+
+# 出荷羽数 (shipment) by prefecture, 2024-02-01 census, table 5(4). Reconciles
+# EXACTLY, unlike Canada's ±1-thousand-kg rounding gap: MAFF's nine
+# regional-agricultural-bureau subtotals (八 regions covering multiple
+# prefectures) plus Hokkaido and Okinawa (each its own single-prefecture
+# region, so not double-counted as both a region row and a province row --
+# see the file header) sum to precisely the national total of 731,847.
+#
+# The regional concentration the project brief expected is exactly what
+# this table shows: Kyushu alone is 49.3% of national shipments, Tohoku
+# 24.6%, the two together 73.8% -- and within Kyushu, Kagoshima (21.8% of
+# the NATIONAL total on its own) and Miyazaki (18.7%) are, along with
+# Tohoku's Iwate (16.7%), the three prefectures that between them account
+# for more than half of every broiler shipped in Japan.
+#
+# Suppressed cells ('x' in MAFF's own table, meaning too few operations to
+# publish without risking identifying a single farm) are loaded as
+# suppressed=1 with no value -- the same presence-without-volume pattern
+# CBS, NASS and StatCan all use. Cells marked '-' (no broiler operations
+# meeting the survey's scope) are loaded as value=0, not omitted and not
+# suppressed -- MAFF's own table distinguishes the two explicitly, and
+# collapsing them into "no data" either way would erase that distinction.
+districts:
+  - measure: head_slaughtered
+    source: maff-chikusan-toukei-broiler-2024
+    year: 2024
+    unit: thousand_head
+    regions:
+      - {region: 'JAPAN', level: total, value: 731847}
+
+      # Single-prefecture regions -- not nested under a district aggregate,
+      # because each one IS its own 全国農業地域 (national agricultural
+      # region). Loading both a region row and an identical province row
+      # for these two would double-count them in any sum over the table.
+      - {region: 'Hokkaido', level: province, value: 39181}
+      - {region: 'Okinawa', level: province, value: 3702}
+
+      # Tohoku (six prefectures)
+      - {region: 'Tohoku', level: district, value: 179829}
+      - {region: 'Aomori', level: province, parent: 'Tohoku', value: 40421}
+      - {region: 'Iwate', level: province, parent: 'Tohoku', value: 122334}
+      - {region: 'Miyagi', level: province, parent: 'Tohoku', value: 11096}
+      - {region: 'Akita', level: province, parent: 'Tohoku', value: 0}
+      - {region: 'Yamagata', level: province, parent: 'Tohoku', value: 3159}
+      - {region: 'Fukushima', level: province, parent: 'Tohoku', value: 2819}
+
+      # Hokuriku (four prefectures)
+      - {region: 'Hokuriku', level: district, value: 7450}
+      - {region: 'Niigata', level: province, parent: 'Hokuriku', value: 7082}
+      - {region: 'Toyama', level: province, parent: 'Hokuriku', value: 0}
+      - {region: 'Ishikawa', level: province, parent: 'Hokuriku', value: 0}
+      - {region: 'Fukui', level: province, parent: 'Hokuriku', value: 368}
+
+      # Kanto-Tozan (nine prefectures -- Kanto proper plus Yamanashi and
+      # Nagano, which MAFF's own regional scheme appends as "Tozan")
+      - {region: 'Kanto-Tozan', level: district, value: 28224}
+      - {region: 'Ibaraki', level: province, parent: 'Kanto-Tozan', value: 5747}
+      - {region: 'Tochigi', level: province, parent: 'Kanto-Tozan', suppressed: 1}
+      - {region: 'Gunma', level: province, parent: 'Kanto-Tozan', value: 7780}
+      - {region: 'Saitama', level: province, parent: 'Kanto-Tozan', suppressed: 1}
+      - {region: 'Chiba', level: province, parent: 'Kanto-Tozan', value: 8653}
+      - {region: 'Tokyo', level: province, parent: 'Kanto-Tozan', value: 0}
+      - {region: 'Kanagawa', level: province, parent: 'Kanto-Tozan', value: 0}
+      - {region: 'Yamanashi', level: province, parent: 'Kanto-Tozan', value: 1684}
+      - {region: 'Nagano', level: province, parent: 'Kanto-Tozan', value: 3275}
+
+      # Tokai (four prefectures)
+      - {region: 'Tokai', level: district, value: 17280}
+      - {region: 'Gifu', level: province, parent: 'Tokai', value: 3915}
+      - {region: 'Shizuoka', level: province, parent: 'Tokai', value: 5322}
+      - {region: 'Aichi', level: province, parent: 'Tokai', value: 5431}
+      - {region: 'Mie', level: province, parent: 'Tokai', value: 2612}
+
+      # Kinki (six prefectures)
+      - {region: 'Kinki', level: district, value: 16507}
+      - {region: 'Shiga', level: province, parent: 'Kinki', suppressed: 1}
+      - {region: 'Kyoto', level: province, parent: 'Kinki', value: 2515}
+      - {region: 'Osaka', level: province, parent: 'Kinki', value: 0}
+      - {region: 'Hyogo', level: province, parent: 'Kinki', value: 12913}
+      - {region: 'Nara', level: province, parent: 'Kinki', suppressed: 1}
+      - {region: 'Wakayama', level: province, parent: 'Kinki', value: 766}
+
+      # Chugoku (five prefectures)
+      - {region: 'Chugoku', level: district, value: 48269}
+      - {region: 'Tottori', level: province, parent: 'Chugoku', value: 17945}
+      - {region: 'Shimane', level: province, parent: 'Chugoku', value: 2226}
+      - {region: 'Okayama', level: province, parent: 'Chugoku', value: 16762}
+      - {region: 'Hiroshima', level: province, parent: 'Chugoku', value: 3813}
+      - {region: 'Yamaguchi', level: province, parent: 'Chugoku', value: 7523}
+
+      # Shikoku (four prefectures)
+      - {region: 'Shikoku', level: district, value: 30830}
+      - {region: 'Tokushima', level: province, parent: 'Shikoku', value: 15380}
+      - {region: 'Kagawa', level: province, parent: 'Shikoku', value: 9318}
+      - {region: 'Ehime', level: province, parent: 'Shikoku', value: 3829}
+      - {region: 'Kochi', level: province, parent: 'Shikoku', value: 2303}
+
+      # Kyushu (seven prefectures -- Okinawa is its OWN region in MAFF's
+      # scheme, not part of Kyushu, despite the geographic adjacency)
+      - {region: 'Kyushu', level: district, value: 360575}
+      - {region: 'Fukuoka', level: province, parent: 'Kyushu', value: 4807}
+      - {region: 'Saga', level: province, parent: 'Kyushu', value: 17366}
+      - {region: 'Nagasaki', level: province, parent: 'Kyushu', value: 15512}
+      - {region: 'Kumamoto', level: province, parent: 'Kyushu', value: 17922}
+      - {region: 'Oita', level: province, parent: 'Kyushu', value: 8351}
+      - {region: 'Miyazaki', level: province, parent: 'Kyushu', value: 136921}
+      - {region: 'Kagoshima', level: province, parent: 'Kyushu', value: 159696}

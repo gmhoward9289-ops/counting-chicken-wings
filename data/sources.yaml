@@ -1883,3 +1883,118 @@
     Aguascalientes sits at or near the top of the state ranking, though
     never loaded as a table figure since only the leader is named, not a
     percentage.
+
+# Fourth country's sources. See docs/JAPAN-PLAN.md and
+# docs/research/library/poultry-japan.yaml.
+
+- slug: maff-chikusan-toukei-broiler-2024
+  title: >-
+    畜産統計調査 確報 令和６年畜産統計 ブロイラー（令和６年２月１日現在）
+    ("Livestock Statistics Survey, Reiwa 6 report, Broiler, as of
+    February 1, 2024") — tables 5(1) and 5(4)
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF), via e-Stat
+  url: https://www.e-stat.go.jp/stat-search/files?toukei=00500222&tstat=000001015614&tclass1=000001020206&tclass2=000001223340&layout=datalist&cycle=7
+  published_on: '2024-11-29'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A genuine annual government enumeration, not an interview or trade-body
+    estimate — the direct MAFF equivalent of StatCan's registered-plant
+    slaughter reports for Canada. Two tables from this survey are loaded,
+    fetched as raw .xlsx directly from e-Stat's file-download endpoint
+    (statInfId=000040226155 for table 5(1), statInfId=000040226158 for
+    table 5(4)) and parsed with openpyxl, not read from a rendered page —
+    see docs/research/library/poultry-japan.yaml for the exact URLs.
+
+    Table 5(1), "飼養戸数・羽数" (farms and rearing/inventory bird count):
+    144,859 thousand birds nationally as of 2024-02-01, across 2,050 farms,
+    up 2.4% year on year. This is a STANDING-FLOCK snapshot (inventory_eoy),
+    not throughput — the same distinction NASS draws for the US and the same
+    one Mexico's plan could not resolve at all. Independently corroborates
+    the USDA FAS GAIN report's "approximately 145 million birds... up two
+    percent" citation of this same MAFF survey (usda-fas-gain-ja2024-0043),
+    confirming the secondhand quote against the primary table itself.
+
+    Table 5(4), "出荷羽数規模別の出荷羽数" (shipment numbers by shipment-scale
+    category): 731,847 thousand birds shipped nationally, with a full
+    47-prefecture breakdown and nine regional-agriculture-bureau subtotals.
+    THE BASIS CAVEAT THE PROJECT BRIEF ASKED FOR: this is 出荷羽数 (birds
+    SHIPPED from the farm within the past year), not a post-mortem
+    processing-plant count the way StatCan's Canadian figure is. MAFF's own
+    note 2 on this table clarifies the count includes any operation that
+    shipped 3,000+ birds in the past year even if it held no birds on the
+    February 1 census date — i.e. it is an annual throughput figure, not a
+    second inventory snapshot. Loaded as head_slaughtered on the working
+    assumption (not independently verified against a separate post-mortem
+    count) that a broiler shipped from a Japanese farm has no destination
+    other than immediate slaughter — unlike, say, a laying hen, which can be
+    sold on as breeding or backyard stock. Suppressed prefecture cells ('x'
+    in the source) are loaded as suppressed=1/value=NULL; cells marked '-'
+    (no broiler operations meeting survey scope) are loaded as value=0.
+    Survey excludes non-commercial keepers (schools, test farms) per the
+    table's own note 1.
+
+- slug: maff-shokuryo-jukyuhyo-r5
+  title: >-
+    食料需給表 令和５年度 ("Food Balance Sheet, FY2023") — chicken meat (鶏肉)
+    line, plus 参考１ (production/per-capita comparison) and 参考４
+    (self-sufficiency ratio time series)
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF)
+  url: https://www.maff.go.jp/j/press/kanbo/anpo/attach/pdf/240808-4.pdf
+  published_on: '2024-08-08'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    MAFF's own annual food balance sheet, built (per the document's stated
+    methodology, item 3) to the FAO Food Balance Sheet handbook using MAFF's
+    own survey and estimated values — so "measured" here means MAFF's
+    official headline figure, the same one its own self-sufficiency press
+    release quotes, not a raw slaughter census the way the broiler shipment
+    table is. FY2023 (令和５年度) is itself a preliminary figure (概算値, per
+    the sheet's own title), loaded with provisional=1.
+
+    Chicken meat (鶏肉) row, 参考１ table: domestic production 1,690 thousand
+    tonnes FY2023 (1,681 thousand tonnes FY2022, +0.5%); per-capita net-food
+    supply 14.4 kg/person FY2023 (14.6 kg FY2022, -0.7%). WEIGHT BASIS: trade
+    press describes this MAFF production figure as "骨付き肉換算" (bone-in
+    meat equivalent) — consistent with the USDA FAS GAIN report's own
+    "Chicken (bone-in)" RTC production table, and NEITHER live weight nor a
+    fully-eviscerated boneless basis. Cross-validates closely against the
+    GAIN report's independent "New Post" 2023 production estimate of 1,686
+    thousand MT (usda-fas-gain-ja2024-0043) — 0.2% apart, two publishers
+    that did not derive one from the other.
+
+    Chicken meat self-sufficiency ratio (参考４, weight basis): 65% FY2023,
+    64% FY2022. This is MAFF's own headline "how much of our chicken do we
+    grow ourselves" figure, reported every year alongside the more-quoted
+    calorie-basis TOTAL food self-sufficiency figure (38% FY2023) — the two
+    are not the same statistic and are not interchangeable.
+
+- slug: usda-fas-gain-ja2024-0043
+  title: 'Japan: Poultry and Products Annual (GAIN Report JA2024-0043)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Tokyo_Japan_JA2024-0043.pdf
+  published_on: '2024-09-04'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A US government attaché report, used here as a CROSS-CHECK rather than
+    the primary route into Japanese figures the way the equivalent report
+    was for Mexico — unlike SIAP, MAFF's own e-Stat portal answered directly
+    (see maff-chikusan-toukei-broiler-2024 and maff-shokuryo-jukyuhyo-r5).
+    Table 1 (PSD "Meat, Chicken") reports separate "USDA Official" and "New
+    Post" columns that disagree with each other (2024 production: 1,790 vs
+    1,720 thousand MT) — both are USDA estimates, not raw MAFF data, so
+    NEITHER column is loaded into this corpus's output tables; only the
+    prose citation of MAFF's own broiler-population figure (~145 million
+    birds, 2024-02-01, +2%) is used, and only as independent corroboration
+    of table 5(1)'s primary figure. 2025 figures in Table 1 are themselves
+    marked "0" under "USDA Official" (not yet published at the time of this
+    report) and are FORECASTS under "New Post" — not loaded, following this
+    project's standing rule against loading projections as actuals (see the
+    Mexico precedent in usda-fas-gain-mx2024-0040).
+
+    Also the source for Japan's stated 2023-2024 weight-basis convention:
+    Table 2 reports "Chicken Production in January – June, Unit: MT, RTC"
+    (ready-to-cook), corroborating the "bone-in meat equivalent" basis
+    documented for MAFF's own production figure.

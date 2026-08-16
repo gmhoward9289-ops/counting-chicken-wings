@@ -1050,3 +1050,79 @@ facts:
     source: usda-fas-gain-mx2024-0040
     placement: learning
     surprise: 3
+
+  # Fifth country. See docs/JAPAN-PLAN.md.
+
+  - slug: japan-shipped-not-slaughtered
+    headline: "Japan's national chicken count measures a truck leaving, not a bird dying"
+    body: >-
+      MAFF's annual broiler figure - 731,847 thousand birds for the year
+      ending February 2024 - counts 出荷羽数, birds SHIPPED off the farm,
+      not a post-mortem count taken at the processing plant the way
+      Statistics Canada's registered-plant slaughter reports are. This
+      project loads it as head_slaughtered anyway, on the working
+      assumption that a broiler shipped from a Japanese farm has nowhere
+      else to go but immediate slaughter - but that assumption was not
+      independently checked against a separate post-mortem count, because
+      no such Japanese national count was found in this research pass.
+
+      This is the same family of caution as Canada's eviscerated-vs-live
+      weight basis and the UK's carcase-weight footnote: naming exactly
+      what a government number measures, rather than assuming every
+      country's "how many birds" answer was taken at the same point in the
+      supply chain.
+    source: maff-chikusan-toukei-broiler-2024
+    placement: learning
+    surprise: 3
+
+  - slug: japan-kyushu-tohoku-concentration
+    headline: Two regions produce three in four of Japan's chickens
+    body: >-
+      Kyushu alone accounts for 49.3% of Japan's broiler shipments and
+      Tohoku a further 24.6% - together 73.8% of the national total, per
+      MAFF's own 2024 prefecture-level count. Within Kyushu, Kagoshima
+      (21.8% of the NATIONAL total on its own) and Miyazaki (18.7%) are,
+      along with Tohoku's Iwate (16.7%), the three prefectures that between
+      them ship more than half of every broiler raised in the country -
+      three prefectures out of forty-seven.
+
+      This is a sharper concentration than the corpus has recorded for any
+      other country: Canada's largest province (Ontario) is 32.6% of that
+      country's head count, and the US spreads its top three states
+      (Georgia, Arkansas, Alabama) across a wider base.
+    source: maff-chikusan-toukei-broiler-2024
+    placement: both
+    surprise: 3
+
+  - slug: japan-self-sufficiency-65-percent
+    headline: Japan grows about two in three of its own chickens, and the number is rising
+    body: >-
+      Japan's chicken meat self-sufficiency ratio - domestic production
+      divided by domestic consumption, by weight - was 65% for FY2023, up
+      from 64% the year before and part of a longer climb from the high
+      50s a decade earlier, per MAFF's own Food Balance Sheet. This is a
+      DIFFERENT statistic from Japan's much more widely quoted overall
+      calorie-basis food self-sufficiency rate (38% the same year), which
+      covers every food category at once and is not specific to chicken.
+
+      Domestic production itself is a genuine twelve-year streak: 2023 was
+      the twelfth consecutive record year for Japanese chicken meat output,
+      reaching 1.69 million tonnes on a bone-in-equivalent basis.
+    source: maff-shokuryo-jukyuhyo-r5
+    placement: result
+    surprise: 2
+
+  - slug: japan-two-government-sources-agree-within-a-fraction
+    headline: A Japanese ministry and a US attaché independently landed within 0.2% of each other
+    body: >-
+      MAFF's own Food Balance Sheet puts 2023 Japanese chicken meat
+      production at 1,690 thousand tonnes. The USDA's Foreign Agricultural
+      Service, working independently from its own "New Post" estimate
+      rather than simply relaying MAFF's figure, put the same year at 1,686
+      thousand tonnes - 0.2% apart. Two publishers, two different
+      methodologies, the same year, landing four thousand tonnes apart out
+      of nearly 1.7 million: the kind of agreement that makes a figure
+      worth trusting rather than merely worth citing.
+    source: maff-shokuryo-jukyuhyo-r5
+    placement: learning
+    surprise: 3
