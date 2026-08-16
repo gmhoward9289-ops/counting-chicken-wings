@@ -1,0 +1,82 @@
+# Source library — European Union poultry, via Eurostat.
+#
+# Produced by the manual pass of 2026-08-16, following the same workflow as
+# poultry-uk.yaml: every URL below was actually fetched on the date shown
+# (curl against the dissemination API, or WebFetch for the metadata page),
+# and coverage was probed against the live dataset rather than assumed.
+#
+# Headline finding: Eurostat is the first source in this project that makes
+# additional countries ROWS rather than research passes. apro_mt_pann
+# publishes head slaughtered AND carcass tonnage for chicken, per member
+# state, from an exhaustive census under one regulation — the Canada
+# property, times 27. The catches, all verified: no EU-27 aggregate for
+# poultry (zero values, any year), no broiler-vs-boiling-hen split for
+# Poland (B7110 empty; B7100 "Chicken" includes spent layers), and no
+# kg-per-head for poultry despite the unit existing in the table.
+#
+# Verified 2024 poultry tonnage for the big producers, for the next pass
+# (B7000, THS_T, SLAUGHT): PL 2,891.97 · ES 1,807.89 · FR 1,722.21 ·
+# DE 1,537 · IT 1,388.27. Head (THS_HD): PL 1,378,481.38 · FR 909,632 ·
+# ES 867,110.58 · DE 668,210 · IT 627,700. Germany is recorded here for
+# reconciliation only — a concurrent session ("Sources: Brazil, Mexico,
+# China, Japan, Russia, Germany") holds it; do not load DE from this file
+# without checking that stream first.
+
+- url: https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/apro_mt_pann?format=JSON&lang=EN
+  title: Slaughtering in slaughterhouses — annual data (apro_mt_pann), dissemination API
+  publisher: Eurostat (European Commission)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, eu, poland]
+  covers:
+    - head_slaughtered_per_year          # THS_HD, per member state
+    - meat_production_tonnes_carcass_weight   # THS_T, stated carcass basis
+    - chicken_split_from_poultry_total   # B7100 vs B7000, for PL at least
+    - per_member_state_comparability     # one regulation, one basis, 27 states
+    - imports_exports_meatitems          # IMP/EXP codes exist; not probed deeply
+  does_not_cover:
+    - eu27_aggregate_poultry             # geo=EU27_2020: zero values, any year
+    - broiler_vs_boiling_hen_split_pl    # B7110 and B7120 empty for Poland
+    - kg_per_head_poultry                # KG_HD unit exists, no poultry values
+    - consumption_or_per_capita          # slaughter table; consumption is elsewhere
+    - slaughter_outside_slaughterhouses_at_census_grade  # separate series, estimated
+  confidence_ceiling: measured
+  notes: >-
+    JSON-stat 2.0: values keyed by flattened index over the id/size arrays,
+    so extraction is arithmetic, not scraping. Filter with repeated query
+    params (meat=B7100&meatitem=SLAUGHT&geo=PL&time=2024). No auth, no key,
+    no rate-limit encountered across ~8 calls.
+
+    Poland B7100 Chicken, SLAUGHT, 2020-2024 — loaded into
+    data/output_poland.yaml: THS_HD 1,178,806.9 / 1,121,028.19 /
+    1,200,098.18 / 1,233,208.9 / 1,297,913.7; THS_T 2,200.28 / 2,096.77 /
+    2,231.61 / 2,284.95 / 2,433.02. Implied carcass weight ~1.87 kg/bird
+    (2024) — internally consistent with the 65% chicken basis. B7000
+    poultry-total implied weight is ~2.10 kg/bird, heavier because it
+    includes turkeys, ducks and geese — the gap between the two ratios is
+    itself a check that B7100 excludes the heavy species.
+
+- url: https://ec.europa.eu/eurostat/cache/metadata/EN/apro_mt_esqrs.htm
+  title: Livestock and meat statistics — ESS quality report (apro_mt)
+  publisher: Eurostat (European Commission)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, eu, methodology]
+  covers:
+    - weight_basis_definition            # carcass, "65% chicken", quoted
+    - legal_basis                        # Regulation (EC) No 1165/2008
+    - census_vs_survey                   # exhaustive; no sample surveys in 2022
+    - member_state_deviations            # NL 74% presentation, HU heads included
+    - other_than_slaughterhouse_methodology  # estimated, methods vary by state
+  does_not_cover:
+    - why_eu_aggregate_missing           # absence observed in data, unexplained here
+  confidence_ceiling: measured
+  notes: >-
+    The page that makes apro_mt_pann's tonnage usable: it STATES the basis
+    (Israel's CBS never did). Retrieval route matters — apro_mt_esms.htm
+    and apro_mt_sims.htm, the natural metadata-URL guesses, both 404; the
+    ESQRS quality-report path is the one that resolves. Poland is not among
+    the named presentation deviations, which is what lets the Polish rows
+    carry the regulation's 65% definition without a caveat of their own.

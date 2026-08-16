@@ -1,0 +1,83 @@
+# Poland chicken figures, from Eurostat's annual slaughtering table
+# (apro_mt_pann) -- the project's first supranational source, and its entry
+# point into the EU. Hand-curated like data/output_uk.yaml: values were
+# pulled from the dissemination API on 2026-08-16 and verified by hand, and
+# there is no repeat extraction pipeline yet. Re-verify against
+# docs/research/library/poultry-eu.yaml before extending.
+#
+# WHY POLAND FIRST: it is the EU's largest poultry producer, checkable
+# inside this same table (2,891.97 thousand tonnes of poultry in 2024
+# against Spain's 1,807.89 and France's 1,722.21 -- same publisher, same
+# regulation, same weight basis). Germany is deliberately absent: a
+# concurrent research session holds it. See docs/EU-PLAN.md.
+#
+# WHAT "CHICKEN" MEANS HERE, and the one caveat every reader needs:
+# Eurostat's meat code B7100 "Chicken" is the finest split Poland reports --
+# the broiler-specific child code (B7110) publishes no Polish values, so
+# these figures include boiling hens (spent layers) as well as broilers.
+# Canada's data separates broilers from fowl; Poland's, via Eurostat, does
+# not. The file still loads under the project's `broiler` species because
+# that is the API's default lens and Israel's CBS chicken series set the
+# precedent, but the mix is stated in every block's notes below.
+#
+# THE BASIS IS STATED, with named deviations: carcass weight per Regulation
+# (EC) No 1165/2008 -- "plucked and drawn, without head and feet and
+# without neck, heart, liver and gizzard, known as '65 % chicken'". Poland
+# is not among the member states whose deviations Eurostat's quality report
+# names (the Netherlands' 74% presentation, Hungary's included heads).
+#
+# UNITS: nothing converted, nothing re-scaled, same rule as every output
+# file since Israel's. Eurostat publishes THS_HD (thousand heads) and THS_T
+# (thousand tonnes); the values below stay at that native scale.
+#
+# NO EU AGGREGATE. apro_mt_pann publishes zero EU-27 poultry values in any
+# year -- verified across the full time axis, not just recent years. An EU
+# total summed from member states would be our computation wearing
+# Eurostat's citation, so it does not exist here. See docs/EU-PLAN.md.
+
+species: broiler
+country: POL
+
+national:
+  # meat=B7100, meatitem=SLAUGHT, unit=THS_HD. An exhaustive census of
+  # slaughterhouses under Regulation (EC) No 1165/2008 -- Eurostat's quality
+  # report states no member state used sample surveys for slaughterhouse
+  # statistics. Same-year, same-grade head count and tonnage from one
+  # table: the Canada property, from a second source family.
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: eurostat-apro-mt-pann-2026-08
+    notes: >-
+      B7100 "Chicken" -- includes boiling hens, because the broiler-specific
+      code (B7110) publishes no Polish values. Slaughterings in
+      slaughterhouses only; the table's separate "other than in
+      slaughterhouses" series (farm and emergency slaughter, estimated
+      rather than enumerated) is not included in these rows.
+    years:
+      - {year: 2024, value: 1297913.7}
+      - {year: 2023, value: 1233208.9}
+      - {year: 2022, value: 1200098.18}
+      - {year: 2021, value: 1121028.19}
+      - {year: 2020, value: 1178806.9}
+
+  # meat=B7100, meatitem=SLAUGHT, unit=THS_T. Carcass weight, "65% chicken"
+  # basis per the regulation -- a STATED basis, the thing Israel's CBS
+  # tonnage never had.
+  - measure: meat_output
+    unit: thousand_tonnes_carcass_weight
+    confidence: measured
+    source: eurostat-apro-mt-pann-2026-08
+    notes: >-
+      Same census, same table, same B7100 caveat as head_slaughtered.
+      Dividing tonnage by head count gives ~1.87 kg carcass per bird for
+      2024, a plausible chicken carcass weight -- the two series are
+      internally consistent, which is the check, not a figure to publish.
+      Eurostat's own kg-per-head unit (KG_HD) exists in this table but
+      carries no poultry values, so no per-bird weight is loaded.
+    years:
+      - {year: 2024, value: 2433.02}
+      - {year: 2023, value: 2284.95}
+      - {year: 2022, value: 2231.61}
+      - {year: 2021, value: 2096.77}
+      - {year: 2020, value: 2200.28}
