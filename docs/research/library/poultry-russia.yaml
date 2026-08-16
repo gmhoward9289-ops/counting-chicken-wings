@@ -1,0 +1,250 @@
+# Source library -- Russian poultry.
+#
+# Produced 2026-08-16, mirroring the format and discipline of
+# ../poultry-mexico.yaml: every URL below was actually fetched (WebFetch,
+# curl, or both) and its outcome recorded, live or dead.
+#
+# THE ROUTE THAT ACTUALLY WORKED, stated up front:
+#
+#   * rosstat.gov.ru and every regional rosstat subdomain seen in research
+#     (e.g. 32.rosstat.gov.ru) FAILED from this environment with a TLS
+#     certificate-trust error on every tool tried -- WebFetch
+#     ("unable to verify the first certificate"), curl/schannel
+#     ("SEC_E_UNTRUSTED_ROOT ... certificate chain was issued by an
+#     authority that is not trusted"), and a raw Python urllib request
+#     (same underlying failure). This is a DIFFERENT failure shape from
+#     Canada's (a TLS 1.3 handshake reset, fixed by forcing TLS 1.2) and
+#     Mexico's (DNS failure / connection refused): Rosstat's certificate
+#     itself is not trusted by the certificate stores available here, which
+#     reads as the site using a Russian government CA (e.g. the Russian
+#     Ministry of Digital Development's own root, issued after Western CAs
+#     stopped renewing certificates for some Russian state sites) that is
+#     not in this environment's trust bundle. Not resolved this pass --
+#     flagged as the highest-value target for a future pass with either a
+#     browser that trusts the Russian root CA, or an explicit
+#     --cacert/trust-store override a human would need to approve.
+#   * rosptitsesoyuz.ru (the national poultry producers' union) failed at
+#     the DNS level outright -- "Could not resolve host" -- the same shape
+#     of dead end Mexico's SIAP portals hit.
+#   * A deep-research pass (Perplexity, which apparently reaches Rosstat's
+#     site through infrastructure that DOES trust its certificate) located
+#     and read Rosstat's actual national workbook (PROD_2023.xlsx) and
+#     confirmed its structure independently: a single "птицы" (poultry, all
+#     species) line, in both live weight and slaughter weight, with NO
+#     chicken/broiler-only row anywhere in the workbook. This project does
+#     not cite that workbook directly as a source in sources.yaml, because
+#     this pass could not independently verify the URL itself (per this
+#     project's own discipline: a URL nobody here could actually open does
+#     not become a citation just because a research tool reports its
+#     contents) -- but the finding shaped every other decision in this file
+#     and in docs/RUSSIA-PLAN.md, and is recorded here for that reason.
+#   * A single USDA FAS GAIN report (government, English, PDF) is the one
+#     source in this pass that isolates chicken meat from the poultry
+#     total -- and it is from 2020, covering 2019-2020 data. No newer
+#     Russia-specific "Poultry and Products Annual" GAIN report was found;
+#     apps.fas.usda.gov search results and the FAS data pages both stop at
+#     2018/2020 for Russia specifically (contrast Mexico, UK and Canada,
+#     which all have a live 2024-25 GAIN or government series). Plausibly
+#     explained by reduced or discontinued USDA agricultural-attaché
+#     reporting on Russia after 2022, though this project did not find an
+#     explicit statement to that effect and is not asserting one.
+#   * PDF text extraction needed PyMuPDF (`fitz`) directly, exactly as it
+#     did for both of Mexico's PDFs: WebFetch's own summarizer refused the
+#     GAIN report as binary, but the same file it saves to disk underneath
+#     extracted cleanly -- ordinary embedded text, no font-encoding trap.
+#   * The taxonomy trap this file exists to document is WORSE than
+#     Mexico's, not the same shape: Mexico's SIAP/UNA sources at least
+#     publish a "carne de ave" (poultry) aggregate distinct from "carne de
+#     pollo" (chicken), so a reader can see the two categories side by
+#     side. Rosstat publishes only the poultry aggregate, full stop --
+#     there is no national chicken-only line to find, not one this project
+#     merely failed to reach.
+
+- url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry%20and%20Products%20Annual_Moscow_Russian%20Federation_08-15-2020
+  title: 'Russia: Poultry and Products Annual (GAIN Report RS2020-0042)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN), Post Moscow
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 1258291
+  subjects: [poultry, russia, broiler, trade]
+  covers:
+    - broiler_meat_output_tonnes_2019_2020   # Table 1, "Poultry, Meat, Chicken" PSD line
+    - broiler_inventory_reference_head        # present but NOT loaded -- year-mapping unclear
+    - imports_exports_tonnes_2019_2020
+    - poultry_wide_inventory_structure         # 544.691M head all-poultry, 2020-01-01
+  does_not_cover:
+    - head_slaughtered                # no chicken-specific slaughter throughput count
+    - output_value_rub                # no ruble figure anywhere in the report
+    - subnational_breakdown           # national totals only
+    - current_data                    # dated 2020-09-21; no successor report exists
+  confidence_ceiling: industry
+  notes: >-
+    Dated 2020-09-21, Report Number RS2020-0042, "Approved By: Stanley
+    Phillips". WebFetch's own text extraction refused the PDF as binary;
+    the same file, saved to disk by the tool as a side effect, extracted
+    cleanly with `fitz` (PyMuPDF) -- same workaround as both of Mexico's
+    PDFs.
+
+    Table 1 ("Russia: Chicken Meat Production, Supply and Demand, 1,000 MT
+    (RTC), million head"): Production 2019 = 4,671 (USDA Official) / 4,668
+    (New Post); 2020 = 4,685 (Official) / 4,715 (New Post); 2021 = 0
+    (Official, not yet estimated) / 4,725 (New Post, explicitly a
+    FORECAST). "New Post" values loaded for 2019 (final) and 2020
+    (in-year estimate, provisional); 2021 forecast not loaded. The table's
+    unit line states RTC (ready-to-cook) weight explicitly -- this project
+    does not need to guess the basis the way it did for some of Israel's
+    figures.
+
+    Also in Table 1: "Inventory (Reference)" in million head -- 535 (Jan
+    2019), 520 (Official) / 523 (New Post) (Jan 2020), 523 (New Post, Jan
+    2021). Chicken-specific, distinct from the report's separate
+    ALL-POULTRY inventory figure (544.691 million head, all fowl, as of
+    2020-01-01, sourced to Rosstat). NOT loaded into output_russia.yaml:
+    the table gives no indication whether each column is a beginning- or
+    end-of-year figure for its labelled market year, and this project will
+    not assign a year to a stock figure by guessing.
+
+    STRUCTURAL CONTEXT, prose only, not loaded as corpus figures: "Broilers
+    and layers account for approximately 96 percent of total poultry
+    inventories" (as of 2020-01-01); "Industrialized commercial farms...
+    account for 93.4 percent of total production of poultry meat";
+    "chicken meat production and consumption declined year-on-year in
+    2019" amid market oversaturation, falling farm-gate prices, and plant
+    bankruptcies, before recovering in 2020 on export growth (22 percent
+    growth in exports in 2020, entry into the Chinese market).
+
+    CAVEAT CARRIED TO CONFIDENCE GRADE, identical reasoning to Mexico's
+    GAIN report: the table is annotated "NOTE: Not Official USDA data;
+    Official USDA data is available at http://apps.fas.usda.gov/psdonline/"
+    -- a Post estimate reconciling Rosstat and trade data, not a direct
+    quote of a Rosstat publication. Loaded at confidence=industry despite
+    source_type=government.
+
+- url: https://agromics.ru/novosti/proizvodstvo-myasa-2024/
+  title: Производство и потребление мяса, поголовье скота в РФ — 2024
+  publisher: Agromiks (agromics.ru)
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, russia, broiler, taxonomy_trap]
+  covers:
+    - broiler_meat_output_tonnes_2023_2024_claimed   # labelled "broiler", see caveat
+    - broiler_headcount_2024_claimed
+    - per_capita_derived_2024
+  does_not_cover:
+    - primary_citation      # names Rosstat as source but no specific table/publication
+    - weight_basis_proof    # states "slaughter weight" but the underlying Rosstat table
+                              # this figure traces to was never identified
+  confidence_ceiling: industry
+  notes: >-
+    States 5.42 million tonnes (2024) and 5.34 million tonnes (2023) of
+    "мясо бройлеров" (broiler meat), both in slaughter/carcass weight, plus
+    a broiler headcount of 556.03 million birds (end-2024). NOT LOADED:
+    these figures are numerically indistinguishable, to three significant
+    figures, from Rosstat's own reported ALL-POULTRY slaughter-weight
+    total for the same years (5,339,467 tonnes for 2023, independently
+    confirmed from Rosstat's national workbook structure -- see the header
+    of this file). Whether agromics.ru has genuinely isolated broiler-only
+    production or is relabelling the all-poultry aggregate could not be
+    settled from the page alone.
+
+- url: https://www.tsenovik.ru/articles/veterinariya/dinamika-proizvodstva-myasa-v-rossii-rezultaty-2023-goda/
+  title: Динамика производства мяса в России. Результаты 2023 года
+  publisher: Tsenovik, citing ИАА "ИМИТ" (Institute of Agrarian Market Studies)
+  kind: trade_press
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, russia, conflict]
+  covers:
+    - poultry_meat_2023_total_alternate   # 5.156 million t, all-poultry, slaughter weight
+    - regional_growth_decline_2023        # federal-district level, all-poultry not broiler
+  does_not_cover:
+    - broiler_specific_figure
+  confidence_ceiling: industry
+  notes: >-
+    A THIRD figure for 2023 Russian poultry-meat production, again
+    all-poultry rather than broiler-specific: 5.156 million tonnes
+    (slaughter weight), +0.3% / +15,000 t over 2022, with 93% from
+    agricultural organizations. This disagrees with both Rosstat's own
+    5,339,467 t all-poultry total and agromics.ru's 5.34 million tonnes
+    labelled "broiler" for the same year -- the clearest evidence in this
+    pass that Russian 2023 poultry-meat figures do not converge even
+    before the chicken-vs-all-poultry taxonomy question is applied. See
+    docs/RUSSIA-PLAN.md, "The 2023-2024 conflict".
+
+- url: https://www.interfax.ru/russia/995122
+  title: 'Росптицесоюз ждет производства в стране в 2024 году яиц и мяса птицы на уровне 2023 года'
+  publisher: Interfax, quoting Rosptitsesoyuz (Elena Stepanova)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, russia, trade_body]
+  covers:
+    - poultry_meat_2024_forecast   # 5.46 million t, all-poultry, carcass weight
+    - egg_production_2024_forecast
+  does_not_cover:
+    - broiler_specific_figure
+    - rosptitsesoyuz_own_publication   # reaches the corpus via press coverage only
+  confidence_ceiling: industry
+  notes: >-
+    The clearest direct Rosptitsesoyuz quote found in this pass, and it is
+    explicitly all-poultry: 5.46 million tonnes poultry meat (carcass
+    weight, all farm categories) forecast for 2024, of which 5.08 million
+    tonnes from agricultural organizations; 46.44 billion eggs. Confirms
+    that even Rosptitsesoyuz's own public statements, at least as reported
+    by this outlet, do not isolate chicken/broiler from the poultry total.
+
+- url: https://rosptitsesoyuz.ru/
+  title: Rosptitsesoyuz (national poultry producers' union) home page
+  publisher: Rosptitsesoyuz
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [poultry, russia, dead_end]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    DNS failure ("Could not resolve host: rosptitsesoyuz.ru") from this
+    research environment, on every attempt. The same shape of dead end
+    Mexico's infosiap.siap.gob.mx hit. Every Rosptitsesoyuz figure in this
+    project's Russia research reaches the corpus secondhand, via press
+    coverage of the union's public statements, never from
+    rosptitsesoyuz.ru directly.
+
+- url: https://rosstat.gov.ru/storage/mediabank/PROD_2023.xlsx
+  title: 'Производство продуктов животноводства в Российской Федерации (national workbook)'
+  publisher: Rosstat (Федеральная служба государственной статистики)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [poultry, russia, dead_end, taxonomy_source]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    UNREACHABLE from this research environment. WebFetch: "unable to
+    verify the first certificate". curl (twice, plain and forced TLS 1.2):
+    "schannel: SEC_E_UNTRUSTED_ROOT ... certificate chain was issued by an
+    authority that is not trusted". A raw Python urllib request hit the
+    same underlying TLS trust failure. This is NOT the same failure shape
+    as Canada's www150.statcan.gc.ca (a TLS 1.3 handshake reset, fixed by
+    forcing TLS 1.2) or Mexico's SIAP (DNS failure / connection refused):
+    Rosstat's certificate itself is not trusted by any certificate store
+    available in this environment, which is consistent with Rosstat using
+    a Russian government root CA that Western trust stores do not carry.
+
+    A separate deep-research pass (via Perplexity, presumably routed
+    through infrastructure that DOES trust Rosstat's certificate) read
+    this workbook and reported its structure: a `tab78` worksheet with a
+    single "птицы" (poultry, all species) row, in both live weight and
+    slaughter weight, for 2020-2023, and NO chicken/broiler-only row
+    anywhere in the file. That finding is recorded here and used to shape
+    docs/RUSSIA-PLAN.md and the taxonomy-trap facts in data/facts.yaml, but
+    this project does NOT cite the workbook's URL as a source in
+    sources.yaml or attach it to any output_stat_year row, because this
+    pass could not independently open and verify the file itself -- a
+    secondhand report of a document's contents is not the same thing as
+    having read the document, and this project's own discipline (stated
+    plainly in docs/MEXICO-PLAN.md and repeated here) is that a URL nobody
+    on this pass could actually open does not become a citation.

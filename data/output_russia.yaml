@@ -1,0 +1,102 @@
+# Russian broiler ("Poultry, Meat, Chicken") meat output.
+#
+# Hand-curated, like data/output_mexico.yaml, because no Russian government
+# source this project could reach publishes a broiler-only national series.
+# Every number here traces to docs/research/library/poultry-russia.yaml and
+# docs/RUSSIA-PLAN.md.
+#
+# TAXONOMY, the central problem of this file: Rosstat's own national
+# production bulletins (the "Бюллетень «Производство продуктов
+# животноводства в Российской Федерации»" series) report a single line for
+# "птица" (poultry, all species: chicken, turkey, duck, goose), with no
+# national row for "куры"/"бройлеры" (chicken/broiler) alone. The only
+# source this research pass found that isolates chicken specifically is a
+# USDA FAS GAIN attaché report -- one step removed from Rosstat, and dated
+# 2020, covering 2019-2020 data (see the source's own notes for why no
+# newer Russia-specific GAIN report exists). Every figure below is that
+# GAIN report's own "Poultry, Meat, Chicken" PSD line, not a relabelled
+# poultry aggregate.
+#
+# WHAT IS DELIBERATELY NOT HERE, and why:
+#
+#   head_slaughtered   - no chicken-specific enumerated head count found.
+#                        The GAIN report's "Inventory (Reference)" row is a
+#                        STANDING stock figure, not a slaughter throughput
+#                        count, and even that is not loaded here -- see
+#                        below.
+#   inventory_eoy      - the GAIN report's chicken-specific "Inventory
+#                        (Reference)" figures (535 / 520-523 / 523 million
+#                        head across Jan 2019 - Jan 2021) exist, but the
+#                        report does not state whether each column is a
+#                        beginning- or end-of-year snapshot for its labelled
+#                        market year, and this project will not guess a
+#                        year mapping for a stock figure -- see
+#                        docs/RUSSIA-PLAN.md.
+#   output_value       - no aggregate ruble figure for chicken meat output
+#                        specifically was found in this pass.
+#   districts (regional
+#     breakdown)       - not attempted this pass. Rosstat publishes
+#                        regional livestock bulletins by federal subject,
+#                        but with the same all-poultry-not-chicken taxonomy
+#                        problem as the national series, and Rosstat's own
+#                        web infrastructure was unreachable from this
+#                        research environment regardless -- see below.
+#   2023/2024 tonnage  - the two headline-looking Russian broiler figures
+#                        found in trade press (5.34 million t for 2023,
+#                        5.42 million t for 2024, both attributed loosely
+#                        to Rosstat) are numerically indistinguishable from
+#                        Rosstat's own ALL-POULTRY total for the same years,
+#                        and a third industry-analytics source gives yet a
+#                        DIFFERENT total (5.156 million t) for 2023 poultry
+#                        meat generally. Three inconsistent figures for one
+#                        year, none of them confirmed chicken-only, is not
+#                        loadable at any confidence grade this project is
+#                        willing to publish -- see docs/RUSSIA-PLAN.md,
+#                        "The 2023-2024 conflict".
+#
+# ACCESS: rosstat.gov.ru and its regional subdomains could not be reached
+# directly from this research environment -- every fetch attempt (WebFetch,
+# curl, and a Python urllib request) failed with a TLS certificate-trust
+# error ("unable to get local issuer certificate" / "SEC_E_UNTRUSTED_ROOT"),
+# not a DNS failure or a refused connection the way Mexico's SIAP was. This
+# reads as Rosstat's certificate chain not being recognised by the trust
+# stores available here, rather than the site being unreachable in any
+# absolute sense -- flagged as the highest-value target for a future pass
+# with different network/certificate tooling. rosptitsesoyuz.ru (the
+# national poultry union's own site) failed at the DNS level, the same
+# shape of dead end Mexico's SIAP portals hit.
+
+species: broiler
+country: RUS
+
+national:
+  # 2019, final. The GAIN report's own text states this figure was
+  # "adjusted in accordance with final Rosstat data" -- one step removed
+  # from a direct Rosstat quote, but the closest thing to a settled 2019
+  # chicken-only total this pass could reach.
+  - measure: meat_output
+    unit: tonnes
+    confidence: industry
+    source: usda-fas-gain-rs2020-0042
+    notes: >-
+      "Poultry, Meat, Chicken" PSD table, "New Post" column -- broiler-only,
+      not the blended "птица" (all-poultry) aggregate Rosstat itself
+      publishes nationally. Ready-to-cook (RTC) weight, stated explicitly
+      in the table's own unit line ("1,000 MT RTC").
+    years:
+      - {year: 2019, value: 4668000, provisional: 0}
+
+  # 2020, in-year estimate at the report's own publication date
+  # (2020-09-21) -- loaded provisional for the same reason Mexico's 2024
+  # GAIN figure was.
+  - measure: meat_output
+    unit: tonnes
+    confidence: industry
+    source: usda-fas-gain-rs2020-0042
+    notes: >-
+      Same PSD table, "New Post" column. 2021's 4,725 thousand MT in the
+      same table is a FORECAST ("expected to lift production... in 2021")
+      and is deliberately not loaded here, matching this project's existing
+      rule against loading projections as reported/estimated actuals.
+    years:
+      - {year: 2020, value: 4715000, provisional: 1}

@@ -1384,3 +1384,62 @@ facts:
     source: ble-fleischbilanz-2025-pm
     placement: learning
     surprise: 3
+  # ---- Russia -----------------------------------------------------------
+  # Fifth country. See docs/RUSSIA-PLAN.md. Thinner than Mexico's coverage:
+  # only a 2020 GAIN report reaches chicken-specific figures at all, and the
+  # 2023-2024 conflict below is reported rather than resolved.
+
+  - slug: russia-poultry-not-broken-out-by-species
+    headline: "Russia's national statistics don't separate chicken from other poultry"
+    body: >-
+      Rosstat, Russia's federal statistics service, publishes a single
+      national line for "птица" (poultry: chicken, turkey, duck, and goose
+      together), with no chicken-only or broiler-only row at the national
+      level. That is a step behind even Mexico's "carne de ave" vs "carne de
+      pollo" split, where the broader poultry aggregate is at least
+      published separately from the chicken-specific one. The only source
+      this project could reach that isolates chicken meat specifically is a
+      2020 USDA attaché report, quoting 2019-2020 Rosstat data one step
+      removed from Rosstat's own publication - so this project's Russian
+      figures are older and thinner than its Mexican ones, not because
+      nobody looked harder, but because the underlying government
+      publication genuinely does not exist at that granularity.
+    source: usda-fas-gain-rs2020-0042
+    placement: both
+    surprise: 4
+
+  - slug: russia-2023-poultry-meat-three-way-conflict
+    headline: Three sources, three different numbers, one year
+    body: >-
+      For 2023 Russian poultry-meat production alone, this project found
+      three mutually inconsistent published totals: 5,339,467 tonnes
+      (Rosstat's own national workbook, all-poultry, slaughter weight),
+      5.34 million tonnes (a trade-press site, labelled "broiler meat" but
+      numerically indistinguishable from Rosstat's all-poultry figure), and
+      5.156 million tonnes (an industry-analytics site, again all-poultry,
+      not broiler-specific). None of the three is confirmed chicken-only,
+      and none of the three agrees with either of the others to within
+      3.5%. Rather than pick one, or split the difference, this project
+      reports none of them as a corpus figure and states the conflict
+      plainly - the same discipline Mexico's world-rank and per-capita
+      traps already established for this corpus.
+    source: tsenovik-imit-dinamika-2023
+    placement: learning
+    surprise: 4
+
+  - slug: russia-poultry-union-reports-all-poultry-not-broiler
+    headline: "Even Russia's own poultry trade body talks about all poultry, not just chicken"
+    body: >-
+      Rosptitsesoyuz, the Russian poultry producers' union, forecast 5.46
+      million tonnes of poultry meat (carcass weight, all farm categories)
+      for 2024 in its most recent public statement this project could
+      reach - and that figure, like Rosstat's own, is for poultry as a
+      whole, not chicken specifically. Rosptitsesoyuz's own website
+      (rosptitsesoyuz.ru) could not be reached at all from this research
+      environment (a DNS failure, the same shape of dead end Mexico's SIAP
+      portals hit), so even this figure reaches the corpus secondhand, via
+      press coverage of a spokesperson's remarks, not from the union's own
+      publication.
+    source: interfax-rosptitsesoyuz-2024-forecast
+    placement: learning
+    surprise: 2
