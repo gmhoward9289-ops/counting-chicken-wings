@@ -393,7 +393,25 @@ jobs:
                 # a no-op and costs one API call -- or one of them is a run
                 # parked awaiting approval, which is the case that used to sit
                 # here until the deadline. See approve_stalled_runs above.
-                approve_stalled_runs ;;
+                approve_stalled_runs
+
+                # required_approving_review_count keeps mergeStateStatus
+                # BLOCKED forever for this bot's own PR -- it has no reviewer
+                # and never will, so protect-master's bypass list now
+                # includes the GitHub Actions app for exactly this PR. Only
+                # reach for that bypass once every required check has
+                # independently reported pass: --admin bypasses ALL branch
+                # protection, not just the review requirement, so calling it
+                # on an unverified BLOCKED (checks still running) would merge
+                # an unfinished build.
+                if [ "$(gh pr view "$PR" --json reviewDecision --jq .reviewDecision)" \
+                    = "REVIEW_REQUIRED" ] \
+                  && [ "$(gh pr checks "$PR" --required --json bucket \
+                      --jq '[.[].bucket] | unique == ["pass"]' 2>/dev/null)" \
+                    = "true" ]; then
+                  echo "review is the only blocker and required checks are green; merging as an admin"
+                  gh pr merge --squash --admin --delete-branch "$PR" || true
+                fi ;;
               CLEAN)
                 # Checks green and mergeable. If --auto took, this merges
                 # itself in a moment; if it did not, do it here.
