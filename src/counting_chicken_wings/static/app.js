@@ -1007,14 +1007,63 @@ async function initStates() {
           undefined,{maximumFractionDigits:0}) + ' M lb' : '—'}</td></tr>`
     ).join('') + '</table>';
 
+  // The gray fill has to say what it is, on the map's own caption. It is a
+  // working data layer -- census presence with hover detail -- but a flat
+  // gray is also exactly what "no data" looks like, and without this line
+  // even the project's own maintainers have read it as states that failed to
+  // load. Names the layer by its colour, and only when that layer is drawn.
   const censusNote = $('#states-census-note');
   if (censusNote) {
-    censusNote.textContent = d.census && d.census.census_year
-      ? `Census of Agriculture ${d.census.census_year}. Sales, operations ` +
+    censusNote.innerHTML = !(d.census && d.census.census_year) ? '' :
+      presence.length
+      ? `<span class="swatch" aria-hidden="true"></span><b>Gray states are
+         data, not gaps</b> — the annual survey publishes average weight for
+         only the states above its disclosure thresholds, and the Census of
+         Agriculture ${d.census.census_year} covers the rest with operations,
+         inventory and sales. Hover a gray state for its census figures, or
+         read them in the table below. No average weight is published at
+         census scale, so none is shown or invented.`
+      : `Census of Agriculture ${d.census.census_year}. Sales, operations ` +
         'and inventory only -- no average weight is published at this ' +
-        'scale, so none is shown.'
-      : '';
+        'scale, so none is shown.';
   }
+  // The survey's own aggregates: the states it will not name individually,
+  // published combined with every member listed in the footnote. A real
+  // cited figure for exactly the states the map cannot colour -- shown AS
+  // aggregates, never split across members, because allocating a combined
+  // row to its states would be inventing data. The lb/bird column is
+  // arithmetic the source never printed, so it carries the grade the API
+  // assigns it rather than passing as a published figure.
+  const aggEl = $('#states-aggregates');
+  if (aggEl) {
+    const agg = d.production_aggregates;
+    const aggRows = (agg && agg.rows) || [];
+    aggEl.innerHTML = !aggRows.length ? '' :
+      `<p class="note" style="margin-top:18px">The production survey
+       publishes the states it cannot name individually as combined rows
+       (${agg.year}) — every member listed by the source. The lb/bird
+       column ${badge(agg.grade)} is production pounds over head, an
+       average the source itself never printed.</p>
+       <table><tr><th>Published as</th><th class="num">Head</th>
+         <th class="num">Production</th><th class="num">lb/bird</th></tr>` +
+      aggRows.map(a =>
+        // "California, Tennessee, and West Virginia" IS its member list;
+        // repeating it underneath says nothing. The members line is for
+        // rows like "Other States", where the label alone names nobody.
+        `<tr><td>${a.label}
+           ${a.members.every(m => a.label.includes(m)) ? ''
+             : `<div class="note">${a.members.join(', ')}</div>`}</td>
+         <td class="num">${a.head_thousands != null
+            ? (a.head_thousands / 1000).toLocaleString(
+                undefined, { maximumFractionDigits: 1 }) + ' M' : '—'}</td>
+         <td class="num">${a.live_weight_klb != null
+            ? (a.live_weight_klb / 1000).toLocaleString(
+                undefined, { maximumFractionDigits: 0 }) + ' M lb' : '—'}</td>
+         <td class="num">${a.derived_live_weight_lb != null
+            ? a.derived_live_weight_lb.toFixed(2) : '—'}</td></tr>`
+      ).join('') + '</table>';
+  }
+
   const censusTable = $('#states-census-table');
   if (censusTable) {
     censusTable.innerHTML = !presence.length ? '' :
