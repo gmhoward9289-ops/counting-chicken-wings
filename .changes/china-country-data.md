@@ -5,7 +5,7 @@ bump: second
 
 Added China (CHN) as a fifth country: national chicken meat production for
 2023-2025 (14.80 / 15.35 / 16.20 million tonnes, `industry` grade, USDA FAS
-attaché reports quoting a PSD table their own cover page marks "Not
+attaché reports quoting a PSD table their own table note marks "Not
 official USDA data"), a derived self-sufficiency series (95.1% → 97.4%,
 rising — China became a net exporter in 2024), and facts covering the
 taxonomy split between China's own 禽肉 (all-poultry) statistics and

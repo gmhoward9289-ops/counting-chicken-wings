@@ -93,8 +93,8 @@ than a parsing artifact on one side.
 Nineteen of Brazil's 27 states (26 states + the Distrito Federal) publish
 non-suppressed 2025 figures in IBGE's table; the other eight — Acre,
 Amazonas, Roraima, Rio Grande do Norte, Alagoas, Sergipe, the Distrito
-Federal (all marked confidential, IBGE's "X") and Amapá (marked "..",
-IBGE's not-applicable code, loaded suppressed rather than asserted as a
+Federal (all marked confidential, IBGE's "X") and Amapá (marked "...",
+IBGE's data-not-available code, loaded suppressed rather than asserted as a
 true zero) — are loaded as suppressed rows, the same presence-without-
 volume pattern Canada's Atlantic provinces and Mexico's unreached SIAP
 data both use in spirit. The published 19 states sum to 14,143,105 tonnes

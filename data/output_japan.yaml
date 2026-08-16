@@ -65,8 +65,10 @@ national:
     confidence: measured
     source: maff-chikusan-toukei-broiler-2024
     notes: >-
-      2,050 farms nationally as of 2024-02-01, up 2.4% year on year
-      (MAFF's own column (5) of table 5(1)). Only one year loaded -- this
+      2,050 farms nationally as of 2024-02-01. The BIRD count is up 2.4%
+      year on year (MAFF's own column (5) of table 5(1), 102.4%); the FARM
+      count is down 2.4% (column (4), 97.6%) -- fewer farms, more birds,
+      the usual consolidation direction. Only one year loaded -- this
       project read the raw 2024 table directly rather than eyeballing prior
       years off a chart in the GAIN report, and did not separately fetch
       earlier years' Livestock Statistics tables this pass.

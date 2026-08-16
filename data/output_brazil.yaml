@@ -113,11 +113,11 @@ national:
 # within a tenth of a point of each other -- unlike Canada's exact
 # partition, and unlike Israel's structurally-explained 4.76% marketing
 # gap. The 19 published states below sum to 6,621,286,613 head against a
-# national 6,695,465,295 (99.0% capture) and 14,143,105 tonnes against a
+# national 6,695,465,295 (98.9% capture) and 14,143,105 tonnes against a
 # national 14,304,261 (98.9% capture). The remaining 8 states/territories
 # -- Acre, Amazonas, Roraima, Rio Grande do Norte, Alagoas, Sergipe and
 # the Distrito Federal (IBGE's confidential-suppression code "X" in every
-# 2025 quarter) plus Amapa (IBGE's not-applicable code "..", loaded
+# 2025 quarter) plus Amapa (IBGE's data-not-available code "...", loaded
 # suppressed rather than asserted as a true zero) -- are loaded as
 # suppressed rows: presence without volume, the same pattern Canada's
 # Atlantic provinces and NASS/CBS both use.

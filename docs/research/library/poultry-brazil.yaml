@@ -86,11 +86,14 @@
 
     SUPPRESSED (marked "X" in every 2025 quarter for both variables): Acre,
     Amazonas, Roraima, Rio Grande do Norte, Alagoas, Sergipe, Distrito
-    Federal. Amapa is marked ".." (IBGE's "not applicable" code, distinct
-    from "X" confidential-suppression) in every quarter -- loaded as
-    suppressed=1 alongside the "X" states rather than asserted as a true
-    zero, because ".." was not chased to ground against IBGE's own
-    documentation of what it means for this specific table.
+    Federal. Amapa is marked "..." (IBGE's "data not available" code,
+    distinct from "X" confidential-suppression; a validation pass on
+    2026-08-16 re-queried SIDRA and found the API returns three dots, not
+    the two-dot not-applicable code this entry originally recorded) in
+    every quarter -- loaded as suppressed=1 alongside the "X" states
+    rather than asserted as a true zero, because the code was not chased
+    to ground against IBGE's own documentation of what it means for this
+    specific table.
 
     RECONCILIATION: the 19 published states sum to 14,143,105 tonnes
     against a national total of 14,304,261 tonnes -- a gap of 161,156
