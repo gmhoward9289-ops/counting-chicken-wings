@@ -10,3 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: codespell-project/actions-codespell@v2
+        with:
+          # ONS = UK Office for National Statistics, CNA = Comisión Nacional
+          # del Agua (Mexico), avance = Spanish in cited source titles.
+          ignore_words_list: ons,cna,avance
