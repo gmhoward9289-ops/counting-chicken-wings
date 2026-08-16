@@ -7,8 +7,8 @@ Every file has a .csv twin for spreadsheets and a .txt twin for
 reading. Files are kept small and self-describing so any one of
 them is usable on its own.
 
-  facts               61 rows  chicken facts
-  sources             69 rows  citations
+  facts               69 rows  chicken facts
+  sources             86 rows  citations
   loss_chain          26 rows  loss chain
   mixing_cascade      30 rows  mixing cascade
   states              46 rows  average live weight by state

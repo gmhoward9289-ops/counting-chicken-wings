@@ -56,7 +56,10 @@ def test_population_is_null_so_no_per_capita_claim_can_be_made(conn):
     rows = conn.execute(
         "SELECT iso3, population FROM country ORDER BY iso3"
     ).fetchall()
-    assert {r["iso3"] for r in rows} == {"ISR", "MEX", "USA"}
+    # The one exact-roster assertion in the suite (the country tests
+    # elsewhere use supersets): adding a country means updating this line
+    # and no other.
+    assert {r["iso3"] for r in rows} == {"CAN", "GBR", "ISR", "MEX", "USA"}
     assert all(r["population"] is None for r in rows)
 
 

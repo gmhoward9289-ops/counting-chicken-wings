@@ -499,6 +499,53 @@
     https://www.nass.usda.gov/Surveys/Guide_to_NASS_Surveys/Chickens_and_Eggs/index.php
 
 [28]
+  slug: canada-quota-not-demand
+  headline: Canadian chicken farmers do not decide how many birds to raise
+  body:
+    Chicken Farmers of Canada sets a national base allocation every few weeks,
+    and provincial boards divide it into farm-level quota. A farmer cannot
+    simply raise more chickens because a market signal says to - production is
+    set in advance by a marketing board response to projected demand, import
+    levels, and (as 2025 showed) disease and hatching-egg supply constraints,
+    not the other way around. This is the same kind of structural fact
+    Israel's kosher slaughter stage was for that country's plan: it changes
+    what "how many chickens does Canada raise" even means, rather than just
+    changing an answer. It is also why Canada has no published "standing
+    flock" figure the way Israel's or the US's inventories do - a quota-set
+    system has no equivalent census to publish, because the quota itself
+    already states the intended throughput.
+  surprise: 4
+  placement: learning
+  source: 2025 Annual Report
+  publisher: Chicken Farmers of Canada
+  url:
+    
+    https://www.chickenfarmers.ca/wp-content/uploads/2026/03/CFC-Annual-report-2025-E.pdf
+
+[29]
+  slug: canada-two-weight-bases-one-report
+  headline: Canada's own chicken statistics do not agree on how to weigh a chicken
+  body:
+    Statistics Canada reports 2025 chicken production in what a separate
+    government page confirms is eviscerated weight - the dressed carcass,
+    after processing. Chicken Farmers of Canada's own annual report, in the
+    very same year, reports "average farm size" and producer price per
+    kilogram of LIVE weight - the bird before slaughter, which for a broiler
+    runs roughly 30% heavier than its eviscerated weight. Two publishers, one
+    country, one year, two different birds by weight - and neither publication
+    says so next to the number. This project never combines the two: an
+    average bird weight for Canada is derived only from StatCan's own head
+    count and StatCan's own tonnage, both on the same (eviscerated) basis,
+    precisely so this trap cannot enter through the back door.
+  surprise: 4
+  placement: learning
+  source: 2025 Annual Report
+  publisher: Chicken Farmers of Canada
+  url:
+    
+    https://www.chickenfarmers.ca/wp-content/uploads/2026/03/CFC-Annual-report-2025-E.pdf
+
+[30]
   slug: chicken-footprint-falling
   headline: Chicken's footprint per bird has fallen every year
   body:
@@ -515,7 +562,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[29]
+[31]
   slug: chunks-are-breast-too
   headline: The "chunks" are not wing either
   body:
@@ -533,7 +580,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
 
-[30]
+[32]
   slug: condemnation-is-tiny
   headline: FSIS condemns less than half a percent
   body:
@@ -546,7 +593,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[31]
+[33]
   slug: cracked-eggs-become-liquid-egg
   headline: A cracked egg is not thrown away, it is rerouted
   body:
@@ -562,7 +609,7 @@
   publisher: USDA Agricultural Marketing Service
   url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
 
-[32]
+[34]
   slug: egg-cholesterol-is-the-outlier
   headline: An egg carries more cholesterol than anything else here
   body:
@@ -578,7 +625,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[33]
+[35]
   slug: egg-grading-is-not-separating
   headline: Grading splits a chicken's wings apart, but cannot split her eggs
   body:
@@ -598,7 +645,7 @@
   publisher: USDA Agricultural Marketing Service
   url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
 
-[34]
+[36]
   slug: feed-behind-a-dozen-wings
   headline: A dozen wings represents about five pounds of feed
   body:
@@ -615,7 +662,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[35]
+[37]
   slug: flat-beats-drumette
   headline: The flat has a better meat yield than the drumette
   body:
@@ -630,7 +677,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[36]
+[38]
   slug: footprint-must-be-allocated
   headline: A dozen wings is not six chickens' worth of carbon
   body:
@@ -647,7 +694,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[37]
+[39]
   slug: israel-farmer-vs-retail-price
   headline: An Israeli chicken triples in price between the farm and the shelf
   body:
@@ -668,7 +715,7 @@
     
     https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
 
-[38]
+[40]
   slug: israel-head-count-is-not-measured
   headline: Israel counts its chickens in tonnes, and the industry fills in the birds
   body:
@@ -701,7 +748,7 @@
     
     https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
 
-[39]
+[41]
   slug: israel-kosher-inspection-no-us-analogue
   headline: Kosher slaughter adds an inspection step the US model has no room for
   body:
@@ -721,7 +768,7 @@
   publisher: Orthodox Union (OU Kosher)
   url: https://oukosher.org/blog/consumer-kosher/shechita/
 
-[40]
+[42]
   slug: line-speed-and-broken-wings
   headline: Some plants run 175 birds a minute, others 140
   body:
@@ -742,7 +789,7 @@
     
     https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
 
-[41]
+[43]
   slug: mortality-rising
   headline: Broiler mortality has been getting worse since 2013
   body:
@@ -757,7 +804,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[42]
+[44]
   slug: season-february-is-not-heavier
   headline: The Super Bowl does not show up in the birds
   body:
@@ -777,7 +824,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[43]
+[45]
   slug: season-texas-one-bad-june
   headline: One odd month looks exactly like a season if you only measure the range
   body:
@@ -796,7 +843,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[44]
+[46]
   slug: silk-nobody-writes-down-one-cocoon-per-worm
   headline: The hardest silk figure to source is the most obvious one
   body:
@@ -822,7 +869,7 @@
   publisher: PubMed / Elsevier
   url: https://pubmed.ncbi.nlm.nih.gov/38061509/
 
-[45]
+[47]
   slug: twelve-eggs-needs-fifteen-hens
   headline: Getting a dozen eggs in one day actually takes about fifteen hens
   body:
@@ -836,7 +883,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[46]
+[48]
   slug: wing-tips-are-a-third-segment
   headline: Every wing has a third segment you never see
   body:
@@ -852,7 +899,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[47]
+[49]
   slug: wing-tips-domestic-fate
   headline: At home, wing tips become stock, pet food, or fertilizer
   body:
@@ -869,7 +916,7 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[48]
+[50]
   slug: wings-is-a-regulated-word
   headline: "Wings" is a regulated word, and boneless wings comply with it
   body:
@@ -887,7 +934,7 @@
     
     https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
 
-[49]
+[51]
   slug: wings-most-damaged-part
   headline: Wings are the most damaged part of the chicken, by far
   body:
@@ -903,7 +950,7 @@
   publisher: Canadian Journal of Animal Science
   url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
 
-[50]
+[52]
   slug: an-egg-is-leaner-than-a-wing
   headline: An egg carries wing-like protein with a third less fat
   body:
@@ -917,7 +964,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[51]
+[53]
   slug: bms-eight-earns-the-five
   headline: It takes a marbling score of 8 out of 12 to earn the 5 in A5
   body:
@@ -937,7 +984,30 @@
     
     https://www.lonemountaincattle.com/breeding-guide/technical-resources/carcass-grading/
 
-[52]
+[54]
+  slug: canada-per-capita-disappearance
+  headline: Chicken is Canada's most-eaten meat, and the number is government-dated
+  body:
+    Agriculture and Agri-Food Canada puts chicken's "per capita disappearance"
+    - the standard supply-side proxy for how much of a food actually gets
+    eaten - at 35.64 kilograms per person in 2025, ahead of every other animal
+    protein in the country. "Disappearance" is kept rather than translated to
+    "consumption" because it means something narrower: total supply minus
+    exports minus the change in frozen stocks, not a measured intake figure.
+    It is the standard the industry itself uses, and it is the reason this
+    figure can ship as a dated fact where Israel's much-repeated "highest
+    per-capita consumer" claim could not - Israel's version traced to a dead
+    link, and every replacement disagreed with the others by up to 20%.
+    Canada's traces to one government page, for one named year.
+  surprise: 3
+  placement: both
+  source: Canada's chicken industry — at a glance
+  publisher: Agriculture and Agri-Food Canada
+  url:
+    
+    https://agriculture.canada.ca/en/sector/animal-industry/poultry-and-egg-market-information/chicken
+
+[55]
   slug: cook-loss-irrelevant
   headline: Cooking changes the weight, never the count
   body:
@@ -949,7 +1019,7 @@
   source: Placeholder pending research
   publisher: counting-chicken-wings
 
-[53]
+[56]
   slug: dressing-yield
   headline: About three quarters of a live chicken becomes sellable meat
   body:
@@ -961,7 +1031,7 @@
   source: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings
 
-[54]
+[57]
   slug: egg-data-agrees-with-itself
   headline: The egg numbers check out against themselves, twice
   body:
@@ -977,7 +1047,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[55]
+[58]
   slug: israel-pargiyot-baby-chickens
   headline: 'Pargiyot' means baby chickens, and it no longer does
   body:
@@ -994,7 +1064,7 @@
   publisher: The Jewish Chronicle
   url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
 
-[56]
+[59]
   slug: kitchen-waste-corroborated
   headline: Restaurant kitchens waste 4-13% of what they buy
   body:
@@ -1013,7 +1083,91 @@
     
     https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
 
-[57]
+[60]
+  slug: mexico-ave-vs-pollo-taxonomy
+  headline: Mexico's own statistics split poultry meat two ways
+  body:
+    Mexican agricultural statistics report "carne de ave" (poultry meat) as a
+    category that includes both chicken and turkey, and "carne de pollo"
+    (chicken meat) as chicken alone. A national poultry-meat total would
+    overstate this project's broiler figure by whatever share turkey
+    contributes - so every Mexican number this project publishes is checked
+    against a source's own wording and is specifically the "pollo" reading,
+    never the broader "ave" aggregate.
+  surprise: 3
+  placement: learning
+  source: Panorama de la industria de la carne de ave en México
+  publisher: BM Editores
+  url:
+    
+    https://bmeditores.mx/avicultura/panorama-de-la-industria-de-la-carne-de-ave-en-mexico
+
+[61]
+  slug: mexico-self-sufficiency-eighty-percent
+  headline: Mexico makes about four in five of its own chickens
+  body:
+    In 2023, Mexico produced 3,888,000 tonnes of chicken meat against a total
+    domestic supply (production plus imports) of 4,894,000 tonnes - about
+    79.4% self-sufficiency, with the remaining fifth arriving mostly from the
+    United States (about 86% of 2023 imports) and Brazil (about 14%). Two
+    independently reported trade-press figures land within a point of the same
+    number (79.6% and "almost 80%"), which is why this is one of the few
+    Mexican figures in this project confident enough to publish as a headline.
+    This is the opposite shape from Israel, which the corpus already describes
+    as a net surplus producer - Mexico runs the more ordinary pattern of a
+    large producer that still imports a meaningful share of what it eats.
+  surprise: 3
+  placement: both
+  source: Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Mexico+City_Mexico_MX2024-0040.pdf
+
+[62]
+  slug: mexico-tif-inspection-not-fsis-equivalent
+  headline: Only some Mexican poultry plants answer to a federal inspector
+  body:
+    Mexico's Tipo Inspección Federal (TIF) system federally certifies
+    slaughter and processing plants; industry estimated that about 85% of 2024
+    poultry slaughter ran through TIF-certified plants (121 of them
+    nationally), up from about 83% in 2023. The remaining slaughter runs
+    through state or municipal inspection, or none at all. Unlike Israel's
+    kosher bedikah inspection, which the corpus already describes as a loss
+    stage with no US analogue, TIF coverage is a question of which SHARE of
+    the national supply is inspected at all, not what an inspector rejects -
+    and no rejection or condemnation rate for either TIF or non-TIF slaughter
+    was found in this research pass. Described here rather than modelled as a
+    loss stage, for the same reason Israel's bedikah is described and not
+    quantified: a number here would be invented, not sourced.
+  surprise: 3
+  placement: learning
+  source: Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Mexico+City_Mexico_MX2024-0040.pdf
+
+[63]
+  slug: mexico-weekly-throughput-not-annualized
+  headline: Mexico's own poultry trade body counts birds by the week, not the year
+  body:
+    The Unión Nacional de Avicultores (UNA) - Mexico's national poultry
+    producers' association - reports approximately 39.3 million chickens
+    processed per week as of 2025. This project deliberately does not multiply
+    that by 52 to produce an annual head count: doing so would assert a
+    constant weekly rate that nobody has published, on top of a figure that is
+    already an industry estimate rather than a government enumeration. So
+    Mexico, like Israel, currently has no bird count in this corpus - the
+    reason is different (a rate that resists honest annualization, rather than
+    a measurement nobody took at all), but the caution is the same.
+  surprise: 3
+  placement: learning
+  source: Industria (statistics page)
+  publisher: Unión Nacional de Avicultores (UNA)
+  url: https://una.org.mx/industria/
+
+[64]
   slug: nineteen-billion-wings
   headline: The US produced 19.16 billion whole wings in 2025
   body:
@@ -1025,7 +1179,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[58]
+[65]
   slug: top-four-concentration
   headline: Four companies produce well over half the chicken in America
   body:
@@ -1041,7 +1195,7 @@
     
     https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
 
-[59]
+[66]
   slug: transit-loss-is-unmeasured
   headline: Nobody publishes how many wings are lost in transit
   body:
@@ -1061,7 +1215,7 @@
   publisher: Environmental Research Letters (IOP)
   url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
 
-[60]
+[67]
   slug: wings-are-mostly-fat-calories
   headline: About 60% of a wing's calories come from fat
   body:
@@ -1075,7 +1229,33 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/172390/nutrients
 
-[61]
+[68]
+  slug: mexico-veracruz-consistent-state-leader
+  headline: The same state has led Mexican chicken production in every recent ranking
+  body:
+    Veracruz was Mexico's top chicken-meat-producing state in 2019 (11.7% of
+    national output, per a peer-reviewed citation of SIAP), in 2021 (per the
+    national agricultural council), and again in 2023-24 (per the USDA's own
+    attaché report), with Aguascalientes, Jalisco, Querétaro and Durango
+    rotating through the next few places across every year checked in this
+    research pass. The one earlier year checked, 2014, named a different
+    leader - Aguascalientes, per a SADER article - so the streak is "every
+    ranking since 2019", not forever. The exact order of that second tier is
+    NOT settled: sources describing the same 2023-24 period disagree on
+    whether Aguascalientes or Jalisco ranks second, and this project
+    deliberately does not pick a side - see docs/MEXICO-PLAN.md. What is
+    consistent across every source from 2019 onward is Veracruz in first place
+    and the same five or six states making up roughly half to two-thirds of
+    national output.
+  surprise: 2
+  placement: learning
+  source: Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Mexico+City_Mexico_MX2024-0040.pdf
+
+[69]
   slug: two-wings-hard-floor
   headline: A chicken has exactly two wings
   body:
