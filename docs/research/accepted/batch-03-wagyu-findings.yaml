@@ -1,0 +1,22 @@
+batch: batch-03-wagyu
+subject: wagyu
+extraction:
+  host: COOPER
+  models:
+  - qwen2.5-coder:7b
+  - gemma4-32k
+  ran: '2026-08-15'
+  specified_by: human
+  gate: verify (verbatim quote against the returned document)
+findings:
+- field: days_on_feed
+  value_lo: 30
+  value_mode: 30
+  value_hi: 30
+  unit: months
+  confidence: industry
+  document: inbox/wagyu/https-www-animbiosci-org-journal-view-php-doi-10-7c1b73c6.txt
+  quote: Moreover, it takes 30 months to complete the Wagyu fattening process.
+  agreement: 1/1 (first model returned nothing)
+  verified_by: null
+proposed_sources: []
