@@ -1883,3 +1883,139 @@
     Aguascalientes sits at or near the top of the state ranking, though
     never loaded as a table figure since only the leader is named, not a
     percentage.
+
+- slug: usda-fas-gain-rs2020-0042
+  title: 'Russia: Poultry and Products Annual (GAIN Report RS2020-0042)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN), Post Moscow
+  url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry%20and%20Products%20Annual_Moscow_Russian%20Federation_08-15-2020
+  published_on: '2020-09-21'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A US government attaché report, the only source this project found that
+    isolates CHICKEN meat specifically (Table 1, "Poultry, Meat, Chicken")
+    from Russia's blended national poultry total. Fetched directly; WebFetch's
+    own summarizer refused the PDF as binary, but the file it saves to disk
+    underneath extracts cleanly with PyMuPDF (`fitz`) - the same workaround
+    Mexico's GAIN report needed.
+
+    Table 1 gives, in 1,000 MT RTC (ready-to-cook weight, stated explicitly):
+    Production 2019 = 4,668 ("New Post" column; final, adjusted to Rosstat's
+    confirmed 2019 total per the report's own text) and 2020 = 4,715 ("New
+    Post"; still an in-year estimate as of the report's 2020-09-21
+    publication date - loaded provisional). 2021's 4,725 is explicitly a
+    FORECAST ("expected to lift production to 4.725 MMT (RTC) in 2021") and
+    is deliberately not loaded, mirroring Mexico's exclusion of GAIN's 2025
+    forecast row.
+
+    Table 1 also carries an "Inventory (Reference)" row in million head
+    (535 for Jan 2019, 520/523 for Jan 2020, 523 for Jan 2021) - a
+    chicken-specific standing-stock reference distinct from the report's
+    separate ALL-POULTRY inventory figure (544.691 million head, all fowl,
+    as of 2020-01-01). Not loaded into output_stat_year: the table does not
+    state whether this "Inventory (Reference)" figure is a beginning- or
+    end-of-year snapshot for the labelled market year, and guessing the
+    mapping would risk double-counting or mis-dating a stock figure - see
+    docs/RUSSIA-PLAN.md.
+
+    CAVEAT CARRIED TO CONFIDENCE GRADE, same reasoning as Mexico's GAIN
+    report: annotated "NOTE: Not Official USDA data; Official USDA data is
+    available at http://apps.fas.usda.gov/psdonline/" - a Post estimate
+    reconciling Rosstat and trade data, not a direct quote of a Rosstat
+    publication. Loaded at confidence=industry, even though source_type is
+    'government'.
+
+    STRUCTURAL CONTEXT, not loaded as corpus figures: broilers and layers
+    together are ~96% of Russia's total poultry inventory (544.691 million
+    head, 2020-01-01); industrialized commercial farms account for 93.4% of
+    poultry meat production; chicken meat production and consumption
+    DECLINED year-on-year in 2019 amid market oversaturation and farm
+    bankruptcies, before recovering in 2020. No Russia-specific "Poultry and
+    Products Annual" GAIN report has been published since this one - the
+    USDA FAS website and search of apps.fas.usda.gov turned up no
+    2021-through-2026 successor, so this is necessarily a pre-2022 baseline,
+    not a current one. See docs/RUSSIA-PLAN.md.
+
+- slug: agromics-proizvodstvo-myasa-2024
+  title: Производство и потребление мяса, поголовье скота в РФ — 2024
+  publisher: Agromiks (agromics.ru)
+  url: https://agromics.ru/novosti/proizvodstvo-myasa-2024/
+  retrieved_on: '2026-08-16'
+  source_type: trade_press
+  notes: >-
+    Trade-press analytics site, attributing its figures to Rosstat. States
+    "5,42 миллиона тонн" (5.42 million tonnes, slaughter/carcass weight) of
+    what it labels "мясо бройлеров" (broiler meat) for 2024, up 1.5% from
+    "5,34 миллиона тонн" in 2023, plus a broiler headcount of "556,03
+    миллиона особей" (556.03 million birds) as of end-2024 (+2.2% y/y). Also
+    states chicken is 44.48% of Russia's 12.2-million-tonne total meat
+    output (all species, not just poultry) in 2024, and derives a per-capita
+    figure of 36.49 kg/person/year from production plus net trade.
+
+    NOT LOADED AS A CHICKEN-SPECIFIC CORPUS FIGURE. Both the 2023 tonnage
+    (5.34 million) and the shape of the 2024 tonnage (5.42 million) are
+    numerically indistinguishable, to three significant figures, from
+    Rosstat's own ALL-POULTRY slaughter-weight total for the same years
+    (5,339,467 t reported for 2023 in Rosstat's national workbook, per
+    independent research - see docs/RUSSIA-PLAN.md and
+    docs/research/library/poultry-russia.yaml). This site's own separate
+    "мясо птицы" (poultry meat, not broiler-specific) article
+    (rynok-myasa) reports figures in the same range for the same years.
+    Whether this source has genuinely isolated broiler-only production, or
+    is relabeling Rosstat's all-poultry total as "бройлеров" the way trade
+    press sometimes conflates "ave" and "pollo" for Mexico, could not be
+    resolved from the page itself - it names Rosstat as its source but does
+    not name a specific Rosstat table or publication. Carried as a fact
+    with this caveat stated plainly, not as an output_stat_year row.
+
+- slug: tsenovik-imit-dinamika-2023
+  title: Динамика производства мяса в России. Результаты 2023 года
+  publisher: Tsenovik, citing ИАА "ИМИТ" (Institute of Agrarian Market Studies)
+  url: https://www.tsenovik.ru/articles/veterinariya/dinamika-proizvodstva-myasa-v-rossii-rezultaty-2023-goda/
+  retrieved_on: '2026-08-16'
+  source_type: trade_press
+  notes: >-
+    An independent industry-analytics source for the SAME 2023 year gives a
+    THIRD number for "мясо птицы" (poultry meat, not broiler-specific):
+    5.156 million tonnes in slaughter weight, +0.3% / +15,000 t over 2022 -
+    a different figure again from both Rosstat's own 5,339,467 t all-poultry
+    total and agromics's 5.34 million tonnes labelled "broiler". The
+    article explicitly discusses "мясо птицы" throughout and does not
+    separate a chicken/broiler-only line. Regional detail (three federal
+    districts grew, three declined) is poultry-wide, not broiler-specific,
+    and is not loaded.
+
+    Used in docs/RUSSIA-PLAN.md as the clearest evidence that Russian
+    2023 poultry-meat production has at least three mutually inconsistent
+    published figures (5.156M, 5.339M, 5.34M tonnes) even before the
+    chicken-vs-all-poultry taxonomy question is applied - a genuine,
+    unresolved conflict this project reports side-by-side rather than
+    adjudicates, per the same discipline as Mexico's world-rank and
+    per-capita traps.
+
+- slug: interfax-rosptitsesoyuz-2024-forecast
+  title: 'Росптицесоюз ждет производства в стране в 2024 году яиц и мяса птицы на уровне 2023 года'
+  publisher: Interfax, quoting Rosptitsesoyuz (Elena Stepanova, Deputy Director General)
+  url: https://www.interfax.ru/russia/995122
+  retrieved_on: '2026-08-16'
+  source_type: trade_body
+  notes: >-
+    The clearest direct quote from Rosptitsesoyuz (Росптицесоюз, the
+    Russian poultry union) found in this pass, and it is explicitly an
+    ALL-POULTRY figure, not chicken-specific: "поголовье птицы" forecast
+    poultry meat production of 5.46 million tonnes (carcass/"убойный" weight,
+    all farm categories) for 2024, of which 5.08 million tonnes from
+    agricultural organizations specifically; egg production 46.44 billion
+    units. Confirms that even Rosptitsesoyuz's own public statements, at
+    least via this outlet, report poultry as a whole rather than publishing
+    a broiler-only national total the way this project would need to load
+    a `measured` or `industry` broiler figure directly from the union.
+    graded trade_body (a national industry association, one step from a
+    government statistical release) rather than government.
+
+    Rosptitsesoyuz's own web presence (rosptitsesoyuz.ru) could not be
+    reached AT ALL from this research environment - DNS failure, the same
+    shape of dead end Mexico's SIAP portals hit. Every Rosptitsesoyuz figure
+    in this project's Russia research reaches the corpus secondhand, via
+    press coverage, never from rosptitsesoyuz.ru directly. See
+    docs/research/library/poultry-russia.yaml.

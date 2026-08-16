@@ -106,3 +106,35 @@ countries:
       Canada) but is loaded as a fact rather than as this column, because it
       is already published as a ratio and this project performs no other
       calculation that would need a Canadian population estimate.
+
+  # Fifth country. See docs/RUSSIA-PLAN.md and
+  # docs/research/library/poultry-russia.yaml. Rosstat, unlike StatCan or
+  # even SIAP, publishes NO national chicken-only line at all -- only a
+  # blended "птица" (all-poultry) total -- so this is closer to Mexico's
+  # shape (secondhand government data, thin coverage) than Canada's.
+  - iso3: RUS
+    name: Russia
+    native_mass_unit: kg
+    native_currency: RUB
+    notes: >-
+      Russia reports in kilograms/tonnes and rubles, so every mass and value
+      needs deliberate conversion at load, as for every non-US country here.
+
+      Rosstat's national livestock bulletins report a single "птица"
+      (poultry, all species) line with no chicken/broiler-only row --
+      unlike Mexico's "carne de ave" vs "carne de pollo" split, Rosstat does
+      not even publish the broader aggregate broken out by species
+      nationally. The only source reached that isolates chicken meat is a
+      2020 USDA FAS GAIN report (2019-2020 data; no newer Russia-specific
+      GAIN report exists). Trade press reports 2023-2024 figures labelled
+      "broiler" that are numerically indistinguishable from Rosstat's own
+      all-poultry total, and a third industry source gives yet a different
+      2023 total again -- a genuine, unresolved conflict, not adjudicated.
+
+      rosstat.gov.ru could not be reached directly from this research
+      environment (TLS certificate-trust failure on every fetch attempt,
+      not a DNS or connection failure); rosptitsesoyuz.ru failed at the DNS
+      level. See docs/research/library/poultry-russia.yaml for the full
+      access record.
+
+      population stays NULL, same discipline as every other country here.
