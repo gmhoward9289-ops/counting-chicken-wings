@@ -256,3 +256,27 @@ countries:
       access record.
 
       population stays NULL, same discipline as every other country here.
+
+  # Tenth country, and the first to arrive through a SUPRANATIONAL source:
+  # Eurostat's harmonised slaughtering table, not Poland's own GUS. That
+  # choice is deliberate -- comparability across 27 member states is the
+  # point of entering the EU via Eurostat, and the same API call has 25+
+  # more countries behind it. See docs/EU-PLAN.md and
+  # docs/research/library/poultry-eu.yaml.
+  - iso3: POL
+    name: Poland
+    native_mass_unit: kg
+    native_currency: PLN
+    notes: >-
+      The EU's largest poultry producer, checkable within the one harmonised
+      Eurostat table this pass loads. Head count and carcass tonnage both
+      land at 'measured' grade from an exhaustive census of slaughterhouses
+      under Regulation (EC) No 1165/2008 -- the Canada property, from a
+      second source family. The finest split Poland reports is "Chicken"
+      (broilers plus boiling hens); the broiler-specific code publishes no
+      Polish values.
+
+      population stays NULL, same discipline as every country since Israel:
+      no per-capita consumption figure was sourced, so no denominator
+      ships. Note the currency: Poland is in the EU but not the eurozone --
+      PLN, not EUR, is what a future output-value figure would arrive in.

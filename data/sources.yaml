@@ -2625,3 +2625,56 @@
     in this project's Russia research reaches the corpus secondhand, via
     press coverage, never from rosptitsesoyuz.ru directly. See
     docs/research/library/poultry-russia.yaml.
+# ---------------------------------------------------------------- European Union
+#
+# See docs/EU-PLAN.md and docs/research/library/poultry-eu.yaml for the full
+# research trail. Eurostat is the project's first supranational source: one
+# API, one regulation, one weight basis, 27 member states. Poland enters
+# first; Germany is deliberately deferred to a concurrent research session.
+
+- slug: eurostat-apro-mt-pann-2026-08
+  title: >-
+    Slaughtering in slaughterhouses -- annual data (apro_mt_pann), poultry
+    series, retrieved via the Eurostat dissemination API
+  publisher: Eurostat (European Commission)
+  url: https://ec.europa.eu/eurostat/databrowser/view/apro_mt_pann/default/table
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Retrieved from the dissemination API (statistics/1.0/data/apro_mt_pann,
+    format=JSON, no auth), HTTP 200, on 2026-08-16. Dimensions verified
+    against the live dataset rather than assumed: meat codes B7000 Poultry
+    meat / B7100 Chicken / B7110 Broiler, meatitem SLAUGHT, units THS_HD
+    (thousand heads), THS_T (thousand tonnes), KG_HD (kg per head).
+
+    Poland, B7100 Chicken, slaughterings: 1,297,913.7 thousand head and
+    2,433.02 thousand tonnes (2024); series loaded back to 2020. The
+    broiler-specific code B7110 publishes NO Polish values, so B7100 --
+    which includes boiling hens -- is the finest available split. KG_HD
+    carries no poultry values for Poland either, so no per-bird weight is
+    loaded.
+
+    BASIS, stated by the publisher: carcass weight under Regulation (EC)
+    No 1165/2008 -- for poultry, "plucked and drawn, without head and feet
+    and without neck, heart, liver and gizzard, known as '65 % chicken'"
+    (quality report, apro_mt_esqrs). Collection is administrative sources
+    and exhaustive surveys of slaughterhouses -- Eurostat's quality report
+    states no member state used sample surveys for slaughterhouse
+    statistics. Named deviations from the 65% presentation exist and Poland
+    is not among them (Netherlands: 74% presentation; Hungary: heads
+    included in some small-scale operations) -- load-bearing for any future
+    pass that adds NL or HU rows.
+
+    NO EU-27 AGGREGATE: geo=EU27_2020 returns zero poultry values in this
+    table across the entire time axis -- verified, not assumed. An EU total
+    would have to be summed from member states, which would be our
+    computation wearing Eurostat's citation, so none is loaded.
+
+    Slaughterings in slaughterhouses only. The table's separate
+    "slaughterings other than in slaughterhouses" series (farm and
+    emergency slaughter) is ESTIMATED annually by member states using
+    varying methods per the quality report, and is not loaded.
+
+    Retrieval route worth recording: the quality-report metadata lives at
+    /eurostat/cache/metadata/EN/apro_mt_esqrs.htm -- the natural guesses
+    (apro_mt_esms.htm, apro_mt_sims.htm) both 404.
