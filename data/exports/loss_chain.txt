@@ -154,6 +154,21 @@
   source: nass-poultry-slaughter-2025
 
 [11]
+  sequence: 30
+  slug: vanilla_curing
+  label: Curing (green pods to cured beans)
+  phase: processing
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.16667
+  survive_mode: 0.16667
+  survive_hi: 0.16667
+  confidence: industry
+  source: vanilla-package-of-practice-2021
+
+[12]
   sequence: 40
   slug: wing_damage
   label: Wing damage and downgrade
@@ -168,7 +183,7 @@
   confidence: study
   source: wing-injuries-loading
 
-[12]
+[13]
   sequence: 45
   slug: egg_checks
   label: Checks (cracked shell, membrane intact)
@@ -183,7 +198,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[13]
+[14]
   sequence: 46
   slug: egg_leakers
   label: Leakers, dirties and loss
@@ -198,7 +213,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[14]
+[15]
   sequence: 50
   slug: grading_downgrade
   label: Grading and trim loss
@@ -213,7 +228,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[15]
+[16]
   sequence: 60
   slug: further_processing
   label: Further processing and marinade pickup
@@ -228,7 +243,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[16]
+[17]
   sequence: 70
   slug: distribution_shrink
   label: Distribution shrink (mass)
@@ -243,7 +258,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[17]
+[18]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -258,7 +273,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[18]
+[19]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -273,7 +288,7 @@
   confidence: estimate
   source: cold-chain-transport-trade
 
-[19]
+[20]
   sequence: 72
   slug: retail_shrink
   label: Supermarket shrink
@@ -288,7 +303,7 @@
   confidence: measured
   source: ers-supermarket-loss
 
-[20]
+[21]
   sequence: 73
   slug: egg_transit_breakage
   label: In-transit breakage
@@ -303,7 +318,7 @@
   confidence: industry
   source: eggs-unlimited-breakage
 
-[21]
+[22]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -318,7 +333,7 @@
   confidence: industry
   source: refed-foodservice
 
-[22]
+[23]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -333,7 +348,7 @@
   confidence: industry
   source: refed-foodservice
 
-[23]
+[24]
   sequence: 76
   slug: egg_kitchen_breakage
   label: Kitchen and consumer breakage
@@ -348,7 +363,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[24]
+[25]
   sequence: 80
   slug: cook_loss
   label: Cook loss
@@ -363,7 +378,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[25]
+[26]
   sequence: 90
   slug: plate_waste
   label: Post-consumer plate waste

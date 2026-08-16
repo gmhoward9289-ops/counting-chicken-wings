@@ -1,6 +1,11 @@
 slug,label,value_lo,value_mode,value_hi,unit,basis,confidence,source
+beef_dressing_pct_us_fed,US fed cattle dressing percentage (comparison figure),60.0,,64.0,% of live weight remaining as hot carcass (dressing percentage),"majority of US fed cattle; program mean 64% (Mississippi Farm to Feedlot, 1993-2007)",industry,msstate-ext-beef-grades
+beef_retail_cuts_pct_ctbrc,USDA Yield Grade closely trimmed boneless retail cuts (%CTBRC),45.4,,52.3,"% of carcass weight as closely trimmed boneless retail cuts, round/loin/rib/chuck only","USDA Yield Grades 5 (<45.4%) through 1 (>52.3%), 1996 grading standard",industry,beefresearch-org-beef-grading
+beef_saleable_meat_pct_carcass,"US beef saleable meat (boneless trimmed, share of carcass weight)",,65.0,,"% of carcass weight yielded as boneless, trimmed beef","SDSU worked example, 1200 lb steer at 63% dressing; also ~40% of live weight",industry,sdsu-ext-fed-steer-yield
 contract_farms,Contract family farms,,25000.0,,farms,national,industry,ncc-key-facts
 direct_jobs,Direct industry employment,,355000.0,,workers,national,industry,ncc-key-facts
 grower_net_annual,Grower net income per house,6000.0,9000.0,12000.0,USD per year,per_year,industry,poultrysite-contract-economics
 grower_pay_per_lb,Contract grower pay,0.038,0.042,0.046,USD per lb live weight,per_lb_liveweight,measured,ers-broiler-grower-fees
 slaughter_plants,Slaughter and evisceration plants,,180.0,,plants,national,industry,ncc-key-facts
+wagyu_carcass_yield_pct,Japanese Black carcass yield (live weight to carcass weight),,62.96,,% of live weight remaining as carcass weight,"at slaughter, 756 kg live / 476 kg carcass, 29.2 months mean age",industry,gotoh-2018-wagyu-review
+wagyu_days_on_feed,Wagyu finishing period (days on feed),,30.0,,months,"finishing period, from start of high-energy feeding to slaughter",industry,gotoh-2018-wagyu-review

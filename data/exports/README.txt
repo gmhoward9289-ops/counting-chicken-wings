@@ -7,9 +7,9 @@ Every file has a .csv twin for spreadsheets and a .txt twin for
 reading. Files are kept small and self-describing so any one of
 them is usable on its own.
 
-  facts               59 rows  chicken facts
-  sources             63 rows  citations
-  loss_chain          25 rows  loss chain
+  facts               61 rows  chicken facts
+  sources             69 rows  citations
+  loss_chain          26 rows  loss chain
   mixing_cascade      30 rows  mixing cascade
   states              46 rows  average live weight by state
   states_census       50 rows  broiler presence by state, Census of Agriculture
@@ -19,7 +19,7 @@ them is usable on its own.
   quality_defects      6 rows  meat quality defects
   nutrition            3 rows  nutrition per 100g
   footprint            5 rows  resource footprint per bird
-  economics            5 rows  economic measures
+  economics           10 rows  economic measures
   producers            3 rows  producers
 
 Numbers to read carefully:

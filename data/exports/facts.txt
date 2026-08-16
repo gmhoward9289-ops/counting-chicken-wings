@@ -396,6 +396,26 @@
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
 [23]
+  slug: a5-two-grades-not-one
+  headline: The A and the 5 in "A5 wagyu" grade two different things
+  body:
+    Japan's Meat Grading Association assigns every carcass a yield grade - a
+    letter, A to C, for how much meat the carcass gives up - and a separate
+    meat quality grade, a number from 1 to 5. "A5" is the pairing of the best
+    of each, not a single scale. The famous marbling score (BMS, 1 to 12) sits
+    inside the quality number as one of four inputs alongside meat color,
+    firmness and texture, and fat quality - and the quality grade takes the
+    lowest of the four. A carcass with perfect marbling and slightly dull fat
+    is not a 5.
+  surprise: 4
+  placement: both
+  source:
+    The Japanese Wagyu beef industry: current situation and future prospects
+    -- A review
+  publisher: Asian-Australasian Journal of Animal Sciences 31(7)
+  url: https://www.animbiosci.org/journal/view.php?doi=10.5713/ajas.18.0333
+
+[24]
   slug: avian-flu-scale
   headline: Bird flu has cost 168 million birds since 2022
   body:
@@ -415,7 +435,7 @@
     
     https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks
 
-[24]
+[25]
   slug: beef-the-answer-is-one-and-that-is-the-honest-answer
   headline: The batch held a thousand cattle; the model still says your patty holds one
   body:
@@ -443,7 +463,7 @@
   publisher: National Research Council / Institute of Medicine, National Academies Press
   url: https://www.ncbi.nlm.nih.gov/books/NBK221105/
 
-[25]
+[26]
   slug: boneless-portion-is-not-anatomy
   headline: How many boneless wings a chicken makes is a business decision
   body:
@@ -461,7 +481,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
 
-[26]
+[27]
   slug: cage-free-does-not-change-the-count
   headline: Cage-free changes the hen's life, not the arithmetic
   body:
@@ -478,7 +498,7 @@
     
     https://www.nass.usda.gov/Surveys/Guide_to_NASS_Surveys/Chickens_and_Eggs/index.php
 
-[27]
+[28]
   slug: chicken-footprint-falling
   headline: Chicken's footprint per bird has fallen every year
   body:
@@ -495,7 +515,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[28]
+[29]
   slug: chunks-are-breast-too
   headline: The "chunks" are not wing either
   body:
@@ -513,7 +533,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
 
-[29]
+[30]
   slug: condemnation-is-tiny
   headline: FSIS condemns less than half a percent
   body:
@@ -526,7 +546,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[30]
+[31]
   slug: cracked-eggs-become-liquid-egg
   headline: A cracked egg is not thrown away, it is rerouted
   body:
@@ -542,7 +562,7 @@
   publisher: USDA Agricultural Marketing Service
   url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
 
-[31]
+[32]
   slug: egg-cholesterol-is-the-outlier
   headline: An egg carries more cholesterol than anything else here
   body:
@@ -558,7 +578,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[32]
+[33]
   slug: egg-grading-is-not-separating
   headline: Grading splits a chicken's wings apart, but cannot split her eggs
   body:
@@ -578,7 +598,7 @@
   publisher: USDA Agricultural Marketing Service
   url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
 
-[33]
+[34]
   slug: feed-behind-a-dozen-wings
   headline: A dozen wings represents about five pounds of feed
   body:
@@ -595,7 +615,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[34]
+[35]
   slug: flat-beats-drumette
   headline: The flat has a better meat yield than the drumette
   body:
@@ -610,7 +630,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[35]
+[36]
   slug: footprint-must-be-allocated
   headline: A dozen wings is not six chickens' worth of carbon
   body:
@@ -627,7 +647,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[36]
+[37]
   slug: israel-farmer-vs-retail-price
   headline: An Israeli chicken triples in price between the farm and the shelf
   body:
@@ -648,7 +668,7 @@
     
     https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
 
-[37]
+[38]
   slug: israel-head-count-is-not-measured
   headline: Israel counts its chickens in tonnes, and the industry fills in the birds
   body:
@@ -681,7 +701,7 @@
     
     https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
 
-[38]
+[39]
   slug: israel-kosher-inspection-no-us-analogue
   headline: Kosher slaughter adds an inspection step the US model has no room for
   body:
@@ -701,7 +721,7 @@
   publisher: Orthodox Union (OU Kosher)
   url: https://oukosher.org/blog/consumer-kosher/shechita/
 
-[39]
+[40]
   slug: line-speed-and-broken-wings
   headline: Some plants run 175 birds a minute, others 140
   body:
@@ -722,7 +742,7 @@
     
     https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
 
-[40]
+[41]
   slug: mortality-rising
   headline: Broiler mortality has been getting worse since 2013
   body:
@@ -737,7 +757,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[41]
+[42]
   slug: season-february-is-not-heavier
   headline: The Super Bowl does not show up in the birds
   body:
@@ -757,7 +777,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[42]
+[43]
   slug: season-texas-one-bad-june
   headline: One odd month looks exactly like a season if you only measure the range
   body:
@@ -776,7 +796,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[43]
+[44]
   slug: silk-nobody-writes-down-one-cocoon-per-worm
   headline: The hardest silk figure to source is the most obvious one
   body:
@@ -802,7 +822,7 @@
   publisher: PubMed / Elsevier
   url: https://pubmed.ncbi.nlm.nih.gov/38061509/
 
-[44]
+[45]
   slug: twelve-eggs-needs-fifteen-hens
   headline: Getting a dozen eggs in one day actually takes about fifteen hens
   body:
@@ -816,7 +836,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[45]
+[46]
   slug: wing-tips-are-a-third-segment
   headline: Every wing has a third segment you never see
   body:
@@ -832,7 +852,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[46]
+[47]
   slug: wing-tips-domestic-fate
   headline: At home, wing tips become stock, pet food, or fertilizer
   body:
@@ -849,7 +869,7 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[47]
+[48]
   slug: wings-is-a-regulated-word
   headline: "Wings" is a regulated word, and boneless wings comply with it
   body:
@@ -867,7 +887,7 @@
     
     https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
 
-[48]
+[49]
   slug: wings-most-damaged-part
   headline: Wings are the most damaged part of the chicken, by far
   body:
@@ -883,7 +903,7 @@
   publisher: Canadian Journal of Animal Science
   url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
 
-[49]
+[50]
   slug: an-egg-is-leaner-than-a-wing
   headline: An egg carries wing-like protein with a third less fat
   body:
@@ -897,7 +917,27 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[50]
+[51]
+  slug: bms-eight-earns-the-five
+  headline: It takes a marbling score of 8 out of 12 to earn the 5 in A5
+  body:
+    The 12-point Beef Marbling Standard is bucketed into the 5-point quality
+    grade: BMS 8 through 12 all earn a quality score of 5, and BMS 5 through 7
+    earn a 4. So "A5" spans a wide range of actual marbling - the floor of the
+    top grade sits at 8, and everything above it collapses into the same
+    letter-number pair. An American wagyu breeder's guide also puts the entry
+    point for BMS 3 at a minimum of 21% intramuscular fat - and notes Japan
+    measures at a different rib site (6th/7th) than the US (12th/13th), so the
+    two systems' numbers are not directly comparable.
+  surprise: 3
+  placement: learning
+  source: Carcass Grading (breeding guide technical resources)
+  publisher: Lone Mountain Cattle Company
+  url:
+    
+    https://www.lonemountaincattle.com/breeding-guide/technical-resources/carcass-grading/
+
+[52]
   slug: cook-loss-irrelevant
   headline: Cooking changes the weight, never the count
   body:
@@ -909,7 +949,7 @@
   source: Placeholder pending research
   publisher: counting-chicken-wings
 
-[51]
+[53]
   slug: dressing-yield
   headline: About three quarters of a live chicken becomes sellable meat
   body:
@@ -921,7 +961,7 @@
   source: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings
 
-[52]
+[54]
   slug: egg-data-agrees-with-itself
   headline: The egg numbers check out against themselves, twice
   body:
@@ -937,7 +977,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[53]
+[55]
   slug: israel-pargiyot-baby-chickens
   headline: 'Pargiyot' means baby chickens, and it no longer does
   body:
@@ -954,7 +994,7 @@
   publisher: The Jewish Chronicle
   url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
 
-[54]
+[56]
   slug: kitchen-waste-corroborated
   headline: Restaurant kitchens waste 4-13% of what they buy
   body:
@@ -973,7 +1013,7 @@
     
     https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
 
-[55]
+[57]
   slug: nineteen-billion-wings
   headline: The US produced 19.16 billion whole wings in 2025
   body:
@@ -985,7 +1025,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[56]
+[58]
   slug: top-four-concentration
   headline: Four companies produce well over half the chicken in America
   body:
@@ -1001,7 +1041,7 @@
     
     https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
 
-[57]
+[59]
   slug: transit-loss-is-unmeasured
   headline: Nobody publishes how many wings are lost in transit
   body:
@@ -1021,7 +1061,7 @@
   publisher: Environmental Research Letters (IOP)
   url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
 
-[58]
+[60]
   slug: wings-are-mostly-fat-calories
   headline: About 60% of a wing's calories come from fat
   body:
@@ -1035,7 +1075,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/172390/nutrients
 
-[59]
+[61]
   slug: two-wings-hard-floor
   headline: A chicken has exactly two wings
   body:

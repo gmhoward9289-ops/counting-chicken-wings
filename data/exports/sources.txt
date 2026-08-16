@@ -569,6 +569,37 @@
     transport, is where refrigeration matters most.
 
 [31]
+  slug: gotoh-2018-wagyu-review
+  title:
+    The Japanese Wagyu beef industry: current situation and future prospects
+    -- A review
+  publisher: Asian-Australasian Journal of Animal Sciences 31(7)
+  source_type: peer_reviewed
+  published_on: 2018-06-21
+  retrieved_on: 2026-08-15
+  url: https://www.animbiosci.org/journal/view.php?doi=10.5713/ajas.18.0333
+  notes:
+    Gotoh, Nishimura, Kuchida & Mannen (2018). Peer-reviewed, but COOPER may
+    not assign `study` -- the figure below is graded `industry` by human
+    decision, same rule as every other peer-reviewed source in this project
+    (see the honey batch's Jaganathan & Mandal lesson in
+    docs/research/README.md). A single source that carried four of
+    batch-03-wagyu's six items in principle (carcass/finishing weights, the
+    yield/quality/BMS grading structure, days on feed, total feed consumption)
+    -- extraction still returned only one figure from it. See
+    docs/research/accepted/batch-03-wagyu-REVIEW.md for why: the model mostly
+    declined to return a candidate at all against a document that demonstrably
+    contained the answers, a different failure shape than vanilla's
+    wrong-question/gate-limit drops. The PMC mirror (PMC6039323) returned a
+    reCAPTCHA wall on 2026-08-15; fetched here from the publisher
+    (animbiosci.org) instead. Round 2 (2026-08-16, human read of the same
+    fetched document) recovered two more figures from it: the Japanese Black
+    carcass-yield weights (756 kg live / 476 kg carcass at 29.2 months) and
+    the JMGA grading structure (yield letter A-C, quality number 1-5, BMS 1-12
+    as one of four inputs to the quality number). See
+    docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
+
+[32]
   slug: myopathy-prevalence-ontario
   title:
     Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
@@ -584,7 +615,7 @@
     comes from - are the worst affected. Woody breast incidence rose from
     about 5% in 2012 to 29% by 2015.
 
-[32]
+[33]
   slug: ncc-broiler-lca-2020
   title: Broiler Production System Life Cycle Assessment: 2020 Update
   publisher: National Chicken Council / University of Arkansas
@@ -604,7 +635,7 @@
     chicks per broiler produced to cover mortality, which independently
     corroborates our farm_mortality stage.
 
-[33]
+[34]
   slug: nrc-2002-ground-beef-risk
   title: Escherichia coli O157:H7 in Ground Beef - Review of a Draft Risk Assessment
   publisher: National Research Council / Institute of Medicine, National Academies Press
@@ -631,7 +662,7 @@
     assessment, not an observation, which is why the combo-bin pool derived
     from it is graded `estimate`.
 
-[34]
+[35]
   slug: plos-hu-2012-grind-batch
   title:
     Estimating Animal Abundance in Ground Beef Batches Assayed with Molecular
@@ -660,7 +691,7 @@
     shift); and not a mean worth quoting on its own - the paper's own point is
     the variance between batches.
 
-[35]
+[36]
   slug: pubmed-multi-silkworm-cocoon
   title:
     Multi-silkworm cocoon: structure, properties and the collective spinning
@@ -691,7 +722,7 @@
     resource. So the constant is one-to-one for commercial silk and is not a
     law of nature.
 
-[36]
+[37]
   slug: welfare-training-carcass-quality
   title:
     The Influence of Welfare Training on Bird Welfare and Carcass Quality in
@@ -704,7 +735,7 @@
     90% of bruising occurs in the 12-24 hours before processing. Bruise
     distribution by region: breast 42%, wings 33%, legs 25%.
 
-[37]
+[38]
   slug: wing-injuries-loading
   title:
     Rearing and handling injuries in broiler chickens and risk factors for
@@ -719,7 +750,7 @@
     the bird. Load-to-load variance is high, so this is stored with a wide
     lo/hi band.
 
-[38]
+[39]
   slug: wing-yield-eight-strains
   title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
   publisher: Poultry Science
@@ -730,7 +761,51 @@
     Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
     (6.7-7.3%), measured across eight commercial broiler strains.
 
-[39]
+[40]
+  slug: beefresearch-org-beef-grading
+  title:
+    Fact Sheet: Beef Grading (Expected Yields of Closely Trimmed, Boneless
+    Retail Cuts by USDA Yield Grade)
+  publisher:
+    National Cattlemen's Beef Association / beefresearch.org (Cattlemen's Beef
+    Board checkoff)
+  source_type: trade_body
+  retrieved_on: 2026-08-15
+  url:
+    
+    https://www.beefresearch.org/resources/product-quality/fact-sheets/beef-grading
+  notes:
+    Checkoff-funded fact sheet authored by Daryl Tatum PhD (Colorado State),
+    citing the 1996 USDA grading standard directly. Cited for the %CTBRC
+    column of its Table 1: closely trimmed boneless retail cuts from
+    round/loin/rib/chuck ONLY, <45.4% to >52.3% of carcass weight across USDA
+    Yield Grades 5 through 1. The companion %Total Yield column (all retail
+    cuts including ground beef, <65 to >=80) is a different denominator and is
+    not interchangeable with it -- nor with SDSU's 65% worked-example figure,
+    which includes trim the %CTBRC basis excludes.
+
+[41]
+  slug: msstate-ext-beef-grades
+  title: Beef Grades and Carcass Information
+  publisher: Mississippi State University Extension Service
+  source_type: trade_body
+  retrieved_on: 2026-08-15
+  url: https://extension.msstate.edu/publications/beef-grades-and-carcass-information
+  notes:
+    A DIFFERENT MSU Extension publication from msstate-ext-beef-yield
+    (farm-direct beef), despite the same publisher and overlapping subject.
+    This one is the grading fact sheet, cited for the fed-cattle dressing
+    percentage: "It typically ranges from 60 to 64 percent for the majority of
+    fed cattle and averaged 64 percent for the Mississippi Farm to Feedlot
+    program cattle from 1993 through 2007." Same 60-64 range the other MSU
+    document states, independently restated with a measured program mean
+    attached -- consistent, and not merged into one citation because they are
+    two documents. Also the document that treats marbling/quality-grade and
+    fat-thickness/yield-grade as independently measured traits throughout,
+    which is the basis for batch-03-wagyu's honest marbling_vs_yield_tradeoff
+    "sources treat the axes as independent" finding.
+
+[42]
   slug: msstate-ext-beef-yield
   title: How Much Meat to Expect from a Beef Animal (farm-direct beef)
   publisher: Mississippi State University Extension Service
@@ -750,7 +825,7 @@
     is 47 percent of live weight, not 40. SDSU's 65 percent does reconcile.
     Both bounds are kept and neither is averaged away.
 
-[40]
+[43]
   slug: ncc-broiler-performance
   title: U.S. Broiler Performance
   publisher: National Chicken Council
@@ -764,7 +839,7 @@
     grow-out mortality going back to 1925. Trade body rather than government,
     so figures are tagged confidence=industry.
 
-[41]
+[44]
   slug: ncc-key-facts
   title: Broiler Chicken Industry Key Facts
   publisher: National Chicken Council
@@ -775,7 +850,7 @@
     https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
   notes: Industry structure - plant counts, company counts, contract farms.
 
-[42]
+[45]
   slug: nysmaple-sap-per-tree
   title: How Much Sap Can One Tree Produce?
   publisher: New York State Maple Producers Association
@@ -791,7 +866,7 @@
     preferred over UVM's rule. Kept as a source because the one-tap figure is
     genuinely useful, cited for the ratio nowhere.
 
-[43]
+[46]
   slug: ofot-sector-summary-2021
   title: ענף הלול - סיכום 2021 (Poultry sector summary, 2021)
   publisher: ארגון מגדלי עופות בישראל (Israel Poultry Growers Organisation)
@@ -819,7 +894,7 @@
     enumerates US slaughter, and the corpus should not imply otherwise by
     placing them in the same tier.
 
-[44]
+[47]
   slug: ou-kosher-shechita
   title: Shechita: All About Kosher Ritual Slaughter
   publisher: Orthodox Union (OU Kosher)
@@ -838,7 +913,7 @@
     it would be an 'estimate' of our own making, which is the grade the
     project is trying to reduce. Recorded as a known gap rather than filled.
 
-[45]
+[48]
   slug: psu-extension-saffron
   title: Saffron: A Tale of Red Gold and How to Produce Your Own
   publisher: Penn State Extension
@@ -863,7 +938,7 @@
     require assuming the mass of a teaspoon of saffron, and that assumption
     would be ours rather than the source's.
 
-[46]
+[49]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -879,7 +954,7 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[47]
+[50]
   slug: sdsu-ext-fed-steer-yield
   title: How Much Meat Can You Expect from a Fed Steer?
   publisher: South Dakota State University Extension
@@ -902,7 +977,7 @@
     packaged beef. The two must never be merged; only the trim figure becomes
     patties.
 
-[48]
+[51]
   slug: ucanr-mg-saffron
   title: Saffron - Garden Help, Herbs
   publisher: UC Master Gardeners of Santa Clara County, UC ANR
@@ -921,7 +996,7 @@
     a data one, and it is recorded here because it is the reason the raw
     documents come back with every batch.
 
-[49]
+[52]
   slug: ufifas-hs661-saffron
   title: Saffron - Crocus sativus L. (HS661)
   publisher: University of Florida IFAS Extension, Horticultural Sciences
@@ -941,7 +1016,7 @@
     own words ("Supposedly"), and it is stored at confidence=industry for
     exactly that reason.
 
-[50]
+[53]
   slug: umaine-7036e-maple
   title: Bulletin #7036: How to Tap Maple Trees and Make Maple Syrup
   publisher: University of Maine Cooperative Extension
@@ -960,7 +1035,7 @@
     quote and no number. That was the correct behaviour: subtracting two dates
     would have been our arithmetic, not the source's.
 
-[51]
+[54]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -976,7 +1051,7 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[52]
+[55]
   slug: uvm-jones-rule-86
   title: The "Jones Rule of 86" Revisited
   publisher: University of Vermont Extension, Proctor Maple Research Center
@@ -1002,7 +1077,47 @@
     own caveat: the rule degrades at the high sugar concentrations reverse
     osmosis now produces, so it is a field rule, not a physical law.
 
-[53]
+[56]
+  slug: vanilla-package-of-practice-2021
+  title: Package of Practice: Vanilla Cultivation
+  publisher:
+    North Eastern Council (NEC) / North Eastern Development Finance
+    Corporation Limited (NEDFi), India
+  source_type: trade_body
+  retrieved_on: 2026-08-15
+  url:
+    
+    https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf
+  notes:
+    Undated within the document itself; the URL path carries a 2021 upload
+    date, kept out of published_on since it names the upload, not necessarily
+    authorship. A regional development-finance body's model project profile
+    for vanilla cultivation, in the same "extension-style practical guide"
+    category as Penn State's and UF/IFAS's saffron sources. Sole source for
+    the only figure batch-02-vanilla accepted: green_to_cured_ratio, "About 6
+    kg of green pods produce 1 kg of cured beans." Confirmed to state Vanilla
+    planifolia by name.
+
+[57]
+  slug: worldbank-vanilla-cultivation-guide
+  title: Guide on Sustainable Vanilla Cultivation
+  publisher: World Bank
+  source_type: trade_body
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf
+  notes:
+    4,433 lines after pdftotext. Strong on pollination and field yields (43
+    and 48 keyword hits respectively) but mentions "cured" exactly once, so it
+    could not answer the curing ratio -- coverage was checked per source
+    before batch-02-vanilla was sent, not assumed. Also the source for the
+    dropped flowers_per_bean row's quote ("A flower gives a vanilla bean after
+    hand pollination") -- true, and never loaded as data, because the numeral
+    1 never appears in that sentence. See
+    docs/research/accepted/batch-02-vanilla-REVIEW.md.
+
+[58]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -1018,7 +1133,7 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[54]
+[59]
   slug: eggs-unlimited-breakage
   title: Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers
   publisher: Eggs Unlimited
@@ -1036,7 +1151,7 @@
     enough that the industry measures breakage closely - it is what the
     invoice argument is about.
 
-[55]
+[60]
   slug: jc-israeli-mangal
   title: Going up in smoke, Sabra style
   publisher: The Jewish Chronicle
@@ -1054,7 +1169,7 @@
     very little role in the day. Undated on the page, so published_on is NULL
     rather than guessed.
 
-[56]
+[61]
   slug: jfs-independence-day-grilling
   title: The Grilling Tradition of Israel's Independence Day
   publisher: Jewish Food Society
@@ -1070,7 +1185,29 @@
     become distinctly Israeli. Two sources agreeing is why the cultural fact
     is loaded at all.
 
-[57]
+[62]
+  slug: lone-mountain-carcass-grading
+  title: Carcass Grading (breeding guide technical resources)
+  publisher: Lone Mountain Cattle Company
+  source_type: trade_press
+  retrieved_on: 2026-08-15
+  url:
+    
+    https://www.lonemountaincattle.com/breeding-guide/technical-resources/carcass-grading/
+  notes:
+    Commercial source -- an American wagyu breeder, not JMGA or a
+    peer-reviewed paper -- graded industry accordingly. Cited ONLY for the
+    BMS-to-quality-grade bucketing (BMS 8-12 -> quality 5; BMS 5-7 -> 4) and
+    its "a BMS 3 grade requires a minimum of 21% IMF" anchor, plus the
+    ribbing-site basis note (Japan ribs between the 6th/7th rib, the US
+    between the 12th/13th). NOT usable as a definition of what BMS measures:
+    Fable's adversarial review (2026-08-16) confirmed this page attributes
+    color, firmness and texture to the BMS grade itself, but per Gotoh BMS is
+    a marbling-only score -- the four-factor lowest-of rule belongs to the
+    separate meat quality grade (1-5). See
+    docs/research/accepted/batch-03-wagyu-findings-round2.yaml.
+
+[63]
   slug: nwe-silkworm
   title: Silkworm
   publisher: New World Encyclopedia
@@ -1089,7 +1226,7 @@
     below the commonly repeated "1,000-1,600 m". The lower sourced figure is
     the one to keep; the folk range has no source we could find.
 
-[58]
+[64]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -1104,7 +1241,7 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[59]
+[65]
   slug: poultryworld-israel-war-2024
   title: Israel poultry industry hit by war and labour shortage
   publisher: Poultry World (Misset)
@@ -1131,7 +1268,7 @@
     9,813 tonnes of broilers in 2024 - so the claim is checkable in principle
     against a Hebrew original.
 
-[60]
+[66]
   slug: smithsonian-silk-road-2002
   title: The Silk Road - Connecting Peoples and Cultures
   publisher: Smithsonian Center for Folklife and Cultural Heritage
@@ -1155,7 +1292,7 @@
     project's fetcher that page contains neither 120 nor 130, so two research
     runs correctly returned nothing and read as model weakness for a week.
 
-[61]
+[67]
   slug: suekayton-silk-thread-and-cloth
   title: Silk Thread and Cloth
   publisher: Sue Kayton (silkworms.com educational pages)
@@ -1180,7 +1317,7 @@
     until fetch_url() learned to call html.unescape() they survived into the
     inbox and made an honest quote from it impossible to verify.
 
-[62]
+[68]
   slug: toi-poultry-imports-2025
   title: Poultry producers warn first-ever imports of chickens will destroy local farms
   publisher: The Times of Israel
@@ -1206,7 +1343,7 @@
     loaded from here. A live article citing a dead one does not resurrect the
     citation.
 
-[63]
+[69]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet
