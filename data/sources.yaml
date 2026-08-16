@@ -1883,3 +1883,153 @@
     Aguascalientes sits at or near the top of the state ranking, though
     never loaded as a table figure since only the leader is named, not a
     percentage.
+
+# Fifth country. See docs/GERMANY-PLAN.md and
+# docs/research/library/poultry-germany.yaml.
+
+- slug: destatis-fleischproduktion-2024-pm
+  title: "Fleischproduktion im Jahr 2024 um 1,4 % gestiegen"
+  publisher: Statistisches Bundesamt (Destatis)
+  url: https://www.destatis.de/DE/Presse/Pressemitteilungen/2025/02/PD25_050_413.html
+  published_on: '2025-02-07'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    2024 broiler figures: 626.7 million Jungmasthühner (broiler) slaughtered,
+    kept separate from 27.1 million Suppenhühner (spent/stewing hens) in the
+    same sentence - the species isolation this project needs. Jungmasthühner-
+    fleisch production: "1,1 Millionen Tonnen" (+1.8% vs 2023), rounded to
+    one decimal of a million by Destatis itself - loaded verbatim rather than
+    back-solved to a false precision from the percentage change.
+
+- slug: destatis-fleischproduktion-2025-pm
+  title: "Fleischproduktion im Jahr 2025 nahezu unverändert"
+  publisher: Statistisches Bundesamt (Destatis)
+  url: https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/02/PD26_049_413.html
+  published_on: '2026-02-13'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    2025 broiler figures: 640.3 million Jungmasthühner slaughtered (vs 20.7
+    million Suppenhühner). Broiler meat production "1,1 Millionen Tonnen"
+    (+3.6% vs 2024) - the same rounded-to-one-decimal-million figure as 2024
+    despite the different growth rate, because that is what Destatis itself
+    publishes in this release. Loaded verbatim, not back-solved.
+
+- slug: destatis-gewerbliche-schlachtung-tabelle-2023
+  title: "Gewerbliche Schlachtungen nach Tierarten (Jahresergebnisse)"
+  publisher: Statistisches Bundesamt (Destatis)
+  url: https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Landwirtschaft-Forstwirtschaft-Fischerei/Tiere-Tierische-Erzeugung/Tabellen/gewerbliche-schlachtung-jahr-halbjahr.html
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Jungmasthühner (broiler), exact decimal figures: 631,132.8 thousand
+    animals / 1,074.5 thousand tonnes (2022); 631,476.2 thousand animals /
+    1,086.1 thousand tonnes (2023) - one full precision level above the
+    press releases' rounded 2024/2025 figures, and this file's own notes say
+    so rather than presenting all four years as equally precise. Total
+    Geflügel (all poultry, incl. turkey/duck) was 1,541.7 (2022) / 1,563.8
+    (2023) thousand tonnes - NOT loaded, since this project's species is
+    broiler chicken specifically.
+
+- slug: destatis-gefluegel-fachserie-2018
+  title: "Geflügel — Fachserie 3, Reihe 4.2.3 (2018)"
+  publisher: Statistisches Bundesamt (Destatis)
+  url: https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Landwirtschaft-Forstwirtschaft-Fischerei/Tiere-Tierische-Erzeugung/Publikationen/Downloads-Tiere-und-tierische-Erzeugung/gefluegel-2030423187004.pdf?__blob=publicationFile
+  published_on: '2019-01-01'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Cited for STRUCTURE, not figures: this Fachserie's table of contents
+    confirms poultry SLAUGHTER tables (section 3, Geflügelschlachtungen) have
+    no Bundesland dimension anywhere - a Land-level breakdown exists only for
+    LAYING HEN housing (sections 4-5, a different bird category and a
+    housing-census concept, not slaughter throughput). This is the source for
+    why data/output_germany.yaml carries no districts: block: not
+    unreachable data (Mexico's problem) or suppression (Canada's Atlantic
+    provinces), but a publication that genuinely does not produce a
+    Land-level broiler slaughter table. published_on is approximate (the
+    2018-reference-year Fachserie was not individually dated beyond its
+    cover year in this pass).
+
+- slug: bmel-versorgungsbilanz-fleisch-doku
+  title: "Dokumentation der Versorgungsbilanz Fleisch"
+  publisher: Bundesministerium für Ernährung und Landwirtschaft (BMEL) / BLE
+  url: https://www.bmel-statistik.de/ernaehrung/versorgungsbilanzen/fleisch/dokumentation-versorgungsbilanz-fleisch
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    THE WEIGHT-BASIS SOURCE for every German broiler meat_output figure this
+    project loads. Exact quote: "Schlachtkörper bei Geflügel bezeichnet den
+    gerupften und ausgenommenen Körper, ohne Kopf und Ständer und ohne Hals,
+    Herz, Leber und Muskelmagen" - plucked and eviscerated, without head,
+    feet, neck, heart, liver or gizzard. Skin and subcutaneous fat ARE
+    included (poultry and pigs are the two exceptions to Destatis's general
+    skin-excluded Schlachtgewicht definition). The page itself states "Das
+    Schlachtgewicht ist nicht einheitlich definiert" (no single uniform
+    definition across species) - kept as a direct quote.
+
+- slug: ble-fleischbilanz-2025-pm
+  title: "Versorgungsbilanz Fleisch: Verzehr leicht gestiegen"
+  publisher: Bundesanstalt für Landwirtschaft und Ernährung (BLE) / BZL
+  url: https://www.ble.de/SharedDocs/Pressemitteilungen/DE/2025/250327_Fleischbilanz.html
+  published_on: '2025-03-27'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    THE PER-CAPITA / SELF-SUFFICIENCY TAXONOMY TRAP for Germany: 13.6 kg
+    per-capita consumption and 100.4% self-sufficiency, both for 2024, are
+    stated for "Geflügelfleisch" (ALL poultry meat - chicken, turkey, duck,
+    goose combined), never narrowed to "Hühnerfleisch" (chicken specifically)
+    anywhere in this release, even though the release's own prose says the
+    year-on-year increase was driven "insbesondere" (particularly) by
+    chicken. NEITHER figure is loaded into this project as a chicken
+    statistic - doing so would silently promote a poultry-wide aggregate to
+    a chicken-specific one, the same trap Mexico's carne-de-ave/carne-de-pollo
+    distinction already documents. Used only to source the fact that
+    documents this trap, not to source a loaded statistic.
+
+- slug: destatis-lz2020-viehhaltung-pm
+  title: "Viehhaltung im letzten Jahrzehnt: Weniger, aber größere Betriebe"
+  publisher: Statistisches Bundesamt (Destatis)
+  url: https://www.destatis.de/DE/Presse/Pressemitteilungen/2021/07/PD21_N043_41.html
+  published_on: '2021-07-08'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    From the 2020 Agricultural Census (reference date 1 March 2020): "Für
+    Hühner gab es demnach im Jahr 2020 etwa 186,3 Millionen Haltungsplätze"
+    and "Die Geflügelhaltung ist mit 50 % der gesamten Haltungsplätze
+    besonders auf Niedersachsen konzentriert." A HOUSING CAPACITY
+    (Haltungsplätze) figure - a stock/infrastructure concept, not slaughter
+    throughput - and it covers "Hühner" (chickens generally, both broilers
+    and laying hens), not broiler-isolated. Loaded as a fact with both
+    caveats stated, never as an output_stat_year row.
+
+- slug: niedersachsen-fleischerzeugung-1994-2014
+  title: "Fleischerzeugung in Deutschland und Niedersachsen 1994 bis 2014"
+  publisher: Landesamt für Statistik Niedersachsen (Statistische Monatshefte Niedersachsen 2/2016; author Silke Dahl)
+  url: https://www.statistik.niedersachsen.de/download/104987
+  published_on: '2016-02-01'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    WebFetch's own summarizer initially refused this PDF as "corrupted";
+    `pdftotext -layout` on the saved binary recovered it cleanly - the same
+    finding Mexico's and Canada's research passes made about summarizer
+    refusals not proving a document unreadable. Table T1.1's "Anteil an D"
+    row for 2014 gives Niedersachsen 59.1% of German poultry (Geflügel)
+    SLAUGHTER WEIGHT and 53.0% of Jungmasthühner (broiler) SLAUGHTER COUNT -
+    a genuinely broiler-isolated, government-sourced regional-concentration
+    figure, kept explicitly dated to 2014 (ten years older than the 2020
+    census housing-share figure above) rather than presented as current.
+    Also explains structurally why no current Land-level broiler-slaughter
+    table exists: "Die Schlachtdaten von Geflügel werden über die
+    Geflügelstatistik beim Statistischen Bundesamt in Tonnen erhoben und
+    können daher in der Regel nur deutschlandweit oder auf der Ebene
+    Niedersachsens ausgewiesen werden" - collected nationally, reportable
+    only at the Germany-wide or Niedersachsen level, corroborating the
+    Fachserie 3 finding above from the opposite direction. Also carries the
+    Schlachtgewicht Warmgewicht/Kaltgewicht (factor 0.98) conversion, but
+    that footnote is scoped to cattle/pigs/sheep/goats/horses, NOT poultry -
+    not applied to any German broiler figure in this project.

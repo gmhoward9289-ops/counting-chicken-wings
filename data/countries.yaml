@@ -106,3 +106,35 @@ countries:
       Canada) but is loaded as a fact rather than as this column, because it
       is already published as a ratio and this project performs no other
       calculation that would need a Canadian population estimate.
+
+  # Fifth country. Destatis isolates Jungmasthuhn (broiler) from Suppenhuhn
+  # (spent hen) directly in its own annual press release, at 'measured'
+  # grade, for four consecutive years -- the strongest data position in
+  # this project after Canada's. See docs/GERMANY-PLAN.md and
+  # docs/research/library/poultry-germany.yaml.
+  - iso3: DEU
+    name: Germany
+    native_mass_unit: kg
+    native_currency: EUR
+    notes: >-
+      Germany reports in kilograms/tonnes and euros, so every mass and value
+      needs deliberate conversion at load, exactly as every non-US country
+      here does.
+
+      population stays NULL: BLE publishes a per-capita consumption figure
+      (13.6 kg, 2024) and a self-sufficiency ratio (100.4%, 2024), but both
+      are for "Geflügelfleisch" (all poultry meat -- chicken, turkey, duck,
+      goose combined), never narrowed to chicken alone anywhere this project
+      reached -- the same carne-de-ave/carne-de-pollo-shaped trap Mexico's
+      row already documents. Neither figure is loaded as a chicken statistic
+      for that reason.
+
+      No districts: table, and not for a Mexico-shaped access reason --
+      Destatis's own Fachserie 3 confirms poultry SLAUGHTER statistics carry
+      no Bundesland dimension at all; a Land-level breakdown exists only for
+      laying-hen HOUSING, a different bird category and a different concept.
+      Germany's real regional concentration (Niedersachsen/Lower Saxony) is
+      carried as two dated facts instead -- a 2020 census housing-capacity
+      share (50%, all Hühner) and an older but broiler-isolated 2014
+      slaughter share (53.0% of Jungmasthühner specifically) -- rather than
+      forced into a table the primary source does not publish.
