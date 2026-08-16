@@ -2046,3 +2046,182 @@
     identical to ABPA's own 14,972 thousand MT for the same year). 2026
     forecast 15,800/15,805 thousand MT - a forecast, not loaded, matching
     this project's convention of loading reported/estimated actuals only.
+# ---------------------------------------------------------------------------
+# China. See docs/CHINA-PLAN.md and docs/research/library/poultry-china.yaml
+# for the full research trail.
+# ---------------------------------------------------------------------------
+
+- slug: nbs-china-2024-communique
+  title: >-
+    中华人民共和国2024年国民经济和社会发展统计公报 (Statistical Communiqué of
+    the People's Republic of China on the 2024 National Economic and Social
+    Development)
+  publisher: National Bureau of Statistics of China (NBS)
+  url: https://www.stats.gov.cn/sj/zxfb/202502/t20250228_1958817.html
+  published_on: '2025-02-28'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    THE PRIMARY GOVERNMENT FIGURE THIS PROJECT COULD REACH FOR CHINA, and it
+    is exactly the taxonomy trap the research brief warned about: "禽肉产量
+    2660万吨，增长3.8%" (poultry meat production reached 26.6 million tonnes,
+    up 3.8% year-on-year, 2024) is a figure for 禽肉 (poultry meat broadly -
+    chicken, duck, goose and other fowl together), stated in the same
+    sentence as pork, beef and mutton with no chicken-specific (鸡肉/肉鸡)
+    breakout anywhere in the communiqué. NOT loaded as this project's
+    broiler meat_output: doing so would silently fold duck and goose
+    production into a "chicken" figure. No head count or slaughter number
+    appears in this section either - China's communiqué reports output
+    tonnage only, the same shape of gap CBS left for Israel's chicken
+    figures, but for a different reason (aggregation across species, not
+    absence of a count).
+
+- slug: usda-fas-gain-ch2025-0170
+  title: 'China: Poultry and Products Annual (GAIN Report CH2025-0170)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Beijing_China+-+People's+Republic+of_CH2025-0170.pdf
+  published_on: '2025-09-10'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A US government attaché report, not China's own statistical agency -
+    the same remove as Mexico's GAIN report, and for the same reason: NBS
+    publishes poultry meat only as an all-species aggregate (see
+    nbs-china-2024-communique), so this Post estimate, prepared by FAS
+    China staff and explicitly captioned "Not official USDA data", is the
+    only chicken-SPECIFIC production series this project could reach.
+    Loaded at confidence=industry, not measured, on that basis.
+
+    Table 1 ("Meat, Chicken" PSD, in 1,000 MT): Production 15,350 (2024,
+    both "USDA Official" and "New Post" columns agree - a settled actual by
+    this report's date) and 16,200 (2025, "New Post" - still an in-year
+    estimate, loaded provisional). Total imports 477 (2024) / 430 (2025);
+    total exports 770 (2024) / 950 (2025); total supply 15,827 (2024) /
+    16,630 (2025). SELF-SUFFICIENCY is arithmetic sitting in this same
+    table, exactly as it was for Mexico: production / total supply =
+    15,350 / 15,827 = 97.0% (2024) and 16,200 / 16,630 = 97.4% (2025) -
+    loaded as a fact, not an output_stat_year row, because this project
+    computed it rather than DEFRA-style-published it directly (see
+    schema.sql's own note on why self_sufficiency_ratio is for a
+    source's OWN published ratio).
+
+    White broilers are ~70% of total chicken meat production, yellow
+    broilers 17-20%, hybrid broilers 8-10% ("about five years ago, white
+    broilers made up only around 50 percent") - industry-grade structural
+    detail, not itself a production figure, kept as a fact.
+
+    China became a net chicken-meat exporter in 2024 per this report's own
+    trade tables (imports 477 vs exports 770, 1,000 MT, 2024) -
+    corroborated independently by usda-fas-livestock-poultry-wmt-2026-04.
+
+    PDF text extraction: WebFetch's own summarizer refused the file as
+    binary ("cannot read"), the same failure Mexico's GAIN PDF hit; the
+    file WebFetch saved to disk as a side effect extracted cleanly with
+    PyMuPDF (`fitz`) - 23,339 characters, ordinary embedded text, no font
+    encoding trap.
+
+- slug: usda-fas-gain-ch2024-0108
+  title: 'China: Poultry and Products Annual (GAIN Report CH2024-0108)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Beijing_China+-+People's+Republic+of_CH2024-0108.pdf
+  published_on: '2024-08-19'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    The prior year's edition of usda-fas-gain-ch2025-0170, carried
+    separately because it is the only route this project found to a
+    SETTLED 2023 chicken-meat production figure - by the time CH2025-0170
+    published, its own table started at 2024. Table 1 ("Meat, Chicken"
+    PSD, 1,000 MT): Production 14,800 (2023, "USDA Official" and "New
+    Post" agree). Total imports 756; total supply 15,556; total exports
+    554. Self-sufficiency 2023 = 14,800 / 15,556 = 95.1%, the earliest
+    point in this project's three-year China self-sufficiency series
+    (95.1% 2023 -> 97.0% 2024 -> 97.4% 2025). Same "Not official USDA
+    data" caveat and confidence=industry ceiling as the 2025 edition.
+
+- slug: usda-fas-livestock-poultry-wmt-2026-04
+  title: 'Livestock and Poultry: World Markets and Trade - China Chicken Meat Exports Continue to Soar in 2026, Surpassing Thailand'
+  publisher: USDA Foreign Agricultural Service (FAS), World Agricultural Outlook Board
+  url: https://apps.fas.usda.gov/psdonline/circulars/livestock_poultry.pdf
+  published_on: '2026-04-09'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    THE SOURCE FOR THIS PROJECT'S ONE HEADLINE CLAIM ABOUT CHINA, stated
+    directly rather than pieced together: "China is the world's second
+    largest producer of chicken meat, significantly behind the United
+    States and often on par with Brazil." Unlike Mexico's three
+    conflicting world-rank claims (6th, 5th, "1st" for a narrower
+    category), this is one document, one clear statement, from USDA's own
+    global circular rather than a country attaché report - loaded as a
+    fact at confidence=industry (the circular blends settled figures with
+    forecasts throughout and is not itself a PSD table).
+
+    Also the source of this project's only per-capita chicken figure for
+    China: "China chicken consumption remains relatively low (11 kg/per
+    capita)" for 2025, against pork (43 kg) and beef (8 kg) within China,
+    and against the United States (55 kg), Japan (24 kg) and Taiwan (42
+    kg) elsewhere - loaded as a fact, UNLIKE Israel's and Mexico's
+    per-capita figures, this project found no second, independently
+    sourced Chinese figure to cross-validate or conflict with it in this
+    pass; flagged as single-source rather than corroborated, and NOT a
+    reason to promote it above industry grade.
+
+    Confirms China became a net chicken-meat exporter in 2024, ranked
+    world's fifth largest chicken-meat exporter and thirteenth largest
+    importer in 2025, and reports 2025 export value of $2.59 billion
+    (nearly double 2020).
+
+- slug: agripost-cn-broiler-industry-2024
+  title: "China's Broiler Industry in 2024: White-Feather Broilers Gain Market Share as Yellow-Feather Chickens Decline"
+  publisher: AgriPost.CN, citing China's National Broiler Industry Technology System (中国肉鸡产业技术体系)
+  url: https://www.agripost.cn/2025/02/17/chinas-broiler-industry-in-2024-white-feather-broilers-gain-market-share-as-yellow-feather-chickens-decline/
+  published_on: '2025-02-17'
+  retrieved_on: '2026-08-16'
+  source_type: trade_press
+  notes: >-
+    THE ONLY BROILER-SPECIFIC HEAD COUNT this project found for China, and
+    it is not loaded into output_stat_year - see docs/CHINA-PLAN.md,
+    "The production-estimate conflict". Total broiler output 14.84 billion
+    birds in 2024 (+1.02% YoY): white-feather 9.03 billion (+2.24%),
+    yellow-feather 3.33 billion (-7.25%), small white-feather 2.48 billion
+    (+9.36%). Meat output: white-feather 17.79 million tonnes (72.17% of
+    total), yellow-feather 4.32 million tonnes (17.53%) - white + yellow
+    alone already sum to 22.11 million tonnes, 44% above
+    usda-fas-gain-ch2025-0170's 15.35 million tonne "Meat, Chicken" PSD
+    figure for the same year, and small white-feather tonnage is not even
+    included in that sum. Neither this source nor the GAIN report states
+    its weight basis (live vs. processed/carcass-equivalent) explicitly,
+    so THIS PASS DOES NOT ASSERT which basis explains the gap - recorded
+    as an unresolved conflict, per this project's discipline of reporting
+    disagreeing production estimates side by side rather than picking a
+    winner.
+
+    Two removes from a primary count: AgriPost.CN (trade press) attributes
+    its figures to "China's National Broiler Industry Technology System"
+    (中国肉鸡产业技术体系, a national agricultural technology system under
+    China's Agriculture Research System, not a statistical agency), and
+    this project did not locate that system's own report directly - flagged
+    for a future pass, the same shape of gap as Mexico's unreached SIAP
+    portal. confidence_ceiling: industry.
+
+- slug: shandong-tjj-2024-livestock-interpretation
+  title: "解读：2024年全省畜牧业生产总体平稳 (Interpretation - 2024 provincial\
+    \ animal husbandry production overall stable)"
+  publisher: Shandong Provincial Bureau of Statistics (山东省统计局)
+  url: http://tjj.shandong.gov.cn/art/2025/1/23/art_6109_10316111.html
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    NOT LOADED, NOT QUOTED FOR FIGURES - listed here only as a documented
+    access failure, the same discipline Mexico's plan applied to unreached
+    SIAP hosts. The page returned a TLS certificate hostname mismatch
+    (certificate issued for *.ybj.shandong.gov.cn, not tjj.shandong.gov.cn)
+    on every fetch attempt from this research environment - a genuine
+    access failure, not a "the data doesn't exist" finding. Secondary
+    aggregators (search-result summaries only, pages not independently
+    read and therefore not cited as sources) describe Shandong as China's
+    top poultry-producing province by a wide margin, but every figure
+    seen this way is for 家禽 (all poultry), not 肉鸡 (chicken
+    specifically) - see docs/CHINA-PLAN.md, "The subnational question",
+    for why no districts: block was built even qualitatively.

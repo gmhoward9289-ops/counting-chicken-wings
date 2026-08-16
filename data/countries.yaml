@@ -130,3 +130,42 @@ countries:
       population stays NULL, same discipline as every other non-US
       country here: a per-capita figure exists (46.7 kg/person, 2025,
       ABPA) but is loaded as a fact rather than as this column.
+  # Sixth country. See docs/CHINA-PLAN.md and
+  # docs/research/library/poultry-china.yaml.
+  #
+  # Population NULL, same discipline as Israel/Mexico/Canada. China's own
+  # National Bureau of Statistics publishes poultry meat (禽肉) only as an
+  # all-species aggregate -- chicken, duck, goose and other fowl together --
+  # with no chicken-specific breakout anywhere in its national communique.
+  # Every chicken-specific figure this project loads for China is one step
+  # removed from NBS, via USDA FAS attaché reports whose own PSD table is
+  # captioned "Not official USDA data".
+  - iso3: CHN
+    name: China
+    native_mass_unit: kg
+    native_currency: CNY
+    notes: >-
+      China reports in tonnes and yuan, so every mass and value needs
+      deliberate conversion at load, as every non-US country's does.
+
+      Two Chinese-specific traps, both documented in docs/CHINA-PLAN.md.
+      First, the taxonomy split: NBS's own 禽肉 (poultry meat) aggregate
+      folds chicken in with duck and goose, and is never loaded as if it
+      were chicken-specific -- see the china-ave-vs-pollo-taxonomy fact.
+      Second, an unresolved production-estimate conflict: USDA's FAS
+      attaché report puts 2024 chicken meat production at 15.35 million
+      tonnes, while China's own National Broiler Industry Technology
+      System (reported via trade press) puts white- and yellow-feather
+      broiler meat ALONE at 22.11 million tonnes for the same year -- a
+      44% gap this pass could not resolve, most likely (but not confirmed)
+      a live-weight-versus-processed-weight basis difference. Recorded
+      side by side rather than adjudicated -- see
+      china-production-estimate-conflict.
+
+      USDA's own global circular states plainly that China is the world's
+      second largest chicken meat producer, "significantly behind the
+      United States and often on par with Brazil" -- unlike Mexico, no
+      competing world-rank claim was found. Per-capita consumption is low
+      for a top producer (about 11 kg/person, 2025, single-source, not
+      cross-validated) and self-sufficiency is high and rising (95.1% 2023
+      -> 97.4% 2025, derived from the same USDA table).
