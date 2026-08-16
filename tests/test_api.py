@@ -9,6 +9,8 @@ stops being true.
 import pytest
 from fastapi.testclient import TestClient
 
+from counting_chicken_wings import audit
+from counting_chicken_wings import db as dbm
 from counting_chicken_wings.api import app
 
 
@@ -76,6 +78,40 @@ def test_sources_endpoint_reports_usage(client):
     d = get(client, "/api/sources")
     assert d["sources"]
     assert any(s["used_by"] > 0 for s in d["sources"])
+
+
+def test_every_cited_source_reports_a_nonzero_count(client):
+    """A source the corpus actually uses must never render as "0 figures".
+
+    `any(used_by > 0)` above passed the whole time the count was computed
+    from a hand-written table list, while 39 of 111 sources -- every one
+    behind the international data -- reported zero. The endpoint derives
+    its tables from the schema now; this pins that, by asking the database
+    which sources are cited and refusing to accept a zero for any of them.
+    """
+    conn = dbm.connect()
+    try:
+        tables = [t for t, _label, _req in audit.cited_tables(conn)]
+        cited = set()
+        for table in tables:
+            cited.update(
+                r[0] for r in conn.execute(
+                    f"SELECT DISTINCT source_id FROM {table} "
+                    "WHERE source_id IS NOT NULL"
+                )
+            )
+        slugs = {
+            r[0] for r in conn.execute(
+                "SELECT slug FROM source WHERE id IN "
+                f"({','.join('?' * len(cited))})", tuple(cited)
+            )
+        }
+    finally:
+        conn.close()
+
+    reported = {s["slug"]: s["used_by"] for s in get(client, "/api/sources")["sources"]}
+    zeroed = sorted(s for s in slugs if reported.get(s, 0) == 0)
+    assert not zeroed, f"cited sources reporting no figures: {zeroed}"
 
 
 # ---------------------------------------------------------------------------
