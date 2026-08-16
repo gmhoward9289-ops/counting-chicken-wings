@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field, fields, replace
-from math import ceil, comb, erf, exp, lgamma, sqrt
+from math import ceil, comb, erf, exp, lgamma, log1p, sqrt
 
 
 # ---------------------------------------------------------------------------
@@ -167,6 +167,48 @@ def unit_is_aggregate(
     return natural < 1.0
 
 
+def mixing_draw_scale(
+    units_requested: float,
+    units_per_individual: float,
+    floor: float,
+    aggregate_units: bool | None = None,
+    recurring: RecurringYield | None = None,
+    mixing_subunits_per_unit: float | None = None,
+) -> tuple[float, float, str]:
+    """Re-express a question at the granularity the mixing draw actually
+    needs, and return (draw_units, draw_upi, drawn_label).
+
+    Extracted from `run()` so `/api/mixing-curve` can draw the same curve
+    the headline answer is built from, for any product, instead of a
+    wing-only approximation that ignored both re-expressions below.
+
+    `aggregate_units` left as None is derived here from the figures via
+    `unit_is_aggregate` -- callers outside this module must not decide it
+    for themselves (`test_aggregate_units.py` forbids the re-derivation by
+    name); they pass `recurring` and let the one copy of the condition run.
+
+      aggregate_units             one unit is a BLEND of many individuals'
+                                   output (a gram of saffron) -- re-express
+                                   in individual-shares, see `run()`.
+      mixing_subunits_per_unit    one unit is a homogenate of many smaller
+                                   already-blended particles (a ground beef
+                                   patty) -- re-express at the sub-unit
+                                   scale, see `run()`.
+      neither                     the unit is already the atomic thing the
+                                   draw assumes (a wing): unchanged.
+    """
+    if aggregate_units is None:
+        aggregate_units = unit_is_aggregate(units_per_individual, recurring)
+    if aggregate_units:
+        shares = max(1, ceil(floor))
+        return shares, 1.0, f"{shares:,} individual-shares"
+    if mixing_subunits_per_unit and mixing_subunits_per_unit > 1:
+        draw_units = units_requested * mixing_subunits_per_unit
+        draw_upi = units_per_individual * mixing_subunits_per_unit
+        return draw_units, draw_upi, f"{draw_units:,.0f} mixing sub-units"
+    return units_requested, units_per_individual, f"{units_requested} units"
+
+
 # Below this many factors the explicit product is as cheap as four lgamma
 # calls and stays bit-for-bit what it always was -- which keeps every
 # headline path (wings: removed is 1 or 2) byte-identical. Above it the
@@ -208,6 +250,31 @@ def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     # below, i.e. whenever total - drawn < removed; same answer here.
     if total - drawn - removed + 1.0 <= 0.0:
         return 0.0
+
+    # The lgamma round trip loses absolute precision with the SIZE of its
+    # arguments: lgamma(T) ~ T ln T, so at T ~ 1e11 each term carries ~4e-4
+    # of absolute error, and when the true exponent is itself small (a few
+    # thousand particles drawn from a hundred-billion-particle container,
+    # which is exactly where /api/mixing-curve's per-product sweep lands for
+    # a homogenate like ground beef) the error swamps the answer -- measured
+    # 6e-4 relative, enough to bend a saturated curve visibly downward.
+    # In that regime -- huge total, removed and drawn both small fractions
+    # of it -- the log-sum is smooth enough that Euler-Maclaurin evaluates
+    # it in closed form to ~1e-12 relative, entirely in well-scaled log1p
+    # terms:  sum_{i=0}^{r-1} log1p(-n/(T-i))
+    #           = n*log1p(-r/T) + (T-n)*log1p(-n/T)
+    #             - (T-r-n)*log1p(-n/(T-r))            [the integral]
+    #             + (log1p(-n/T) - log1p(-n/(T-r)))/2  [trapezoid term]
+    # with the next correction at the utterly negligible n/T^2 scale.
+    # Everything outside this regime keeps the lgamma form, where its error
+    # is either tiny (moderate T) or irrelevant (exponent large, miss ~ 0).
+    if total >= 1e9 and removed < 0.01 * total and drawn < 0.01 * total:
+        T, r, n = float(total), float(removed), float(drawn)
+        integral = (n * log1p(-r / T) + (T - n) * log1p(-n / T)
+                    - (T - r - n) * log1p(-n / (T - r)))
+        trapezoid = (log1p(-n / T) - log1p(-n / (T - r))) / 2.0
+        return exp(integral + trapezoid)
+
     return exp(
         lgamma(total - drawn + 1.0) - lgamma(total - drawn - removed + 1.0)
         + lgamma(total - removed + 1.0) - lgamma(total + 1.0)
@@ -1170,39 +1237,11 @@ def run(
         anatomical=anatomical, floor_source=floor_source,
     )
 
-    if aggregate_units:
-        # A continuous product's unit is an AGGREGATE, and that breaks the
-        # assumption the pooling formula rests on: that every contributing
-        # individual gave at least one WHOLE unit. A wing belongs to exactly
-        # one chicken, so drawing twelve wings is twelve draws. One gram of
-        # saffron is the combined stigma mass of about 150 flowers, so
-        # "draw one unit" is not one draw -- it is 150 of them, and asking
-        # the formula for one draw returned "a gram came from about 1
-        # flower" while the floor said 150. Two numbers from the same run
-        # contradicting each other.
-        #
-        # Fix: re-express the question in INDIVIDUAL-SHARES, one share per
-        # contributing individual, so units_per_individual becomes 1 and the
-        # formula's assumption holds again. Nothing about the mixing maths
-        # changes; only the unit it is asked in.
-        shares = max(1, ceil(floor))
-        draw_units, draw_upi = shares, 1.0
-        drawn_label = f"{shares:,} individual-shares"
-    elif mixing_subunits_per_unit and mixing_subunits_per_unit > 1:
-        # The mirror-image error, and the one a 2026-08 audit caught in
-        # ground beef: a unit here is not one intact thing traceable to at
-        # most one individual, it is a homogenate of many already-blended
-        # sub-units. Treating "1 patty = 1 draw" silently assumes it is a
-        # single indivisible piece from one animal, which is exactly the
-        # WING assumption and exactly what grinding destroys. Re-express the
-        # draw at the sub-unit (particle) scale instead -- the pooling
-        # formula does not change, only the granularity it is asked at.
-        draw_units = units_requested * mixing_subunits_per_unit
-        draw_upi = units_per_individual * mixing_subunits_per_unit
-        drawn_label = f"{draw_units:,.0f} mixing sub-units"
-    else:
-        draw_units, draw_upi = units_requested, units_per_individual
-        drawn_label = f"{units_requested} units"
+    draw_units, draw_upi, drawn_label = mixing_draw_scale(
+        units_requested, units_per_individual, floor,
+        aggregate_units=aggregate_units,
+        mixing_subunits_per_unit=mixing_subunits_per_unit,
+    )
 
     def _draw(stages, use_params=None):
         """One pass of the mixing cascade, in whatever unit the question is

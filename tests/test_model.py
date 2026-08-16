@@ -587,3 +587,51 @@ def test_a_draw_that_cannot_saturate_raises_rather_than_looping():
     """The guard is a guard, not a silent clamp."""
     with pytest.raises(ValueError):
         saturation_threshold(12, 2.0, epsilon=0.0)
+
+
+def test_ratio_choose_survives_hundred_billion_unit_containers():
+    """The closed-form lgamma path (#141) loses ~4e-4 of absolute exponent
+    precision at container sizes around 1e11 -- lgamma(T) ~ T ln T, and
+    double precision keeps relative, not absolute, accuracy. That is exactly
+    where /api/mixing-curve's per-product sweep lands for a homogenate
+    (200,000 animals x ~7e5 particles each), and the error bent a saturated
+    curve visibly downward: 1,100 distinct fell to 974 as the pool grew.
+
+    Reference is the symmetric identity C(T-n,r)/C(T,r) looped over the
+    SMALL argument -- a few thousand float factors, accurate to ~n*eps.
+    """
+    from counting_chicken_wings.model import _ratio_choose
+
+    def ref(total, removed, drawn):
+        r = 1.0
+        for i in range(drawn):
+            r *= (total - removed - i) / (total - i)
+        return r
+
+    cases = [
+        (147_400_000_000, 737_000, 1_100),   # the patty point that dipped
+        (10**11, 10**6, 500),
+        (10**10, 100_000, 64_000),
+        (2 * 10**9, 737_000, 1_100),
+    ]
+    for total, removed, drawn in cases:
+        assert _ratio_choose(total, removed, drawn) == pytest.approx(
+            ref(total, removed, drawn), rel=1e-9), (total, removed, drawn)
+
+
+def test_ratio_choose_branches_agree_where_they_meet():
+    """The stable branch is gated, not global: at moderate totals the lgamma
+    form is already accurate, and the two must hand off without a seam."""
+    from counting_chicken_wings.model import _ratio_choose
+
+    # Just under / just over the 1e9 total gate, same removed and drawn.
+    below = _ratio_choose(999_999_999, 5_000, 300)
+    above = _ratio_choose(1_000_000_001, 5_000, 300)
+    # Not equal (different totals), but each must match its own exact value.
+    def exact(total, removed, drawn):
+        r = 1.0
+        for i in range(drawn):
+            r *= (total - removed - i) / (total - i)
+        return r
+    assert below == pytest.approx(exact(999_999_999, 5_000, 300), rel=1e-6)
+    assert above == pytest.approx(exact(1_000_000_001, 5_000, 300), rel=1e-9)

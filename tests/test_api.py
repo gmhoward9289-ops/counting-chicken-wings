@@ -258,7 +258,7 @@ def test_variance_404s_on_an_unknown_product(client):
 # ---------------------------------------------------------------------------
 
 def test_mixing_curve_rises_from_floor_to_ceiling(client):
-    d = get(client, "/api/mixing-curve", draw=12)
+    d = get(client, "/api/mixing-curve", count=12)
     ys = [p["distinct"] for p in d["points"]]
     assert ys == sorted(ys)
     assert ys[0] == pytest.approx(d["floor"])
@@ -266,9 +266,67 @@ def test_mixing_curve_rises_from_floor_to_ceiling(client):
 
 
 def test_mixing_curve_never_leaves_its_bounds(client):
-    d = get(client, "/api/mixing-curve", draw=12)
+    d = get(client, "/api/mixing-curve", count=12)
     for p in d["points"]:
         assert d["floor"] - 1e-9 <= p["distinct"] <= d["ceiling"] + 1e-9
+
+
+def test_mixing_curve_unknown_product_404s(client):
+    r = client.get("/api/mixing-curve", params={"product": "not-a-product"})
+    assert r.status_code == 404
+
+
+@pytest.mark.parametrize("product,count", [
+    ("whole_wing", 12),
+    ("table_egg", 12),
+    ("ground_beef_patty", 1),
+    ("saffron_gram", 1),
+    ("maple_syrup_gallon", 1),
+])
+def test_mixing_curve_covers_every_product(client, product, count):
+    """Every product on the calculator's dropdown draws a real curve, not
+    just the headline wing -- the mixing simulator used to be pinned to
+    whole_wing regardless of which product was asked for.
+    """
+    d = get(client, "/api/mixing-curve", product=product, count=count)
+    ys = [p["distinct"] for p in d["points"]]
+    assert ys, f"{product} produced no curve points"
+    # Non-decreasing up to floating-point noise: a patty's curve saturates
+    # near its ~1,100 sub-unit ceiling, where the hypergeometric tail sits
+    # close enough to 1 that successive points can differ in the last
+    # couple of ULPs without the curve having actually turned over.
+    assert all(b >= a - max(1e-6, abs(a) * 1e-8) for a, b in zip(ys, ys[1:]))
+    # `d["floor"]` is the average-rate figure `run()` itself reports for this
+    # product/window (recurring_floor's `expected`, not its `hard` bound), so
+    # it is not a guaranteed lower bound on distinct for every recurring
+    # product -- same-day eggs are the case in point, where a below-1
+    # per-hen daily rate pushes the average floor above the dozen-egg
+    # ceiling entirely (see test_eggs.py's own
+    # test_commercial_same_day_dozen_is_exactly_twelve_hens for the sharper,
+    # hard-floor version of this). What must hold for every product is the
+    # ceiling: distinct can never exceed the units actually drawn.
+    for p in d["points"]:
+        assert p["distinct"] <= d["ceiling"] + max(1e-6, d["ceiling"] * 1e-8)
+        # ... and can never exceed the pool itself: you cannot find more
+        # distinct individuals in a batch than the batch contains. This is
+        # the assertion that catches reaching for `expected_distinct` (the
+        # wings-only two-per-individual special case) instead of
+        # `expected_distinct_general` -- the special case reported ~1,100
+        # distinct animals in a pool of 1 for a patty.
+        assert p["distinct"] <= p["pool"] + max(1e-6, p["pool"] * 1e-8)
+
+
+def test_mixing_curve_ground_beef_patty_reaches_the_batch_not_one_animal(
+    client,
+):
+    """The regression this generalization must not reintroduce: a single
+    patty's mixing curve should climb toward hundreds of distinct animals
+    (the DNA-measured grind-batch pool), not flatten near 1 the way a wing
+    -- or the old wing-only curve applied to a patty -- would.
+    """
+    d = get(client, "/api/mixing-curve", product="ground_beef_patty", count=1)
+    assert d["ceiling"] > 100
+    assert d["points"][-1]["distinct"] > 100
 
 
 # ---------------------------------------------------------------------------

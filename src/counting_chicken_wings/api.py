@@ -17,8 +17,10 @@ from . import db as dbm
 from . import seasonality as seas
 from .model import (
     CONFIDENCE_RANK,
-    expected_distinct,
+    expected_distinct_general,
+    floor_individuals,
     meets_confidence,
+    mixing_draw_scale,
     run,
     sensitivity,
     variance_decomposition,
@@ -784,50 +786,99 @@ def variance(
 
 @app.get("/api/mixing-curve")
 def mixing_curve(
-    draw: int = Query(12, gt=0, le=500),
-    units_per_individual: float = Query(2.0, gt=0),
+    count: float = Query(12, gt=0, le=100000),
+    product: str = "whole_wing",
+    window_days: float | None = Query(None, gt=0, le=3650),
 ):
-    """The distinct-individuals curve as the pool grows.
+    """The distinct-individuals curve as the pool grows, for any product.
 
-    Powers the simulator: drag the pool from 6 individuals to 40,000 and
-    watch the count climb from the floor toward the ceiling.
+    Powers the simulator: drag the pool from a handful of individuals to
+    200,000 and watch the count climb from the floor toward the ceiling.
+
+    The curve itself stays the bare hypergeometric shape it has always
+    been -- no separation efficiency, no clustering, none of the mixing
+    cascade's other stages -- because the shape is the finding: it flattens
+    above a few hundred individuals and never recovers. What varies by
+    product is the SCALE the draw happens at, and that has to match the
+    real headline answer or the two disagree in front of the same reader.
+    `mixing_draw_scale` is the same re-expression `run()` uses for the
+    headline figure (individual-shares for a blended unit like a gram of
+    saffron, mixing sub-units for a homogenate like a ground beef patty) --
+    duplicating that logic here once produced exactly the mismatch this
+    fixes -- see .changes/beef-patty-mixing-granularity.md: a patty's curve
+    implied "about 1 animal" while its headline answer said "most of the
+    batch".
     """
-    pools = []
-    b = max(1, int(draw / units_per_individual))
-    while b <= 200000:
-        pools.append(b)
-        b = int(b * 1.35) + 1
-    if 200000 not in pools:
-        pools.append(200000)
+    conn = dbm.connect()
+    try:
+        try:
+            prod = dbm.get_product(conn, product)
+        except KeyError:
+            raise HTTPException(404, f"unknown product: {product}")
 
-    points = []
-    for pool in pools:
-        container = int(pool * units_per_individual)
-        if container < draw:
-            continue
-        points.append({
-            "pool": pool,
-            "distinct": expected_distinct(draw, container, pool),
-        })
+        try:
+            recurring = dbm.make_recurring(prod, window_days)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
 
-    return {
-        "draw": draw,
-        "floor": draw / units_per_individual,
-        "ceiling": draw,
-        "points": points,
-        # Deliberately the bare curve: no separation, no clustering. It is
-        # the shape that matters here, and the shape is the finding -- it
-        # flattens above a few hundred individuals and never recovers. Past
-        # that point the pool estimate stops mattering, which is why the
-        # commodity answer does not rest on any pool figure in the corpus.
-        "note": (
-            "Each individual contributes all of its units to the pool, so "
-            "this is the most conservative case. Note how fast the curve "
-            "flattens: past a few hundred individuals the answer stops "
-            "depending on the pool size at all, which is why every "
-            "commodity-scale route lands in the same place."
-        ),
-    }
+        units_per_individual = (
+            recurring.units_per_individual if recurring is not None
+            else prod["units_per_individual_mode"]
+        )
+        floor = floor_individuals(count, units_per_individual)
+        # Whether the unit is an aggregate is derived inside the model, from
+        # `recurring` -- `test_aggregate_units.py` forbids this module
+        # deciding it again.
+        draw, upi, drawn_label = mixing_draw_scale(
+            count, units_per_individual, floor,
+            recurring=recurring,
+            mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
+        )
+
+        pools = []
+        b = max(1, int(draw / upi))
+        while b <= 200000:
+            pools.append(b)
+            b = int(b * 1.35) + 1
+        if 200000 not in pools:
+            pools.append(200000)
+
+        points = []
+        for pool in pools:
+            container = int(pool * upi)
+            if container < draw:
+                continue
+            points.append({
+                "pool": pool,
+                # The general formula, not the wings-only two-per-individual
+                # special case: `pool` individuals contributed `container`
+                # units between them, whatever this product's anatomy says
+                # that ratio is.
+                "distinct": expected_distinct_general(
+                    int(draw), container, pool),
+            })
+
+        return {
+            "product": prod["label"],
+            "individual_noun": prod["individual_noun"],
+            "individual_plural": prod["individual_plural"],
+            "count": count,
+            "unit_name": prod["unit_name"],
+            "drawn_label": drawn_label,
+            "draw": draw,
+            "floor": draw / upi,
+            "ceiling": draw,
+            "points": points,
+            "note": (
+                "Each individual contributes all of its units to the pool, "
+                "so this is the most conservative case. Note how fast the "
+                "curve flattens: past a few hundred individuals the answer "
+                "stops depending on the pool size at all, which is why "
+                "every commodity-scale route lands in the same place."
+            ),
+        }
+    finally:
+        conn.close()
 
 
 @app.get("/api/states")
