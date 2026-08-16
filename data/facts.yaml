@@ -1124,6 +1124,8 @@ facts:
       different structural reason, and the same absence this project
       declines to paper over with an estimate for either country.
     source: abpa-annual-report-2026
+    placement: learning
+    surprise: 3
   # ---- China ------------------------------------------------------------
   # Fifth country. See docs/CHINA-PLAN.md. Every fact here is checked
   # against a source's own wording for the 禽肉 (all-poultry) vs. 鸡肉/肉鸡
@@ -1235,6 +1237,7 @@ facts:
       head count next to a tonnage figure it cannot be squared against
       would imply a bird weight nobody actually measured.
     source: agripost-cn-broiler-industry-2024
+    placement: learning
   # Fifth country. See docs/JAPAN-PLAN.md.
 
   - slug: japan-shipped-not-slaughtered
@@ -1308,6 +1311,8 @@ facts:
       of nearly 1.7 million: the kind of agreement that makes a figure
       worth trusting rather than merely worth citing.
     source: maff-shokuryo-jukyuhyo-r5
+    placement: learning
+    surprise: 3
   - slug: germany-poultry-skin-included
     headline: German chicken statistics count the skin -- almost nothing else's do
     body: >-
