@@ -13,6 +13,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from . import audit
 from . import db as dbm
 from . import seasonality as seas
 from .model import (
@@ -2102,17 +2103,25 @@ def facts(
 
 @app.get("/api/sources")
 def sources():
-    """Every source, with a count of how many figures depend on it."""
+    """Every source, with a count of how many figures depend on it.
+
+    The tables are discovered from the schema rather than listed here. A
+    hand-written list is a third copy of a contract the database already
+    states, and it went stale exactly as `audit.cited_tables` warns: every
+    country added after the list was written landed in `output_stat_year`
+    and `regional_production_year`, neither of which was counted, so 39 of
+    111 sources reported "0 figures" -- including every source behind the
+    international data. A source that carries the corpus reading as unused
+    is worse than no count at all.
+    """
     conn = dbm.connect()
     try:
+        tables = [t for t, _label, _req in audit.cited_tables(conn)]
         rows = conn.execute("SELECT * FROM source ORDER BY source_type, slug")
         out = []
         for r in rows:
             uses = 0
-            for table in ("loss_factor", "fact", "product", "product_segment",
-                          "producer", "mixing_stage", "slaughter_stat_year",
-                          "regional_size_stat", "husbandry_stat_year",
-                          "production_program", "product_grade"):
+            for table in tables:
                 uses += conn.execute(
                     f"SELECT COUNT(*) FROM {table} WHERE source_id = ?",
                     (r["id"],),
