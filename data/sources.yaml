@@ -1414,3 +1414,137 @@
     paid, 3 million tons of feed purchased) -- industry-grade, no single
     year or public methodology stated for the multiplier, so kept as fact
     material rather than a statistic.
+
+# ---------------------------------------------------------------------------
+# Vanilla (batch-02-vanilla, accepted 2026-08-15)
+# ---------------------------------------------------------------------------
+
+- slug: vanilla-package-of-practice-2021
+  title: 'Package of Practice: Vanilla Cultivation'
+  publisher: North Eastern Council (NEC) / North Eastern Development Finance Corporation Limited (NEDFi), India
+  url: https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf
+  retrieved_on: '2026-08-15'
+  source_type: trade_body
+  notes: >-
+    Undated within the document itself; the URL path carries a 2021 upload
+    date, kept out of published_on since it names the upload, not necessarily
+    authorship. A regional development-finance body's model project profile
+    for vanilla cultivation, in the same "extension-style practical guide"
+    category as Penn State's and UF/IFAS's saffron sources.
+
+    Sole source for the only figure batch-02-vanilla accepted:
+    green_to_cured_ratio, "About 6 kg of green pods produce 1 kg of cured
+    beans." Confirmed to state Vanilla planifolia by name.
+
+- slug: worldbank-vanilla-cultivation-guide
+  title: Guide on Sustainable Vanilla Cultivation
+  publisher: World Bank
+  url: https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf
+  retrieved_on: '2026-07-29'
+  source_type: trade_body
+  notes: >-
+    4,433 lines after pdftotext. Strong on pollination and field yields (43
+    and 48 keyword hits respectively) but mentions "cured" exactly once, so
+    it could not answer the curing ratio -- coverage was checked per source
+    before batch-02-vanilla was sent, not assumed. Also the source for the
+    dropped flowers_per_bean row's quote ("A flower gives a vanilla bean
+    after hand pollination") -- true, and never loaded as data, because the
+    numeral 1 never appears in that sentence. See
+    docs/research/accepted/batch-02-vanilla-REVIEW.md.
+
+# ---------------------------------------------------------------------------
+# Wagyu (batch-03-wagyu, accepted 2026-08-15)
+# ---------------------------------------------------------------------------
+
+- slug: gotoh-2018-wagyu-review
+  title: 'The Japanese Wagyu beef industry: current situation and future prospects -- A review'
+  publisher: Asian-Australasian Journal of Animal Sciences 31(7)
+  url: https://www.animbiosci.org/journal/view.php?doi=10.5713/ajas.18.0333
+  published_on: '2018-06-21'
+  retrieved_on: '2026-08-15'
+  source_type: peer_reviewed
+  notes: >-
+    Gotoh, Nishimura, Kuchida & Mannen (2018). Peer-reviewed, but COOPER may
+    not assign `study` -- the figure below is graded `industry` by human
+    decision, same rule as every other peer-reviewed source in this project
+    (see the honey batch's Jaganathan & Mandal lesson in
+    docs/research/README.md).
+
+    A single source that carried four of batch-03-wagyu's six items in
+    principle (carcass/finishing weights, the yield/quality/BMS grading
+    structure, days on feed, total feed consumption) -- extraction still
+    returned only one figure from it. See
+    docs/research/accepted/batch-03-wagyu-REVIEW.md for why: the model
+    mostly declined to return a candidate at all against a document that
+    demonstrably contained the answers, a different failure shape than
+    vanilla's wrong-question/gate-limit drops.
+
+    The PMC mirror (PMC6039323) returned a reCAPTCHA wall on 2026-08-15;
+    fetched here from the publisher (animbiosci.org) instead.
+
+    Round 2 (2026-08-16, human read of the same fetched document) recovered
+    two more figures from it: the Japanese Black carcass-yield weights
+    (756 kg live / 476 kg carcass at 29.2 months) and the JMGA grading
+    structure (yield letter A-C, quality number 1-5, BMS 1-12 as one of
+    four inputs to the quality number). See
+    docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
+
+- slug: msstate-ext-beef-grades
+  title: Beef Grades and Carcass Information
+  publisher: Mississippi State University Extension Service
+  url: https://extension.msstate.edu/publications/beef-grades-and-carcass-information
+  retrieved_on: '2026-08-15'
+  source_type: trade_body
+  notes: >-
+    A DIFFERENT MSU Extension publication from msstate-ext-beef-yield
+    (farm-direct beef), despite the same publisher and overlapping subject.
+    This one is the grading fact sheet, cited for the fed-cattle dressing
+    percentage: "It typically ranges from 60 to 64 percent for the majority
+    of fed cattle and averaged 64 percent for the Mississippi Farm to
+    Feedlot program cattle from 1993 through 2007." Same 60-64 range the
+    other MSU document states, independently restated with a measured
+    program mean attached -- consistent, and not merged into one citation
+    because they are two documents.
+
+    Also the document that treats marbling/quality-grade and
+    fat-thickness/yield-grade as independently measured traits throughout,
+    which is the basis for batch-03-wagyu's honest
+    marbling_vs_yield_tradeoff "sources treat the axes as independent"
+    finding.
+
+- slug: beefresearch-org-beef-grading
+  title: 'Fact Sheet: Beef Grading (Expected Yields of Closely Trimmed, Boneless Retail Cuts by USDA Yield Grade)'
+  publisher: National Cattlemen's Beef Association / beefresearch.org (Cattlemen's Beef Board checkoff)
+  url: https://www.beefresearch.org/resources/product-quality/fact-sheets/beef-grading
+  retrieved_on: '2026-08-15'
+  source_type: trade_body
+  notes: >-
+    Checkoff-funded fact sheet authored by Daryl Tatum PhD (Colorado State),
+    citing the 1996 USDA grading standard directly. Cited for the %CTBRC
+    column of its Table 1: closely trimmed boneless retail cuts from
+    round/loin/rib/chuck ONLY, <45.4% to >52.3% of carcass weight across
+    USDA Yield Grades 5 through 1. The companion %Total Yield column (all
+    retail cuts including ground beef, <65 to >=80) is a different
+    denominator and is not interchangeable with it -- nor with SDSU's 65%
+    worked-example figure, which includes trim the %CTBRC basis excludes.
+
+- slug: lone-mountain-carcass-grading
+  title: Carcass Grading (breeding guide technical resources)
+  publisher: Lone Mountain Cattle Company
+  url: https://www.lonemountaincattle.com/breeding-guide/technical-resources/carcass-grading/
+  retrieved_on: '2026-08-15'
+  source_type: trade_press
+  notes: >-
+    Commercial source -- an American wagyu breeder, not JMGA or a
+    peer-reviewed paper -- graded industry accordingly. Cited ONLY for the
+    BMS-to-quality-grade bucketing (BMS 8-12 -> quality 5; BMS 5-7 -> 4)
+    and its "a BMS 3 grade requires a minimum of 21% IMF" anchor, plus the
+    ribbing-site basis note (Japan ribs between the 6th/7th rib, the US
+    between the 12th/13th).
+
+    NOT usable as a definition of what BMS measures: Fable's adversarial
+    review (2026-08-16) confirmed this page attributes color, firmness and
+    texture to the BMS grade itself, but per Gotoh BMS is a marbling-only
+    score -- the four-factor lowest-of rule belongs to the separate meat
+    quality grade (1-5). See
+    docs/research/accepted/batch-03-wagyu-findings-round2.yaml.

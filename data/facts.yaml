@@ -915,3 +915,39 @@ facts:
     source: cfc-annual-report-2025
     placement: learning
     surprise: 4
+
+  # Wagyu grading facts, batch-03-wagyu round 2 (accepted 2026-08-16).
+  # First facts outside the poultry domain -- `domain:` is new and optional,
+  # defaulting to poultry, so every existing fact above is untouched.
+  - slug: a5-two-grades-not-one
+    domain: livestock
+    headline: The A and the 5 in "A5 wagyu" grade two different things
+    body: >-
+      Japan's Meat Grading Association assigns every carcass a yield grade -
+      a letter, A to C, for how much meat the carcass gives up - and a
+      separate meat quality grade, a number from 1 to 5. "A5" is the pairing
+      of the best of each, not a single scale. The famous marbling score
+      (BMS, 1 to 12) sits inside the quality number as one of four inputs
+      alongside meat color, firmness and texture, and fat quality - and the
+      quality grade takes the lowest of the four. A carcass with perfect
+      marbling and slightly dull fat is not a 5.
+    source: gotoh-2018-wagyu-review
+    placement: both
+    surprise: 4
+
+  - slug: bms-eight-earns-the-five
+    domain: livestock
+    headline: It takes a marbling score of 8 out of 12 to earn the 5 in A5
+    body: >-
+      The 12-point Beef Marbling Standard is bucketed into the 5-point
+      quality grade: BMS 8 through 12 all earn a quality score of 5, and BMS
+      5 through 7 earn a 4. So "A5" spans a wide range of actual marbling -
+      the floor of the top grade sits at 8, and everything above it collapses
+      into the same letter-number pair. An American wagyu breeder's guide
+      also puts the entry point for BMS 3 at a minimum of 21% intramuscular
+      fat - and notes Japan measures at a different rib site (6th/7th) than
+      the US (12th/13th), so the two systems' numbers are not directly
+      comparable.
+    source: lone-mountain-carcass-grading
+    placement: learning
+    surprise: 3
