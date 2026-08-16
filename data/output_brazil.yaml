@@ -1,0 +1,197 @@
+# Brazilian broiler ("frango de corte" / chicken meat) figures.
+#
+# Two real sources, at two grades, and a schema constraint that only
+# allows one to win per cell -- see docs/BRAZIL-PLAN.md, "Two national
+# head counts, and why only one is loaded", for the full reasoning. In
+# short: IBGE's Pesquisa Trimestral do Abate de Animais (SIDRA table 1094)
+# is a genuine government census-type quarterly survey, reached directly
+# via its own REST API, covering federal + state + municipal inspection
+# combined -- the strongest grade this project can assign. ABPA's Annual
+# Report 2026 is an industry trade body's own report, citing MAPA
+# (federal-inspection only) for a DIFFERENT, lower head count for the same
+# year, and its own broader methodology for a DIFFERENT, higher tonnage
+# figure for the same year. Both ABPA figures are documented in
+# sources.yaml and docs/research/library/poultry-brazil.yaml rather than
+# loaded here, because output_stat_year allows only one row per
+# (species, country, region, year, measure) and IBGE outranks ABPA on
+# confidence grade for every cell where they overlap.
+#
+# WEIGHT BASIS: IBGE's table reports CARCASS weight ("peso total das
+# carcacas"), not live weight -- stated explicitly in the table's own
+# title, unlike Canada's StatCan table, which never states its basis and
+# needed a separate AAFC publication to settle it. No conversion is
+# performed anywhere in this file: IBGE reports head count and weight in
+# kg; weight is given here in tonnes by dividing by 1,000 (numerically
+# exact, no modelling), matching the tonnes convention every other
+# country file in this project uses.
+#
+# ARITHMETIC PERFORMED BY THIS PROJECT, NOT PUBLISHED AS SUCH BY IBGE:
+# IBGE's table publishes QUARTERLY figures only; every annual number below
+# is this project's own sum of the four published 2025 quarters, real
+# counts added together, not a model or an estimate. See
+# docs/research/library/poultry-brazil.yaml for the quarter-by-quarter
+# figures being summed.
+
+species: broiler
+country: BRA
+
+national:
+  # THE FIGURE MEXICO NEVER HAD AT THIS GRADE, AND CANADA'S COUNTERPART
+  # FOR A SECOND NON-US COUNTRY. Government census-type quarterly survey,
+  # reached directly via IBGE's own SIDRA API -- not a secondhand
+  # attache-report citation. A second, lower, industry-grade figure
+  # (5,706,000 thousand head, ABPA citing MAPA's federal-inspection-only
+  # population) exists and is NOT loaded here -- see docs/BRAZIL-PLAN.md.
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: ibge-sidra-1094-abate-frangos
+    notes: >-
+      Summed from IBGE's four published 2025 quarters (1,647,469,931 +
+      1,641,006,289 + 1,690,778,193 + 1,716,210,882 = 6,695,465,295 head),
+      covering federal + state + municipal sanitary inspection combined --
+      a broader population than ABPA's own 5.706 billion figure, which
+      ABPA itself sources to MAPA federal-inspection-only slaughter. See
+      docs/BRAZIL-PLAN.md, "Two national head counts", for the documented,
+      unresolved conflict between the two.
+    years:
+      - {year: 2025, value: 6695465}
+
+  - measure: meat_output
+    unit: tonnes
+    confidence: measured
+    source: ibge-sidra-1094-abate-frangos
+    notes: >-
+      Carcass weight ("peso total das carcacas"), stated as such in IBGE's
+      own table title -- not live weight, and not converted from any other
+      basis. Summed from the four published 2025 quarters (3,492,399,355 +
+      3,558,452,775 + 3,598,165,273 + 3,655,244,093 kg = 14,304,261,496 kg
+      = 14,304,261 tonnes, numerically exact conversion).
+    years:
+      - {year: 2025, value: 14304261}
+
+  # ABPA's OWN production series, loaded ONLY for 2024 -- the one year
+  # that does not collide with IBGE's 2025 row above. ABPA's 2025 figure
+  # (15,289,000 t) is real and cited in sources.yaml, but is not loaded as
+  # a second 2025 row: the schema allows one meat_output value per
+  # country per year, and IBGE already holds that cell at a better grade.
+  - measure: meat_output
+    unit: tonnes
+    confidence: industry
+    source: abpa-annual-report-2026
+    notes: >-
+      ABPA's own "Chicken Meat" production figure (not the broader "aves"
+      aggregate, which the same report gives separately for eggs, turkey
+      and duck meat). Loaded for 2024 only to avoid colliding with IBGE's
+      measured 2025 row above; ABPA's own 2025 figure (15,289,000 t,
+      differing from IBGE's 14,304,261 t by about 7%) is documented as an
+      unresolved conflict in docs/BRAZIL-PLAN.md rather than loaded
+      alongside it.
+    years:
+      - {year: 2024, value: 14972000}
+
+  # No collision: IBGE's table carries no output-value column at all, so
+  # ABPA's Gross Production Value figure is the only candidate for this
+  # cell.
+  - measure: output_value
+    unit: BRL_million
+    confidence: industry
+    source: abpa-annual-report-2026
+    notes: >-
+      Gross Production Value, "Chicken Meat" specifically, as stated
+      directly by ABPA ("R$ 112.6 billion") rather than derived from a
+      price times a quantity this project does not otherwise hold.
+    years:
+      - {year: 2025, value: 112600}
+
+# One districts block per measure, matching Canada's shape (a provincial
+# breakdown exists for BOTH head_slaughtered and meat_output, from the
+# same publisher) rather than Israel's single-measure shape.
+#
+# THE RECONCILIATION IS A SUPPRESSION-DRIVEN GAP OF ABOUT 1.1%, checked on
+# TWO INDEPENDENT QUANTITIES (head count and carcass weight) landing
+# within a tenth of a point of each other -- unlike Canada's exact
+# partition, and unlike Israel's structurally-explained 4.76% marketing
+# gap. The 19 published states below sum to 6,621,286,613 head against a
+# national 6,695,465,295 (99.0% capture) and 14,143,105 tonnes against a
+# national 14,304,261 (98.9% capture). The remaining 8 states/territories
+# -- Acre, Amazonas, Roraima, Rio Grande do Norte, Alagoas, Sergipe and
+# the Distrito Federal (IBGE's confidential-suppression code "X" in every
+# 2025 quarter) plus Amapa (IBGE's not-applicable code "..", loaded
+# suppressed rather than asserted as a true zero) -- are loaded as
+# suppressed rows: presence without volume, the same pattern Canada's
+# Atlantic provinces and NASS/CBS both use.
+#
+# region_level reuses 'province' for Brazilian states (UF), the same
+# generic subnational-primary-division concept Canada's provinces use --
+# Brazil's states are not literally called "provinces", but the schema
+# offers no dedicated value for them and adding one was out of scope for
+# this pass.
+districts:
+  - measure: head_slaughtered
+    source: ibge-sidra-1094-abate-frangos
+    year: 2025
+    unit: thousand_head
+    regions:
+      - {region: 'BRASIL', level: total, value: 6695465}
+      - {region: 'Parana', level: province, value: 2299336}
+      - {region: 'Santa Catarina', level: province, value: 918216}
+      - {region: 'Rio Grande do Sul', level: province, value: 760045}
+      - {region: 'Sao Paulo', level: province, value: 753826}
+      - {region: 'Goias', level: province, value: 530340}
+      - {region: 'Minas Gerais', level: province, value: 488085}
+      - {region: 'Mato Grosso', level: province, value: 210598}
+      - {region: 'Mato Grosso do Sul', level: province, value: 179159}
+      - {region: 'Bahia', level: province, value: 136018}
+      - {region: 'Pernambuco', level: province, value: 76345}
+      - {region: 'Espirito Santo', level: province, value: 57072}
+      - {region: 'Para', level: province, value: 56235}
+      - {region: 'Ceara', level: province, value: 40119}
+      - {region: 'Rio de Janeiro', level: province, value: 36914}
+      - {region: 'Paraiba', level: province, value: 27991}
+      - {region: 'Tocantins', level: province, value: 25137}
+      - {region: 'Rondonia', level: province, value: 17849}
+      - {region: 'Piaui', level: province, value: 6893}
+      - {region: 'Maranhao', level: province, value: 1108}
+      - {region: 'Acre', level: province, suppressed: 1}
+      - {region: 'Amazonas', level: province, suppressed: 1}
+      - {region: 'Roraima', level: province, suppressed: 1}
+      - {region: 'Amapa', level: province, suppressed: 1}
+      - {region: 'Rio Grande do Norte', level: province, suppressed: 1}
+      - {region: 'Alagoas', level: province, suppressed: 1}
+      - {region: 'Sergipe', level: province, suppressed: 1}
+      - {region: 'Distrito Federal', level: province, suppressed: 1}
+
+  - measure: meat_output
+    source: ibge-sidra-1094-abate-frangos
+    year: 2025
+    unit: tonnes
+    regions:
+      - {region: 'BRASIL', level: total, value: 14304261}
+      - {region: 'Parana', level: province, value: 4974439}
+      - {region: 'Santa Catarina', level: province, value: 1913851}
+      - {region: 'Rio Grande do Sul', level: province, value: 1393814}
+      - {region: 'Sao Paulo', level: province, value: 1692841}
+      - {region: 'Goias', level: province, value: 1178406}
+      - {region: 'Minas Gerais', level: province, value: 1048587}
+      - {region: 'Mato Grosso', level: province, value: 449616}
+      - {region: 'Mato Grosso do Sul', level: province, value: 423522}
+      - {region: 'Bahia', level: province, value: 304265}
+      - {region: 'Pernambuco', level: province, value: 170098}
+      - {region: 'Espirito Santo', level: province, value: 137773}
+      - {region: 'Para', level: province, value: 129831}
+      - {region: 'Ceara', level: province, value: 74792}
+      - {region: 'Rio de Janeiro', level: province, value: 63932}
+      - {region: 'Paraiba', level: province, value: 64567}
+      - {region: 'Tocantins', level: province, value: 61556}
+      - {region: 'Rondonia', level: province, value: 44193}
+      - {region: 'Piaui', level: province, value: 14478}
+      - {region: 'Maranhao', level: province, value: 2544}
+      - {region: 'Acre', level: province, suppressed: 1}
+      - {region: 'Amazonas', level: province, suppressed: 1}
+      - {region: 'Roraima', level: province, suppressed: 1}
+      - {region: 'Amapa', level: province, suppressed: 1}
+      - {region: 'Rio Grande do Norte', level: province, suppressed: 1}
+      - {region: 'Alagoas', level: province, suppressed: 1}
+      - {region: 'Sergipe', level: province, suppressed: 1}
+      - {region: 'Distrito Federal', level: province, suppressed: 1}

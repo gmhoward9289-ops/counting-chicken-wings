@@ -1883,3 +1883,166 @@
     Aguascalientes sits at or near the top of the state ranking, though
     never loaded as a table figure since only the leader is named, not a
     percentage.
+
+- slug: ibge-sidra-1094-abate-frangos
+  title: >-
+    Tabela 1094 - Número de informantes, Quantidade e Peso total das
+    carcaças dos frangos abatidos, no mês e no trimestre, por tipo de
+    inspeção (Pesquisa Trimestral do Abate de Animais)
+  publisher: Instituto Brasileiro de Geografia e Estatística (IBGE)
+  url: https://sidra.ibge.gov.br/tabela/1094
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Brazil's NASS/StatCan-equivalent quarterly animal slaughter survey,
+    queried directly via IBGE's SIDRA REST API
+    (apisidra.ibge.gov.br/values/t/1094/...), not scraped from the table
+    viewer - the same "real API" shape Statistics Canada's Web Data
+    Service was for Canada, and the opposite of Mexico's unreachable SIAP.
+    Isolates chicken ("frangos") slaughter specifically, by state (UF),
+    with head count (variable 284, "Animais abatidos") and carcass weight
+    in kg (variable 285, "Peso total das carcaças") from federal + state +
+    municipal sanitary inspection combined, plus a machine-readable
+    suppression code ("X" for confidential cells, ".." for not-applicable)
+    per state per quarter.
+
+    NATIONAL 2025, summed from the four published quarters (this project's
+    own arithmetic on IBGE's real quarterly counts - IBGE does not itself
+    publish a 2025 annual total in this table): 6,695,465,295 head
+    slaughtered (1,647,469,931 + 1,641,006,289 + 1,690,778,193 +
+    1,716,210,882), 14,304,261,496 kg carcass weight = 14,304,261 tonnes
+    (3,492,399,355 + 3,558,452,775 + 3,598,165,273 + 3,655,244,093).
+
+    BY STATE, same summing, for the 19 states with published (non-
+    suppressed) 2025 figures: Paraná 2,299,336,111 head / 4,974,439 t,
+    Santa Catarina 918,216,434 / 1,913,851 t, Rio Grande do Sul 760,045,190
+    / 1,393,814 t, São Paulo 753,826,364 / 1,692,841 t, Goiás 530,339,846 /
+    1,178,406 t, Minas Gerais 488,084,751 / 1,048,587 t, Mato Grosso
+    210,597,652 / 449,616 t, Mato Grosso do Sul 179,159,145 / 423,522 t,
+    Bahia 136,018,435 / 304,265 t, Pernambuco 76,344,838 / 170,098 t,
+    Espírito Santo 57,072,094 / 137,773 t, Pará 56,234,740 / 129,831 t,
+    Ceará 40,119,129 / 74,792 t, Rio de Janeiro 36,914,303 / 63,932 t,
+    Paraíba 27,991,024 / 64,567 t, Tocantins 25,136,568 / 61,556 t,
+    Rondônia 17,848,745 / 44,193 t, Piauí 6,893,446 / 14,478 t, Maranhão
+    1,107,798 / 2,544 t.
+
+    SUPPRESSED (confidential "X" in every 2025 quarter): Acre, Amazonas,
+    Roraima, Rio Grande do Norte, Alagoas, Sergipe, Distrito Federal. Amapá
+    is marked ".." (not-applicable, distinct from confidential
+    suppression) in every quarter - loaded suppressed=1 alongside the "X"
+    states rather than asserted as a true zero.
+
+    RECONCILIATION: 19 published states sum to 14,143,105 tonnes of
+    14,304,261 national (98.9%) and 6,621,286,613 of 6,695,465,295 head
+    national (99.0%) - both gaps land at almost the same percentage
+    (1.1-1.13%), a coherence check that the suppression pattern is real
+    rather than a parsing artifact.
+
+    GRADED MEASURED throughout: a direct government census-type survey,
+    reached at first hand via IBGE's own API, not a trade body's citation
+    of a government figure one step removed. A second, real, industry-
+    grade national head count exists (ABPA, citing MAPA, 5,706,000
+    thousand head, federal-inspection only) and is NOT loaded alongside
+    this one - see abpa-annual-report-2026 below and
+    docs/BRAZIL-PLAN.md, "Two national head counts", for the documented,
+    unresolved 17% conflict between the two.
+
+- slug: abpa-annual-report-2026
+  title: ABPA Annual Report 2026 (covering 2025 data)
+  publisher: Associação Brasileira de Proteína Animal (ABPA)
+  url: https://abpa-br.org/wp-content/uploads/2026/04/ABPA_Annual_Report_2026.pdf
+  published_on: '2026-04-28'
+  retrieved_on: '2026-08-16'
+  source_type: trade_body
+  notes: >-
+    Brazil's national poultry-and-pork trade body, the equivalent of the
+    National Chicken Council. Reached directly as a 43 MB PDF, found via
+    the report's own download archive (abpa-br.org/abpa-relatorio-anual/),
+    and read with PyMuPDF (WebFetch's own extraction refused the file for
+    exceeding its 10 MB cap). Corroborated by the report's own launch
+    press release, which quotes identical figures verbatim.
+
+    HEADLINE 2025 "CHICKEN MEAT" FIGURES (not the broader "aves" aggregate
+    the same report gives separately for eggs, turkey and duck meat, each
+    with their own production/export/per-capita figures on the same
+    summary page): production 15.289 million tonnes (3rd largest producer
+    in the world, behind USA 21.812M and China 16.200M t, per the report's
+    own World Chicken Meat Market table); exports 5.324 million tonnes to
+    153 countries, US$9.8 billion revenue (world's largest exporter,
+    34.82% of production - "Destination of Brazilian Chicken Meat
+    Production in 2025": 65.18% domestic market, 34.82% exports);
+    per-capita consumption 46.7 kg/inhabitant; Gross Production Value R$
+    112.6 billion; breeding hens housed ("Matrizes de corte, alojamento")
+    63.0 million head. 2024 production given cleanly as 14,972 thousand MT
+    in the same World Market table, loaded here as this project's only
+    2024 national tonnage figure.
+
+    TWO STATE-LEVEL CHARTS, NEITHER LOADED into output_stat_year (both
+    would collide with ibge-sidra-1094-abate-frangos above under this
+    project's one-row-per-cell schema constraint):
+    (1) "Chicken Slaughtering by Federal Unit in 2025", sourced by ABPA
+    itself to "Ministry Of Agriculture And Livestock (MAPA) *Slaughtering
+    Under Federal Inspection" - federal-inspection-only, narrower than
+    IBGE's all-inspection-types population above. Total Brazil 5.706
+    billion head; Paraná 38.93% / 2.221 billion, Santa Catarina 13.65% /
+    779 million, Rio Grande do Sul 13.13% / 749 million, Goiás 9.20% / 525
+    million, São Paulo 8.28% / 472 million, Minas Gerais 5.93% / 338
+    million, Mato Grosso 3.68% / 210 million, Mato Grosso do Sul 3.01% /
+    172 million, Distrito Federal 0.93% / 53.1 million, Pernambuco 1.09% /
+    62.1 million, Bahia 0.61% / 34.8 million, Espírito Santo 0.58% / 32.9
+    million, Rondônia 0.31% / 17.7 million, Paraíba 0.38% / 21.5 million,
+    Pará 0.17% / 9.9 million, Others 0.13%.
+    (2) "Brazilian Chicken Meat Exports by Federal Unit in 2025", sourced
+    to SECEX (Brazil's foreign-trade secretariat). Paraná 40.76% /
+    2,103,688 t, Santa Catarina 23.28% / 1,201,818 t, Rio Grande do Sul
+    13.30% / 686,359 t - "the three states that make up the southern
+    region of Brazil represent 77.3% of Brazilian chicken meat exports"
+    (ABPA's own words). Goiás 5.29% / 272,908 t, São Paulo 6.41% /
+    330,828 t, Mato Grosso do Sul 3.45% / 178,244 t, Minas Gerais 3.87% /
+    199,637 t, Mato Grosso 1.93% / 99,639 t, Distrito Federal 1.46% /
+    75,241 t, Espírito Santo 0.06% / 3,354 t, Others 0.19% / 10,047 t. Not
+    loaded because this project's schema has no 'exports' measure and the
+    closest existing one ('marketed') means domestic sales elsewhere in
+    this corpus, not export volume - reusing it would misstate the figure.
+
+    CAVEAT CARRIED TO CONFIDENCE GRADE: a trade body's own report, never
+    promoted past 'industry' even where it cites a government source
+    (MAPA, SECEX) one step removed - the same rule Mexico's GAIN-sourced
+    figures and Canada's CFC-sourced figures both follow. ABPA's own
+    implied average carcass weight (15,289,000 t / 5,706,000 thousand head
+    = 2.68 kg/head) differs sharply from IBGE's (2.14 kg/head) - a real,
+    unresolved discrepancy, not a rounding artifact, discussed in
+    docs/BRAZIL-PLAN.md.
+
+- slug: usda-fas-gain-br2025-0038
+  title: 'Brazil: Poultry and Products Annual (GAIN Report BR2025-0038)'
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Brasilia_Brazil_BR2025-0038.pdf
+  published_on: '2025-09-29'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    A US government attaché report (Camila Aquino, approved Frederick
+    Giles), read directly with PyMuPDF after WebFetch's own first-pass
+    extraction misread the PSD table's columns (an error caught by
+    re-extracting rather than trusting a first read at face value). NOT
+    used for any figure loaded into data/output_brazil.yaml - IBGE's own
+    SIDRA data is both more current and a step closer to the primary
+    source - but kept for an independent cross-check: its own state map,
+    captioned "Data Source: IBGE" and covering the first half of 2025
+    only, gives South region 58.48% and Paraná 35.2% of national chicken
+    meat production, landing within a point of this project's own
+    IBGE-derived full-year 2025 figures (South region 57.9%, Paraná
+    34.8%, computed from ibge-sidra-1094-abate-frangos above) despite
+    being a different subset of the year and a step further removed from
+    IBGE. Two independent readings of IBGE data converging is a genuine
+    cross-check.
+
+    PSD table (self-annotated "Source: Not Official USDA Data", never
+    graded above industry regardless of the government publisher): 2025
+    "New Post" production 15,355 thousand MT, exports 5,000 thousand MT,
+    domestic consumption 10,355 thousand MT. 2024 production 15,000/15,000
+    thousand MT (USDA Official / New Post agree - close to but not
+    identical to ABPA's own 14,972 thousand MT for the same year). 2026
+    forecast 15,800/15,805 thousand MT - a forecast, not loaded, matching
+    this project's convention of loading reported/estimated actuals only.
