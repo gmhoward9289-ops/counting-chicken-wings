@@ -95,7 +95,8 @@ def _row_get(row, key, default=None):
 
 def list_products(conn) -> list[sqlite3.Row]:
     return conn.execute(
-        """SELECT p.slug, p.label, p.label_plural, p.unit_name, p.yield_mode,
+        """SELECT p.slug, p.label, p.label_plural, p.display_name,
+                  p.unit_name, p.yield_mode,
                   p.yield_period_days, p.max_units_per_day,
                   s.common_name AS species, s.slug AS species_slug,
                   s.individual_plural, s.active

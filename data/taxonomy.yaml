@@ -34,6 +34,7 @@ products:
     species: broiler
     label: Whole wing
     label_plural: Whole wings
+    display_name: "Chicken: Bone-in wing"
     yield_mode: countable
     units_per_individual_lo: 2
     units_per_individual_mode: 2
@@ -54,6 +55,7 @@ products:
     species: broiler
     label: Boneless wing
     label_plural: Boneless wings
+    display_name: "Chicken: Boneless wing"
     yield_mode: countable
     # NOT an anatomical constant. A chicken has exactly two wings, but the
     # number of boneless "wings" it yields depends entirely on how big the

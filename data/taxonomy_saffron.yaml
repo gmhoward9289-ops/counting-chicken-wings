@@ -97,6 +97,7 @@ products:
     species: saffron_crocus
     label: Saffron stigma
     label_plural: Saffron stigmas
+    display_name: "Saffron: Stigma"
     yield_mode: countable
     # Exactly three. This is the structural twin of two wings per chicken and
     # the reason this subject was chosen.
@@ -128,6 +129,7 @@ products:
     species: saffron_crocus
     label: Gram of dried saffron
     label_plural: Grams of dried saffron
+    display_name: "Saffron: Gram, dried"
     yield_mode: continuous
     # GRAMS OF DRIED SPICE PER FLOWER -- the reciprocal of flowers per gram,
     # which is how every source states it. 1/150 = 0.006667.
