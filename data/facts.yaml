@@ -1050,3 +1050,117 @@ facts:
     source: usda-fas-gain-mx2024-0040
     placement: learning
     surprise: 3
+
+  # ---- China ------------------------------------------------------------
+  # Fifth country. See docs/CHINA-PLAN.md. Every fact here is checked
+  # against a source's own wording for the 禽肉 (all-poultry) vs. 鸡肉/肉鸡
+  # (chicken-specific) distinction before being written, the same
+  # discipline Mexico's ave/pollo split established.
+
+  - slug: china-ave-vs-pollo-taxonomy
+    headline: China's own statistics agency does not publish a chicken-only figure
+    body: >-
+      The National Bureau of Statistics' national communique reports
+      poultry meat production (禽肉) as one number - 26.6 million tonnes for
+      2024, up 3.8% - covering chicken, duck, goose and other fowl
+      together, with no chicken-specific breakout anywhere in the
+      document. Every chicken-SPECIFIC figure in this corpus therefore
+      comes from a source one step removed from China's own statistical
+      agency: USDA's FAS attaché reports, which quote a "Meat, Chicken"
+      PSD table their own cover page annotates "Not official USDA data".
+      This is the same shape of gap Mexico's SIAP left, for a different
+      reason - not unreachable, but aggregated across species in the one
+      place this project could reach it directly.
+    source: nbs-china-2024-communique
+    placement: learning
+    surprise: 3
+
+  - slug: china-second-largest-producer
+    headline: China makes the world's second-most chicken meat, and eats relatively little of it
+    body: >-
+      USDA's own global circular states plainly that "China is the world's
+      second largest producer of chicken meat, significantly behind the
+      United States and often on par with Brazil" - a rare case in this
+      project of a world-rank claim with no competing figure found (unlike
+      Mexico, where three sources gave three different ranks for the same
+      years). Yet China's per-capita chicken consumption is low for a top
+      producer: about 11 kg per person in 2025, against 43 kg of pork
+      within China itself, and far below the United States (55 kg), Japan
+      (24 kg) and Taiwan (42 kg). A country can lead world production and
+      still not be where the chicken is eaten - production scales with
+      population and export capacity, consumption per head does not follow
+      automatically.
+
+      This per-capita figure is carried at industry grade and is
+      single-source: no independent Chinese domestic figure was found in
+      this pass to corroborate or conflict with it, unlike Mexico's
+      five-way per-capita spread. That is a gap flagged for a future pass,
+      not a claim this project treats as settled the way Canada's
+      AAFC-sourced per-capita figure is.
+    source: usda-fas-livestock-poultry-wmt-2026-04
+    placement: both
+    surprise: 4
+
+  - slug: china-production-estimate-conflict
+    headline: Two credible counts of China's 2024 chicken meat disagree by nearly half
+    body: >-
+      USDA's FAS attaché report puts China's 2024 chicken meat production
+      at 15.35 million tonnes. China's own National Broiler Industry
+      Technology System, reported via trade press, puts white-feather and
+      yellow-feather broiler meat ALONE (excluding a third category, small
+      white-feather broilers, entirely) at 22.11 million tonnes for the
+      same year - 44% higher, before that third category is even added
+      in. Both describe chicken specifically, not the broader
+      all-poultry aggregate, so the taxonomy trap that explains many of
+      this project's other cross-source gaps does not explain this one.
+
+      Neither source states whether it is reporting live weight or
+      processed/carcass-equivalent weight - the same basis ambiguity this
+      project already tracks for Canada (StatCan vs. Chicken Farmers of
+      Canada) and the US (live vs. ready-to-cook) - and that is the most
+      likely explanation, but it was NOT confirmed in this research pass.
+      Recorded as an open, unresolved conflict rather than resolved by
+      picking a source: this project loads the USDA figure into its
+      output table (the more conservative, more precisely sourced of the
+      two), and states the larger industry estimate here rather than
+      silently dropping it.
+    source: agripost-cn-broiler-industry-2024
+    placement: both
+    surprise: 5
+
+  - slug: china-self-sufficiency
+    headline: China makes almost all the chicken it eats, and the share keeps rising
+    body: >-
+      Dividing production by total supply in the USDA FAS "Meat, Chicken"
+      PSD table gives 95.1% self-sufficiency for 2023, 97.0% for 2024, and
+      97.4% for 2025 - a rising share, and far closer to fully
+      self-sufficient than Mexico's ~79-80% or the UK's 83%. China became
+      a net chicken-meat exporter in 2024 for the first time in the
+      series, and both the export share of production and the import share
+      of consumption have stayed in the low single digits throughout.
+
+      Computed here from the same PSD table's production and total-supply
+      rows, the same way Canada's self-sufficiency was computed from two
+      AAFC figures rather than published as a ratio directly - carried as
+      a fact rather than an output_stat_year row for that reason.
+    source: usda-fas-gain-ch2025-0170
+    placement: both
+    surprise: 3
+
+  - slug: china-broiler-headcount-not-loaded
+    headline: The one Chinese broiler head count found could not be reconciled with its own tonnage
+    body: >-
+      China's National Broiler Industry Technology System reports 14.84
+      billion broilers produced in 2024 (white-feather 9.03 billion,
+      yellow-feather 3.33 billion, small white-feather 2.48 billion) - the
+      only broiler-specific bird count this project found anywhere for
+      China. It is not loaded as this project's head_slaughtered figure,
+      because the same report's own meat-output tonnage for white and
+      yellow broilers alone (22.11 million tonnes) does not reconcile with
+      the production tonnage this project DOES load from USDA (15.35
+      million tonnes) - see china-production-estimate-conflict. Loading a
+      head count next to a tonnage figure it cannot be squared against
+      would imply a bird weight nobody actually measured.
+    source: agripost-cn-broiler-industry-2024
+    placement: learning
+    surprise: 3

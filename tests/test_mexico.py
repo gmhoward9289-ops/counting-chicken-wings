@@ -59,7 +59,7 @@ def test_population_is_null_so_no_per_capita_claim_can_be_made(conn):
     # The one exact-roster assertion in the suite (the country tests
     # elsewhere use supersets): adding a country means updating this line
     # and no other.
-    assert {r["iso3"] for r in rows} == {"CAN", "GBR", "ISR", "MEX", "USA"}
+    assert {r["iso3"] for r in rows} == {"CAN", "CHN", "GBR", "ISR", "MEX", "USA"}
     assert all(r["population"] is None for r in rows)
 
 
@@ -198,9 +198,18 @@ def test_no_world_rank_claim_leaked_into_the_corpus(conn):
     definition all appear in the research pass; none is safe to publish as
     Mexico's rank, and the plan is explicit that no version of this claim
     should ship.
+
+    Scoped to Mexico's own facts (slug prefix), not the whole corpus: China's
+    research pass found exactly one world-rank claim with no competing
+    figure ("world's second largest producer", USDA FAS) rather than
+    Mexico's three-way conflict, and docs/CHINA-PLAN.md is explicit that
+    THAT claim is safe to publish. This test guards against Mexico's specific
+    contested claim leaking back in, not against every country ever
+    publishing a rank.
     """
     hits = conn.execute(
-        "SELECT COUNT(*) FROM fact WHERE body LIKE '%largest%producer%'"
+        "SELECT COUNT(*) FROM fact "
+        "WHERE body LIKE '%largest%producer%' AND slug LIKE 'mexico%'"
     ).fetchone()[0]
     assert hits == 0
 

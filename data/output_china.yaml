@@ -1,0 +1,106 @@
+# Chinese broiler ("肉鸡" / chicken meat, not "禽肉" / all-poultry) figures.
+#
+# Hand-curated, like data/output_mexico.yaml, because no single
+# machine-parseable Chinese government publication sits behind these
+# numbers the way StatCan's API sits behind Canada's. Every figure here
+# traces to docs/research/library/poultry-china.yaml and docs/CHINA-PLAN.md.
+#
+# TAXONOMY, checked for every row below rather than assumed: China's own
+# statistical usage separates 禽肉 (poultry meat -- chicken, duck, goose and
+# other fowl together) from 鸡肉/肉鸡 (chicken meat / broiler chickens
+# specifically). The National Bureau of Statistics' own national communique
+# publishes ONLY the 禽肉 aggregate (26.6 million tonnes, 2024,
+# nbs-china-2024-communique) -- that figure is NOT loaded here, because
+# folding duck and goose production into "chicken" would misstate the
+# broiler-specific total by an unknown and unstated share. Every figure
+# actually loaded below is from the USDA FAS GAIN reports' "Meat, Chicken"
+# PSD table specifically, which the reports themselves distinguish from an
+# all-poultry aggregate.
+#
+# WHAT IS DELIBERATELY NOT HERE, and why:
+#
+#   head_slaughtered   - the only broiler-specific head count found (14.84
+#                        billion birds, 2024, China's National Broiler
+#                        Industry Technology System via
+#                        agripost-cn-broiler-industry-2024) is not loaded.
+#                        Its own reported meat tonnage for the SAME year
+#                        (white + yellow alone = 22.11 million tonnes)
+#                        disagrees with the GAIN report's 15.35 million
+#                        tonne figure by 44%, and neither source states its
+#                        weight basis -- see docs/CHINA-PLAN.md, "The
+#                        production-estimate conflict". Loading either
+#                        figure into head_slaughtered here, next to the
+#                        GAIN meat_output row, would present two
+#                        irreconcilable measurements of the same industry
+#                        as though they agreed.
+#   inventory_eoy      - no national standing-flock total for broilers was
+#                        found. China's fast broiler turnover (see the
+#                        loss-chain discipline already applied to the US
+#                        and Canada) makes a meaningful standing count an
+#                        unusual thing for any source to publish, and none
+#                        did.
+#   output_value       - no aggregate CNY figure for chicken meat output
+#                        specifically was found in this pass; the GAIN
+#                        PSD table carries quantities, not values.
+#   districts (province
+#     breakdown)       - provincial poultry data is genuinely published by
+#                        China's provincial statistics bureaus (Shandong,
+#                        Henan, etc.), but every figure reachable this pass
+#                        was for 家禽 (all poultry), not chicken
+#                        specifically, and the one primary provincial page
+#                        checked directly (Shandong) failed on a TLS
+#                        certificate mismatch -- see
+#                        shandong-tjj-2024-livestock-interpretation in
+#                        sources.yaml and docs/CHINA-PLAN.md, "The
+#                        subnational question".
+#   self_sufficiency_ratio (as a row) - computed here (95.1% 2023, 97.0%
+#                        2024, 97.4% 2025) from the GAIN tables' own
+#                        production and total-supply figures, exactly as
+#                        Canada's self-sufficiency was computed from two
+#                        AAFC figures. Loaded as a FACT
+#                        (china-self-sufficiency), not as an
+#                        output_stat_year row, matching Canada's precedent:
+#                        this project computed the ratio, DEFRA-style
+#                        self_sufficiency_ratio rows are for a source's OWN
+#                        published ratio (see schema.sql's note on that
+#                        measure).
+
+species: broiler
+country: CHN
+
+national:
+  # 2023-2025, from the USDA FAS GAIN reports' "Meat, Chicken" PSD table --
+  # the only chicken-SPECIFIC (not all-poultry) production series this
+  # project could reach. Two report editions cover the three years: 2023
+  # from CH2024-0108 (settled actual by that report's date), 2024 and 2025
+  # from CH2025-0170 (2024 settled; 2025 still an in-year "New Post"
+  # estimate). Both reports annotate their own PSD table "Not official USDA
+  # data" -- graded industry rather than measured for that reason, even
+  # though the publisher is a US government body, matching the treatment
+  # Mexico's GAIN report already established.
+  - measure: meat_output
+    unit: tonnes
+    confidence: industry
+    source: usda-fas-gain-ch2024-0108
+    notes: >-
+      "Meat, Chicken" PSD category specifically -- not the NBS 禽肉
+      (all-poultry) aggregate. "USDA Official" and "New Post" columns
+      agree for 2023, a settled actual by this report's August 2024
+      publication date.
+    years:
+      - {year: 2023, value: 14800000, provisional: 0}
+
+  - measure: meat_output
+    unit: tonnes
+    confidence: industry
+    source: usda-fas-gain-ch2025-0170
+    notes: >-
+      "Meat, Chicken" PSD category specifically. 2024's "USDA Official" and
+      "New Post" columns agree (a settled actual by this report's September
+      2025 publication date); 2025 is still an in-year "New Post" estimate
+      and is loaded provisional. See sources.yaml for this same table's
+      import/export/supply figures, which is where the self-sufficiency
+      fact (china-self-sufficiency) is computed from.
+    years:
+      - {year: 2024, value: 15350000, provisional: 0}
+      - {year: 2025, value: 16200000, provisional: 1}
