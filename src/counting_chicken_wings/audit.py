@@ -43,6 +43,7 @@ TABLE_LABELS = {
     "slaughter_stat_year": "national slaughter stats",
     "regional_size_stat": "regional stats",
     "regional_production_year": "regional production stats",
+    "regional_production_aggregate": "multi-state production aggregates",
     "regional_census_stat": "census state stats",
     "husbandry_stat_year": "husbandry stats",
     "output_stat_year": "output/inventory stats",

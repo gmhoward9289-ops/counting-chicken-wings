@@ -457,6 +457,45 @@ CREATE TABLE regional_production_year (
 CREATE INDEX idx_regional_production_region
     ON regional_production_year (region, year);
 
+-- The Production and Value summary's own multi-state aggregates: the rows
+-- NASS publishes for the states it will not name individually. In 2025 that
+-- is "California, Tennessee, and West Virginia" as one combined line, and
+-- "Other States" -- fourteen states, every one named in the footnote --
+-- as another.
+--
+-- A separate table rather than rows in regional_production_year, because an
+-- aggregate is a different claim from a state figure: it has members, its
+-- membership CHANGES BY YEAR (Florida was published individually in 2024
+-- and folded into Other States in 2025), and any query that joins regions
+-- to states by name must never meet one. What makes these rows trustworthy
+-- is arithmetic: states + aggregates reproduces the published United States
+-- total exactly, for head, pounds and dollars in both years -- the parser
+-- refuses to emit them otherwise, and a test asserts it again from here.
+--
+-- Splitting an aggregate across its members would be inventing data. These
+-- rows exist to be shown AS aggregates -- a real cited figure for exactly
+-- the states the map cannot colour -- never to be allocated.
+CREATE TABLE regional_production_aggregate (
+    id                      INTEGER PRIMARY KEY,
+    species_id              INTEGER NOT NULL REFERENCES species(id),
+    country_id              INTEGER NOT NULL REFERENCES country(id),
+    label                   TEXT    NOT NULL,  -- as the source prints it
+    year                    INTEGER NOT NULL,
+    -- Comma-separated member state names, straight from the source's own
+    -- footnote. Data, not presentation: the API splits it so the page can
+    -- say WHICH states a figure covers.
+    members                 TEXT    NOT NULL,
+    head_thousands          INTEGER,
+    live_weight_klb         INTEGER,
+    value_kusd              INTEGER,
+    -- Production pounds over head, same derivation regional_production_year
+    -- stores. Grades `derived`: real arithmetic on measured figures, but a
+    -- weight NASS never published -- the API says so wherever it is shown.
+    derived_live_weight_lb  REAL,
+    source_id               INTEGER NOT NULL REFERENCES source(id),
+    UNIQUE (species_id, country_id, label, year)
+);
+
 
 -- Broiler presence and scale for every state, from the Census of
 -- Agriculture. Separate from both survey tables because it is a different

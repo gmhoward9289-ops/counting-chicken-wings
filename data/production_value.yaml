@@ -17,7 +17,10 @@
 # The report excludes any state producing under 500,000 broilers, and
 # suppresses others to avoid disclosing individual operations. Which
 # states get suppressed CHANGES BY YEAR, so keeping every year widens
-# coverage.
+# coverage. The suppressed states are not lost: the report publishes
+# them as named aggregates, carried in `aggregates:` below, and the
+# parser refuses to emit unless states + aggregates reproduce the
+# published United States total exactly.
 
 source: nass-production-value-2025
 species: broiler
@@ -213,3 +216,33 @@ regions:
     live_weight_klb: 1685800
     value_kusd: 1254235
     derived_live_weight_lb: 6.40
+
+aggregates:
+  - label: California, Tennessee, and West Virginia
+    year: 2025
+    members: [California, Tennessee, West Virginia]
+    head_thousands: 681600
+    live_weight_klb: 3930000
+    value_kusd: 2813880
+    derived_live_weight_lb: 5.77
+  - label: Other States
+    year: 2025
+    members: [Florida, Illinois, Indiana, Iowa, Louisiana, Michigan, Minnesota, Nebraska, New Jersey, New York, Ohio, Oregon, Washington, Wisconsin]
+    head_thousands: 673000
+    live_weight_klb: 3869600
+    value_kusd: 2770634
+    derived_live_weight_lb: 5.75
+  - label: California, Tennessee, and West Virginia
+    year: 2024
+    members: [California, Tennessee, West Virginia]
+    head_thousands: 672500
+    live_weight_klb: 3813300
+    value_kusd: 2837095
+    derived_live_weight_lb: 5.67
+  - label: Other States
+    year: 2024
+    members: [Illinois, Indiana, Iowa, Michigan, Minnesota, Nebraska, New Jersey, New York, Ohio, Oregon, Washington, Wisconsin]
+    head_thousands: 465200
+    live_weight_klb: 2427600
+    value_kusd: 1806133
+    derived_live_weight_lb: 5.22
