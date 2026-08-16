@@ -447,6 +447,13 @@ td.num { text-align: right; font-family: var(--mono); font-size: 13.5px;
        font-variant-numeric: tabular-nums; }
 .note { color: var(--faint); font-size: 13px; }
 .warn { color: var(--estimate); }
+/* Legend swatch for a map layer whose fill is a category rather than a
+   value -- the presence-only census states. The same --grey the trace is
+   drawn in, so the legend cannot drift from the map. */
+.swatch {
+  display: inline-block; width: 12px; height: 12px; border-radius: 2px;
+  background: var(--grey); vertical-align: -1px; margin-right: 5px;
+}
 /* Inline affordance for a rejected request (usually a 422): small and near
    the control it belongs to, not a modal -- cleared on the next success so
    it cannot outlive the problem it described. */

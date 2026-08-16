@@ -1007,13 +1007,25 @@ async function initStates() {
           undefined,{maximumFractionDigits:0}) + ' M lb' : '—'}</td></tr>`
     ).join('') + '</table>';
 
+  // The gray fill has to say what it is, on the map's own caption. It is a
+  // working data layer -- census presence with hover detail -- but a flat
+  // gray is also exactly what "no data" looks like, and without this line
+  // even the project's own maintainers have read it as states that failed to
+  // load. Names the layer by its colour, and only when that layer is drawn.
   const censusNote = $('#states-census-note');
   if (censusNote) {
-    censusNote.textContent = d.census && d.census.census_year
-      ? `Census of Agriculture ${d.census.census_year}. Sales, operations ` +
+    censusNote.innerHTML = !(d.census && d.census.census_year) ? '' :
+      presence.length
+      ? `<span class="swatch" aria-hidden="true"></span><b>Gray states are
+         data, not gaps</b> — the annual survey publishes average weight for
+         only the states above its disclosure thresholds, and the Census of
+         Agriculture ${d.census.census_year} covers the rest with operations,
+         inventory and sales. Hover a gray state for its census figures, or
+         read them in the table below. No average weight is published at
+         census scale, so none is shown or invented.`
+      : `Census of Agriculture ${d.census.census_year}. Sales, operations ` +
         'and inventory only -- no average weight is published at this ' +
-        'scale, so none is shown.'
-      : '';
+        'scale, so none is shown.';
   }
   const censusTable = $('#states-census-table');
   if (censusTable) {
