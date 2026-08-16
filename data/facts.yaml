@@ -1474,3 +1474,48 @@ facts:
     source: interfax-rosptitsesoyuz-2024-forecast
     placement: learning
     surprise: 2
+  - slug: fourteen-states-one-number
+    headline: Fourteen states' chicken production is published as one number
+    body: >-
+      NASS will not print a state's broiler figures if doing so could
+      identify individual farms. In 2025 that folded fourteen states -
+      Florida, Illinois, Indiana, Iowa, Louisiana, Michigan, Minnesota,
+      Nebraska, New Jersey, New York, Ohio, Oregon, Washington, and
+      Wisconsin - into a single "Other States" row: 673 million birds and
+      3.87 billion pounds, with no state getting a line of its own. The
+      footnote names every member, so you know exactly who is in the pile.
+      You just cannot know anyone's share - and that is the point: the
+      rule exists to protect the small producers a per-state figure would
+      expose.
+    source: nass-production-value-2025
+    placement: both
+    surprise: 4
+
+  - slug: unnamed-states-run-smaller-birds
+    headline: The states NASS won't name grow smaller chickens
+    body: >-
+      Divide the combined rows' published pounds by their published head
+      counts - arithmetic we derived, not a figure NASS printed - and the
+      states hidden inside the 2025 aggregates averaged about 5.8 lb per
+      bird, against 6.6 lb for the country as a whole. The big broiler
+      states got big running big deboning birds; the states too small to
+      name individually skew toward smaller programs. Even the shape of
+      what is hidden leaks through the arithmetic of hiding it.
+    source: nass-production-value-2025
+    placement: both
+    surprise: 4
+
+  - slug: florida-vanished-into-other-states
+    headline: Florida had its own row in 2024 and vanished in 2025
+    body: >-
+      Not because production stopped - because the disclosure line moved.
+      In 2024 Florida was published individually: 60.6 million broilers.
+      In 2025 it is folded into "Other States" and its figure is deliberately
+      unpublishable. Which states get named changes year to year, so a state
+      disappearing from the table says nothing about its chickens and
+      everything about its farm count. It is also why this corpus keeps
+      every year of the report: the union of years names more states than
+      any single edition can.
+    source: nass-production-value-2025
+    placement: both
+    surprise: 4

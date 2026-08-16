@@ -403,6 +403,36 @@ def test_states_census_entries_carry_no_survey_figures(client):
         assert "volume" not in r
 
 
+def test_states_aggregates_cover_the_suppressed_states(client):
+    """The production survey's combined rows are served, with membership.
+
+    These are real published figures for exactly the states the survey will
+    not name individually. Every aggregate must name its members (from the
+    source's own footnote), and none of those members may also appear as an
+    individually published aggregate-year production row -- an aggregate
+    that overlaps a named state would double-count the moment anyone sums.
+    """
+    d = get(client, "/api/states")
+    agg = d["production_aggregates"]
+    assert agg["year"] is not None
+    assert agg["grade"] == "derived"
+    assert len(agg["rows"]) >= 2
+    for row in agg["rows"]:
+        assert row["label"]
+        assert len(row["members"]) >= 2
+        assert row["source"]
+
+
+def test_states_aggregate_weight_is_arithmetic_not_a_figure(client):
+    """derived_live_weight_lb must equal pounds over head, because that is
+    the only claim it makes -- the source never printed it."""
+    d = get(client, "/api/states")
+    for row in d["production_aggregates"]["rows"]:
+        if row["head_thousands"] and row["live_weight_klb"]:
+            assert abs(row["live_weight_klb"] / row["head_thousands"]
+                       - row["derived_live_weight_lb"]) < 0.005
+
+
 def test_trends_carry_the_full_series(client):
     d = get(client, "/api/trends")
     years = [r["year"] for r in d["husbandry"]]

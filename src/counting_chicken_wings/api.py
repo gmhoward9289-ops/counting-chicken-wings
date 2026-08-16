@@ -970,6 +970,26 @@ def states(year: int | None = None):
         survey_regions = {r["region"] for r in rows}
         census_year = census_rows[0]["census_year"] if census_rows else None
 
+        # The Production and Value summary's own multi-state aggregates: real
+        # published figures for exactly the states the survey will not name.
+        # Served at the aggregate table's own latest year rather than the
+        # survey year requested, because the two publications cover different
+        # periods and forcing them to share a year would silently drop these
+        # rows the moment their editions drift apart.
+        agg_year = conn.execute(
+            "SELECT MAX(year) FROM regional_production_aggregate"
+        ).fetchone()[0]
+        agg_rows = conn.execute(
+            """SELECT a.label, a.year, a.members, a.head_thousands,
+                      a.live_weight_klb, a.value_kusd,
+                      a.derived_live_weight_lb, s.slug AS source_slug
+               FROM regional_production_aggregate a
+               JOIN source s ON s.id = a.source_id
+               WHERE a.year = ?
+               ORDER BY a.label""",
+            (agg_year,),
+        ).fetchall() if agg_year is not None else []
+
         return {
             "year": year,
             "message": message,
@@ -987,6 +1007,25 @@ def states(year: int | None = None):
                 for r in rows
             ],
             "programs": [dict(p) for p in programs],
+            # `derived_live_weight_lb` is arithmetic on the published head
+            # and pounds -- a weight the source itself never printed, so it
+            # travels at `derived` grade and the page must say so.
+            "production_aggregates": {
+                "year": agg_year,
+                "grade": "derived",
+                "rows": [
+                    {
+                        "label": a["label"],
+                        "members": a["members"].split(", "),
+                        "head_thousands": a["head_thousands"],
+                        "live_weight_klb": a["live_weight_klb"],
+                        "value_kusd": a["value_kusd"],
+                        "derived_live_weight_lb": a["derived_live_weight_lb"],
+                        "source": a["source_slug"],
+                    }
+                    for a in agg_rows
+                ],
+            },
             "census": {
                 "census_year": census_year,
                 "scope": _scope(conn, [r["slug"] for r in census_scoped]),

@@ -567,6 +567,26 @@ class Builder:
                 source_id=sid,
             )
 
+        # The summary's own multi-state aggregates -- the states it will not
+        # name individually, published combined with every member named in
+        # the footnote. A separate table so no query joining regions to
+        # states by name can ever meet one; see schema.sql for why splitting
+        # them across members is forbidden.
+        for r in t.get("aggregates", []):
+            self.ins(
+                "regional_production_aggregate",
+                country_id=self.default_country,
+                species_id=sp,
+                label=r["label"],
+                year=r["year"],
+                members=", ".join(r["members"]),
+                head_thousands=r.get("head_thousands"),
+                live_weight_klb=r.get("live_weight_klb"),
+                value_kusd=r.get("value_kusd"),
+                derived_live_weight_lb=r.get("derived_live_weight_lb"),
+                source_id=sid,
+            )
+
     def census_states(self):
         """All-50-state broiler presence from the Census of Agriculture.
 

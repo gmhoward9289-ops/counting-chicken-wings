@@ -160,6 +160,65 @@ def test_derived_live_weight_matches_its_own_inputs(db):
     assert not bad, "stored derivation drifted: " + ", ".join(bad)
 
 
+def test_states_plus_aggregates_reproduce_the_national_total(db):
+    """The aggregates' whole claim to trustworthiness, re-asserted from the
+    database.
+
+    NASS publishes the suppressed states as combined rows, and the check
+    that makes those rows safe to carry is arithmetic: named states plus
+    aggregates must reproduce the published United States total, per
+    measure, per year. The parser refuses to emit a YAML that fails this;
+    this test proves the property survived the build. If it ever fails, a
+    row was edited by hand or the two tables drifted to different editions.
+    """
+    years = [r[0] for r in db.execute(
+        "SELECT DISTINCT year FROM regional_production_aggregate")]
+    assert years, "no aggregate rows built"
+    for year in years:
+        for col in ("head_thousands", "live_weight_klb", "value_kusd"):
+            states = db.execute(
+                f"""SELECT SUM({col}) FROM regional_production_year
+                    WHERE year = ? AND region != 'United States'""",
+                (year,),
+            ).fetchone()[0]
+            aggs = db.execute(
+                f"SELECT SUM({col}) FROM regional_production_aggregate "
+                "WHERE year = ?", (year,),
+            ).fetchone()[0]
+            national = db.execute(
+                f"""SELECT {col} FROM regional_production_year
+                    WHERE year = ? AND region = 'United States'""",
+                (year,),
+            ).fetchone()[0]
+            assert states + aggs == national, (
+                f"{year} {col}: states {states} + aggregates {aggs} "
+                f"!= published national {national}"
+            )
+
+
+def test_aggregate_members_never_overlap_named_states(db):
+    """An aggregate exists BECAUSE its members have no row of their own.
+
+    If a member ever also appears as an individually published state in the
+    same year, the sum above still catching the right total would be luck,
+    and any consumer summing regions with aggregates would double-count."""
+    rows = db.execute(
+        """SELECT year, label, members
+           FROM regional_production_aggregate"""
+    ).fetchall()
+    for r in rows:
+        named = {x[0] for x in db.execute(
+            """SELECT region FROM regional_production_year
+               WHERE year = ? AND region != 'United States'""",
+            (r["year"],),
+        )}
+        overlap = set(r["members"].split(", ")) & named
+        assert not overlap, (
+            f"{r['year']} '{r['label']}' members also published "
+            f"individually: {sorted(overlap)}"
+        )
+
+
 def test_every_production_row_is_cited(db):
     assert db.execute(
         "SELECT COUNT(*) FROM regional_production_year WHERE source_id IS NULL"
