@@ -296,6 +296,29 @@ def test_state_spread_survives_the_build(db):
     assert rows["North Carolina"] == pytest.approx(8.4, abs=0.05)
 
 
+def test_v_broiler_census_stat_is_species_scoped_and_covers_all_states(db):
+    """The census view exists so a caller can never blend a second species
+    into a broiler-only map by forgetting a WHERE clause, and so it reads all
+    50 states -- the annual survey's suppression is exactly what this table
+    is for working around."""
+    rows = db.execute("SELECT DISTINCT census_year FROM v_broiler_census_stat"
+                       ).fetchall()
+    assert len(rows) == 1, "expected exactly one loaded census year"
+    year = rows[0]["census_year"]
+
+    count = db.execute(
+        "SELECT COUNT(*) AS n FROM v_broiler_census_stat "
+        "WHERE census_year = ?", (year,)
+    ).fetchone()["n"]
+    assert count == 50
+
+    species = db.execute(
+        """SELECT DISTINCT sp.slug FROM v_broiler_census_stat c
+           JOIN species sp ON sp.id = c.species_id"""
+    ).fetchall()
+    assert [r["slug"] for r in species] == ["broiler"]
+
+
 def test_wings_db_env_overrides_default_path(monkeypatch, tmp_path):
     """$WINGS_DB must win over the __file__-derived default.
 

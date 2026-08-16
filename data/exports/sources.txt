@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- citations
-# generated: 2026-07-29
+# generated: 2026-08-16
 # every statistic in this dataset cites one of these
 # --------------------------------------------------
 
@@ -29,6 +29,27 @@
     plausible commodity-scale pool lands within a hair of the ceiling.
 
 [3]
+  slug: project-estimate-mixing-parameters
+  title: Mixing model parameters reasoned from grading, packing and portioning
+  publisher: counting-chicken-wings
+  source_type: estimate
+  retrieved_on: 2026-07-31
+  notes:
+    The scalar parameters of the mixing model - how thoroughly a grader splits
+    a pair, how many wings come up in one scoop, how much of "these two units
+    travelled together" survives a stage - are OUR ESTIMATES, reasoned from
+    grade-band widths, case and combo-bin sizes, and how a foodservice portion
+    is actually taken from a bin. None of them is measured, and each is
+    flagged confidence=estimate. They are kept separate from
+    project-estimate-mixing because they are a different claim. That source
+    covers POOL SIZES - how many birds are commingled at a stage. These cover
+    the BEHAVIOUR of a stage, which is reasoned from different evidence and
+    can be wrong independently. Two of them were previously bare constants in
+    model.py, invisible to this audit. They are here so that "how much does
+    this number matter?" is answerable from the corpus rather than from an
+    ad-hoc sweep.
+
+[4]
   slug: project-estimate-unsourced
   title: Placeholder pending research
   publisher: counting-chicken-wings
@@ -40,7 +61,7 @@
     wide and every one is listed in docs/RESEARCH.md open items. Anything
     citing this source should be treated as unverified.
 
-[4]
+[5]
   slug: ams-shell-egg-grades
   title: United States Standards, Grades, and Weight Classes for Shell Eggs
   publisher: USDA Agricultural Marketing Service
@@ -62,7 +83,7 @@
     stream, which is what makes them a loss for the question "how many hens
     for a dozen eggs in a carton".
 
-[5]
+[6]
   slug: aphis-hpai-detections
   title:
     Confirmations of Highly Pathogenic Avian Influenza in Commercial and
@@ -77,7 +98,124 @@
     1,689 confirmed flocks and 168.62 million birds affected between 2022 and
     April 2025.
 
-[6]
+[7]
+  slug: cbs-quarterly-agriculture-2025q2
+  title:
+    Quarterly Agriculture Statistics 2025 Q2, Table 7: Marketing of selected
+    animals and animal products, detailed data
+  publisher: Israel Central Bureau of Statistics
+  source_type: government
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.cbs.gov.il/he/publications/DocLib/2025/agriculture_q202502/t07.xlsx
+  notes:
+    The only source found that puts a head count on Israeli broilers, and a
+    different publication from the three Statistical Abstract tables. Chick
+    placements, heavy breeds: 275,427,900 head for 2024 and 262,848,753 for
+    2023. Heavy breeds are broilers; light breeds are layers and turkeys are
+    separate. This retires the unverified trade-press lead of "~260 million
+    broilers/year" in docs/ISRAEL-PLAN.md - that is essentially the 2023
+    placement figure, now with a government citation rather than a headline
+    whose article has since 404ed. CBS publishes no poultry head slaughtered,
+    in either publication. Table 7 does carry a slaughterhouse head-count
+    block, but its 2024 total of 529,550 is exactly cattle 164,559 plus sheep
+    and goats 229,195 plus pigs 135,796 - poultry is excluded by construction.
+    Annual figures are in columns Q (2024) and R (2023). The header's "P =
+    2011" appears to be a CBS typo or merged-cell artifact. Also carries
+    broiler marketing of 571,497 tonnes for 2024, which corroborates
+    Statistical Abstract table 21.4 to within three tonnes across two
+    separately published tables. Not loaded as a mass - see the weight basis
+    conflict recorded on cbs-st21-11-output-2025.
+
+[8]
+  slug: cbs-st21-04-marketing-2025
+  title:
+    Table 21.4, Marketing of animals and animal products by district and
+    regional council - Statistical Abstract of Israel 2025
+  publisher: Israel Central Bureau of Statistics
+  source_type: government
+  published_on: 2025-08-14
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.cbs.gov.il/he/publications/DocLib/2025/21.ShnatonAgriculture/st21_04.xlsx
+  notes:
+    Broilers MARKETED in tonnes by district and regional council, 2024 only.
+    Settles the open question at the foot of docs/ISRAEL-PLAN.md: Israel does
+    have subnational poultry data, so a comparison against 50 US states need
+    not be visibly lopsided. Suppression uses "-" and ". ." exactly as NASS
+    does, so the existing "presence, not volume" rendering applies unchanged.
+    Six councils are suppressed and are loaded as rows with no value - never
+    as zero. CROSS-CHECK THAT FAILS, and it travels with either figure: the
+    districts sum to 571,499.95 tonnes against 600,072 tonnes of output in
+    table 21.11, a gap of 4.76%. Marketing excludes self-consumption and
+    private sale by its own footnote 1, so the gap is probably real rather
+    than an error -- but a reader who adds up the districts will find it, and
+    finding it unannounced reads as a mistake in our data. Footnote 1 also
+    means this is "by source of product", not by place of slaughter. Footnote
+    3 restricts the Judea and Samaria Area row to "Israeli localities", so
+    that row counts some of the production in that area and not all of it; it
+    is kept with the publisher's label and the publisher's qualification
+    rather than being renamed or dropped. "Outside regional councils" appears
+    once per district in the source. The bare label is not unique, so each is
+    qualified with its district - the figure means nothing without knowing
+    which district it is outside of.
+
+[9]
+  slug: cbs-st21-08-livestock-2025
+  title: Table 21.8, Livestock - Statistical Abstract of Israel 2025
+  publisher: Israel Central Bureau of Statistics
+  source_type: government
+  published_on: 2025-08-14
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.cbs.gov.il/he/publications/DocLib/2025/21.ShnatonAgriculture/st21_08.xlsx
+  notes:
+    Broilers in thousands, END OF YEAR, ten columns back to 1960 - the longest
+    poultry series available for Israel, and the reason 1960-1990 figures are
+    loaded even though nothing uses them yet. THE TRAP ON THIS TABLE: 37,895
+    thousand head for 2024 is a standing flock at a point in time, not annual
+    throughput. Broilers turn over several times a year, so reading it as
+    slaughter understates the answer several times over. Stored as
+    measure='inventory_eoy' so the distinction is in the data and not only in
+    this note. It is the same inventory-versus-throughput caveat already
+    carried on the US census sales figures. It also neither confirms nor
+    refutes the trade-press lead of ~260 million broilers a year in
+    docs/ISRAEL-PLAN.md, because a flock of 37.9 million turning over five to
+    seven times a year is consistent with it.
+
+[10]
+  slug: cbs-st21-11-output-2025
+  title:
+    Table 21.11, Agricultural output by industry and product - Statistical
+    Abstract of Israel 2025
+  publisher: Israel Central Bureau of Statistics
+  source_type: government
+  published_on: 2025-08-14
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.cbs.gov.il/he/publications/DocLib/2025/21.ShnatonAgriculture/st21_11.xlsx
+  notes:
+    Broiler output in 1,000 tonnes and value in NIS million for 2024*, 2023,
+    2020, 2010 and 2000. CBS's own asterisk marks 2024 provisional, and that
+    marker is carried into the data rather than dropped. Footnote 5 defines
+    broilers as "Chickens intended for fattening for the meat industry", which
+    matches our broiler species, so loading it needed no mapping decision.
+    What it does NOT carry, and the reason Israel cannot yet answer the count
+    question from Israeli data: no head slaughtered, and no average bird
+    weight anywhere in the table. "Agricultural output" is also not defined as
+    live or dressed weight, which is why the figure is stored as
+    measure='meat_output' in tonnes rather than mapped onto a US column that
+    would assert one or the other. Table eggs appear in the same table at
+    2,661.49 under a column headed "1,000 tonnes, unless otherwise stated".
+    That cannot be tonnes for a country of ten million people, so it is one of
+    the "otherwise stated" rows and is almost certainly millions of eggs. Not
+    loaded: almost certainly is not a citation.
+
+[11]
   slug: crs-hpai-outbreak
   title: The Highly Pathogenic Avian Influenza (HPAI) Outbreak in Poultry, 2022-Present
   publisher: Congressional Research Service (R48518)
@@ -91,7 +229,7 @@
     This is the key finding for our purposes - HPAI is overwhelmingly an egg
     story, not a wing story.
 
-[7]
+[12]
   slug: epa-foodservice-waste
   title: Food waste reduction in commercial kitchens (Winnow, EPA materials)
   publisher: US Environmental Protection Agency
@@ -105,7 +243,7 @@
     Spoilage specifically ranges 1-5% in prepare-ahead operations and 1-6% in
     cook-to-order operations. Corroborates the ReFED band.
 
-[8]
+[13]
   slug: ers-broiler-grower-fees
   title: Fees paid to growers for raising broiler chickens varied widely in 2020
   publisher: USDA Economic Research Service
@@ -119,7 +257,7 @@
     relative "tournament" system in which each farm's rate depends on its
     performance against others delivering in the same period.
 
-[9]
+[14]
   slug: ers-supermarket-loss
   title:
     Supermarket Loss Estimates for Fresh Fruit, Vegetables, Meat, Poultry, and
@@ -134,7 +272,7 @@
     measured supermarket estimates, cutting loss-adjusted fresh meat, poultry,
     and seafood availability by 7.3% for 2012.
 
-[10]
+[15]
   slug: fsis-line-speed-rule
   title:
     Maximum Line Speed Rates for Young Chicken and Turkey Establishments
@@ -157,7 +295,7 @@
     safety and carcass DAMAGE are different questions; the FSIS defence
     addresses the former, not the latter.
 
-[11]
+[16]
   slug: fsis-poultry-labeling-standards
   title: Food Standards and Labeling Policy Book
   publisher: USDA Food Safety and Inspection Service
@@ -173,7 +311,7 @@
     solid-muscle / chunked-and-formed / ground-and-formed distinction that
     separates a whole-muscle boneless wing from a reformed nugget.
 
-[12]
+[17]
   slug: nass-census-agriculture-2022
   title: Census of Agriculture 2022, broiler data by state
   publisher: USDA National Agricultural Statistics Service (QuickStats)
@@ -195,7 +333,7 @@
     states raise broilers and at what scale" - never mix them into an annual
     time series.
 
-[13]
+[18]
   slug: nass-chickens-eggs-2025
   title: Chickens and Eggs 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -219,7 +357,7 @@
     2024-2025 against 23 for slaughter. Maryland, South Dakota, and Virginia
     are suppressed for 2025 but present for 2024.
 
-[14]
+[19]
   slug: nass-chickens-eggs-monthly-2026
   title: Chickens and Eggs, monthly releases 2026
   publisher: USDA National Agricultural Statistics Service
@@ -237,7 +375,7 @@
     they are different birds with very different lay rates, and a state's
     headline eggs-per-layer figure is largely a readout of which mix it runs.
 
-[15]
+[20]
   slug: nass-poultry-slaughter-2025
   title: Poultry Slaughter 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -251,7 +389,7 @@
     "commercially grown broilers-fryers and other young immature birds such as
     roasters and capons". Highest-confidence source in the project.
 
-[16]
+[21]
   slug: nass-production-value-2025
   title: Poultry - Production and Value 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -273,7 +411,7 @@
     Florida is individually reported here for 2024 while appearing in no year
     of the slaughter summary.
 
-[17]
+[22]
   slug: usda-fdc-egg-raw
   title: Egg, whole, raw, fresh (FDC 171287)
   publisher: USDA FoodData Central
@@ -290,7 +428,7 @@
     Storing one arbitrary cooked row would assert a default that does not
     exist.
 
-[18]
+[23]
   slug: usda-fdc-wing-fried
   title: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
   publisher: USDA FoodData Central
@@ -301,7 +439,7 @@
     Breaded and fried. Roughly 59% of calories from fat against 27% from
     protein - the breading and frying oil, not the bird, drive the change.
 
-[19]
+[24]
   slug: usda-fdc-wing-raw
   title: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
   publisher: USDA FoodData Central
@@ -312,7 +450,44 @@
     Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure for
     an unbreaded, uncooked whole wing with skin.
 
-[20]
+[25]
+  slug: usda-psd-israel-broiler-2000
+  title:
+    Production, Supply and Distribution database, Israel broiler meat
+    production, market years 1964-2000
+  publisher: USDA Foreign Agricultural Service
+  source_type: government
+  retrieved_on: 2026-07-29
+  url: https://apps.fas.usda.gov/psdonline/downloads/psd_livestock_csv.zip
+  notes:
+    Held ONLY as evidence in the CBS weight-basis question. No figure from it
+    is loaded, and it is not an Israeli source. The question it addresses: CBS
+    reports Israeli broiler tonnage but never states whether the figure is
+    live weight or carcass weight, so the tonnage cannot be used for anything
+    that depends on the basis. USDA PSD reports broiler meat on a
+    ready-to-cook basis by its own convention, which makes it a yardstick. The
+    one overlapping year is 2000. CBS reports 270,000 tonnes; PSD reports
+    195,000 tonnes. The ratio is 72.2%, which is dressing-yield shaped - this
+    project's own US figure derives to 75.67% from two NASS totals. If CBS
+    were already reporting carcass weight the ratio would sit near 100%. That
+    is evidence for CBS being LIVE weight, not proof, and three things keep it
+    from being proof. It is a single overlapping year. That year is 2000,
+    twenty-six years before the figures actually in use. And PSD's unit string
+    for broiler meat is a bare "(1000 MT)" where its beef series says "(1000
+    MT CWE)" explicitly, so the ready-to-cook basis is convention rather than
+    a label on the row. Two further checks, both consistent with live weight
+    and neither decisive. CBS's own output and marketing series agree at
+    95-100% for the same year, so both share one basis and the gap between
+    them is stock change rather than dressing. And 571,497 tonnes marketed
+    against 275,427,900 chicks placed gives 2.075 kg per bird placed, or about
+    2.18 kg per bird marketed at 5% farm mortality - plausible as a live
+    weight for Israel's smaller birds, and requiring roughly 2.9 kg live if
+    read as carcass weight. Recorded as a conflict rather than resolved, per
+    the rule in docs/research/README.md that a source disagreement is reported
+    and not adjudicated, and because promoting this to a stated basis is a
+    human judgement about provenance.
+
+[26]
   slug: tyson-foodservice-boneless
   title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
   publisher: Tyson Foodservice
@@ -328,7 +503,7 @@
     and the descriptor "whole muscle chicken breast". These are breast chunks,
     and the manufacturer does not pretend otherwise.
 
-[21]
+[27]
   slug: tyson-foodservice-chunks
   title: Boneless wings and chunks product line, ingredient statements
   publisher: Tyson Foodservice
@@ -344,7 +519,7 @@
     "chunks" contain no wing meat either, and the phrase "with rib meat" is a
     breast-yield allowance rather than a different cut sneaking in.
 
-[22]
+[28]
   slug: boneless-wing-method
   title:
     A method of production of boneless chicken wings (drumettes and winglets)
@@ -357,7 +532,7 @@
     Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
     winglet 30.7 g at 80.1% boneless yield.
 
-[23]
+[29]
   slug: chilling-method-yield
   title:
     Moisture retention by water- and air-chilled broilers, and effect of
@@ -375,7 +550,7 @@
     therefore belongs in the mass stages and can never move a count answer -
     but it matters a great deal to anyone buying wings by the pound.
 
-[24]
+[30]
   slug: cold-chain-refrigeration-losses
   title:
     The impact of refrigeration on food losses and associated greenhouse gas
@@ -393,7 +568,38 @@
     one. For meat the paper finds post-harvest handling and storage, not
     transport, is where refrigeration matters most.
 
-[25]
+[31]
+  slug: gotoh-2018-wagyu-review
+  title:
+    The Japanese Wagyu beef industry: current situation and future prospects
+    -- A review
+  publisher: Asian-Australasian Journal of Animal Sciences 31(7)
+  source_type: peer_reviewed
+  published_on: 2018-06-21
+  retrieved_on: 2026-08-15
+  url: https://www.animbiosci.org/journal/view.php?doi=10.5713/ajas.18.0333
+  notes:
+    Gotoh, Nishimura, Kuchida & Mannen (2018). Peer-reviewed, but COOPER may
+    not assign `study` -- the figure below is graded `industry` by human
+    decision, same rule as every other peer-reviewed source in this project
+    (see the honey batch's Jaganathan & Mandal lesson in
+    docs/research/README.md). A single source that carried four of
+    batch-03-wagyu's six items in principle (carcass/finishing weights, the
+    yield/quality/BMS grading structure, days on feed, total feed consumption)
+    -- extraction still returned only one figure from it. See
+    docs/research/accepted/batch-03-wagyu-REVIEW.md for why: the model mostly
+    declined to return a candidate at all against a document that demonstrably
+    contained the answers, a different failure shape than vanilla's
+    wrong-question/gate-limit drops. The PMC mirror (PMC6039323) returned a
+    reCAPTCHA wall on 2026-08-15; fetched here from the publisher
+    (animbiosci.org) instead. Round 2 (2026-08-16, human read of the same
+    fetched document) recovered two more figures from it: the Japanese Black
+    carcass-yield weights (756 kg live / 476 kg carcass at 29.2 months) and
+    the JMGA grading structure (yield letter A-C, quality number 1-5, BMS 1-12
+    as one of four inputs to the quality number). See
+    docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
+
+[32]
   slug: myopathy-prevalence-ontario
   title:
     Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
@@ -409,7 +615,7 @@
     comes from - are the worst affected. Woody breast incidence rose from
     about 5% in 2012 to 29% by 2015.
 
-[26]
+[33]
   slug: ncc-broiler-lca-2020
   title: Broiler Production System Life Cycle Assessment: 2020 Update
   publisher: National Chicken Council / University of Arkansas
@@ -429,7 +635,94 @@
     chicks per broiler produced to cover mortality, which independently
     corroborates our farm_mortality stage.
 
-[27]
+[34]
+  slug: nrc-2002-ground-beef-risk
+  title: Escherichia coli O157:H7 in Ground Beef - Review of a Draft Risk Assessment
+  publisher: National Research Council / Institute of Medicine, National Academies Press
+  source_type: peer_reviewed
+  published_on: 2002-01-01
+  retrieved_on: 2026-07-31
+  url: https://www.ncbi.nlm.nih.gov/books/NBK221105/
+  notes:
+    The structure of a ground beef lot, on a host the pipeline can actually
+    reach. "Trim is removed from each carcass and combined into 2,000-pound
+    combo bins during the slaughter process." "Grinder loads are presumed to
+    vary in size from the equivalent of 2 to 15 combo bins of trim." And, in
+    the Slaughter Module chapter (NBK221092): "Lot is defined in the draft as
+    the number of cattle necessary to fill one combo bin with trim; and a
+    single lot may take one or more truckloads of cattle." HOW IT WAS FOUND,
+    because the method generalises. The figures wanted here live in an FSIS
+    draft risk assessment, and fsis.usda.gov returns HTTP 403 to this
+    project's fetcher site-wide - verified against three paths on two separate
+    days. This volume is the National Academies REVIEWING that draft, and it
+    quotes the definitions at length. When an agency document is unfetchable,
+    look for the body that reviewed it: oversight literature quotes what it
+    reviews, and oversight publishers host differently. Note "presumed" in the
+    grinder-load sentence. It is a modelling assumption inside a risk
+    assessment, not an observation, which is why the combo-bin pool derived
+    from it is graded `estimate`.
+
+[35]
+  slug: plos-hu-2012-grind-batch
+  title:
+    Estimating Animal Abundance in Ground Beef Batches Assayed with Molecular
+    Markers
+  publisher:
+    Hu X-S, Simila J, Platz SS, Moore SS, Plastow G, Meghen CN; PLoS ONE
+    7(3):e34191
+  source_type: peer_reviewed
+  published_on: 2012-03-30
+  retrieved_on: 2026-07-31
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC3316629/
+  notes:
+    The most important source in the ground beef subject and the only measured
+    mixing pool anywhere in this corpus. DNA markers profiled in six
+    commercial grind batches, animal abundance estimated by mark-recapture:
+    "An average of 411 to1367 animals was present in the six grind batches."
+    (The missing space is the document's own.) Promoted to `study` by hand.
+    COOPER graded it `industry` because it cannot grade higher, and the
+    promotion rests on a narrow point that the honey batch taught: 411-1,367
+    is this paper's own primary result, not uncited scene-setting borrowed
+    from someone else. The same paper's "a single ground beef batch may
+    consist of many hundreds of animals" IS scene-setting, and is deliberately
+    not used as a figure anywhere. Four things it is not, all easy to get
+    wrong: not a per-patty count (a batch is many bins); not a per-bin count;
+    not a national figure (six batches, one manufacturer, one line, one
+    shift); and not a mean worth quoting on its own - the paper's own point is
+    the variance between batches.
+
+[36]
+  slug: pubmed-multi-silkworm-cocoon
+  title:
+    Multi-silkworm cocoon: structure, properties and the collective spinning
+    behaviour behind it (Int J Biol Macromol, PMID 38061509)
+  publisher: PubMed / Elsevier
+  source_type: peer_reviewed
+  published_on: 2023-12-01
+  retrieved_on: 2026-07-31
+  url: https://pubmed.ncbi.nlm.nih.gov/38061509/
+  notes:
+    Cited for ONE sentence and graded deliberately below what its source_type
+    would suggest: "A normal silkworm cocoon (NSC) with a unique nonwoven
+    structure is usually spun by a single silkworm larva." THE PAPER IS
+    PEER-REVIEWED AND THAT SENTENCE IS NOT ITS FINDING. It is uncited
+    scene-setting in a materials-science study about cocoon structure, so the
+    figure it supports is graded `industry`, not `study`. This is exactly the
+    distinction the research README draws using Jaganathan & Mandal on honey,
+    and it is the reason `study` is a human-only grade: a model that sees a
+    journal header cannot tell a paper's result from its first sentence. Cited
+    because it is the ONLY fetchable source found, across a 35-URL sweep
+    covering FAO, Britannica, Wikipedia, Saint Louis Zoo, Carolina Biological
+    and several extension PDFs, that states the one-cocoon-per-silkworm
+    relation in a single sentence at all. Sericulture writers treat it as too
+    obvious to count and write "the larvae enclose themselves in a cocoon",
+    which contains no number and cannot ground a figure of 1. It also supplies
+    its own exception, which is kept rather than trimmed: three or more larvae
+    sometimes spin one cocoon collectively in a particular Bombyx mori genetic
+    resource. So the constant is one-to-one for commercial silk and is not a
+    law of nature.
+
+[37]
   slug: welfare-training-carcass-quality
   title:
     The Influence of Welfare Training on Bird Welfare and Carcass Quality in
@@ -442,7 +735,7 @@
     90% of bruising occurs in the 12-24 hours before processing. Bruise
     distribution by region: breast 42%, wings 33%, legs 25%.
 
-[28]
+[38]
   slug: wing-injuries-loading
   title:
     Rearing and handling injuries in broiler chickens and risk factors for
@@ -457,7 +750,7 @@
     the bird. Load-to-load variance is high, so this is stored with a wide
     lo/hi band.
 
-[29]
+[39]
   slug: wing-yield-eight-strains
   title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
   publisher: Poultry Science
@@ -468,7 +761,71 @@
     Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
     (6.7-7.3%), measured across eight commercial broiler strains.
 
-[30]
+[40]
+  slug: beefresearch-org-beef-grading
+  title:
+    Fact Sheet: Beef Grading (Expected Yields of Closely Trimmed, Boneless
+    Retail Cuts by USDA Yield Grade)
+  publisher:
+    National Cattlemen's Beef Association / beefresearch.org (Cattlemen's Beef
+    Board checkoff)
+  source_type: trade_body
+  retrieved_on: 2026-08-15
+  url:
+    
+    https://www.beefresearch.org/resources/product-quality/fact-sheets/beef-grading
+  notes:
+    Checkoff-funded fact sheet authored by Daryl Tatum PhD (Colorado State),
+    citing the 1996 USDA grading standard directly. Cited for the %CTBRC
+    column of its Table 1: closely trimmed boneless retail cuts from
+    round/loin/rib/chuck ONLY, <45.4% to >52.3% of carcass weight across USDA
+    Yield Grades 5 through 1. The companion %Total Yield column (all retail
+    cuts including ground beef, <65 to >=80) is a different denominator and is
+    not interchangeable with it -- nor with SDSU's 65% worked-example figure,
+    which includes trim the %CTBRC basis excludes.
+
+[41]
+  slug: msstate-ext-beef-grades
+  title: Beef Grades and Carcass Information
+  publisher: Mississippi State University Extension Service
+  source_type: trade_body
+  retrieved_on: 2026-08-15
+  url: https://extension.msstate.edu/publications/beef-grades-and-carcass-information
+  notes:
+    A DIFFERENT MSU Extension publication from msstate-ext-beef-yield
+    (farm-direct beef), despite the same publisher and overlapping subject.
+    This one is the grading fact sheet, cited for the fed-cattle dressing
+    percentage: "It typically ranges from 60 to 64 percent for the majority of
+    fed cattle and averaged 64 percent for the Mississippi Farm to Feedlot
+    program cattle from 1993 through 2007." Same 60-64 range the other MSU
+    document states, independently restated with a measured program mean
+    attached -- consistent, and not merged into one citation because they are
+    two documents. Also the document that treats marbling/quality-grade and
+    fat-thickness/yield-grade as independently measured traits throughout,
+    which is the basis for batch-03-wagyu's honest marbling_vs_yield_tradeoff
+    "sources treat the axes as independent" finding.
+
+[42]
+  slug: msstate-ext-beef-yield
+  title: How Much Meat to Expect from a Beef Animal (farm-direct beef)
+  publisher: Mississippi State University Extension Service
+  source_type: trade_body
+  retrieved_on: 2026-07-31
+  url:
+    
+    https://extension.msstate.edu/publications/how-much-meat-expect-beef-animal-farm-direct-beef
+  notes:
+    "The average dressing percentage of beef cattle is 60 to 64 percent."
+    Cited for dressing, and for the upper bound of the carcass-to-packaged
+    band. Carries a conflict this project records rather than resolves. Its
+    take-home sentence gives two figures that do not reconcile with each
+    other: "the take-home weight of packaged beef will be approximately 40
+    percent of the animal's live weight, or 75 percent of the hot carcass
+    weight." At its own 63 percent dressing percent, 75 percent of the carcass
+    is 47 percent of live weight, not 40. SDSU's 65 percent does reconcile.
+    Both bounds are kept and neither is averaged away.
+
+[43]
   slug: ncc-broiler-performance
   title: U.S. Broiler Performance
   publisher: National Chicken Council
@@ -482,7 +839,7 @@
     grow-out mortality going back to 1925. Trade body rather than government,
     so figures are tagged confidence=industry.
 
-[31]
+[44]
   slug: ncc-key-facts
   title: Broiler Chicken Industry Key Facts
   publisher: National Chicken Council
@@ -493,7 +850,70 @@
     https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
   notes: Industry structure - plant counts, company counts, contract farms.
 
-[32]
+[45]
+  slug: nysmaple-sap-per-tree
+  title: How Much Sap Can One Tree Produce?
+  publisher: New York State Maple Producers Association
+  source_type: trade_body
+  retrieved_on: 2026-07-30
+  url: https://nysmaple.com/how-much-sap-can-one-tree-produce/
+  notes:
+    A producers' association page, and the most quotable of the three - which
+    is exactly why it needs watching. It supplies the modal "most trees today
+    have only one tap", which is load-bearing here: it is what lets a per-TAP
+    yield stand in for a per-TREE yield without inventing a multiplier. It
+    also states the bare "approximately 40 gallons of sap" that COOPER
+    preferred over UVM's rule. Kept as a source because the one-tap figure is
+    genuinely useful, cited for the ratio nowhere.
+
+[46]
+  slug: ofot-sector-summary-2021
+  title: ענף הלול - סיכום 2021 (Poultry sector summary, 2021)
+  publisher: ארגון מגדלי עופות בישראל (Israel Poultry Growers Organisation)
+  source_type: trade_body
+  retrieved_on: 2026-07-30
+  url:
+    
+    https://ofot.co.il/%D7%A2%D7%A0%D7%A3-%D7%94%D7%9C%D7%95%D7%9C-%D7%A1%D7%99%D7%9B%D7%95%D7%9D-2021/
+  notes:
+    The growers' organisation, not the statutory Poultry Board - note the
+    domains, ofot.CO.il is the growers and ofot.ORG.il is the council. Undated
+    on the page beyond the year it summarises, so published_on is NULL.
+    Carries a sector table for 2021 that no government publication matches:
+    3,630 active growers across family farms and kibbutzim, of which 604 raise
+    broilers producing 515,400 tonnes worth NIS 3,414 million, 2,863 produce
+    2,230 million table eggs, and 78 breeding operations supply 244 million
+    chicks. HOW THIS DOCUMENT WAS FOUND is worth recording. COOPER fetched it
+    during batch-05 and both models returned nothing from it; a human reading
+    the same downloaded file found the table in minutes. That is the second
+    time the returned artifacts have been worth more than the extraction, and
+    it is the reason raw documents come back with every batch. See
+    docs/research/accepted/batch-05-israel-hebrew-REVIEW.md. Graded
+    'trade_body' rather than 'government': it is an industry association
+    reporting on its own members. Nobody enumerated these figures the way NASS
+    enumerates US slaughter, and the corpus should not imply otherwise by
+    placing them in the same tier.
+
+[47]
+  slug: ou-kosher-shechita
+  title: Shechita: All About Kosher Ritual Slaughter
+  publisher: Orthodox Union (OU Kosher)
+  source_type: trade_body
+  retrieved_on: 2026-07-29
+  url: https://oukosher.org/blog/consumer-kosher/shechita/
+  notes:
+    A kosher certification agency describing its own procedure, which makes it
+    authoritative on WHAT HAPPENS and silent on HOW OFTEN. For poultry,
+    post-slaughter bedikah inspects the lungs, intestines and tendon
+    junctions, and a mashgiach pulls any bird with a blemish off the line for
+    a rav to rule on. That is a loss stage with no US analogue - FSIS has no
+    equivalent check - and it should push the birds-required number up. NO
+    REJECTION RATE IS PUBLISHED, here or anywhere reachable. So the stage can
+    be described honestly and cannot yet be quantified: any figure we put on
+    it would be an 'estimate' of our own making, which is the grade the
+    project is trying to reduce. Recorded as a known gap rather than filled.
+
+[48]
   slug: psu-extension-saffron
   title: Saffron: A Tale of Red Gold and How to Produce Your Own
   publisher: Penn State Extension
@@ -518,7 +938,7 @@
     require assuming the mass of a teaspoon of saffron, and that assumption
     would be ours rather than the source's.
 
-[33]
+[49]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -534,7 +954,30 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[34]
+[50]
+  slug: sdsu-ext-fed-steer-yield
+  title: How Much Meat Can You Expect from a Fed Steer?
+  publisher: South Dakota State University Extension
+  source_type: trade_body
+  published_on: 2022-07-13
+  retrieved_on: 2026-07-31
+  url: https://extension.sdstate.edu/how-much-meat-can-you-expect-fed-steer
+  notes:
+    The ground-beef-specific yield, which is the figure the subject actually
+    needs: "This 150 -185 pounds of lean trim would likely be packaged as
+    ground beef." The space before the dash is the page's own typography and
+    is preserved everywhere it is quoted - tidying it is what made a true
+    quote fail the gate on the Wikipedia row in this same batch. Also carries
+    the whole-chain arithmetic that reconciles: a 1,200 lb steer at 63 percent
+    dressing gives a 750 lb carcass, "about 65% of the carcass weight, or
+    roughly 490 pounds, as boneless, trimmed beef", which is "approximately
+    40% of the live weight". That internal consistency is why the 65 percent
+    figure anchors the low end of the carcass-to-packaged band while MSU's 75
+    percent anchors the high end. Lean trim is roughly a third of total
+    packaged beef. The two must never be merged; only the trim figure becomes
+    patties.
+
+[51]
   slug: ucanr-mg-saffron
   title: Saffron - Garden Help, Herbs
   publisher: UC Master Gardeners of Santa Clara County, UC ANR
@@ -553,7 +996,7 @@
     a data one, and it is recorded here because it is the reason the raw
     documents come back with every batch.
 
-[35]
+[52]
   slug: ufifas-hs661-saffron
   title: Saffron - Crocus sativus L. (HS661)
   publisher: University of Florida IFAS Extension, Horticultural Sciences
@@ -573,7 +1016,26 @@
     own words ("Supposedly"), and it is stored at confidence=industry for
     exactly that reason.
 
-[36]
+[53]
+  slug: umaine-7036e-maple
+  title: Bulletin #7036: How to Tap Maple Trees and Make Maple Syrup
+  publisher: University of Maine Cooperative Extension
+  source_type: trade_body
+  published_on: 2019-01-01
+  retrieved_on: 2026-07-30
+  url: https://extension.umaine.edu/publications/7036e/
+  notes:
+    Source for taps-per-tree by trunk diameter and for the conservative end of
+    the per-tap seasonal yield. Its tapping guidance is stricter than older
+    literature - one tap below 18 inches, a second only at 18 to 25 inches, a
+    third only on very healthy trees over 25 inches - which is the direction
+    the whole industry has moved for tree health. Its season is given as
+    calendar windows rather than a duration ("mid-February to early April in
+    Southern Maine"), which is why season_length came back from COOPER with a
+    quote and no number. That was the correct behaviour: subtracting two dates
+    would have been our arithmetic, not the source's.
+
+[54]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -589,7 +1051,73 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[37]
+[55]
+  slug: uvm-jones-rule-86
+  title: The "Jones Rule of 86" Revisited
+  publisher: University of Vermont Extension, Proctor Maple Research Center
+  source_type: trade_body
+  published_on: 2013-10-01
+  retrieved_on: 2026-07-30
+  url:
+    
+    https://www.uvm.edu/extension/agriculture/maple/bizmodules/sites/default/files/imce/uploads/1013jonesruleof86.pdf
+  notes:
+    The strongest maple source in the corpus and the only one that gives a
+    RULE rather than a constant: divide 86 by the sap sugar concentration in
+    degrees Brix to get gallons of sap per gallon of syrup. Devised by C.H.
+    Jones at UVM in 1946. Preferred over the folk "40 gallons" wherever both
+    would serve, because 40:1 is only true near 2 Brix and this document says
+    so in the same breath: an average 2 Brix sap "would require 43 gallons of
+    sap to produce 1 gallon of syrup, or a sap:syrup ratio of close to 40:1".
+    Worth recording that COOPER read this document and quoted the weaker
+    source anyway in batch-07-maple. The passage was retrieved and in front of
+    the model - a single chunk, returned by best_chunks - so the preference
+    for the round number was the model's, not a retrieval failure. See
+    docs/research/accepted/batch-07-maple-REVIEW.md. Also note the document's
+    own caveat: the rule degrades at the high sugar concentrations reverse
+    osmosis now produces, so it is a field rule, not a physical law.
+
+[56]
+  slug: vanilla-package-of-practice-2021
+  title: Package of Practice: Vanilla Cultivation
+  publisher:
+    North Eastern Council (NEC) / North Eastern Development Finance
+    Corporation Limited (NEDFi), India
+  source_type: trade_body
+  retrieved_on: 2026-08-15
+  url:
+    
+    https://www.advancingnortheast.in/wp-content/uploads/2021/10/Vanilla-Cultivation-PP-converted-3.pdf
+  notes:
+    Undated within the document itself; the URL path carries a 2021 upload
+    date, kept out of published_on since it names the upload, not necessarily
+    authorship. A regional development-finance body's model project profile
+    for vanilla cultivation, in the same "extension-style practical guide"
+    category as Penn State's and UF/IFAS's saffron sources. Sole source for
+    the only figure batch-02-vanilla accepted: green_to_cured_ratio, "About 6
+    kg of green pods produce 1 kg of cured beans." Confirmed to state Vanilla
+    planifolia by name.
+
+[57]
+  slug: worldbank-vanilla-cultivation-guide
+  title: Guide on Sustainable Vanilla Cultivation
+  publisher: World Bank
+  source_type: trade_body
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://documents1.worldbank.org/curated/en/099032424233135653/pdf/P17027419430cf08b18e671563dbd6cce04.pdf
+  notes:
+    4,433 lines after pdftotext. Strong on pollination and field yields (43
+    and 48 keyword hits respectively) but mentions "cured" exactly once, so it
+    could not answer the curing ratio -- coverage was checked per source
+    before batch-02-vanilla was sent, not assumed. Also the source for the
+    dropped flowers_per_bean row's quote ("A flower gives a vanilla bean after
+    hand pollination") -- true, and never loaded as data, because the numeral
+    1 never appears in that sentence. See
+    docs/research/accepted/batch-02-vanilla-REVIEW.md.
+
+[58]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -605,7 +1133,7 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[38]
+[59]
   slug: eggs-unlimited-breakage
   title: Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers
   publisher: Eggs Unlimited
@@ -623,7 +1151,82 @@
     enough that the industry measures breakage closely - it is what the
     invoice argument is about.
 
-[39]
+[60]
+  slug: jc-israeli-mangal
+  title: Going up in smoke, Sabra style
+  publisher: The Jewish Chronicle
+  source_type: trade_press
+  retrieved_on: 2026-07-29
+  url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
+  notes:
+    Held for one specific thing: it names what actually goes on the mangal for
+    Yom Ha'atzmaut, and chicken wings are on that list alongside pargiyot -
+    deboned chicken thighs, cubed and skewered - with the meal built around
+    small cuts and many salads rather than large joints. That makes this
+    project's exact product part of an Israeli national holiday, which is a
+    better demo hook than any production statistic. It also observes that
+    falafel, shawarma and schnitzel - the dishes outsiders name first - play
+    very little role in the day. Undated on the page, so published_on is NULL
+    rather than guessed.
+
+[61]
+  slug: jfs-independence-day-grilling
+  title: The Grilling Tradition of Israel's Independence Day
+  publisher: Jewish Food Society
+  source_type: trade_press
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.jewishfoodsociety.org/stories/the-grilling-tradition-of-israels-independence-day
+  notes:
+    Independent corroboration that Yom Ha'atzmaut grilling is near-universal
+    rather than a niche custom - the mangal treated as as essential to the day
+    as the president's speech - and that the tradition, while imported, has
+    become distinctly Israeli. Two sources agreeing is why the cultural fact
+    is loaded at all.
+
+[62]
+  slug: lone-mountain-carcass-grading
+  title: Carcass Grading (breeding guide technical resources)
+  publisher: Lone Mountain Cattle Company
+  source_type: trade_press
+  retrieved_on: 2026-08-15
+  url:
+    
+    https://www.lonemountaincattle.com/breeding-guide/technical-resources/carcass-grading/
+  notes:
+    Commercial source -- an American wagyu breeder, not JMGA or a
+    peer-reviewed paper -- graded industry accordingly. Cited ONLY for the
+    BMS-to-quality-grade bucketing (BMS 8-12 -> quality 5; BMS 5-7 -> 4) and
+    its "a BMS 3 grade requires a minimum of 21% IMF" anchor, plus the
+    ribbing-site basis note (Japan ribs between the 6th/7th rib, the US
+    between the 12th/13th). NOT usable as a definition of what BMS measures:
+    Fable's adversarial review (2026-08-16) confirmed this page attributes
+    color, firmness and texture to the BMS grade itself, but per Gotoh BMS is
+    a marbling-only score -- the four-factor lowest-of rule belongs to the
+    separate meat quality grade (1-5). See
+    docs/research/accepted/batch-03-wagyu-findings-round2.yaml.
+
+[63]
+  slug: nwe-silkworm
+  title: Silkworm
+  publisher: New World Encyclopedia
+  source_type: trade_press
+  retrieved_on: 2026-07-31
+  url: https://www.newworldencyclopedia.org/entry/Silkworm
+  notes:
+    A tertiary reference work - an encyclopedia entry, not a survey and not a
+    study. Graded and cited as what it is. Carried because it is the only silk
+    source we hold that names a primary reference for its central figure: the
+    cocoons-per-pound claim is attributed to Palmer 1949, which we have NOT
+    seen. The citation in this corpus is therefore to the encyclopedia that
+    carries the number, not to Palmer, on the principle that citing a paper
+    through a source you have read is how a rumour acquires a footnote. It is
+    also the source of the sourced filament length, 300-900 m, which sits well
+    below the commonly repeated "1,000-1,600 m". The lower sourced figure is
+    the one to keep; the folk range has no source we could find.
+
+[64]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -638,7 +1241,109 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[40]
+[65]
+  slug: poultryworld-israel-war-2024
+  title: Israel poultry industry hit by war and labour shortage
+  publisher: Poultry World (Misset)
+  source_type: trade_press
+  published_on: 2024-03-04
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.poultryworld.net/the-industrymarkets/market-trends-analysis-the-industrymarkets-2/israel-poultry-industry-hit-by-war-and-labour-shortage/
+  notes:
+    By Vladislav Vorotnikov. Explains a hole that is already visible in our
+    CBS series: 16 million head of poultry lost across Newcastle disease
+    outbreaks in Q4 2023, on top of poultry houses shut in the north and south
+    and a labour shortage after foreign workers left. CBS output for 2023 is
+    553,068 tonnes - below 2020 - and this is why. NOTE ON REACHABILITY: this
+    URL returns 403 to some automated fetchers and 200 to an ordinary browser
+    user-agent. It is alive; a 403 here is a bot filter, not a dead link. Do
+    not retire it on one failed fetch. Two figures in it are THIRD-HAND and
+    are deliberately not loaded as data: Of HaGalil at about 15% of Israeli
+    chicken slaughter and Of Oz at about 5%. Poultry World is citing
+    TheMarker, which is citing unnamed industry sources. Worth knowing that
+    both named plants sit in places our own district data covers - Kiryat
+    Shmona in the north, Sha'ar HaNegev in the south, the latter marketing
+    9,813 tonnes of broilers in 2024 - so the claim is checkable in principle
+    against a Hebrew original.
+
+[66]
+  slug: smithsonian-silk-road-2002
+  title: The Silk Road - Connecting Peoples and Cultures
+  publisher: Smithsonian Center for Folklife and Cultural Heritage
+  source_type: trade_press
+  published_on: 2002-01-01
+  retrieved_on: 2026-07-31
+  url:
+    
+    https://festival.si.edu/2002/the-silk-road/the-silk-road-connecting-peoples-and-cultures/smithsonian
+  notes:
+    A museum festival programme essay. The best provenance available for a
+    cocoons-per-necktie figure, which says more about the state of that figure
+    than about the Smithsonian. It gives 150 cocoons per necktie. Two other
+    figures circulate - 120-130 at AFB Education, and 110 across several
+    retail and content-farm pages, all reproducing one unattributed sentence
+    verbatim. This source is preferred on provenance alone, NOT on any
+    evidence it is more accurate, and the conflict is recorded on the product
+    row rather than resolved. No survey exists behind any of the three. It
+    replaced bows-n-ties, which carries the 120-130 figure in a browser and
+    serves an article body that JavaScript truncates mid-word. To the
+    project's fetcher that page contains neither 120 nor 130, so two research
+    runs correctly returned nothing and read as model weakness for a week.
+
+[67]
+  slug: suekayton-silk-thread-and-cloth
+  title: Silk Thread and Cloth
+  publisher: Sue Kayton (silkworms.com educational pages)
+  source_type: trade_press
+  retrieved_on: 2026-07-31
+  url: https://www.suekayton.com/Silkworms/cloth.htm
+  notes:
+    A schoolteacher's silkworm-rearing page for classroom use. The weakest
+    provenance of anything cited in this corpus, and it is cited anyway for
+    two figures because no better source states them and pretending otherwise
+    would be worse than saying so plainly. What it is good for: the
+    FIVE-cocoons-per-thread reeling figure, which is the only mixing pool size
+    in the entire project backed by a citation rather than by our own
+    estimate. Both COOPER models returned it independently. What to watch: its
+    per-garment sentence answers two questions at once - "It takes 1700 to
+    2000 cocoons to make one silk dress (or about 1,000 cocoons for a silk
+    shirt)." A previous research run stored the DRESS numbers in the SHIRT row
+    and passed every automatic check, because every figure involved genuinely
+    appears in the quote. Anyone re-reading this source should read the
+    clause, not the sentence. Historical footnote: this page is also where the
+    entity-decoding bug was found. It carries 47 non-breaking spaces, and
+    until fetch_url() learned to call html.unescape() they survived into the
+    inbox and made an honest quote from it impossible to verify.
+
+[68]
+  slug: toi-poultry-imports-2025
+  title: Poultry producers warn first-ever imports of chickens will destroy local farms
+  publisher: The Times of Israel
+  source_type: trade_press
+  published_on: 2025-09-07
+  retrieved_on: 2026-07-29
+  url:
+    
+    https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
+  notes:
+    By Sue Surkes. The most useful Israeli poultry source found outside CBS,
+    and the only one carrying the figure CBS does not publish: roughly 260
+    million broilers raised a year. Attribution matters here and is the reason
+    this is usable at all. The figures are attributed to a NAMED industry
+    official - Moti Elkabetz, secretary of the Poultry Breeders Association -
+    rather than to "sources" or "industry estimates". That makes it an
+    industry figure with a person behind it, not an anonymous claim. Also
+    carries: NIS 10 billion annual turnover, about 600 large chicken farms, 20
+    kosher poultry slaughterhouses, some 6,000 dependent jobs, a 40-day
+    grow-out, about 30% of product sold frozen, NIS 6.5/kg paid to the farmer
+    against about NIS 20/kg at retail. The 58.2 kg per-capita figure it quotes
+    is sourced to Euromeatnews, whose article now 404s, so that number is NOT
+    loaded from here. A live article citing a dead one does not resurrect the
+    citation.
+
+[69]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet

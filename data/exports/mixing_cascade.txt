@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- mixing cascade
-# generated: 2026-07-29
+# generated: 2026-08-16
 # pool sizes are in INDIVIDUALS. mixing_kind='separating' actively splits one bird's units into different streams
 # ---------------------------------------------------------------------------------------------------------------
 
@@ -20,6 +20,37 @@
 
 [2]
   sequence: 10
+  slug: beef_combo_bin
+  label: Combo bin of trim
+  mixing_kind: random
+  pool_lo: 27
+  pool_mode: 105
+  pool_hi: 684
+  confidence: estimate
+  description:
+    Trim is stripped from every carcass on the line and combined into
+    2,000-pound combo bins - large cardboard boxes lined with plastic. This is
+    ground beef's cut-up line: the first commingling event, and it happens on
+    the slaughter floor rather than anywhere near a kitchen.
+  source: project-estimate-mixing
+
+[3]
+  sequence: 10
+  slug: maple_collection_tank
+  label: Collection tank
+  mixing_kind: random
+  pool_lo: 5
+  pool_mode: 800
+  pool_hi: 20000
+  confidence: estimate
+  description:
+    Sap from every tap on the line arrives in one tank. This is the first
+    stage and it does almost all the work: after it, no quantity of sap
+    corresponds to any particular tree.
+  source: project-estimate-mixing
+
+[4]
+  sequence: 10
   slug: saffron_picking_tray
   label: Picking tray
   mixing_kind: random
@@ -33,7 +64,25 @@
     complete mixing event, and it happens within seconds of separation.
   source: project-estimate-mixing
 
-[3]
+[5]
+  sequence: 10
+  slug: silk_reeling
+  label: Reeling
+  mixing_kind: random
+  pool_lo: 5
+  pool_mode: 5
+  pool_hi: 5
+  confidence: industry
+  description:
+    Cocoons are softened in hot water and unwound, and the filaments from
+    about five of them are wound together to make one usable silk thread. A
+    single filament is roughly ten micrometres across and far too fine to
+    weave alone, so combining is not an economy - it is the only way to get a
+    thread at all. This is silk's cut-up line, and it happens before the
+    material is a textile in any sense.
+  source: suekayton-silk-thread-and-cloth
+
+[6]
   sequence: 20
   slug: wing_chiller
   label: Wing chiller
@@ -47,7 +96,39 @@
     single vessel with a residence time measured in tens of minutes.
   source: project-estimate-mixing
 
-[4]
+[7]
+  sequence: 20
+  slug: beef_grind_batch
+  label: Grind batch
+  mixing_kind: random
+  pool_lo: 411
+  pool_mode: 889
+  pool_hi: 1367
+  confidence: study
+  description:
+    Several combo bins of trim are emptied into a grinder together, along with
+    lean finely textured beef and rework, and ground into one batch. The
+    National Academies' review of the FSIS risk assessment models a grinder
+    load as 2 to 15 combo bins; Hu et al. counted 411 to 1,367 distinct
+    animals in six real ones.
+  source: plos-hu-2012-grind-batch
+
+[8]
+  sequence: 20
+  slug: maple_evaporator_batch
+  label: Evaporator batch
+  mixing_kind: random
+  pool_lo: 5
+  pool_mode: 800
+  pool_hi: 20000
+  confidence: estimate
+  description:
+    A continuous-flow evaporator is fed from the tank all day, so a run draws
+    on whatever the stand delivered. It cannot narrow the pool the tank
+    produced; it can only carry it forward.
+  source: project-estimate-mixing
+
+[9]
   sequence: 20
   slug: saffron_drying_batch
   label: Drying batch
@@ -62,7 +143,22 @@
     crew.
   source: project-estimate-mixing
 
-[5]
+[10]
+  sequence: 20
+  slug: silk_skein
+  label: Skein and throwing
+  mixing_kind: random
+  pool_lo: 500
+  pool_mode: 5000
+  pool_hi: 50000
+  confidence: estimate
+  description:
+    Reeled threads are wound into skeins and twisted into yarn. Output from
+    many reeling basins combines here, so the pool grows by roughly the size
+    of the filature rather than by anything intrinsic to the silk.
+  source: project-estimate-mixing
+
+[11]
   sequence: 30
   slug: size_grading
   label: Size grading (jumbo / large / medium)
@@ -74,11 +170,30 @@
   description:
     Wings are weighed individually and routed to grade streams. This is ACTIVE
     SEPARATION, not shuffling: a bird's two wings go to different boxes
-    whenever they fall on opposite sides of a grade boundary. The single
-    strongest driver pushing the answer toward 12.
+    whenever they fall on opposite sides of a grade boundary. Real, and the
+    strongest single stage in the cascade - but not what determines the
+    commodity answer. By the time wings reach the grader the pool is already
+    far past the saturation point, so switching this stage off entirely costs
+    0.0003 of a bird. It earns its keep on the small-pool routes and in
+    destroying adjacency.
   source: project-estimate-mixing
 
-[6]
+[12]
+  sequence: 30
+  slug: maple_barrel
+  label: Bulk barrel
+  mixing_kind: random
+  pool_lo: 50
+  pool_mode: 3000
+  pool_hi: 40000
+  confidence: estimate
+  description:
+    Syrup is drummed for sale, commonly in 40-gallon barrels. One barrel takes
+    many days' boiling, so it spans most of a season's flow from the whole
+    stand.
+  source: project-estimate-mixing
+
+[13]
   sequence: 30
   slug: saffron_grading
   label: Grade separation
@@ -94,7 +209,23 @@
     another when they are not identical, and they rarely are.
   source: project-estimate-mixing
 
-[7]
+[14]
+  sequence: 30
+  slug: silk_weaving_warp
+  label: Weaving warp
+  mixing_kind: random
+  pool_lo: 20000
+  pool_mode: 500000
+  pool_hi: 5000000
+  confidence: estimate
+  description:
+    Yarn is dressed onto a loom beam as a warp and woven into a bolt of cloth.
+    This is the largest pooling event in the chain by a wide margin - a bolt
+    yields many garments, and every garment cut from it draws on every worm
+    that went into the beam.
+  source: project-estimate-mixing
+
+[15]
   sequence: 40
   slug: combo_bin
   label: Combo bin
@@ -108,7 +239,23 @@
     wing that is about 8,700 wings in one bin.
   source: project-estimate-mixing
 
-[8]
+[16]
+  sequence: 40
+  slug: maple_packer_blend
+  label: Packer blend
+  mixing_kind: random
+  pool_lo: 5000
+  pool_mode: 100000
+  pool_hi: 2000000
+  confidence: estimate
+  description:
+    A packer buys barrels from many sugarhouses and blends to a grade and
+    colour before bottling. This is the step that makes a supermarket bottle a
+    regional average rather than one family's woods, and it is where the tree
+    count stops being knowable even in principle.
+  source: project-estimate-mixing
+
+[17]
   sequence: 40
   slug: saffron_packing
   label: Lot packing
@@ -123,7 +270,7 @@
     measured in kilograms.
   source: project-estimate-mixing
 
-[9]
+[18]
   sequence: 50
   slug: iqf_freezer
   label: IQF freezer tunnel
@@ -137,7 +284,7 @@
     lot boundaries are preserved through this step.
   source: project-estimate-mixing
 
-[10]
+[19]
   sequence: 60
   slug: case_pack
   label: Case pack
@@ -152,7 +299,7 @@
     case is from a different bird.
   source: project-estimate-mixing
 
-[11]
+[20]
   sequence: 70
   slug: distributor
   label: Distributor warehouse
@@ -164,7 +311,7 @@
   description: Pallets assembled from many lots, plants, and sometimes producers.
   source: project-estimate-mixing
 
-[12]
+[21]
   sequence: 80
   slug: restaurant_freezer
   label: Restaurant freezer bin
@@ -179,7 +326,7 @@
     weeks of production.
   source: project-estimate-mixing
 
-[13]
+[22]
   sequence: 90
   slug: fryer_basket
   label: Fryer basket
@@ -193,7 +340,7 @@
     which the question finally gets answered.
   source: project-estimate-mixing
 
-[14]
+[23]
   sequence: 110
   slug: egg_collection
   label: Nest and belt collection
@@ -209,7 +356,7 @@
     gathered.
   source: project-estimate-mixing
 
-[15]
+[24]
   sequence: 120
   slug: egg_farm_cooler
   label: On-farm cooler
@@ -224,7 +371,7 @@
     category at all.
   source: project-estimate-mixing
 
-[16]
+[25]
   sequence: 130
   slug: egg_washing
   label: Washing
@@ -239,7 +386,7 @@
     continuous flow.
   source: ams-shell-egg-grades
 
-[17]
+[26]
   sequence: 140
   slug: egg_candling
   label: Candling and grading
@@ -255,7 +402,7 @@
     separate hen.
   source: ams-shell-egg-grades
 
-[18]
+[27]
   sequence: 150
   slug: egg_carton_pack
   label: Carton pack
@@ -270,7 +417,7 @@
     a different hen.
   source: project-estimate-mixing
 
-[19]
+[28]
   sequence: 160
   slug: egg_distributor
   label: Distributor
@@ -286,7 +433,7 @@
     it.
   source: project-estimate-mixing
 
-[20]
+[29]
   sequence: 170
   slug: egg_retail_case
   label: Retail case
@@ -298,7 +445,7 @@
   description: The shelf. Cartons from several lots sit side by side, and you pick one.
   source: project-estimate-mixing
 
-[21]
+[30]
   sequence: 180
   slug: egg_home_fridge
   label: Your fridge

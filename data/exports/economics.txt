@@ -1,8 +1,41 @@
 # (o>  counting chicken wings -- economic measures
-# generated: 2026-07-29
+# generated: 2026-08-16
 # ------------------------------------------------
 
 [1]
+  slug: beef_dressing_pct_us_fed
+  label: US fed cattle dressing percentage (comparison figure)
+  value_lo: 60.0
+  value_hi: 64.0
+  unit: % of live weight remaining as hot carcass (dressing percentage)
+  basis:
+    majority of US fed cattle; program mean 64% (Mississippi Farm to Feedlot,
+    1993-2007)
+  confidence: industry
+  source: msstate-ext-beef-grades
+
+[2]
+  slug: beef_retail_cuts_pct_ctbrc
+  label: USDA Yield Grade closely trimmed boneless retail cuts (%CTBRC)
+  value_lo: 45.4
+  value_hi: 52.3
+  unit:
+    % of carcass weight as closely trimmed boneless retail cuts,
+    round/loin/rib/chuck only
+  basis: USDA Yield Grades 5 (<45.4%) through 1 (>52.3%), 1996 grading standard
+  confidence: industry
+  source: beefresearch-org-beef-grading
+
+[3]
+  slug: beef_saleable_meat_pct_carcass
+  label: US beef saleable meat (boneless trimmed, share of carcass weight)
+  value_mode: 65.0
+  unit: % of carcass weight yielded as boneless, trimmed beef
+  basis: SDSU worked example, 1200 lb steer at 63% dressing; also ~40% of live weight
+  confidence: industry
+  source: sdsu-ext-fed-steer-yield
+
+[4]
   slug: contract_farms
   label: Contract family farms
   value_mode: 25000.0
@@ -11,7 +44,7 @@
   confidence: industry
   source: ncc-key-facts
 
-[2]
+[5]
   slug: direct_jobs
   label: Direct industry employment
   value_mode: 355000.0
@@ -20,7 +53,7 @@
   confidence: industry
   source: ncc-key-facts
 
-[3]
+[6]
   slug: grower_net_annual
   label: Grower net income per house
   value_lo: 6000.0
@@ -31,7 +64,7 @@
   confidence: industry
   source: poultrysite-contract-economics
 
-[4]
+[7]
   slug: grower_pay_per_lb
   label: Contract grower pay
   value_lo: 0.038
@@ -42,7 +75,7 @@
   confidence: measured
   source: ers-broiler-grower-fees
 
-[5]
+[8]
   slug: slaughter_plants
   label: Slaughter and evisceration plants
   value_mode: 180.0
@@ -50,3 +83,21 @@
   basis: national
   confidence: industry
   source: ncc-key-facts
+
+[9]
+  slug: wagyu_carcass_yield_pct
+  label: Japanese Black carcass yield (live weight to carcass weight)
+  value_mode: 62.96
+  unit: % of live weight remaining as carcass weight
+  basis: at slaughter, 756 kg live / 476 kg carcass, 29.2 months mean age
+  confidence: industry
+  source: gotoh-2018-wagyu-review
+
+[10]
+  slug: wagyu_days_on_feed
+  label: Wagyu finishing period (days on feed)
+  value_mode: 30.0
+  unit: months
+  basis: finishing period, from start of high-energy feeding to slaughter
+  confidence: industry
+  source: gotoh-2018-wagyu-review

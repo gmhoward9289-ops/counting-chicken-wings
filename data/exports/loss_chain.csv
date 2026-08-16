@@ -1,10 +1,15 @@
 sequence,slug,label,phase,applies_to,optional,default_enabled,product,survive_lo,survive_mode,survive_hi,confidence,source
 10,farm_mortality,Grow-out mortality,grow_out,individual,1,0,all,0.935,0.9407,0.95,industry,ncc-broiler-performance
+10,beef_dressing,Dressing (live weight to hot carcass),slaughter,mass,0,1,all,0.6,0.62,0.64,industry,msstate-ext-beef-yield
+10,maple_boiling,Boiling (sap to syrup),processing,mass,0,1,all,0.0116,0.0233,0.0581,industry,uvm-jones-rule-86
 10,saffron_field_loss,Flowers not picked in time,harvest,individual,1,0,all,0.85,0.92,0.98,estimate,project-estimate-unsourced
+10,silk_breeding_stock,Cocoons kept for breeding,harvest,individual,1,0,all,0.9,0.95,0.98,estimate,project-estimate-unsourced
 15,layer_mortality,Layer flock mortality,laying,individual,1,0,table_egg,0.9,0.94,0.97,estimate,project-estimate-unsourced
 20,transport_doa,Transport dead-on-arrival,transport,individual,0,1,all,0.99,0.996,0.999,estimate,project-estimate-unsourced
+20,beef_carcass_to_packaged,Carcass to packaged beef,processing,mass,0,1,all,0.65,0.7,0.75,industry,sdsu-ext-fed-steer-yield
 20,saffron_drying,Drying,processing,mass,0,1,all,0.2,0.2,0.2,industry,ufifas-hs661-saffron
 30,postmortem_condemnation,Post-mortem condemnation,slaughter,individual,0,1,all,0.9954,0.9955,0.9955,measured,nass-poultry-slaughter-2025
+30,vanilla_curing,Curing (green pods to cured beans),processing,mass,0,1,all,0.16667,0.16667,0.16667,industry,vanilla-package-of-practice-2021
 40,wing_damage,Wing damage and downgrade,harvest_and_cutup,product,0,1,whole_wing,0.9,0.943,0.98,study,wing-injuries-loading
 45,egg_checks,"Checks (cracked shell, membrane intact)",grading,product,0,1,table_egg,0.93,0.965,0.985,industry,ams-shell-egg-grades
 46,egg_leakers,"Leakers, dirties and loss",grading,product,0,1,table_egg,0.99,0.995,0.997,industry,ams-shell-egg-grades

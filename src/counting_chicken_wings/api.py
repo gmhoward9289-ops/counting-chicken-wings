@@ -891,6 +891,34 @@ def states(year: int | None = None):
             (year,),
         ).fetchall() if year is not None else []
 
+        # Census of Agriculture: every state, five-yearly, sales rather than
+        # slaughter. Reported alongside the annual survey, never merged into
+        # it -- regional_census_stat.sales_head and v_broiler_size_stat.volume
+        # are different USDA programmes measuring different things, and
+        # summing or averaging them together would claim a false equivalence
+        # (see the comment above regional_census_stat in schema.sql).
+        census_rows = conn.execute(
+            """SELECT c.region, c.census_year, c.sales_head, c.operations,
+                      c.inventory, s.slug AS source_slug
+               FROM v_broiler_census_stat c
+               JOIN source s ON s.id = c.source_id
+               ORDER BY c.region"""
+        ).fetchall()
+
+        census_scoped = conn.execute(
+            """SELECT DISTINCT sp.slug
+               FROM v_broiler_census_stat c
+               JOIN species sp ON sp.id = c.species_id"""
+        ).fetchall()
+
+        # A state the census enumerates but the requested year's survey does
+        # not -- presence, with no comparable weight or volume figure to show
+        # for it. Computed against the SURVEY YEAR actually being served, not
+        # against every year the survey has ever covered, so this stays right
+        # if a caller asks for an older `year`.
+        survey_regions = {r["region"] for r in rows}
+        census_year = census_rows[0]["census_year"] if census_rows else None
+
         return {
             "year": year,
             "message": message,
@@ -908,6 +936,21 @@ def states(year: int | None = None):
                 for r in rows
             ],
             "programs": [dict(p) for p in programs],
+            "census": {
+                "census_year": census_year,
+                "scope": _scope(conn, [r["slug"] for r in census_scoped]),
+                "regions": [
+                    {
+                        "region": c["region"],
+                        "sales_head": c["sales_head"],
+                        "operations": c["operations"],
+                        "inventory": c["inventory"],
+                        "source": c["source_slug"],
+                        "presence_only": c["region"] not in survey_regions,
+                    }
+                    for c in census_rows
+                ],
+            },
         }
     finally:
         conn.close()

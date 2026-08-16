@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- national slaughter totals
-# generated: 2026-07-29
+# generated: 2026-08-16
 # dressing_yield is derived, not reported: RTC / live weight
 # ----------------------------------------------------------
 

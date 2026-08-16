@@ -308,6 +308,43 @@ def test_states_names_the_empty_case_for_an_unloaded_year(client):
     assert d["message"], "an empty result must say why, not just be empty"
 
 
+def test_states_census_block_is_all_fifty_states(client):
+    """The Census of Agriculture publishes every state -- the whole reason
+    it exists in this project is to lift coverage past what the annual
+    survey is allowed to report individually."""
+    d = get(client, "/api/states")
+    census = d["census"]
+    assert census["census_year"] is not None
+    assert len(census["regions"]) == 50
+    for r in census["regions"]:
+        assert r["region"]
+        assert r["source"] == "nass-census-agriculture-2022"
+
+
+def test_states_census_presence_only_is_exactly_the_gap(client):
+    """presence_only must be true for exactly the states the requested
+    year's survey has nothing to say about -- neither more (a state the
+    survey DOES report, wrongly flagged) nor fewer (a census-only state
+    silently reported as if it had a comparable figure)."""
+    d = get(client, "/api/states")
+    survey_regions = {r["region"] for r in d["regions"]}
+    census = d["census"]["regions"]
+
+    flagged = {r["region"] for r in census if r["presence_only"]}
+    all_census = {r["region"] for r in census}
+    assert flagged == all_census - survey_regions
+
+
+def test_states_census_entries_carry_no_survey_figures(client):
+    """Census rows must never be dressed up with the survey's vocabulary --
+    sales_head is not head_slaughtered and must not leak into avg_size or
+    volume, which is what the survey's rows carry instead."""
+    d = get(client, "/api/states")
+    for r in d["census"]["regions"]:
+        assert "avg_size" not in r
+        assert "volume" not in r
+
+
 def test_trends_carry_the_full_series(client):
     d = get(client, "/api/trends")
     years = [r["year"] for r in d["husbandry"]]

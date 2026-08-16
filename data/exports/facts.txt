@@ -1,9 +1,37 @@
 # (o>  counting chicken wings -- chicken facts
-# generated: 2026-07-29
+# generated: 2026-08-16
 # surprise is 1-5; higher means more counterintuitive
 # ---------------------------------------------------
 
 [1]
+  slug: beef-the-only-pool-anyone-has-ever-counted
+  headline: One mixing pool in this corpus was measured, and it took DNA to do it
+  body:
+    Every cascade here rests on an estimate of how many animals are in the
+    pool. Nobody in poultry, eggs, saffron or maple measures that, because
+    nobody has a reason to, so the audit prints `project-estimate-mixing`
+    against pool after pool and it has always been the softest joint in the
+    model. Ground beef is the one exception. Hu et al. profiled DNA markers in
+    six commercial grind batches and estimated animal abundance by
+    mark-recapture - the same technique used to count fish in a lake, pointed
+    at a hamburger. They found an average of 411 to 1,367 animals present per
+    batch. That is a pool size counted rather than asserted, measured in the
+    product itself, by the only method that can see through a grinder. It
+    matters well beyond beef. The commingling model claims that ordinary food
+    is a blend of a great many animals, and for five of six subjects that
+    claim rests on reasoning about how the trade works. Here it rests on
+    somebody reading the DNA and finding the animals were there.
+  surprise: 5
+  placement: both
+  source:
+    Estimating Animal Abundance in Ground Beef Batches Assayed with Molecular
+    Markers
+  publisher:
+    Hu X-S, Simila J, Platz SS, Moore SS, Plastow G, Meghen CN; PLoS ONE
+    7(3):e34191
+  url: https://pmc.ncbi.nlm.nih.gov/articles/PMC3316629/
+
+[2]
   slug: bird-flu-hit-the-layers-instead
   headline: Bird flu took 11 million layers out while broilers barely moved
   body:
@@ -20,7 +48,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[2]
+[3]
   slug: bird-flu-is-an-egg-story
   headline: Bird flu barely touches chicken wings
   body:
@@ -37,7 +65,7 @@
   publisher: Congressional Research Service (R48518)
   url: https://www.congress.gov/crs-product/R48518
 
-[3]
+[4]
   slug: boneless-takes-a-third-of-a-chicken
   headline: A dozen boneless wings takes about a third of a chicken
   body:
@@ -55,7 +83,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
 
-[4]
+[5]
   slug: boneless-wings-contain-no-wing
   headline: A boneless wing contains no wing meat
   body:
@@ -72,7 +100,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
 
-[5]
+[6]
   slug: breading-adds-carbs-not-density
   headline: Breading a wing lowers its calories per gram
   body:
@@ -88,7 +116,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/170360/nutrients
 
-[6]
+[7]
   slug: bruising-happens-at-the-end
   headline: 90% of bruising happens in the last 12 to 24 hours
   body:
@@ -104,7 +132,7 @@
   publisher: Animals (PMC)
   url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6719098/
 
-[7]
+[8]
   slug: chilling-changes-weight-not-count
   headline: How a plant chills its birds swings wing weight by 10%
   body:
@@ -122,7 +150,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S105661711931205X
 
-[8]
+[9]
   slug: dozen-eggs-could-be-one-hen
   headline: A dozen eggs might have come from a single chicken
   body:
@@ -138,7 +166,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[9]
+[10]
   slug: eggs-invert-the-wing-story
   headline: With eggs, the floor rises to meet the ceiling
   body:
@@ -152,7 +180,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[10]
+[11]
   slug: farmer-gets-twelve-cents
   headline: The farmer got about twelve cents for your dozen wings
   body:
@@ -170,7 +198,7 @@
     
     http://www.ers.usda.gov/data-products/charts-of-note/chart-detail?chartId=104642
 
-[11]
+[12]
   slug: grading-splits-wings
   headline: Size grading deliberately separates a bird's two wings
   body:
@@ -184,7 +212,49 @@
   source: Mixing pool sizes reasoned from process equipment scale
   publisher: counting-chicken-wings
 
-[12]
+[13]
+  slug: israel-2023-newcastle-dip
+  headline: A disease outbreak and a war are visible in Israel's own statistics
+  body:
+    Israel's Central Bureau of Statistics reports broiler output of 553,068
+    tonnes for 2023 - below its 2020 figure of 578,164 tonnes, and 8% below
+    the 600,072 tonnes of 2024. Output going backwards for a year is unusual
+    in a growing industry, and the reason is documented: some 16 million head
+    of poultry were lost in Newcastle disease outbreaks in the fourth quarter
+    of 2023, poultry houses in the north and south were shut for the war, and
+    foreign workers left, leaving slaughterhouses short-staffed enough to move
+    to a six-day week. The standing flock tells the same story: 34,121
+    thousand birds at the end of 2023 against 38,239 thousand at the end of
+    2020. This is what a corpus is for. The dip was already in the government
+    data we loaded; the explanation came from a trade publication, and neither
+    would have meant much alone.
+  surprise: 5
+  placement: both
+  source: Israel poultry industry hit by war and labour shortage
+  publisher: Poultry World (Misset)
+  url:
+    
+    https://www.poultryworld.net/the-industrymarkets/market-trends-analysis-the-industrymarkets-2/israel-poultry-industry-hit-by-war-and-labour-shortage/
+
+[14]
+  slug: israel-wings-on-the-mangal
+  headline: Israel has a national holiday whose menu includes chicken wings
+  body:
+    On Yom Ha'atzmaut, Israel's Independence Day, the mangal - the barbecue -
+    is treated as about as essential to the day as the president's speech. And
+    what goes on it is not large joints of meat but small cuts: pargiyot,
+    deboned chicken thighs cubed and skewered, and chicken wings, eaten with a
+    great many salads. Falafel, shawarma and schnitzel - the dishes outsiders
+    name first when they think of Israeli food - barely feature. So the one
+    product this whole project is built around is part of a national holiday
+    in the country with the highest chicken consumption per person on earth.
+  surprise: 5
+  placement: both
+  source: Going up in smoke, Sabra style
+  publisher: The Jewish Chronicle
+  url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
+
+[15]
   slug: low-egg-states-are-broiler-states
   headline: Alabama's hens lay 100 fewer eggs a year than Montana's
   body:
@@ -200,7 +270,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[13]
+[16]
   slug: menu-wing-ambiguity
   headline: A restaurant "dozen wings" usually is not twelve wings
   body:
@@ -217,7 +287,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[14]
+[17]
   slug: nearly-every-breast-is-striped
   headline: 96% of chicken breasts now show white striping
   body:
@@ -236,7 +306,7 @@
   publisher: PLOS ONE
   url: https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0267019
 
-[15]
+[18]
   slug: ohio-vs-north-carolina
   headline: An Ohio chicken weighs half what a North Carolina chicken does
   body:
@@ -251,7 +321,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[16]
+[19]
   slug: same-day-dozen-is-twelve-hens
   headline: A dozen eggs gathered in one day came from twelve different hens
   body:
@@ -266,7 +336,49 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[17]
+[20]
+  slug: season-states-agree-none-is-seasonal
+  headline: No state's bird weight is seasonal, and the states agree on the season
+  body:
+    Broiler live weight moves 2.7% across the year nationally, from 6.55 lb in
+    March to 6.73 lb in September. Judged on its own that swing is
+    indistinguishable from twelve noisy numbers - and so is every single
+    state's, all 22 of them. Then look across the states instead of at any one
+    of them. Thirteen of the 22 peak in August, September or October, where
+    about five would be expected if the peak month were random, and twelve
+    trough in February to April. Agreement between series that were surveyed
+    separately is a different kind of evidence from the size of any one
+    series' range, and it is much harder to explain away. The season is real,
+    it is small, and no single state is evidence for it.
+  surprise: 5
+  placement: both
+  source: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+
+[21]
+  slug: silk-pupa-killed-for-an-unbroken-thread
+  headline: The count is exact because the animal's whole life's work is taken at once
+  body:
+    A silkworm spins one cocoon, from one continuous filament three hundred to
+    nine hundred metres long, and then it is killed inside it - baked, steamed
+    or boiled before the moth can emerge. That is not cruelty for its own sake
+    and it is not a detail. A moth that emerges dissolves a hole through the
+    wall and cuts the single thread into short useless lengths, so the cocoon
+    has to be taken whole or not at all. The economics and the arithmetic
+    point the same way: one animal, one cocoon, one unbroken thread, all of it
+    or none. It is why "about 150 silkworms per necktie" is a headcount rather
+    than an average. Everywhere else in this project a number of animals is
+    inferred from a mass or a yield that varies. Here each worm contributes
+    its entire lifetime output exactly once, and the reason the figure is
+    exact is the same reason the pupa does not survive.
+  surprise: 5
+  placement: both
+  source: Silkworm
+  publisher: New World Encyclopedia
+  url: https://www.newworldencyclopedia.org/entry/Silkworm
+
+[22]
   slug: wing-tips-are-an-export-business
   headline: Wing tips and chicken paws are a $648 million export market
   body:
@@ -283,7 +395,27 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[18]
+[23]
+  slug: a5-two-grades-not-one
+  headline: The A and the 5 in "A5 wagyu" grade two different things
+  body:
+    Japan's Meat Grading Association assigns every carcass a yield grade - a
+    letter, A to C, for how much meat the carcass gives up - and a separate
+    meat quality grade, a number from 1 to 5. "A5" is the pairing of the best
+    of each, not a single scale. The famous marbling score (BMS, 1 to 12) sits
+    inside the quality number as one of four inputs alongside meat color,
+    firmness and texture, and fat quality - and the quality grade takes the
+    lowest of the four. A carcass with perfect marbling and slightly dull fat
+    is not a 5.
+  surprise: 4
+  placement: both
+  source:
+    The Japanese Wagyu beef industry: current situation and future prospects
+    -- A review
+  publisher: Asian-Australasian Journal of Animal Sciences 31(7)
+  url: https://www.animbiosci.org/journal/view.php?doi=10.5713/ajas.18.0333
+
+[24]
   slug: avian-flu-scale
   headline: Bird flu has cost 168 million birds since 2022
   body:
@@ -303,7 +435,35 @@
     
     https://www.aphis.usda.gov/livestock-poultry-disease/avian/avian-influenza/hpai-detections/commercial-backyard-flocks
 
-[19]
+[25]
+  slug: beef-the-answer-is-one-and-that-is-the-honest-answer
+  headline: The batch held a thousand cattle; the model still says your patty holds one
+  body:
+    Ask this project how many cattle are in a hamburger and it says about one,
+    which reads like the model failing at the exact moment it should be most
+    impressive. It is not. It is the model refusing to make something up. The
+    two numbers answer different questions. The batch your patty came out of
+    held somewhere between 411 and 1,367 animals - that is the pool, and it is
+    counted. Your patty is one share of a homogenate drawn from that pool, so
+    the draw model has exactly one draw to work with, and one draw can be
+    accounted for by one animal. To get a bigger number the model would need a
+    figure for how many distinct parcels of trim survive into a single quarter
+    pound. Nobody has measured that. Grinding is the most total mixer in the
+    corpus precisely because it destroys the individual, which is the same
+    reason the question is so hard to answer from the other end. Wings work
+    differently: six chickens is anatomy, and no supply chain can argue with
+    it. A patty has no anatomical floor at all - its floor of one is only the
+    observation that one animal is physically sufficient, reachable only on
+    the home-ground route where nothing commingles. Inventing a
+    parcels-per-patty figure would produce a far better headline and would be
+    the single most dishonest number in the corpus.
+  surprise: 4
+  placement: learning
+  source: Escherichia coli O157:H7 in Ground Beef - Review of a Draft Risk Assessment
+  publisher: National Research Council / Institute of Medicine, National Academies Press
+  url: https://www.ncbi.nlm.nih.gov/books/NBK221105/
+
+[26]
   slug: boneless-portion-is-not-anatomy
   headline: How many boneless wings a chicken makes is a business decision
   body:
@@ -321,7 +481,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700055446
 
-[20]
+[27]
   slug: cage-free-does-not-change-the-count
   headline: Cage-free changes the hen's life, not the arithmetic
   body:
@@ -338,7 +498,7 @@
     
     https://www.nass.usda.gov/Surveys/Guide_to_NASS_Surveys/Chickens_and_Eggs/index.php
 
-[21]
+[28]
   slug: chicken-footprint-falling
   headline: Chicken's footprint per bird has fallen every year
   body:
@@ -355,7 +515,7 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[22]
+[29]
   slug: chunks-are-breast-too
   headline: The "chunks" are not wing either
   body:
@@ -373,7 +533,7 @@
     
     https://www.tysonfoodservice.com/products/tyson/chicken/boneless-wings--chunks/00023700035608
 
-[23]
+[30]
   slug: condemnation-is-tiny
   headline: FSIS condemns less than half a percent
   body:
@@ -386,7 +546,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[24]
+[31]
   slug: cracked-eggs-become-liquid-egg
   headline: A cracked egg is not thrown away, it is rerouted
   body:
@@ -402,7 +562,7 @@
   publisher: USDA Agricultural Marketing Service
   url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
 
-[25]
+[32]
   slug: egg-cholesterol-is-the-outlier
   headline: An egg carries more cholesterol than anything else here
   body:
@@ -418,7 +578,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[26]
+[33]
   slug: egg-grading-is-not-separating
   headline: Grading splits a chicken's wings apart, but cannot split her eggs
   body:
@@ -438,7 +598,7 @@
   publisher: USDA Agricultural Marketing Service
   url: https://www.ams.usda.gov/grades-standards/shell-egg-grades-and-standards
 
-[27]
+[34]
   slug: feed-behind-a-dozen-wings
   headline: A dozen wings represents about five pounds of feed
   body:
@@ -455,7 +615,7 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[28]
+[35]
   slug: flat-beats-drumette
   headline: The flat has a better meat yield than the drumette
   body:
@@ -470,7 +630,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[29]
+[36]
   slug: footprint-must-be-allocated
   headline: A dozen wings is not six chickens' worth of carbon
   body:
@@ -487,7 +647,81 @@
     
     https://www.nationalchickencouncil.org/wp-content/uploads/2021/09/Broiler-Production-System-LCA_2020-Update.pdf
 
-[30]
+[37]
+  slug: israel-farmer-vs-retail-price
+  headline: An Israeli chicken triples in price between the farm and the shelf
+  body:
+    A named industry figure - the secretary of Israel's Poultry Breeders
+    Association - puts the price paid to the farmer at about NIS 6.5 a kilo
+    against roughly NIS 20 a kilo at the retail chains, on a production cost
+    of about NIS 6 over a 40-day grow-out. That is a farmer's margin of
+    roughly half a shekel and a chain's margin of about eight. Graded
+    'industry', not 'measured': it is a working figure from inside the trade
+    rather than something a statistical agency enumerated. It is here because
+    it answers the question people actually ask after "how many chickens" -
+    which is "so where does the money go".
+  surprise: 4
+  placement: learning
+  source: Poultry producers warn first-ever imports of chickens will destroy local farms
+  publisher: The Times of Israel
+  url:
+    
+    https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
+
+[38]
+  slug: israel-head-count-is-not-measured
+  headline: Israel counts its chickens in tonnes, and the industry fills in the birds
+  body:
+    Israel's Central Bureau of Statistics publishes one of the longest poultry
+    series anywhere - flock and output figures reaching back to 1960 - with
+    broiler output in tonnes, a standing flock at year-end, and a district
+    breakdown. A heads-slaughtered count is simply not one of its published
+    measures, a definitional choice many national statistical systems make;
+    the US, where the Department of Agriculture enumerates broilers
+    slaughtered (9,579,797,000 for 2025), is the exception rather than the
+    rule. The bird count comes instead from Israel's industry bodies, which
+    publish detailed public sector tables of their own: about 260 million
+    birds a year, from a named official via the trade press. It survives two
+    independent checks. Divide the 600,072 tonnes CBS did measure by that 260
+    million and you get about 2.3 kg a bird, which is what a 40-day broiler
+    weighs. And a second industry body - the growers' organisation, four years
+    earlier - reports 244 million chicks placed in 2021, about 6% below, which
+    is roughly what four years of growth looks like. Three sources that did
+    not copy each other, agreeing. This corpus still declines to derive an
+    official-looking count nobody published - that restraint is the project's
+    own discipline, not a shortfall in the sources - so both readings stay
+    available: ask for measured figures only and Israel answers scale in the
+    measures CBS actually publishes; include industry figures and it answers
+    the count question too.
+  surprise: 4
+  placement: both
+  source: Poultry producers warn first-ever imports of chickens will destroy local farms
+  publisher: The Times of Israel
+  url:
+    
+    https://www.timesofisrael.com/poultry-producers-warn-first-ever-imports-of-chickens-will-destroy-local-farms/
+
+[39]
+  slug: israel-kosher-inspection-no-us-analogue
+  headline: Kosher slaughter adds an inspection step the US model has no room for
+  body:
+    After a bird is slaughtered under shechita, bedikah inspects the lungs,
+    intestines and tendon junctions, and any bird with a blemish is pulled off
+    the line for a rabbi to rule on. There is no FSIS equivalent: a US plant's
+    post-mortem check is looking for different things and rejects on different
+    grounds. That is a loss stage with no American counterpart, and it should
+    push the birds-required number up in a country where essentially all
+    commercial slaughter is kosher. It is not in the model, and it is not in
+    the model for an honest reason: no rejection rate is published anywhere we
+    can reach. Describing the step costs nothing; putting a number on it would
+    mean inventing one.
+  surprise: 4
+  placement: learning
+  source: Shechita: All About Kosher Ritual Slaughter
+  publisher: Orthodox Union (OU Kosher)
+  url: https://oukosher.org/blog/consumer-kosher/shechita/
+
+[40]
   slug: line-speed-and-broken-wings
   headline: Some plants run 175 birds a minute, others 140
   body:
@@ -508,7 +742,7 @@
     
     https://www.fsis.usda.gov/policy/federal-register-rulemaking/federal-register-rules/maximum-line-speed-rates-young-chicken
 
-[31]
+[41]
   slug: mortality-rising
   headline: Broiler mortality has been getting worse since 2013
   body:
@@ -523,7 +757,72 @@
     
     https://www.nationalchickencouncil.org/about-the-industry/statistics/u-s-broiler-performance/
 
-[32]
+[42]
+  slug: season-february-is-not-heavier
+  headline: The Super Bowl does not show up in the birds
+  body:
+    Wing demand spikes in the first week of February, so it would be
+    reasonable to expect February birds to be bigger. They are not: February
+    is the third-lightest month in the national series, and the peak is five
+    months earlier in September. That is not a mystery, it is a lead time. A
+    bird slaughtered in early February was placed as a chick before Christmas,
+    and a grower cannot decide in January to have grown a heavier bird.
+    Whatever absorbs the spike - frozen inventory, imports, or grade mix - is
+    not bird size, and none of those three series is in this corpus, so this
+    project can show you that the weight does not move and cannot yet tell you
+    what does.
+  surprise: 4
+  placement: both
+  source: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+
+[43]
+  slug: season-texas-one-bad-june
+  headline: One odd month looks exactly like a season if you only measure the range
+  body:
+    Texas's monthly weights swing 7.3%, and the swing is 5.4 times the typical
+    month-to-month movement - which on that test alone reads as seasonal. It
+    is one June. Smooth the series across neighbouring months and less than
+    half the swing survives, where a real annual cycle keeps about 90% of it
+    and a single odd month keeps about a third. This is the shape of a whole
+    category of wrong answer. A range is trivial to compute and says nothing
+    about whether the year has a shape, so Kentucky's 12.3% swing - the
+    largest of any serious broiler state - is one August and nothing else,
+    while Alabama's 3.6% is spread across the year and means more.
+  surprise: 4
+  placement: learning
+  source: Poultry Slaughter 2025 Summary
+  publisher: USDA National Agricultural Statistics Service
+  url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
+
+[44]
+  slug: silk-nobody-writes-down-one-cocoon-per-worm
+  headline: The hardest silk figure to source is the most obvious one
+  body:
+    One silkworm spins one cocoon. Every per-garment figure in this corpus is
+    a cocoon count, and a cocoon count only becomes an animal count because
+    that holds - so it is the load-bearing number of the whole subject. It is
+    also the one number that could not be extracted automatically. Two runs of
+    two different models declined to answer it, and they were right to:
+    sericulture writers never state it numerically. They write "the larvae
+    enclose themselves in a cocoon", which contains no number at all, so an
+    honest answer of 1 has nothing to verify against. A sweep of thirty-five
+    sources - the FAO, Britannica, Wikipedia, zoos, university extension PDFs
+    - turned up exactly one fetchable sentence stating the relation, and it
+    states it sideways. Things everybody knows are not written down. That is a
+    general hazard for any project that builds a corpus by reading documents,
+    and it is worth knowing that the gap tends to sit under the foundations
+    rather than out at the edges.
+  surprise: 4
+  placement: learning
+  source:
+    Multi-silkworm cocoon: structure, properties and the collective spinning
+    behaviour behind it (Int J Biol Macromol, PMID 38061509)
+  publisher: PubMed / Elsevier
+  url: https://pubmed.ncbi.nlm.nih.gov/38061509/
+
+[45]
   slug: twelve-eggs-needs-fifteen-hens
   headline: Getting a dozen eggs in one day actually takes about fifteen hens
   body:
@@ -537,7 +836,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[33]
+[46]
   slug: wing-tips-are-a-third-segment
   headline: Every wing has a third segment you never see
   body:
@@ -553,7 +852,7 @@
   publisher: Poultry Science
   url: https://www.sciencedirect.com/science/article/pii/S0032579119322989
 
-[34]
+[47]
   slug: wing-tips-domestic-fate
   headline: At home, wing tips become stock, pet food, or fertilizer
   body:
@@ -570,7 +869,7 @@
     
     https://www.usapeec.org/newsroom/media/pressrelease/chineseappetiteforchickenpaws/
 
-[35]
+[48]
   slug: wings-is-a-regulated-word
   headline: "Wings" is a regulated word, and boneless wings comply with it
   body:
@@ -588,7 +887,7 @@
     
     https://www.usda.gov/sites/default/files/guidance-documents/FSIS-GD-2005-0003-Food-Standards-and-Labeling-Policy-Book.pdf
 
-[36]
+[49]
   slug: wings-most-damaged-part
   headline: Wings are the most damaged part of the chicken, by far
   body:
@@ -604,7 +903,7 @@
   publisher: Canadian Journal of Animal Science
   url: https://cdnsciencepub.com/doi/10.1139/cjas-2019-0204
 
-[37]
+[50]
   slug: an-egg-is-leaner-than-a-wing
   headline: An egg carries wing-like protein with a third less fat
   body:
@@ -618,7 +917,27 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/171287/nutrients
 
-[38]
+[51]
+  slug: bms-eight-earns-the-five
+  headline: It takes a marbling score of 8 out of 12 to earn the 5 in A5
+  body:
+    The 12-point Beef Marbling Standard is bucketed into the 5-point quality
+    grade: BMS 8 through 12 all earn a quality score of 5, and BMS 5 through 7
+    earn a 4. So "A5" spans a wide range of actual marbling - the floor of the
+    top grade sits at 8, and everything above it collapses into the same
+    letter-number pair. An American wagyu breeder's guide also puts the entry
+    point for BMS 3 at a minimum of 21% intramuscular fat - and notes Japan
+    measures at a different rib site (6th/7th) than the US (12th/13th), so the
+    two systems' numbers are not directly comparable.
+  surprise: 3
+  placement: learning
+  source: Carcass Grading (breeding guide technical resources)
+  publisher: Lone Mountain Cattle Company
+  url:
+    
+    https://www.lonemountaincattle.com/breeding-guide/technical-resources/carcass-grading/
+
+[52]
   slug: cook-loss-irrelevant
   headline: Cooking changes the weight, never the count
   body:
@@ -630,7 +949,7 @@
   source: Placeholder pending research
   publisher: counting-chicken-wings
 
-[39]
+[53]
   slug: dressing-yield
   headline: About three quarters of a live chicken becomes sellable meat
   body:
@@ -642,7 +961,7 @@
   source: National dressing yield derived from NASS totals
   publisher: counting-chicken-wings
 
-[40]
+[54]
   slug: egg-data-agrees-with-itself
   headline: The egg numbers check out against themselves, twice
   body:
@@ -658,7 +977,24 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://esmis.nal.usda.gov/sites/default/release-files/795778/ckegan26.pdf
 
-[41]
+[55]
+  slug: israel-pargiyot-baby-chickens
+  headline: 'Pargiyot' means baby chickens, and it no longer does
+  body:
+    Pargiyot is the Israeli grill staple, and the name is a fossil. It means
+    "baby chickens" in Hebrew, after the young birds that were once the cut of
+    choice. Today the same word is used for cubed and marinated chicken thigh
+    or breast from an ordinary broiler. Worth noticing because this project
+    counts birds, not menu items. A name that used to describe a whole small
+    bird now describes a portion of a large one - the same drift that makes "a
+    dozen wings" ambiguous between twelve whole wings and twelve fried pieces.
+  surprise: 3
+  placement: learning
+  source: Going up in smoke, Sabra style
+  publisher: The Jewish Chronicle
+  url: https://www.thejc.com/life/food/going-up-in-smoke-sabra-style-q4sg2433
+
+[56]
   slug: kitchen-waste-corroborated
   headline: Restaurant kitchens waste 4-13% of what they buy
   body:
@@ -677,7 +1013,7 @@
     
     https://www.epa.gov/sites/default/files/2019-12/documents/winnow_presentation_12_19_19.pdf
 
-[42]
+[57]
   slug: nineteen-billion-wings
   headline: The US produced 19.16 billion whole wings in 2025
   body:
@@ -689,7 +1025,7 @@
   publisher: USDA National Agricultural Statistics Service
   url: https://www.nass.usda.gov/Publications/Todays_Reports/reports/pslaan26.pdf
 
-[43]
+[58]
   slug: top-four-concentration
   headline: Four companies produce well over half the chicken in America
   body:
@@ -705,7 +1041,7 @@
     
     https://www.wattagnet.com/broilers-turkeys/processing-slaughter/article/15516740/top-10-us-chicken-producers-grow-in-new-directions-wattagnet
 
-[44]
+[59]
   slug: transit-loss-is-unmeasured
   headline: Nobody publishes how many wings are lost in transit
   body:
@@ -725,7 +1061,7 @@
   publisher: Environmental Research Letters (IOP)
   url: https://iopscience.iop.org/article/10.1088/1748-9326/ad4c7b
 
-[45]
+[60]
   slug: wings-are-mostly-fat-calories
   headline: About 60% of a wing's calories come from fat
   body:
@@ -739,7 +1075,7 @@
   publisher: USDA FoodData Central
   url: https://fdc.nal.usda.gov/food-details/172390/nutrients
 
-[46]
+[61]
   slug: two-wings-hard-floor
   headline: A chicken has exactly two wings
   body:
