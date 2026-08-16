@@ -535,7 +535,18 @@ CREATE TABLE output_stat_year (
                         'chicks_placed',
                         -- Operations, not animals. Counted here because it is
                         -- how two industry bodies corroborate each other.
-                        'grower_count'
+                        'grower_count',
+                        -- Production-to-supply ratio, a percentage. Added
+                        -- for the UK, whose DEFRA-published annual figure
+                        -- answers the "self-sufficiency / import share"
+                        -- question ISRAEL-PLAN.md flagged as open (Israel is
+                        -- an unusual net-surplus producer; the UK is the
+                        -- more typical net-importer case). Stored as its own
+                        -- measure rather than derived, because DEFRA
+                        -- publishes it directly -- deriving one from
+                        -- production and consumption we do not otherwise
+                        -- hold would be inventing a step nobody asked for.
+                        'self_sufficiency_ratio'
                     )),
     value           REAL,
     unit            TEXT    NOT NULL,          -- 'tonnes','ILS_million','thousand_head'

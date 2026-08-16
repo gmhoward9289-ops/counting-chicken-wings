@@ -38,3 +38,21 @@ countries:
       conversion at load. Second, the headline claim that Israel leads the
       world in per-capita chicken consumption is contested - one dataset puts
       Kuwait ahead for 2023 - and must be resolved rather than asserted.
+
+  # Third country. See docs/UK-PLAN.md and
+  # docs/research/library/poultry-uk.yaml. Unlike Israel, DEFRA publishes a
+  # genuine government head-slaughtered series, so the UK does not carry the
+  # same "no count answer" caveat Israel does.
+  - iso3: GBR
+    name: United Kingdom
+    native_mass_unit: kg
+    native_currency: GBP
+    notes: >-
+      Population left NULL deliberately, matching USA and ISR. ONS publishes
+      an uncontested UK population estimate, but no per-capita CONSUMPTION
+      figure was sourced (DEFRA and FAOSTAT give production and slaughter,
+      not consumption), and loading population here without also touching
+      the country-wide `population IS NULL` invariant the Israel tests
+      assert would let a per-capita claim render before it has been
+      considered project-wide. Revisit together with a real consumption
+      figure, not on its own.

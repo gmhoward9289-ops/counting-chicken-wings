@@ -148,11 +148,17 @@ def test_population_is_null_so_no_per_capita_claim_can_be_made(conn):
     chicken consumer" now 404s and the WATTAgNet ranking 403s, so population
     stays NULL for both countries rather than being filled with a plausible
     number that would make the claim renderable.
+
+    UPDATED when the UK landed as a third country (docs/UK-PLAN.md). GBR's
+    population is also NULL, for a different reason than Israel's -- ONS
+    publishes an uncontested UK population figure, but no per-capita
+    CONSUMPTION figure was sourced for the UK, so population stays out until
+    a consumption figure exists to divide it into.
     """
     rows = conn.execute(
         "SELECT iso3, population FROM country ORDER BY iso3"
     ).fetchall()
-    assert {r["iso3"] for r in rows} == {"ISR", "USA"}
+    assert {r["iso3"] for r in rows} == {"GBR", "ISR", "USA"}
     assert all(r["population"] is None for r in rows)
 
 
