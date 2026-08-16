@@ -2,7 +2,7 @@
 
 ## v2.2.0 — 2026-08-16
 
-### Added
+### Mexico joins the corpus as its second country
 
 Mexico joins Israel as the corpus's second country. Broiler meat output is
 loaded for 2019 (`measured`, via a peer-reviewed citation of a dated SIAP
