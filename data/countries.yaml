@@ -106,3 +106,27 @@ countries:
       Canada) but is loaded as a fact rather than as this column, because it
       is already published as a ratio and this project performs no other
       calculation that would need a Canadian population estimate.
+
+  # Fifth country, and the second (after Canada) where the primary
+  # statistical agency answers directly rather than needing a secondhand
+  # attache report to stand in. See docs/BRAZIL-PLAN.md and
+  # docs/research/library/poultry-brazil.yaml.
+  - iso3: BRA
+    name: Brazil
+    native_mass_unit: kg
+    native_currency: BRL
+    notes: >-
+      IBGE (Instituto Brasileiro de Geografia e Estatistica) publishes a
+      genuine REST API (SIDRA) that isolates chicken slaughter, by state,
+      at 'measured' grade -- head count and carcass weight from the same
+      government census-type quarterly survey. A second, real,
+      industry-grade national head count exists from ABPA (the poultry
+      trade body, citing MAPA's federal-inspection-only figure) and
+      disagrees with IBGE's by about 17%; only IBGE's is loaded into the
+      database, since the schema allows one head_slaughtered value per
+      country per year -- ABPA's competing figure is documented rather
+      than dropped. See docs/BRAZIL-PLAN.md, "Two national head counts".
+
+      population stays NULL, same discipline as every other non-US
+      country here: a per-capita figure exists (46.7 kg/person, 2025,
+      ABPA) but is loaded as a fact rather than as this column.

@@ -1050,3 +1050,79 @@ facts:
     source: usda-fas-gain-mx2024-0040
     placement: learning
     surprise: 3
+
+  # ---- Brazil ------------------------------------------------------------
+  # Fifth country. See docs/BRAZIL-PLAN.md. Unlike Mexico, Brazil's own
+  # statistical agency (IBGE) answers directly - the interesting finding
+  # here is not "can we reach the data" but "two real sources disagree,
+  # and only one fits in the schema".
+
+  - slug: brazil-two-national-headcounts-disagree
+    headline: Brazil has two real chicken headcounts for 2025, and they disagree by 17%
+    body: >-
+      IBGE, Brazil's statistics agency, counted 6.695 billion chickens
+      slaughtered in 2025 across federally-, state-, and municipally-
+      inspected plants combined. ABPA, the national poultry trade body,
+      reports 5.706 billion for the same year - but its own chart says
+      that figure is sourced to the Ministry of Agriculture and citing
+      FEDERAL inspection only, a narrower population than IBGE's.
+
+      This project loads IBGE's number: a direct government census-type
+      survey outranks a trade body's citation of a government figure one
+      step removed, the same rule that graded Mexico's USDA-sourced
+      figures below its peer-reviewed one. ABPA's figure is not discarded
+      - it is recorded in the source library and in docs/BRAZIL-PLAN.md,
+      because a number this project chooses not to load is still a number
+      worth explaining why.
+    source: ibge-sidra-1094-abate-frangos
+    placement: both
+    surprise: 4
+
+  - slug: brazil-south-exports-more-than-it-produces-share-of
+    headline: Southern Brazil ships a bigger share of exports than it does of production
+    body: >-
+      Paraná, Santa Catarina and Rio Grande do Sul together produce 57.9%
+      of Brazil's chicken meat but ship 77.3% of its chicken meat exports
+      - a gap ABPA states in its own words. Paraná alone accounts for
+      34.8% of national production and 40.76% of national exports.
+
+      The three southern states are not just where Brazil raises the most
+      chickens; they are disproportionately where Brazil's export-grade
+      plants sit, closer to the ports (Paranaguá, São Francisco do Sul,
+      Itajaí, Rio Grande) that ship 153 countries' worth of chicken meat
+      out of the country.
+    source: abpa-annual-report-2026
+    placement: both
+    surprise: 3
+
+  - slug: brazil-largest-exporter-not-largest-producer
+    headline: Brazil ships more chicken abroad than any country, without raising the most
+    body: >-
+      The United States and China both raise more chickens than Brazil
+      does (21.8 and 16.2 million tonnes of production in 2025, against
+      Brazil's 15.3 million, per ABPA's own World Chicken Meat Market
+      table) - but Brazil exports more chicken meat than any country on
+      Earth: 5.324 million tonnes to 153 countries in 2025, worth US$9.8
+      billion, a bit over a third of everything Brazil produces.
+
+      Being the biggest exporter and being the biggest producer are two
+      different superlatives, and Brazil holds only the second-place one
+      on production while leading the world on the other.
+    source: abpa-annual-report-2026
+    placement: both
+    surprise: 3
+
+  - slug: brazil-breeder-stock-not-broiler-flock
+    headline: "63 million housed hens in Brazil are not broilers at all"
+    body: >-
+      ABPA reports 63.0 million breeding hens ("matrizes de corte")
+      housed in 2025 - but these are parent stock, the hens that lay the
+      fertile eggs broiler chicks hatch from, not meat birds themselves.
+      Brazil has no published national standing-flock count for the
+      broiler population that IBGE and ABPA both count at slaughter -
+      the same absence Canada's supply-managed system produces for a
+      different structural reason, and the same absence this project
+      declines to paper over with an estimate for either country.
+    source: abpa-annual-report-2026
+    placement: learning
+    surprise: 3
