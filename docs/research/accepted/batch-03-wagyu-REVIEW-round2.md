@@ -73,6 +73,43 @@ project's own rule that grading provenance is not visible in the text of a
 document and is not something an extraction pass — human-run or
 COOPER-run — should self-assign.
 
+## Adversarial re-check (Fable), 2026-08-16
+
+Before this PR was proposed for merge, a second model (Fable) was asked to
+independently verify every row against the actual documents on disk, checking
+each quote for character-for-character exactness — the project's own gate —
+rather than trusting the notes above.
+
+**Result: the numbers and bases all held up. Three quotes did not pass the
+verbatim gate as originally written, and have been corrected by hand:**
+
+- `carcass_yield_pct` / `japanese_wagyu` had silently repaired the source's
+  own OCR artifact ("cat tle" → "cattle") and swapped a trailing comma for a
+  period. Restored to the source's literal text, artifact included — the
+  same choice the ground-beef batch made for a different OCR quirk.
+- `saleable_meat_pct` / `usda_yield_grade_ctbrc`'s table-title fragment had
+  normalized "Table 1 ." (space before the period, as scraped) to "Table 1."
+  Restored the source's spacing.
+- `bms_scale_definition`'s two quoted fragments were joined in reverse
+  document order. Reordered to match the source, since an ellipsis implies
+  omitted text in sequence.
+
+None of these affected the underlying numbers or arithmetic — 756/476 kg,
+the 45.4–52.3% range, and the BMS/quality-grade split were all independently
+confirmed correct — but a corpus whose value proposition is verbatim
+citation cannot ship a quote that fails its own mechanical check, however
+harmless the discrepancy.
+
+Fable also surfaced one substantive gap the notes had only hedged at: the
+Lone Mountain Cattle quote used for `bms_scale_mapping` states that "the BMS
+grade is based on a number of different factors, including... color;
+firmness and texture" — but per Gotoh, BMS is a marbling-only score, and
+the four-factor lowest-of rule belongs to the separate meat quality grade,
+not to BMS itself. The source's own definition of BMS is wrong on this
+point. The finding's notes now name this conflation explicitly rather than
+leaving it to a general "check against Gotoh" hedge, and the row is kept
+for its 8-12→5 bucketing and 21% IMF anchor, not as a definition of BMS.
+
 ## Honest position on this round
 
 Round 1's finding was "source quality does not guarantee extraction yield."

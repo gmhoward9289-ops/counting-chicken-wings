@@ -28,8 +28,13 @@ findings:
   unit: '% of live weight remaining as carcass weight (derived: 476 / 756)'
   confidence: industry
   document: inbox/wagyu/https-www-animbiosci-org-journal-view-php-doi-10-7c1b73c6.txt
-  quote: The mean body and carcass weights of Japanese Black cattle at slaughter
-    were 756 kg and 476 kg, respectively, at 29.2 months of age.
+  # QUOTE CORRECTED BY HAND 2026-08-16, values untouched. Fable's adversarial
+  # review caught that the original quote silently repaired the document's
+  # own OCR artifact ("cat tle" -> "cattle") and swapped a trailing comma for
+  # a period -- both invisible edits that would fail the verbatim gate.
+  # Restored to the literal text of the fetched document, artifact and all.
+  quote: The mean body and carcass weights of Japanese Black cat tle at slaughter
+    were 756 kg and 476 kg, respectively, at 29.2 months of age,
   agreement: human-read, no second pass
   verified_by: null
   notes: >-
@@ -91,7 +96,13 @@ findings:
     only (USDA Yield Grades 5 through 1)'
   confidence: industry
   document: inbox/wagyu/https-www-beefresearch-org-resources-product-qua-3cda73ba.txt
-  quote: 'Table 1. Expected Yields of Closely Trimmed, Boneless Retail Cuts (%
+  # QUOTE CORRECTED BY HAND 2026-08-16, values untouched. Fable's review
+  # caught that the table title had been silently normalized ("Table 1 ."
+  # in the source, with a space before the period, became "Table 1." here).
+  # Restored the source's own spacing. The numeric cells are stitched from
+  # separate table rows in a scraped HTML table (each cell is verbatim, the
+  # ellipses mark real omitted rows), which is unavoidable for tabular data.
+  quote: 'Table 1 . Expected Yields of Closely Trimmed, Boneless Retail Cuts (%
     CTBRC) and Total Retail Cuts (% Total Yield) for Each USDA Yield Grade
     ... 1 >52.3 ≥80 ... 5 <45.4 <65'
   agreement: human-read, no second pass
@@ -114,9 +125,14 @@ findings:
   confidence: industry
   target_table: quality_defect
   document: inbox/wagyu/https-www-animbiosci-org-journal-view-php-doi-10-7c1b73c6.txt
-  quote: 'Graders determine the BMS score (from 1 to 12) by comparing the actual
-    carcass marbling with the marbling standard photograph... assigns both a
-    yield grade (A, B, or C) and a meat quality grade (1 to 5)'
+  # QUOTE REORDERED BY HAND 2026-08-16, text and values untouched. Fable's
+  # review caught that the two fragments were joined out of document order
+  # (the ellipsis implies omitted text in sequence, and this had the second
+  # fragment first). Reordered to match the source: "assigns both a yield
+  # grade..." appears before "Graders determine the BMS score...".
+  quote: 'assigns both a yield grade (A, B, or C) and a meat quality grade (1
+    to 5) ... Graders determine the BMS score (from 1 to 12) by comparing the
+    actual carcass marbling with the marbling standard photograph'
   agreement: human-read, no second pass
   verified_by: null
   notes: >-
@@ -151,6 +167,15 @@ findings:
     of 21% IMF" as an anchor point, and separately that Japanese carcasses
     are ribbed between the 6th/7th rib versus the US 12th/13th rib -- a
     basis difference worth carrying into any US/Japan comparison note.
+    Fable's review flagged a specific conflation in this quote worth naming
+    rather than leaving to the "check against Gotoh" hedge above: this
+    source's own middle sentence attributes color, firmness and texture to
+    the BMS grade itself ("the BMS grade is based on a number of different
+    factors, including the amount of marbling; color; firmness and texture"),
+    but per Gotoh, BMS is a marbling-only score (1-12) and the four-factor
+    lowest-of rule belongs to the separate meat quality grade (1-5), not to
+    BMS. Use this source for the 8-12->5 / 5-7->4 bucketing and the 21% IMF
+    anchor; do not use it as the definition of what BMS measures.
 - field: marbling_vs_yield_tradeoff
   value_lo: null
   value_mode: null
