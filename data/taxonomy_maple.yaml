@@ -88,6 +88,7 @@ products:
     species: sugar_maple
     label: Gallon of maple syrup
     label_plural: Gallons of maple syrup
+    display_name: "Maple: Gallon of syrup"
     yield_mode: recurring
     # GALLONS OF SYRUP PER TREE PER SEASON, boil included. See the trap note
     # at the top of this file before adding any concentration factor to this.

@@ -44,6 +44,7 @@ products:
     species: layer_hen
     label: Egg
     label_plural: Eggs
+    display_name: "Chicken: Egg"
     yield_mode: recurring
     # Eggs per hen per YEAR. yield_period_days below is what makes this
     # number mean anything.

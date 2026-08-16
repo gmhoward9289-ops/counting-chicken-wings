@@ -95,6 +95,7 @@ products:
     species: beef_cattle
     label: Quarter-pound ground beef patty
     label_plural: Quarter-pound ground beef patties
+    display_name: "Beef: Ground beef 1/4-lb patty"
     yield_mode: continuous
     # PATTIES PER ANIMAL, from lean trim -- the stream that actually becomes
     # ground beef, not total packaged beef.

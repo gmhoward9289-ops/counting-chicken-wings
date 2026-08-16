@@ -41,6 +41,23 @@ def test_list_products_puts_active_species_first(conn):
     assert actives == sorted(actives, reverse=True)
 
 
+def test_active_products_carry_a_prefixed_display_name(conn):
+    """Every picker entry leads with its source: 'Chicken: Bone-in wing'.
+
+    The pickers mix species, so an unprefixed option ('Egg') gives no hint
+    of what is being counted. `label` stays bare because prose composes it
+    mid-sentence; `display_name` is the picker-only form, and the 'Source: '
+    shape is the convention this test keeps new products honest about.
+    """
+    for r in dbm.list_products(conn):
+        if not r["active"]:
+            continue
+        assert r["display_name"], f"{r['slug']} has no display_name"
+        assert ": " in r["display_name"], (
+            f"{r['slug']} display_name '{r['display_name']}' lacks the "
+            "'Source: product' prefix")
+
+
 # ---------------------------------------------------------------------------
 # Loss stage resolution
 # ---------------------------------------------------------------------------

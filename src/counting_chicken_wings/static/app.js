@@ -812,7 +812,7 @@ async function initMix() {
   const active = META.products.filter(p => p.active);
   $('#mix-product').innerHTML = active.map(p =>
     `<option value="${p.slug}"${p.slug === HEADLINE_PRODUCT ? ' selected' : ''
-      }>${p.label}</option>`).join('');
+      }>${p.display_name || p.label}</option>`).join('');
 
   const syncWindow = () => {
     const p = active.find(x => x.slug === $('#mix-product').value);
@@ -1866,7 +1866,8 @@ async function initImpact() {
   $('#i-product').innerHTML = META.products
     .filter(p => p.active)
     .map(p => `<option value="${p.slug}"${
-      p.slug === PRODUCT ? ' selected' : ''}>${p.label}</option>`)
+      p.slug === PRODUCT ? ' selected' : ''}>${
+      p.display_name || p.label}</option>`)
     .join('');
   // Assignment, not addEventListener: redrawTheme() re-runs initImpact on
   // every theme toggle, and addEventListener would leave the previous
@@ -2100,9 +2101,11 @@ READY = (async () => {
   }
 
   const active = META.products.filter(p => p.active);
+  // display_name, not label: the picker mixes species, so each option leads
+  // with its source ("Chicken: Bone-in wing"). Prose keeps the bare label.
   $('#product').innerHTML = active.map(p =>
     `<option value="${p.slug}"${p.slug === HEADLINE_PRODUCT ? ' selected' : ''
-      }>${p.label}</option>`).join('');
+      }>${p.display_name || p.label}</option>`).join('');
 
   // The window control only makes sense for a rate, so it follows the
   // selected product rather than sitting there permanently confusing anyone

@@ -127,6 +127,12 @@ CREATE TABLE product (
     label               TEXT    NOT NULL,          -- 'Whole wing'
     label_plural        TEXT    NOT NULL,
 
+    -- Picker name, 'Source: product' ('Chicken: Bone-in wing'). Only for
+    -- lists that mix species; prose keeps using label, which has to read
+    -- mid-sentence ("a boneless wing contains no wing meat"). NULL falls
+    -- back to label.
+    display_name        TEXT,
+
     yield_mode          TEXT    NOT NULL CHECK (yield_mode IN
                             ('countable','continuous','recurring')),
 

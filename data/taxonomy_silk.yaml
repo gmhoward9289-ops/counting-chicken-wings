@@ -128,6 +128,7 @@ products:
     species: silkworm
     label: Silkworm cocoon
     label_plural: Silkworm cocoons
+    display_name: "Silk: Cocoon"
     yield_mode: countable
     # ONE. The structural twin of two wings per chicken and three stigmas per
     # flower, and the reason this subject is in the corpus at all.
@@ -172,6 +173,7 @@ products:
     species: silkworm
     label: Silk necktie
     label_plural: Silk neckties
+    display_name: "Silk: Necktie"
     yield_mode: continuous
     # NECKTIES PER SILKWORM -- the reciprocal of 150 cocoons per tie, which is
     # how the source states it, and a cocoon count is a silkworm count because
@@ -215,6 +217,7 @@ products:
     species: silkworm
     label: Silk shirt
     label_plural: Silk shirts
+    display_name: "Silk: Shirt"
     yield_mode: continuous
     # SHIRTS PER SILKWORM: 1/1000. One number, no range given.
     units_per_individual_lo: 0.001
@@ -242,6 +245,7 @@ products:
     species: silkworm
     label: Silk dress
     label_plural: Silk dresses
+    display_name: "Silk: Dress"
     yield_mode: continuous
     # DRESSES PER SILKWORM. Note the inversion: the source's LOW cocoon count
     # (1700) is this column's HIGH yield, because these are reciprocals.
@@ -281,6 +285,7 @@ products:
     species: silkworm
     label: Pound of raw silk
     label_plural: Pounds of raw silk
+    display_name: "Silk: Pound, raw"
     yield_mode: continuous
     # POUNDS OF RAW SILK PER SILKWORM, reciprocal of 2,000-3,000 cocoons per
     # pound. Reciprocals again invert the bounds:
