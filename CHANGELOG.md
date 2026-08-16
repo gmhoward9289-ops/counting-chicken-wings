@@ -1,5 +1,36 @@
 # Changelog
 
+## v2.4.0 — 2026-08-16
+
+### Product pickers now lead with the source: "Chicken: Bone-in wing"
+
+Every product dropdown mixes species, so a bare "Egg" or "Gram of dried
+saffron" never said what was being counted. Each product now carries a
+`display_name` in the taxonomy — "Chicken: Boneless wing", "Beef: Ground
+beef 1/4-lb patty", "Silk: Dress", "Maple: Gallon of syrup" — and the
+calculator, mixing-simulator, and impact pickers all show it. The bare
+`label` is unchanged and still what prose composes mid-sentence ("a
+boneless wing contains no wing meat"), which is exactly why the picker
+name is a separate column rather than a rename. A test now requires every
+active product to declare the prefixed form.
+
+### Wagyu's own comparison figures were printing as 0%
+
+`/api/footprint`'s "Who got paid" table read only `value_mode`, so a stat
+carrying just `value_lo`/`value_hi` — the shape wagyu's own batch used for
+the US fed-cattle dressing percentage (60–64%) and USDA %CTBRC (45.4–52.3%)
+comparison figures — fell through `?? 0` and printed **0%**, asserting a
+number no source ever stated. It now prints the range. Wagyu's two figures
+that do carry a mode (30-month finishing period, 62.96% carcass yield) were
+unaffected and already rendered correctly.
+
+Wagyu itself has been reachable since v2.1.0 via
+`/api/footprint?product=ground_beef_patty` (it shares beef cattle's
+`livestock` domain) and the facts feed, but `docs/ROADMAP.md` still read
+"still drafted and still not run" — corrected to describe what actually
+shipped and what's still missing (no species/product row, so no calculator
+answer or BMS-marbling quality axis of its own).
+
 ## v2.3.0 — 2026-08-16
 
 ### Added Brazil
