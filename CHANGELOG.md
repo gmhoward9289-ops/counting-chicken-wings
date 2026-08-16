@@ -1,5 +1,158 @@
 # Changelog
 
+## v2.2.0 — 2026-08-16
+
+### Added
+
+Mexico joins Israel as the corpus's second country. Broiler meat output is
+loaded for 2019 (`measured`, via a peer-reviewed citation of a dated SIAP
+publication) and 2023-2024 (`industry`, via a USDA FAS GAIN report that
+quotes SIAP secondhand — Mexico's own statistics portal was unreachable
+from this research pass, DNS failure on one host and a refused connection
+on the other). Five new facts cover the carne-de-ave/carne-de-pollo
+taxonomy split, Mexico's cross-validated ~79% chicken-meat self-sufficiency,
+its consistent state leader (Veracruz), a weekly throughput figure held in
+its own units rather than annualized into an invented head count, and TIF
+federal slaughter inspection coverage.
+
+No head count, standing flock, output value, or state-level breakdown
+shipped: none was sourced to a grade this project is willing to publish.
+Two headline claims found in research — a "world's Nth largest producer"
+rank contested three ways, and a per-capita consumption figure contested
+five ways across a ~70% spread — are documented and deliberately not
+published, mirroring the discipline the Israel data already established.
+`country.population` stays `NULL` for Mexico for the same reason it does
+for Israel. See `docs/MEXICO-PLAN.md` and
+`docs/research/library/poultry-mexico.yaml` for the full research trail.
+
+### Canada joins the corpus, and answers the question at `measured` grade
+
+`GET /api/output/CAN` now answers the wing question for Canada, and answers
+it the way no country other than the US has yet managed: Statistics Canada's
+table 32-10-0118-01 publishes both head slaughtered — 806.0 million broilers
+for 2025 — and meat output (1,416,554 tonnes, eviscerated weight), by
+province, same year, same registered-plant survey, all at `measured` grade.
+Five-year series for head count, tonnage and farm value (CAD) are loaded,
+and the government-only view keeps Canada countable where it strips Israel's
+industry-grade head figure. The table also isolates "Chicken" from "Fowl"
+(spent laying hens), so the count is broilers, not a blended line.
+
+The provincial breakdown is the opposite finding from Israel's: six named
+provinces plus StatCan's Atlantic aggregate sum to *exactly* the national
+total, for head count and tonnage alike — a partition of one survey, not two
+surveys agreeing. The four Atlantic provinces are loaded individually as
+suppressed rows (StatCan's own machine-readable `securityLevelCode`), the
+same presence-without-volume pattern CBS and NASS use, and the aggregate
+sits at `region_level='district'` so a reader counting provinces gets ten.
+`output_stat_year.region_level` gained `'province'` for this, and the
+country loader's `districts` block now accepts a list of blocks each naming
+its own `measure` — Israel's single unlabelled block still defaults to
+`marketed`, unchanged.
+
+What did not ship, deliberately: no average *live* bird weight, because
+StatCan's tonnage is eviscerated (per AAFC, twice over) while Chicken
+Farmers of Canada's farm-size figures are live weight, and dividing across
+bases would understate live weight by roughly a dressing percentage — the
+derived 1.76 kg/bird view row is eviscerated-basis and labelled as such. No
+standing flock, because a quota-set supply-managed system publishes no such
+census — recorded as a structural absence, not a gap. `country.population`
+stays `NULL`: AAFC's own 35.64 kg per-capita disappearance figure ships as
+a dated fact instead, alongside facts on quota-set production and the
+two-weight-bases trap. Full research trail in `docs/CANADA-PLAN.md` and
+`docs/research/library/poultry-canada.yaml`, including FAOSTAT found
+unreachable for the second country running.
+
+### The mixing simulator now works for every product, not just wings
+
+`/api/mixing-curve` was pinned to `whole_wing` -- it took `draw` and
+`units_per_individual` directly rather than a product slug, so the web
+page's mixing simulator always showed a chicken-and-wings curve no matter
+what the calculator itself was asking about. The endpoint now takes
+`product` (and `count`, `window_days` for recurring products) the same way
+`/api/calculate` and `/api/scientific` already do, and computes the curve
+at the same granularity the headline answer uses for that product:
+individual-shares for a blended unit like a gram of saffron, mixing
+sub-units for a homogenate like a ground beef patty
+(`beef-patty-mixing-granularity`'s fix), and the unit's own scale for
+everything else. That re-expression used to be duplicated logic risk
+waiting to happen -- it now lives once, in `model.mixing_draw_scale`, and
+both `run()` and the curve endpoint call it.
+
+The mixing simulator page gained a product selector (and a window control
+for recurring products) so a reader can actually drag the pool for a dozen
+eggs, a ground beef patty, a gram of saffron, or a gallon of maple syrup,
+not only a dozen wings.
+
+`bump: second` because this is a new capability at the API surface -- a
+query parameter and a control the corpus diff cannot see -- not a change to
+any published figure.
+
+### The state map now shows all 50 states, not the 22 the annual survey is allowed to publish
+
+`regional_census_stat` — the Census of Agriculture table `build.py` has
+loaded since `census_states()` landed — was sitting unread. Nothing queried
+it: no view, no API field, no line on the map. The annual NASS survey that
+`/api/states` already served is capped at 22 states by disclosure rules, and
+California, a top-ten broiler state, is the clearest casualty: it appears in
+no year of that survey at all.
+
+`/api/states` now carries a `census` block alongside the existing survey
+response — every one of the 50 states the census enumerates, each flagged
+`presence_only` when the requested year's survey has nothing to say for it.
+The two never blend: Census of Agriculture sales counts are a different USDA
+programme from annual slaughter and live-weight figures, and the response
+keeps them in separate fields rather than folding one into the other's
+`avg_size` or `volume`.
+
+The map gained a second choropleth trace for the presence-only states, filled
+a single flat colour rather than placed on the size colourscale — there is no
+comparable weight figure for them, and putting one on the same scale would
+imply there were. Its tooltip cites the Census of Agriculture and shows
+operations, inventory and sales instead. The state table below the map picked
+up a matching section, and `wings export` now writes a `states_census` file
+alongside `states`.
+
+`bump: second` because this is a new database view and a new field on an
+existing endpoint — capability the corpus diff cannot see on its own.
+
+### The United Kingdom joins the corpus as a third country
+
+`GET /api/output/GBR` now answers the wing question for the UK, and answers
+it more directly than Israel's did on its own first pass: DEFRA's monthly
+poultry statistics publish a genuine head-slaughtered series — 1,131.6
+million broilers for 2024, government-enumerated, `measured` grade — where
+Israel's CBS publishes no head count at all and the project had to reach for
+a named industry official's press interview instead. Meat output (1,832,700
+tonnes carcase weight for 2024), chicks placed, and DEFRA's own 83%
+poultry-meat self-sufficiency ratio are loaded alongside it, all four DEFRA,
+all four `measured`. A fresh FAOSTAT bulk download — closed off three ways
+during the Israel research and open again now — corroborates DEFRA's head
+count and tonnage within 2%.
+
+What did not ship, deliberately: no subnational breakdown, because DEFRA
+itself stopped publishing any nation-level split in July 2025 "to protect
+commercial confidentiality across the nations," and even before that cutoff
+the only split was England & Wales versus the UK total, never a genuine
+four-nation one. No UK-wide average bird weight, because DEFRA's own
+liveweight survey covers England & Wales only and pairing it with the
+UK-wide head count would quietly narrow the geography. No population, and
+therefore no per-capita claim of any kind — ONS has an uncontested UK
+figure, but no per-capita consumption source was found, so the population
+column stays NULL for the UK exactly as it already does for Israel and the
+US, pending a consumption figure to divide it into.
+
+`output_stat_year.measure` gained `self_sufficiency_ratio` to hold DEFRA's
+production-to-supply ratio directly, the only schema change this needed —
+every other UK figure fits measures Israel's rows already exercise, which is
+the schema built ahead of Israel's data paying off for a second country.
+
+Full research trail in `docs/UK-PLAN.md` and
+`docs/research/library/poultry-uk.yaml`, mirroring the Israel plan's format
+including its dead ends: neither AHDB nor the British Poultry Council
+publishes an independent production series of their own, and USDA FAS has no
+standalone UK poultry GAIN report, the same finding the Israel research made
+for Israel.
+
 ## v2.1.0 — 2026-08-16
 
 ### Vanilla and wagyu research lands in the corpus
