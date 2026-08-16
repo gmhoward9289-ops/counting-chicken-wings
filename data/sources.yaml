@@ -1275,9 +1275,15 @@
     28,591 / 48,016; Atlantic (a StatCan-defined aggregate of Newfoundland
     and Labrador, Prince Edward Island, Nova Scotia and New Brunswick, each
     suppressed individually via securityLevelCode=1) 58,818 / 109,102. The
-    six named provinces plus Atlantic sum EXACTLY to the national total --
-    unlike Israel's district marketing figures, which fall 4.76% short of
-    national output for a documented reason. Sourced from reports of birds
+    six named provinces plus Atlantic sum EXACTLY to the national HEAD total
+    (806,000 to the last thousand) -- unlike Israel's district marketing
+    figures, which fall 4.76% short of national output for a documented
+    reason. The WEIGHT rows sum to 1,416,555 thousand kg against a published
+    national 1,416,554 -- one rounding unit apart, because StatCan rounds
+    each series row to the nearest thousand kg independently; confirmed
+    against the WDS API directly, so the discrepancy is StatCan's own
+    publication artifact and not a transcription error here. Sourced from
+    reports of birds
     slaughtered in registered processing plants, per StatCan's own survey
     methodology (record number 5039), so head_slaughtered here is a genuine
     government enumeration, not an industry estimate -- Israel has never had

@@ -94,12 +94,17 @@ national:
 # (marketed quantity, not output). The loader defaults to 'marketed' only
 # when a block does not say otherwise, so Israel's file needs no change.
 #
-# THE RECONCILIATION IS EXACT, unlike Israel's 4.76% gap: the six named
-# provinces plus the Atlantic aggregate sum to precisely the national total,
-# because every level of this table is a partition of the same "birds
-# slaughtered in registered plants" concept. A 'total' row is included
-# alongside the six provinces and the Atlantic aggregate specifically so
-# that fact is checkable without re-deriving it from the national block.
+# THE HEAD RECONCILIATION IS EXACT, unlike Israel's 4.76% gap: the six
+# named provinces plus the Atlantic aggregate sum to precisely the national
+# 806,000 thousand birds, because every level of this table is a partition
+# of the same "birds slaughtered in registered plants" concept. The WEIGHT
+# rows sum one thousand kg OVER the published national total (1,416,555 vs
+# 1,416,554) -- StatCan rounds each series row to the nearest thousand kg
+# independently, and the discrepancy is confirmed against the WDS API
+# itself, so it is loaded verbatim rather than "fixed". A 'total' row is
+# included alongside the six provinces and the Atlantic aggregate
+# specifically so both facts are checkable without re-deriving them from
+# the national block.
 #
 # Atlantic is a StatCan-defined aggregate of Newfoundland and Labrador,
 # Prince Edward Island, Nova Scotia and New Brunswick -- loaded at

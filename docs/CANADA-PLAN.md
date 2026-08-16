@@ -50,8 +50,14 @@ self-consumption). Canada's six individually-published provinces plus the
 Atlantic aggregate (a StatCan-defined grouping of Newfoundland and Labrador,
 Prince Edward Island, Nova Scotia and New Brunswick, each of which is
 individually suppressed for confidentiality) sum to **exactly** the national
-total: 806,000 thousand birds, to the last thousand. Both output tonnage
-and output value reconcile the same way. This is worth stating plainly
+total: 806,000 thousand birds, to the last thousand. Output tonnage and
+output value reconcile to within **one rounding unit** rather than exactly —
+the provinces sum to 1,416,555 thousand kg against a published national
+1,416,554, and to $4,060,368 thousand against $4,060,369, because StatCan
+rounds every series row to the nearest thousand independently (confirmed
+against the WDS API itself, not a transcription error on this side). One
+part in 1.4 million, in opposite directions, is a publication artifact, not
+a second survey. This is worth stating plainly
 rather than leaving a reader to notice it, the same way the Israeli gap
 needed stating: a partition that closes exactly is itself informative,
 because it means the provincial figures and the national figure are the
