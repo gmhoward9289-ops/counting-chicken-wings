@@ -1,5 +1,114 @@
 # Changelog
 
+## v2.2.1 — 2026-08-16
+
+### Added Brazil
+
+Brazil (BRA) joins the corpus as a fifth country, at `measured` grade on
+both national head count and tonnage — the second country, after Canada,
+where the primary statistical agency (IBGE, via its SIDRA REST API)
+answers directly rather than needing a secondhand attaché report to stand
+in. A real subnational breakdown covers 19 of Brazil's 27 states, with the
+remaining 8 loaded as suppressed presence-without-volume rows, reconciling
+to within about 1.1% of the national total on both head count and tonnage
+independently.
+
+A second, real, industry-grade national head count exists from ABPA
+(Brazil's poultry trade body, citing federal-inspection-only slaughter)
+and disagrees with IBGE's by about 17% — documented as an open conflict in
+`docs/BRAZIL-PLAN.md` rather than silently dropped or averaged in, since
+the schema allows only one head-count value per country per year. Also
+loaded: national output value, export share, per-capita consumption, and
+four learning-centre facts, all at the confidence grade their source
+actually supports.
+
+Declared `second` because a fifth country and a new state-level dataset
+(19 Brazilian states, at `measured` grade) is new *capability* the corpus
+diff should catch on its own, but the two-source conflict this branch
+documents and resolves — which figure wins, and why — is exactly the kind
+of judgment call `release_check.py` cannot see in a diff.
+
+### China joins the corpus — chicken meat output, industry grade, with an unresolved conflict named rather than hidden
+
+Added China (CHN) as a fifth country: national chicken meat production for
+2023-2025 (14.80 / 15.35 / 16.20 million tonnes, `industry` grade, USDA FAS
+attaché reports quoting a PSD table their own table note marks "Not
+official USDA data"), a derived self-sufficiency series (95.1% → 97.4%,
+rising — China became a net exporter in 2024), and facts covering the
+taxonomy split between China's own 禽肉 (all-poultry) statistics and
+chicken-specific figures, the world's-second-largest-producer claim, and a
+low, single-source per-capita consumption figure (~11 kg/person, 2025).
+
+No head count, standing flock, output value, or provincial breakdown
+shipped this round — see `docs/CHINA-PLAN.md` for why, including a
+genuine, unresolved 44% gap between two credible 2024 production estimates
+that this pass records side by side rather than adjudicates.
+
+`GET /api/output/CHN` answers a question the corpus could not answer
+before, hence `second` rather than `third`.
+
+### Germany added: broiler slaughter and meat production, four years, `measured` grade
+
+Destatis's own annual "Fleischproduktion" press release isolates Jungmasthuhn
+(broiler) from Suppenhuhn (spent hen) directly, so Germany's head-slaughtered
+and meat-output figures land at `measured` grade for 2022-2025 from one
+government survey — the strongest data position in this project after
+Canada's. No subnational table ships: Destatis's own poultry-slaughter
+publication structure carries no Bundesland dimension at all (confirmed from
+its own table of contents), a genuine structural absence rather than an
+access failure. Per-capita consumption and self-sufficiency figures exist but
+cover all poultry meat, not chicken specifically, and are deliberately not
+loaded as chicken statistics — the same taxonomy discipline already applied
+to Mexico. See `docs/GERMANY-PLAN.md` for the full research trail.
+
+### What changed
+
+Added Japan (JPN) as the fifth country in the corpus: a national broiler
+head count at `measured` grade (both a standing-flock inventory and an
+annual shipment/throughput figure, from MAFF's Livestock Statistics
+Survey), a full 47-prefecture breakdown of the shipment figure that
+reconciles exactly against the national total, and a production-tonnage /
+chicken-specific self-sufficiency-ratio series from MAFF's Food Balance
+Sheet, cross-validated within 0.2% against an independent USDA FAS GAIN
+estimate. Per-capita supply (14.4 kg/person, FY2023) is loaded as a fact;
+`country.population` stays `NULL`, matching every other country in the
+corpus. See `docs/JAPAN-PLAN.md` for the full research trail, including the
+shipped-vs-slaughtered basis caveat carried on the head count.
+
+No `bump:` declared — per `docs/VERSIONING.md`, another country's series
+landing in tables the schema already models (`output_stat_year`,
+`output_stat_district`, `country`, `fact`) is more rows of a kind already
+present, the same shape Canada's and Mexico's additions took, so
+`release_check.py` should land this at `third` on its own.
+
+### Russia joins the corpus, thin and honestly graded
+
+`GET /api/output/RUS` now answers the wing question for Russia, at
+`industry` grade, for 2019-2020 only. A 2020 USDA FAS GAIN report (the only
+source this research pass found that isolates chicken meat from Russia's
+blended national poultry total) gives 4,668,000 tonnes (2019, final) and
+4,715,000 tonnes (2020, in-year estimate), both ready-to-cook weight. No
+head count, standing flock, output value, or subnational breakdown shipped.
+
+The taxonomy problem here is a level worse than Mexico's carne-de-ave/
+carne-de-pollo split: Rosstat's own national bulletins report a single
+"птица" (poultry, all species) line with no chicken-only row to select even
+in principle, at the national level. Three Russian trade-press sources
+describing the SAME 2023 poultry-meat total disagree with each other by up
+to 3.5%, and two of the three are numerically indistinguishable from
+Rosstat's own all-poultry aggregate despite one being explicitly labelled
+"broiler meat" — a real, unresolved conflict, reported rather than
+adjudicated, and not loaded as a corpus figure at any grade.
+
+rosstat.gov.ru itself was unreachable from this research environment: every
+fetch attempt (WebFetch, curl, raw Python) failed on TLS certificate trust,
+a different failure shape than Canada's handshake reset or Mexico's DNS/
+connection failures, consistent with Rosstat using a Russian government CA
+not carried by the trust stores available here. rosptitsesoyuz.ru failed at
+the DNS level outright. `country.population` stays NULL for RUS, as for
+every other non-US country here. See `docs/RUSSIA-PLAN.md` and
+`docs/research/library/poultry-russia.yaml` for the full research trail.
+
 ## v2.2.0 — 2026-08-16
 
 ### Mexico joins the corpus as its second country
