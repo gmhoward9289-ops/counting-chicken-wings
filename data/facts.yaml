@@ -1308,5 +1308,79 @@ facts:
       of nearly 1.7 million: the kind of agreement that makes a figure
       worth trusting rather than merely worth citing.
     source: maff-shokuryo-jukyuhyo-r5
+  - slug: germany-poultry-skin-included
+    headline: German chicken statistics count the skin -- almost nothing else's do
+    body: >-
+      Germany's official "Schlachtgewicht" (slaughter weight) definition
+      excludes skin for cattle, sheep, goats and horses, but poultry is one
+      of only two exceptions -- alongside pigs -- where the skin stays on
+      the reported figure. The government's own definition: "the plucked
+      and eviscerated body, without head, feet, neck, heart, liver or
+      gizzard" - eviscerated, but not skinned.
+
+      So Germany's 1.1-million-tonne broiler figure is closer in concept to
+      a whole roasting bird than to a skinless retail cut, and comparing it
+      directly to a country whose statistics quietly assume skin-off would
+      overstate that country's chickens by however much a chicken's skin
+      weighs. Germany's own statistics agency says plainly that there is no
+      single uniform Schlachtgewicht definition across species - this
+      project treats that as a warning worth repeating, not a technicality.
+    source: bmel-versorgungsbilanz-fleisch-doku
+    placement: learning
+    surprise: 4
+
+  - slug: germany-niedersachsen-half-the-flock
+    headline: Half of Germany's chicken housing sits in one state
+    body: >-
+      The 2020 Agricultural Census counted about 186.3 million housing
+      places for chickens nationwide, and Destatis states plainly that
+      poultry housing "is with 50% of all housing places especially
+      concentrated in Niedersachsen" (Lower Saxony) - one of sixteen German
+      states holding half the country's capacity.
+
+      This is a housing-capacity figure, not a slaughter-throughput one, and
+      it covers chickens broadly (broilers and laying hens together), not
+      broilers alone - the two caveats this project carries alongside it
+      rather than smoothing into a cleaner-sounding broiler-specific claim
+      the census does not actually make.
+    source: destatis-lz2020-viehhaltung-pm
+    placement: both
+    surprise: 3
+
+  - slug: germany-niedersachsen-2014-broiler-share
+    headline: A decade ago, Lower Saxony alone slaughtered more than half of Germany's broilers
+    body: >-
+      Niedersachsen's own state statistics office reported that in 2014 the
+      state accounted for 53.0% of German Jungmasthühner (broiler) slaughter
+      by head count, and 59.1% of national poultry slaughter by weight -
+      already a majority from one of sixteen states, a decade before the
+      2020 census's housing-capacity figure told a similar story from a
+      different angle.
+
+      Kept explicitly dated to 2014 rather than presented as current: this
+      is the most recent BROILER-SPECIFIC regional figure this project
+      could source for Germany, because Destatis's own poultry-slaughter
+      tables carry no state (Bundesland) breakdown at all in the years this
+      project could reach directly - see docs/GERMANY-PLAN.md.
+    source: niedersachsen-fleischerzeugung-1994-2014
+    placement: learning
+    surprise: 3
+
+  - slug: germany-selfsufficiency-hides-which-bird
+    headline: Germany's "100% self-sufficient in poultry" headline is not about chicken alone
+    body: >-
+      Germany's government reports poultry meat self-sufficiency at 100.4%
+      and per-capita poultry consumption at 13.6 kg, both for 2024 - but
+      both figures are for "Geflügelfleisch," which bundles chicken with
+      turkey, duck and goose. The same release says the year's growth was
+      driven "particularly" by chicken, without ever separating out a
+      chicken-only version of either headline number.
+
+      This project does not load either figure as a chicken statistic for
+      that reason - the same discipline Mexico's carne-de-ave/carne-de-pollo
+      distinction already established. A German reader asking "is Germany
+      self-sufficient in CHICKEN specifically" does not currently have a
+      sourced answer here, and neither does this project invent one.
+    source: ble-fleischbilanz-2025-pm
     placement: learning
     surprise: 3

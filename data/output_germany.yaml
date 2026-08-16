@@ -1,0 +1,148 @@
+# German broiler ("Jungmasthuhn") slaughter and meat production, from
+# Destatis's mandatory poultry-abattoir survey. Hand-curated, like
+# output_mexico.yaml and output_uk.yaml, from press releases and a data
+# table rather than a single machine-parseable file. Every number traces to
+# docs/GERMANY-PLAN.md and docs/research/library/poultry-germany.yaml.
+#
+# WHY THIS FILE LOOKS LIKE CANADA'S, NOT MEXICO'S: Destatis's annual
+# "Fleischproduktion" press release isolates Jungmasthuhn (broiler) from
+# Suppenhuhn (spent/stewing hen) in the same sentence -- the species split
+# this project needs, delivered directly rather than requiring a second,
+# finer table or a secondhand USDA GAIN quote. That earns 'measured' grade
+# on both head count and tonnage, for four consecutive years, from one
+# government survey -- the strongest data position in this batch of
+# countries after Canada's.
+#
+# PRECISION IS NOT UNIFORM ACROSS YEARS, ON PURPOSE. 2022 and 2023 come from
+# Destatis's own decimal-precision data table; 2024 and 2025 come from the
+# annual press releases, which round meat_output to one decimal place of a
+# million tonnes ("1,1 Millionen Tonnen") regardless of the actual
+# underlying figure. Rather than back-solving a falsely precise 2024/2025
+# tonnage from the stated percentage change (which would invent precision
+# Destatis itself did not publish), the rounded press-release figures are
+# loaded verbatim and marked provisional, and the precision gap is stated
+# here rather than smoothed over.
+#
+# WEIGHT BASIS: BMEL's own methodology page (bmel-versorgungsbilanz-fleisch-
+# doku) states poultry Schlachtgewicht is "der gerupften und ausgenommenen
+# Körper, ohne Kopf und Ständer und ohne Hals, Herz, Leber und Muskelmagen"
+# -- plucked and eviscerated, without head/feet/neck/heart/liver/gizzard,
+# but WITH the skin (poultry and pigs are Destatis's two skin-included
+# exceptions). This is whole-carcass weight, conceptually close to the UK's
+# "whole-bird-equivalent carcase weight net of offal" -- not a
+# ready-to-cook-minus-skin figure, and not the Warmgewicht/Kaltgewicht
+# (factor 0.98) convention that applies to cattle, pigs, sheep and horses
+# but NOT to poultry, which is measured by a wholly separate survey.
+#
+# NO districts: BLOCK, AND NOT FOR A LACK-OF-ACCESS REASON LIKE MEXICO'S.
+# Destatis's own Fachserie 3 Reihe 4.2.3 confirms poultry SLAUGHTER data
+# (this project's measure) has no Bundesland dimension in its published
+# tables at all -- a Land-level breakdown exists only for LAYING HEN
+# housing (a different bird category, a housing census rather than an
+# abattoir-throughput survey). Germany's real regional concentration
+# (Niedersachsen/Lower Saxony dominance) is carried as facts instead, at
+# two different vintages and two different concepts -- see
+# docs/GERMANY-PLAN.md and the facts germany-niedersachsen-half-the-flock
+# and germany-niedersachsen-2014-broiler-share.
+#
+# TOTAL GEFLÜGEL (all poultry, including turkey and duck) figures exist in
+# every source used here and are deliberately NOT loaded -- this project's
+# species is broiler chicken specifically, and Geflügel mixes in other
+# birds the way Mexico's "carne de ave" does.
+
+species: broiler
+country: DEU
+
+national:
+  # Jungmasthuhn (broiler) isolated from Suppenhuhn (spent hen) at source,
+  # for four consecutive years, all from Destatis's mandatory survey of
+  # EU-hygiene-licensed poultry abattoirs (small operations estimated via
+  # Marktinfo Eier & Geflügel per the survey's own stated methodology).
+  # Two more head_slaughtered blocks follow (2024, 2025), one per source,
+  # because each year's figure comes from a DIFFERENT press release --
+  # output_stats() attributes one source per block, so a single-source
+  # 2022-2025 block would misattribute the two most recent years to the
+  # 2022-2023 data table, which never states them. Same split as Mexico's
+  # two meat_output blocks (2019 vs 2023-2024), for the same reason.
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: destatis-gewerbliche-schlachtung-tabelle-2023
+    notes: >-
+      Jungmasthuhn (broiler) only -- Suppenhuhn (spent/stewing hen) is a
+      separate line in every source used here and is excluded, the same
+      species isolation Canada's Chicken-vs-Fowl split provides. Exact
+      decimal precision from Destatis's own data table.
+    years:
+      - {year: 2022, value: 631132.8}
+      - {year: 2023, value: 631476.2}
+
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: destatis-fleischproduktion-2024-pm
+    notes: >-
+      "626,7 Millionen Jungmast-... Hühner" slaughtered, 2024 -- rounded to
+      0.1 million by the press release itself, one precision level below
+      the 2022-2023 data-table figures above. Marked provisional for that
+      reason: a rounded headline number, not yet folded into the detailed
+      table at the time of this pass.
+    years:
+      - year: 2024
+        value: 626700
+        provisional: 1
+
+  - measure: head_slaughtered
+    unit: thousand_head
+    confidence: measured
+    source: destatis-fleischproduktion-2025-pm
+    notes: >-
+      "640,3 Millionen Jungmast-... Hühner" slaughtered, 2025. Same rounding
+      caveat as 2024.
+    years:
+      - year: 2025
+        value: 640300
+        provisional: 1
+
+  - measure: meat_output
+    unit: tonnes
+    confidence: measured
+    source: destatis-gewerbliche-schlachtung-tabelle-2023
+    notes: >-
+      Whole-carcass weight (plucked, eviscerated, skin on, no giblets) per
+      BMEL's own poultry Schlachtgewicht definition -- see
+      bmel-versorgungsbilanz-fleisch-doku and the file header. Exact tonnes
+      from Destatis's data table (1,000-kg conversion is exact, no
+      arithmetic performed, matching Canada's file's convention).
+    years:
+      - {year: 2022, value: 1074500}
+      - {year: 2023, value: 1086100}
+
+  - measure: meat_output
+    unit: tonnes
+    confidence: measured
+    source: destatis-fleischproduktion-2024-pm
+    notes: >-
+      Destatis's OWN rounded press-release figure: "1,1 Millionen Tonnen"
+      Jungmasthühnerfleisch, +1.8% vs 2023 -- loaded verbatim as 1,100,000
+      rather than back-solved to a false precision from the percentage
+      change. Marked provisional: a rounded headline figure, not a settled
+      table entry.
+    years:
+      - year: 2024
+        value: 1100000
+        provisional: 1
+
+  - measure: meat_output
+    unit: tonnes
+    confidence: measured
+    source: destatis-fleischproduktion-2025-pm
+    notes: >-
+      "1,1 Millionen Tonnen" again for 2025, +3.6% vs 2024 -- the same
+      rounded figure as 2024 despite the different growth rate, because
+      that is what Destatis's own press release states. Loaded verbatim,
+      not back-solved.
+    years:
+      - year: 2025
+        value: 1100000
+        provisional: 1
