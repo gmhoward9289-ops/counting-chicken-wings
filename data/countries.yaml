@@ -169,3 +169,28 @@ countries:
       for a top producer (about 11 kg/person, 2025, single-source, not
       cross-validated) and self-sufficiency is high and rising (95.1% 2023
       -> 97.4% 2025, derived from the same USDA table).
+  # Seventh country, and -- unlike Mexico -- one where the primary agency's
+  # own portal (e-Stat) answered directly for a national head count, a
+  # full 47-prefecture breakdown of it, and a production/self-sufficiency
+  # series, all at 'measured' grade. See docs/JAPAN-PLAN.md and
+  # docs/research/library/poultry-japan.yaml.
+  - iso3: JPN
+    name: Japan
+    native_mass_unit: kg
+    native_currency: JPY
+    notes: >-
+      MAFF's Livestock Statistics Survey publishes an annual broiler
+      SHIPMENT count (出荷羽数, not a post-mortem slaughter count) by
+      prefecture, and a separate standing-flock inventory census -- loaded
+      as head_slaughtered and inventory_eoy respectively, with the
+      shipped-vs-slaughtered basis distinction stated explicitly rather than
+      assumed away. MAFF's Food Balance Sheet separately publishes
+      production tonnage (bone-in-equivalent basis) and a weight-basis
+      self-sufficiency ratio for chicken meat specifically, cross-validated
+      within 0.2% against an independent USDA FAS GAIN estimate.
+
+      population stays NULL, same discipline as every other country in this
+      corpus: a genuine per-capita supply figure exists (14.4 kg/person,
+      FY2023, MAFF) but is loaded as a fact rather than as this column,
+      because it is already published as a ratio and this project performs
+      no other calculation that would need a Japanese population estimate.
