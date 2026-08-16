@@ -1888,7 +1888,9 @@ def footprint(
     three has its own scope, which is why they can be absent independently:
 
       - resource_footprint is per SPECIES. Only the broiler has one.
-      - economic_stat is per DOMAIN. Only poultry has any.
+      - economic_stat is per DOMAIN. Poultry has its own, and `livestock`
+        (beef cattle) picked up five wagyu figures in v2.1.0 -- reachable
+        through any beef product, since wagyu has no product of its own.
       - the mass share is per PRODUCT, and lives in the corpus (see
         `product_mass_share`), so it is subject to the citation audit like
         everything else. Two products have one.

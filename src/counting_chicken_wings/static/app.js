@@ -1835,8 +1835,15 @@ async function impact() {
     (f.economics.length
       ? `<table><tr><th>Measure</th><th class="num">Value</th><th>Unit</th>
          <th>Basis</th></tr>` +
+        // A stat carrying only value_lo/value_hi (a range, no single mode --
+        // e.g. wagyu's 60-64% US dressing comparison) used to fall through
+        // `?? 0` and print "0", asserting a figure the source never stated.
         f.economics.map(e => `<tr><td><b>${e.label}</b></td>
-          <td class="num">${(e.value_mode ?? 0).toLocaleString()}</td>
+          <td class="num">${e.value_mode != null
+              ? e.value_mode.toLocaleString()
+              : e.value_lo != null && e.value_hi != null
+                ? `${e.value_lo}–${e.value_hi}`
+                : '—'}</td>
           <td>${e.unit}</td><td>${badge(e.confidence)}</td></tr>`).join('') +
         '</table>'
       : `<p class="note">No payment or employment figures are in the corpus

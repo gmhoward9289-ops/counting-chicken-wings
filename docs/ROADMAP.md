@@ -577,18 +577,27 @@ or two and still says something true about the subject or about us.
   Loading it is the single most valuable next source for the subject, and would
   put a `measured` floor under figures that are currently all `industry`.
 
-- [ ] **Vanilla and wagyu are still drafted and still not run.** `batch-02-vanilla`
-  (archetype `how-many`) and `batch-03-wagyu` (`comparison`) are marked
-  **DEFERRED, not abandoned** in their own headers, with **candidate URLs
-  deliberately blank** — COOPER fetches exactly what is listed and never
-  searches, so an invented URL fails silently and the batch returns empty for a
-  reason nobody can see. Fill them from a real search pass before sending.
+- [x] **Vanilla and wagyu were run and landed in `v2.1.0`.** Both batches'
+  candidate URLs were filled from a real search pass and both cleared the
+  citation audit; see `docs/research/accepted/batch-03-wagyu-REVIEW.md` and
+  `-round2.md` for the record of what was fetched and accepted.
 
-  Vanilla is still the cleanest test of a large concentration ratio. Wagyu is
-  the only specced subject that tests quality-as-a-dimension (BMS marbling,
-  which should reuse the `quality_defect` pattern and must not change a count),
-  and would be the first subject where the individual is a large animal and the
-  product is most of it.
+  Neither is a full subject yet, and that gap is real, not documentation lag:
+
+  - **Vanilla** got a species row (*Vanilla planifolia*, horticulture) and the
+    curing-loss stage, but no product row — no source states a per-vine yield
+    as a numeral, and the schema refuses a product without one. Still the
+    cleanest test of a large concentration ratio, once that number turns up.
+  - **Wagyu** got five `economic_stat` rows (30-month finishing period,
+    three carcass/retail yield figures on three different denominators) and
+    two grading facts, reachable today via `/api/footprint?product=ground_beef_patty`
+    (wagyu shares beef cattle's `livestock` domain) and the facts feed — but
+    no species or product row of its own, so it has no calculator answer and
+    no BMS-marbling quality axis. It is still the only specced subject that
+    tests quality-as-a-dimension (BMS marbling, which should reuse the
+    `quality_defect` pattern and must not change a count), and would be the
+    first subject where the individual is a large animal and the product is
+    most of it.
 
   `batch-05-milk` was drafted and human-scouted ahead of both and has not been
   run either. It is the first non-poultry subject that could reach `measured`
