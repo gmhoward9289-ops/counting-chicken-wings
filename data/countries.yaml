@@ -86,34 +86,23 @@ countries:
       assert would let a per-capita claim render before it has been
       considered project-wide. Revisit together with a real consumption
       figure, not on its own.
-=======
-  # Second country after Israel. See docs/MEXICO-PLAN.md.
-  #
-  # Population NULL for the same reason as Israel: it is a statistic, and
-  # this project found FIVE mutually inconsistent per-capita chicken figures
-  # (22.4-37.75 kg/yr, depending on source and year) rather than one
-  # reachable primary series. Filling it in would mean picking a winner
-  # among sources that disagree by 70%, on the reader's behalf.
-  - iso3: MEX
-    name: Mexico
+
+  # Fourth country, and the first with a same-year, same-grade,
+  # government head count AND tonnage for a non-US corpus. See
+  # docs/CANADA-PLAN.md.
+  - iso3: CAN
+    name: Canada
     native_mass_unit: kg
-    native_currency: MXN
+    native_currency: CAD
     notes: >-
-      Mexico reports in kilograms/tonnes and pesos, so every mass and value
-      needs deliberate conversion at load, exactly as Israel's did.
+      Statistics Canada publishes broiler head slaughtered and meat output
+      by province, at 'measured' grade, from the same government survey --
+      the first time this project has had that combination for a country
+      other than the US. See docs/CANADA-PLAN.md and
+      docs/research/library/poultry-canada.yaml.
 
-      SIAP (Mexico's NASS-equivalent) publishes a by-state broiler output
-      table, but its web portals were unreachable from this project's
-      research environment (DNS failure on one host, connection refused on
-      the other) - so, unlike Israel, the gap here is access rather than
-      the data not existing. National tonnage reached the corpus secondhand,
-      via a USDA FAS GAIN report that quotes SIAP directly, and via a
-      peer-reviewed paper that cites a dated SIAP publication. See
-      docs/research/library/poultry-mexico.yaml for the full access record.
-
-      Mexican statistical usage distinguishes "carne de ave" (poultry meat,
-      includes turkey) from "carne de pollo" (chicken meat only) - every
-      figure loaded for Mexico is checked against a source's own wording
-      and is the "pollo" reading, never silently promoted from the broader
-      aggregate.
->>>>>>> add-mexico-country-data
+      population stays NULL, same discipline as Israel: a genuine per-capita
+      figure exists (35.64 kg/person, 2025, Agriculture and Agri-Food
+      Canada) but is loaded as a fact rather than as this column, because it
+      is already published as a ratio and this project performs no other
+      calculation that would need a Canadian population estimate.

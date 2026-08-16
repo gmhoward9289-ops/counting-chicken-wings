@@ -517,8 +517,17 @@ CREATE TABLE output_stat_year (
     -- districts inside a grand total, and counting all three levels as
     -- "regions" would claim 55 Israeli regions against 23 US states -- more
     -- granularity than exists, by double-counting the aggregates.
+    --
+    -- 'province' added for Canada: StatCan reports ten actual provinces,
+    -- which are a different concept from Israel's regional councils and
+    -- deserve their own word rather than being forced into 'council'.
+    -- Canada's Atlantic region -- a StatCan-defined aggregate of four
+    -- provinces, each individually suppressed for confidentiality -- reuses
+    -- 'district' rather than adding a second new value, because it is the
+    -- same shape as Israel's district-of-councils grouping: an aggregate
+    -- that sits between the national total and the named leaves.
     region_level    TEXT CHECK (region_level IN
-                        ('total','district','council')),
+                        ('total','district','council','province')),
     year            INTEGER NOT NULL,
     measure         TEXT    NOT NULL CHECK (measure IN (
                         'meat_output',      -- output of meat, per the source

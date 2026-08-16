@@ -1,0 +1,350 @@
+# Source library — Canadian poultry.
+#
+# Produced 2026-08-16, following the workflow in ../SOURCE-LIBRARY.md: search,
+# verify every URL, then probe what each document can actually answer. Every
+# url below was actually fetched and its status recorded — nothing here is
+# guessed from memory, because Canada is the one country in this project with
+# a genuinely queryable statistical API and it would be a shame to not use it.
+#
+# THE ROUTE THAT ACTUALLY WORKED, none of it guessable in advance:
+#
+#   * www150.statcan.gc.ca resets the TLS handshake under a plain `curl`
+#     (schannel: "Recv failure: Connection was reset", i.e. a TLS 1.3
+#     negotiation failure through whatever sits in front of this sandbox's
+#     egress). Forcing `--tlsv1.2` on every request to that host fixes it
+#     completely -- same URL, same content, just an older handshake. This
+#     cost the first half-hour of the research pass and is recorded so nobody
+#     re-spends it. `www.statcan.gc.ca` (the marketing/definitions site, a
+#     different host) has no such problem and answers plain curl fine.
+#   * Statistics Canada's Web Data Service (WDS) is real and it is an actual
+#     JSON REST API, not a PDF -- the one genuinely queryable source in this
+#     project's whole corpus so far. POST a coordinate
+#     ("<geo>.<dim2>.<dim3>.<dim4>.0.0.0.0.0.0", one memberId per dimension,
+#     zero-padded to 10 positions) to
+#     getDataFromCubePidCoordAndLatestNPeriods and it returns exact values
+#     with a machine-readable confidentiality flag (securityLevelCode 1 =
+#     suppressed, value null) -- no PDF table-scraping, no font-encoding
+#     traps of the kind that sank the OECD-FAO annex for Israel. This is a
+#     genuine capability difference from every other source in this project
+#     and future country work should check for a StatCan-style API first.
+#   * Table numbers get renumbered over the life of a program but the CURRENT
+#     ones, confirmed live on 2026-08-16, are 32-10-0117-01 (poultry meat,
+#     total, Chicken-including-stewing-hen vs Turkey) and 32-10-0118-01
+#     (the finer split: Fowl vs Chicken alone, which is the one that isolates
+#     broilers). Table pid = the dash-free 8-digit number, e.g. 32100118.
+#   * FAOSTAT is closed again, the same as it was for Israel, but differently
+#     this time -- see the dead-ends section.
+
+- url: https://www150.statcan.gc.ca/t1/wds/rest/getCubeMetadata
+  title: "StatCan Web Data Service (WDS) — cube metadata for 32-10-0118-01"
+  publisher: Statistics Canada
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/json
+  subjects: [poultry, canada, api]
+  covers:
+    - dimension_structure          # Geography x Estimates x Commodity
+    - provincial_member_ids        # Canada + 6 named provinces + Atlantic region
+    - fowl_vs_chicken_split        # THE useful thing this table has that 117 lacks
+    - survey_methodology_summary
+  does_not_cover:
+    - weight_basis_definition      # "live" vs "eviscerated" never stated IN this response
+  confidence_ceiling: measured
+  notes: >-
+    POST {"productId":32100118} confirmed the cube is CURRENT (archiveStatusCode
+    "2"), covers 1941-01-01 to 2025-01-01 reference periods, releases annually
+    in May, and has three dimensions: Geography (Canada, Atlantic-as-region,
+    Newfoundland and Labrador, Prince Edward Island, Nova Scotia, New
+    Brunswick, Quebec, Ontario, Manitoba, Saskatchewan, Alberta, British
+    Columbia -- no territories, which matter for poultry has none), Estimates
+    (Production/Weight/Value, each "total"), and Commodity (Total birds / Fowl
+    / Chicken). Chicken is the broiler-equivalent line; Fowl is spent laying
+    hens and other stewing birds, and the whole reason this table is worth
+    using over 32-10-0117-01 is that 117 only offers "Chicken (including
+    stewing hen)" as one blended line.
+
+    Footnote (footnoteId 1, attached to the whole cube) says only "Weight is
+    expressed in thousand kilograms, value is expressed in thousand dollars
+    and birds are expressed in thousands of numbers." No footnote anywhere in
+    this response states whether "Weight" is live or eviscerated -- see the
+    survey-methodology entry below for how that got resolved anyway.
+
+- url: https://www150.statcan.gc.ca/t1/wds/rest/getDataFromCubePidCoordAndLatestNPeriods
+  title: "WDS — actual data pull, table 32-10-0118-01, Chicken commodity"
+  publisher: Statistics Canada
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/json
+  subjects: [poultry, canada, broiler, provincial]
+  covers:
+    - head_slaughtered_per_year          # THE figure Israel never had, at measured grade
+    - meat_output_tonnes
+    - output_value_cad
+    - provincial_breakdown_all_ten_provinces
+    - suppression_flag                   # securityLevelCode, machine-readable
+  does_not_cover:
+    - standing_flock                     # no inventory concept published this way
+    - live_weight                        # only the (probably-eviscerated) production weight
+  confidence_ceiling: measured
+  notes: >-
+    Coordinates queried: geography member (1=Canada, 6=Quebec, 7=Ontario,
+    8=Manitoba, 9=Saskatchewan, 10=Alberta, 11=British Columbia, 12=Atlantic
+    [a StatCan-defined 4-province aggregate], 2/3/4/5=Newfoundland/PEI/Nova
+    Scotia/New Brunswick individually) x Estimates (1=Production total,
+    2=Weight total, 3=Value total) x Commodity (3=Chicken, i.e. broilers
+    excluding fowl).
+
+    CANADA, 2025: 806,000 thousand birds (806.0 million), 1,416,554 thousand
+    kg meat (= 1,416,554 tonnes, since thousand-kg and tonnes are numerically
+    identical), $4,060,369 thousand production value (= $4,060.369 million
+    CAD). Five-year birds series: 750,419 (2021) / 769,616 (2022) / 782,999
+    (2023) / 786,183 (2024) / 806,000 (2025) -- a clean upward run, matching
+    the Daily release's "fifth consecutive year-over-year increase".
+
+    PROVINCIAL 2025 (thousand birds / thousand kg): Ontario 262,866 / 493,780;
+    Quebec 218,281 / 371,268; Alberta 81,067 / 139,102; British Columbia
+    119,133 / 197,314; Manitoba 37,244 / 57,973; Saskatchewan 28,591 / 48,016;
+    Atlantic (aggregate of NL+PE+NS+NB) 58,818 / 109,102.
+
+    THE SIX NAMED PROVINCES PLUS ATLANTIC SUM TO THE NATIONAL TOTAL EXACTLY:
+    262866+218281+81067+119133+37244+28591+58818 = 806,000 birds, matching
+    Canada to the last thousand. This is a much cleaner reconciliation than
+    Israel's district marketing figures, which fell 4.76% short of national
+    output for a real and documented reason (marketing excludes
+    self-consumption). Canada's provincial breakdown is a partition of the
+    same "birds slaughtered in registered plants" concept at every level, so
+    it closes exactly -- worth stating explicitly because a reader who adds
+    up Israel's districts learned to expect a gap, and this is the opposite
+    finding.
+
+    NEWFOUNDLAND, PEI, NOVA SCOTIA AND NEW BRUNSWICK ARE INDIVIDUALLY
+    SUPPRESSED: each returns securityLevelCode 1 and value null, while the
+    4-province Atlantic aggregate they roll into is published in full. This
+    is presence-without-volume exactly as CBS suppresses Israeli regional
+    councils and NASS suppresses states -- the same rendering rule applies
+    unchanged. It is a genuine confidentiality suppression (few enough
+    registered plants per Atlantic province that a value would identify an
+    individual operation), not a data gap.
+
+- url: https://www150.statcan.gc.ca/n1/daily-quotidien/260527/dq260527e-eng.pdf
+  title: "The Daily — Poultry and egg statistics, 2025"
+  publisher: Statistics Canada
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  content_type: application/pdf
+  bytes: 164032
+  subjects: [poultry, canada, narrative]
+  covers:
+    - production_growth_narrative        # "fifth consecutive year-over-year increase"
+    - provincial_growth_direction        # named winners/losers by province, in prose
+    - turkey_decline_context
+    - egg_production_record
+  does_not_cover:
+    - exact_provincial_figures           # narrative only; the WDS pull above has the numbers
+  confidence_ceiling: measured
+  notes: >-
+    Released 2026-05-27, reference year 2025. pdftotext -layout extracted
+    cleanly -- no font-encoding trap like the OECD-FAO annex that blocked
+    Israel's per-capita figure. Total chicken production (INCLUDING stewing
+    hen, table 117's blended line) grew 2.1% to 1.4 billion kg in 2025;
+    Alberta led growth at +3.8%, Saskatchewan was the only province to
+    decline (-1.0%); Ontario and Quebec together are "almost two-thirds" of
+    national chicken production. Turkey fell 12.3% to 139.5 million kg on
+    reduced production allocations -- a supply-management quota decision, not
+    a demand collapse, which matters if turkey is ever added since the cause
+    is structural rather than seasonal. Egg production hit a record 997.2
+    million dozen, +9.2%, the strongest growth since 1957.
+
+    This PDF is also the source that names the CURRENT table numbers:
+    32-10-0117-01 through 32-10-0123-01 and 32-10-0133-01 through
+    32-10-0135-01, confirmed live as of this release.
+
+- url: https://agriculture.canada.ca/en/sector/animal-industry/poultry-and-egg-market-information/chicken
+  title: "Canada's chicken industry — at a glance"
+  publisher: Agriculture and Agri-Food Canada (AAFC)
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  bytes: 29913
+  subjects: [poultry, canada, trade, per_capita]
+  covers:
+    - weight_basis_confirmation          # THE thing StatCan's own footnotes never state
+    - producer_count                     # 2,834, cross-checked against CFC below
+    - per_capita_consumption             # a real, dated, government figure -- unlike Israel's
+    - imports_and_exports_2025
+    - provincial_concentration           # Ontario+Quebec share, blended-commodity basis
+  does_not_cover:
+    - self_sufficiency_percentage        # not stated directly; derivable from the trade figures
+  confidence_ceiling: measured
+  notes: >-
+    THIS PAGE SETTLES THE WEIGHT-BASIS QUESTION that Israel's CBS tables left
+    open and that StatCan's own cube metadata does not state: "the 2,834
+    regulated chicken producers in Canada produced 1.4 billion kilograms of
+    chicken (EVISCERATED WEIGHT)". AAFC states explicitly what StatCan's
+    footnotes do not, for the same underlying series -- production weight in
+    32-10-0117-01/118-01 is eviscerated (dressed) weight, not live weight.
+    That resolves the exact trap that Israeli output tonnage fell into
+    (basis-unknown), and it is why data/output_canada.yaml can grade the
+    meat_output figure without a caveat Israel's carries.
+
+    "61.0% of which was produced in Ontario and Quebec" for 2025 -- this is
+    the BLENDED chicken-including-stewing-hen line (table 117: (493,780 +
+    371,268... wait, table 117's "Chicken incl. stewing hen" Ontario+Quebec =
+    509,946+381,208=891,154 against Canada's 1,449,762 = 61.46%, close enough
+    to AAFC's rounded 61.0% to be the same underlying figure), NOT the
+    chicken-only 806,000 line this project loads (which gives 59.7% for the
+    same two provinces). Both percentages are real; they answer slightly
+    different questions (blended vs broiler-only), and the corpus keeps the
+    broiler-only figure to match this project's species definition.
+
+    Per-capita: "chicken remained the most consumed animal meat protein in
+    Canada in 2025 with a per capita disappearance of 35.64 kilograms" --
+    a genuine, dated, government-sourced per-capita figure. "Disappearance"
+    is the standard term for supply-minus-exports-minus-stock-change, a proxy
+    for consumption, not identical to it -- worth keeping the word rather
+    than translating it to "consumption" and losing that distinction. This is
+    loaded as a fact rather than as country.population + a derived query,
+    because AAFC already publishes the ratio directly and doing so avoids
+    sourcing and dating a separate Canadian population estimate for a
+    calculation this project does not otherwise need.
+
+    Trade 2025: imports 231.4 million kg ($1.1 billion), mostly from the
+    United States, then Thailand, then Chile. Exports 106.7 million kg ($754
+    million) to over 45 countries, largest being the United States, the
+    Philippines, and Benin. Self-sufficiency is not stated as a percentage on
+    this page; it is DERIVED in the plan as production / (production +
+    imports − exports) = 1,416.554 / (1,416.554 + 231.4 − 106.7) ≈ 91.9%,
+    carried at 'derived' grade and citing this same page for both halves of
+    the calculation.
+
+- url: https://agriculture.canada.ca/en/sector/animal-industry/poultry-and-egg-market-information/imports-and-exports/canadas-poultry-import-regime
+  title: "Canada's poultry import regime — Tariff Rate Quotas"
+  publisher: Agriculture and Agri-Food Canada (AAFC) / Global Affairs Canada
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 200
+  subjects: [poultry, canada, trade, quota]
+  covers:
+    - trq_levels_2026                    # WTO / CUSMA / CPTPP, by product
+    - eviscerated_basis_for_trq           # corroborates the weight-basis finding above
+  does_not_cover:
+    - historical_trq_series
+  confidence_ceiling: measured
+  notes: >-
+    Independent corroboration of the eviscerated-weight convention: Canada's
+    2026 chicken TRQ levels are stated in "kg eviscerated" for every one of
+    WTO (39,843,700 kg), CUSMA (57,570,000 kg) and CPTPP (24,212,000 kg).
+    This is a different publication from the chicken-industry page above, so
+    two AAFC pages independently use eviscerated weight as the sector's
+    standard reporting basis for chicken -- not proof that the StatCan
+    PRODUCTION series uses the identical basis, but strong circumstantial
+    support, which is why the corpus notes "eviscerated, per AAFC" rather
+    than treating it as certain beyond doubt.
+
+- url: https://www.chickenfarmers.ca/wp-content/uploads/2026/03/CFC-Annual-report-2025-E.pdf
+  title: "Chicken Farmers of Canada — 2025 Annual Report"
+  publisher: Chicken Farmers of Canada (CFC)
+  kind: trade_body
+  verified_on: '2026-08-16'
+  http_status: 200
+  bytes: 19213847
+  subjects: [poultry, canada, industry_structure, provincial]
+  covers:
+    - producer_count_by_province          # cross-checks AAFC's national total exactly
+    - average_farm_size_live_weight       # a DIFFERENT weight basis than StatCan's
+    - producer_price_by_province
+    - economic_contribution_estimates     # jobs, GDP, taxes, feed purchases
+  does_not_cover:
+    - national_average_bird_weight        # no single "kg per bird" figure stated anywhere
+  confidence_ceiling: industry
+  notes: >-
+    19 MB PDF; pdftotext -layout extracted 2,393 lines cleanly (not
+    image-only). The "INDUSTRY SNAPSHOT" table gives producer counts by
+    province for 2025: BC 323, AB 251, SK 66, MB 125, ON 1,281, QC 624,
+    NB 42, NS 108, PEI 8, NL 6, TOTAL 2,834 -- matching AAFC's "2,834
+    regulated chicken producers" exactly, a real cross-check between a
+    government page and the industry body it regulates alongside.
+
+    THE WEIGHT-BASIS TRAP, SECOND VERSE: this same table gives "AVERAGE FARM
+    SIZE (000 KG LIVE WEIGHT)" and "AVERAGE PRODUCER PRICE ($/KG LIVE
+    WEIGHT)" by province -- explicitly LIVE weight, the opposite basis from
+    StatCan's (probably) eviscerated production figures. Do not combine CFC's
+    live-weight farm-size or price figures with StatCan's head count to
+    derive an average bird weight -- that would divide a live-weight
+    quantity's neighbour by a head count whose matching weight series is
+    eviscerated, understating the true live weight by whatever the
+    eviscerated yield percentage is (typically an ~70% dressing percentage
+    for broilers, i.e. a ~30% error in the wrong direction). Kept as a
+    separate, clearly-labelled figure instead: NOT loaded into
+    output_stat_year at all, because doing so risks exactly this
+    conflation for a future reader who sees two "weight" measures for
+    Canada and assumes they share a basis. Recorded here as a documented
+    absence rather than a silently-omitted figure.
+
+    Economic contribution, national, industry estimate: sustains 112,604
+    jobs, contributes $12.2 billion to GDP, pays $4 billion in taxes,
+    purchases 3 million tons of feed. Not loaded as statistics (no single
+    year or clean methodology stated for the multiplier), but is fact
+    material.
+
+# ---------------------------------------------------------------- dead ends
+
+- url: https://fenixservices.fao.org/faostat/api/v1/en/data/QCL
+  title: FAOSTAT bulk API (production domain)
+  publisher: FAO
+  kind: institutional
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [poultry, international]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    Connection failure (curl exit 1, no HTTP response at all) even with the
+    --tlsv1.2 workaround that fixed StatCan. Same host that returned 521 for
+    Israel's research pass on 2026-07-29 -- this is not a transient blip
+    specific to this sandbox, it is fenixservices.fao.org itself being
+    unreliable across two independent research passes three weeks apart.
+
+- url: https://bulks-faostat.fao.org/production/
+  title: FAOSTAT bulk downloads
+  publisher: FAO
+  kind: institutional
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [poultry, international]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    Timed out (30s) rather than the 403 Israel's pass recorded on
+    2026-07-29 -- a different failure mode, same practical result. FAOSTAT
+    remains unusable as a cross-validation source for this project two
+    passes running, for two different countries. www.fao.org/faostat/en/
+    itself returns 200 but is a JavaScript single-page app with no data in
+    the initial HTML, so it is not a workaround.
+
+- url: https://www150.statcan.gc.ca/ (plain curl, no --tlsv1.2)
+  title: "StatCan main data host — TLS 1.3 negotiation failure"
+  publisher: Statistics Canada
+  kind: government
+  verified_on: '2026-08-16'
+  http_status: 0
+  subjects: [infrastructure]
+  covers: []
+  does_not_cover: [everything]
+  notes: >-
+    Not a dead source -- recorded because the failure mode is confusing
+    enough to cost the next person real time. Plain `curl` to
+    www150.statcan.gc.ca resets during the TLS handshake ("schannel: Recv
+    failure: Connection was reset") from this sandbox's network path, on
+    every attempt, while the same command against www.statcan.gc.ca (a
+    different host entirely) succeeds immediately. Adding `--tlsv1.2` to
+    force an older handshake against www150 fixes it completely and every
+    subsequent request in this file used that flag. Whatever sits in front
+    of this egress point appears to mishandle TLS 1.3 to that specific host.
+    A WebFetch attempt at the same URL failed with a generic ECONNRESET
+    before this was diagnosed -- if WebFetch or a plain curl fails against
+    *only* www150 and no other statcan.gc.ca host, try forcing TLS 1.2
+    before concluding the source is unreachable.

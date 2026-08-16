@@ -1374,6 +1374,181 @@
     marketing-vs-output gap. Not loaded as the primary figure because DEFRA
     is more granular, more current, and UK-specific.
 
+- slug: statcan-32100118-fowl-chicken-2026
+  title: >-
+    Table 32-10-0118-01, Fowl and chicken meat production, weight and farm
+    value (annual)
+  publisher: Statistics Canada
+  url: https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3210011801
+  published_on: '2026-05-27'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Pulled via StatCan's Web Data Service API (getDataFromCubePidCoordAndLatestNPeriods),
+    not scraped from the table viewer -- see docs/research/library/poultry-canada.yaml
+    for the exact coordinates queried. The one table in this project's whole
+    corpus that separates "Chicken" (broilers) from "Fowl" (spent laying
+    hens and other stewing birds), which is why it is preferred over
+    32-10-0117-01's blended "Chicken (including stewing hen)" line.
+
+    CANADA, Chicken only, 2025: 806,000 thousand head slaughtered,
+    1,416,554 thousand kg meat output (numerically equal to 1,416,554
+    tonnes), $4,060,369 thousand production value. Five-year national head
+    series: 750,419 (2021) / 769,616 (2022) / 782,999 (2023) / 786,183
+    (2024) / 806,000 (2025).
+
+    Provincial 2025 (thousand head / thousand kg): Ontario 262,866 /
+    493,780; Quebec 218,281 / 371,268; Alberta 81,067 / 139,102; British
+    Columbia 119,133 / 197,314; Manitoba 37,244 / 57,973; Saskatchewan
+    28,591 / 48,016; Atlantic (a StatCan-defined aggregate of Newfoundland
+    and Labrador, Prince Edward Island, Nova Scotia and New Brunswick, each
+    suppressed individually via securityLevelCode=1) 58,818 / 109,102. The
+    six named provinces plus Atlantic sum EXACTLY to the national HEAD total
+    (806,000 to the last thousand) -- unlike Israel's district marketing
+    figures, which fall 4.76% short of national output for a documented
+    reason. The WEIGHT rows sum to 1,416,555 thousand kg against a published
+    national 1,416,554 -- one rounding unit apart, because StatCan rounds
+    each series row to the nearest thousand kg independently; confirmed
+    against the WDS API directly, so the discrepancy is StatCan's own
+    publication artifact and not a transcription error here. Sourced from
+    reports of birds
+    slaughtered in registered processing plants, per StatCan's own survey
+    methodology (record number 5039), so head_slaughtered here is a genuine
+    government enumeration, not an industry estimate -- Israel has never had
+    this combination at this grade.
+
+    WEIGHT BASIS: this table's own footnotes state only that weight is
+    reported in thousand kilograms, not whether that is live or eviscerated
+    weight. Resolved via a SEPARATE AAFC publication (see
+    aafc-chicken-industry-2026 below), which states explicitly that the
+    1.4 billion kg 2025 figure is "eviscerated weight". Treated as
+    eviscerated for the purposes of this corpus's meat_output measure on
+    that basis, though the two publications are not the same document.
+
+- slug: statcan-32100117-poultry-meat-2026
+  title: >-
+    Table 32-10-0117-01, Production, disposition and farm value of poultry
+    meat (annual)
+  publisher: Statistics Canada
+  url: https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3210011701
+  published_on: '2026-05-27'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    The blended table: "Chicken (including stewing hen)" is one line rather
+    than split from fowl. NOT used for this corpus's head_slaughtered or
+    meat_output rows -- table 32-10-0118-01 above isolates broilers and is
+    preferred -- but used to cross-check AAFC's "61.0% of chicken production
+    in Ontario and Quebec" claim, which is stated on the BLENDED basis
+    (509,946 + 381,208 = 891,154 of 1,449,762 thousand kg = 61.46%, close
+    enough to AAFC's rounded 61.0% to be the same underlying figure). The
+    equivalent chicken-only share from table 118 is 59.7%, a different
+    number answering a slightly different question, and the corpus keeps
+    the chicken-only figures to match its own species definition.
+
+    Also the source for the Daily release's chart data (chicken and turkey
+    production trend lines, 2016-2025) and the national five-year series
+    used to sanity-check table 118's chicken-only trend moves in the same
+    direction.
+
+- slug: statcan-daily-poultry-2026
+  title: 'The Daily — Poultry and egg statistics, 2025'
+  publisher: Statistics Canada
+  url: https://www150.statcan.gc.ca/n1/daily-quotidien/260527/dq260527e-eng.pdf
+  published_on: '2026-05-27'
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Narrative release accompanying tables 117 and 118. Total chicken
+    production (including stewing hen) grew 2.1% to 1.4 billion kg in 2025,
+    the fifth consecutive annual increase; Alberta led growth (+3.8%),
+    Saskatchewan was the only province to decline (-1.0%). Turkey production
+    fell 12.3% to 139.5 million kg "following reductions in Canadian
+    production allocations" -- a supply-management quota decision, not a
+    demand collapse. Egg production reached a record 997.2 million dozen,
+    +9.2%, the strongest annual increase since 1957.
+
+    Cited for narrative direction and the Newcastle-disease-style context
+    a reader needs around the raw figures, not for exact values -- those
+    come from the WDS API pull recorded under statcan-32100118-fowl-chicken-2026.
+
+- slug: aafc-chicken-industry-2026
+  title: "Canada's chicken industry — at a glance"
+  publisher: Agriculture and Agri-Food Canada
+  url: https://agriculture.canada.ca/en/sector/animal-industry/poultry-and-egg-market-information/chicken
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    THE SOURCE THAT SETTLES THE WEIGHT-BASIS QUESTION StatCan's own table
+    footnotes leave open: "the 2,834 regulated chicken producers in Canada
+    produced 1.4 billion kilograms of chicken (eviscerated weight)" in 2025.
+    Also the source of this corpus's per-capita fact -- "a per capita
+    disappearance of 35.64 kilograms" in 2025 -- kept as "disappearance"
+    rather than retitled "consumption", since AAFC's own term is a specific
+    supply-side proxy rather than a measured intake figure.
+
+    Trade, 2025: imports 231.4 million kg ($1.1 billion, mostly United
+    States then Thailand then Chile); exports 106.7 million kg ($754
+    million, to over 45 countries, largest United States then Philippines
+    then Benin). Self-sufficiency is DERIVED from these two figures plus
+    production (1,416.554 million kg) as production / (production +
+    imports − exports) ≈ 91.9% -- not an AAFC-published percentage, a
+    calculation over two AAFC-published figures, carried at `derived` grade
+    accordingly.
+
+    "61.0% of chicken production in Ontario and Quebec" is on the BLENDED
+    chicken-including-stewing-hen basis -- see statcan-32100117-poultry-meat-2026
+    for the cross-check against this project's chicken-only figure.
+
+- slug: aafc-poultry-import-regime-2026
+  title: "Canada's poultry import regime — Tariff Rate Quotas"
+  publisher: Agriculture and Agri-Food Canada / Global Affairs Canada
+  url: https://agriculture.canada.ca/en/sector/animal-industry/poultry-and-egg-market-information/imports-and-exports/canadas-poultry-import-regime
+  retrieved_on: '2026-08-16'
+  source_type: government
+  notes: >-
+    Independent corroboration of the eviscerated-weight convention: Canada's
+    2026 chicken Tariff Rate Quota levels are stated in "kg eviscerated" for
+    WTO (39,843,700 kg), CUSMA (57,570,000 kg) and CPTPP (24,212,000 kg)
+    access. A different AAFC publication from aafc-chicken-industry-2026,
+    independently using the same weight basis for the same sector -- not
+    proof the StatCan PRODUCTION series shares that exact basis, but strong
+    circumstantial support, which is why the corpus's notes say "eviscerated,
+    per AAFC" rather than treating the basis as certain beyond doubt.
+
+- slug: cfc-annual-report-2025
+  title: '2025 Annual Report'
+  publisher: Chicken Farmers of Canada
+  url: https://www.chickenfarmers.ca/wp-content/uploads/2026/03/CFC-Annual-report-2025-E.pdf
+  published_on: '2026-03-01'
+  retrieved_on: '2026-08-16'
+  source_type: trade_body
+  notes: >-
+    19 MB PDF, text extracts cleanly with pdftotext -layout. "INDUSTRY
+    SNAPSHOT" table gives 2025 producer counts by province -- BC 323, AB
+    251, SK 66, MB 125, ON 1,281, QC 624, NB 42, NS 108, PEI 8, NL 6, TOTAL
+    2,834 -- matching AAFC's "2,834 regulated chicken producers" exactly, a
+    real cross-check between a government page and the industry body it
+    regulates alongside. NOT loaded as a statistic in its own right, since
+    it duplicates AAFC's national figure; recorded here for the provincial
+    split AAFC does not itself publish.
+
+    THE SAME TABLE also gives "AVERAGE FARM SIZE (000 KG LIVE WEIGHT)" and
+    "AVERAGE PRODUCER PRICE ($/KG LIVE WEIGHT)" by province -- explicitly
+    LIVE weight, the opposite basis from StatCan's (probably) eviscerated
+    production figures. DELIBERATELY NOT LOADED into output_stat_year:
+    combining CFC's live-weight figures with StatCan's head count to derive
+    an average bird weight would understate live weight by roughly a
+    dressing percentage's worth (broiler eviscerated yield is typically
+    ~70% of live weight). Kept as a documented absence -- see
+    docs/CANADA-PLAN.md, "What NOT to do".
+
+    Also the source of national economic-contribution estimates (112,604
+    jobs sustained, $12.2 billion GDP contribution, $4 billion in taxes
+    paid, 3 million tons of feed purchased) -- industry-grade, no single
+    year or public methodology stated for the multiplier, so kept as fact
+    material rather than a statistic.
+
 # ---------------------------------------------------------------------------
 # Vanilla (batch-02-vanilla, accepted 2026-08-15)
 # ---------------------------------------------------------------------------
