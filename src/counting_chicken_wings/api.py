@@ -17,13 +17,12 @@ from . import db as dbm
 from . import seasonality as seas
 from .model import (
     CONFIDENCE_RANK,
-    expected_distinct,
+    expected_distinct_general,
     floor_individuals,
     meets_confidence,
     mixing_draw_scale,
     run,
     sensitivity,
-    unit_is_aggregate,
     variance_decomposition,
 )
 
@@ -827,10 +826,12 @@ def mixing_curve(
             else prod["units_per_individual_mode"]
         )
         floor = floor_individuals(count, units_per_individual)
-        aggregate = unit_is_aggregate(units_per_individual, recurring)
+        # Whether the unit is an aggregate is derived inside the model, from
+        # `recurring` -- `test_aggregate_units.py` forbids this module
+        # deciding it again.
         draw, upi, drawn_label = mixing_draw_scale(
             count, units_per_individual, floor,
-            aggregate_units=aggregate,
+            recurring=recurring,
             mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
         )
 
@@ -849,7 +850,12 @@ def mixing_curve(
                 continue
             points.append({
                 "pool": pool,
-                "distinct": expected_distinct(int(draw), container, pool),
+                # The general formula, not the wings-only two-per-individual
+                # special case: `pool` individuals contributed `container`
+                # units between them, whatever this product's anatomy says
+                # that ratio is.
+                "distinct": expected_distinct_general(
+                    int(draw), container, pool),
             })
 
         return {

@@ -307,6 +307,13 @@ def test_mixing_curve_covers_every_product(client, product, count):
     # ceiling: distinct can never exceed the units actually drawn.
     for p in d["points"]:
         assert p["distinct"] <= d["ceiling"] + max(1e-6, d["ceiling"] * 1e-8)
+        # ... and can never exceed the pool itself: you cannot find more
+        # distinct individuals in a batch than the batch contains. This is
+        # the assertion that catches reaching for `expected_distinct` (the
+        # wings-only two-per-individual special case) instead of
+        # `expected_distinct_general` -- the special case reported ~1,100
+        # distinct animals in a pool of 1 for a patty.
+        assert p["distinct"] <= p["pool"] + max(1e-6, p["pool"] * 1e-8)
 
 
 def test_mixing_curve_ground_beef_patty_reaches_the_batch_not_one_animal(

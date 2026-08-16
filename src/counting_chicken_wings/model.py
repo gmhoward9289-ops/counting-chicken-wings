@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field, fields, replace
-from math import ceil, comb, erf, exp, lgamma, sqrt
+from math import ceil, comb, erf, exp, lgamma, log1p, sqrt
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +171,8 @@ def mixing_draw_scale(
     units_requested: float,
     units_per_individual: float,
     floor: float,
-    aggregate_units: bool = False,
+    aggregate_units: bool | None = None,
+    recurring: RecurringYield | None = None,
     mixing_subunits_per_unit: float | None = None,
 ) -> tuple[float, float, str]:
     """Re-express a question at the granularity the mixing draw actually
@@ -180,6 +181,11 @@ def mixing_draw_scale(
     Extracted from `run()` so `/api/mixing-curve` can draw the same curve
     the headline answer is built from, for any product, instead of a
     wing-only approximation that ignored both re-expressions below.
+
+    `aggregate_units` left as None is derived here from the figures via
+    `unit_is_aggregate` -- callers outside this module must not decide it
+    for themselves (`test_aggregate_units.py` forbids the re-derivation by
+    name); they pass `recurring` and let the one copy of the condition run.
 
       aggregate_units             one unit is a BLEND of many individuals'
                                    output (a gram of saffron) -- re-express
@@ -191,6 +197,8 @@ def mixing_draw_scale(
       neither                     the unit is already the atomic thing the
                                    draw assumes (a wing): unchanged.
     """
+    if aggregate_units is None:
+        aggregate_units = unit_is_aggregate(units_per_individual, recurring)
     if aggregate_units:
         shares = max(1, ceil(floor))
         return shares, 1.0, f"{shares:,} individual-shares"
@@ -242,6 +250,31 @@ def _ratio_choose(total: int, removed: int, drawn: int) -> float:
     # below, i.e. whenever total - drawn < removed; same answer here.
     if total - drawn - removed + 1.0 <= 0.0:
         return 0.0
+
+    # The lgamma round trip loses absolute precision with the SIZE of its
+    # arguments: lgamma(T) ~ T ln T, so at T ~ 1e11 each term carries ~4e-4
+    # of absolute error, and when the true exponent is itself small (a few
+    # thousand particles drawn from a hundred-billion-particle container,
+    # which is exactly where /api/mixing-curve's per-product sweep lands for
+    # a homogenate like ground beef) the error swamps the answer -- measured
+    # 6e-4 relative, enough to bend a saturated curve visibly downward.
+    # In that regime -- huge total, removed and drawn both small fractions
+    # of it -- the log-sum is smooth enough that Euler-Maclaurin evaluates
+    # it in closed form to ~1e-12 relative, entirely in well-scaled log1p
+    # terms:  sum_{i=0}^{r-1} log1p(-n/(T-i))
+    #           = n*log1p(-r/T) + (T-n)*log1p(-n/T)
+    #             - (T-r-n)*log1p(-n/(T-r))            [the integral]
+    #             + (log1p(-n/T) - log1p(-n/(T-r)))/2  [trapezoid term]
+    # with the next correction at the utterly negligible n/T^2 scale.
+    # Everything outside this regime keeps the lgamma form, where its error
+    # is either tiny (moderate T) or irrelevant (exponent large, miss ~ 0).
+    if total >= 1e9 and removed < 0.01 * total and drawn < 0.01 * total:
+        T, r, n = float(total), float(removed), float(drawn)
+        integral = (n * log1p(-r / T) + (T - n) * log1p(-n / T)
+                    - (T - r - n) * log1p(-n / (T - r)))
+        trapezoid = (log1p(-n / T) - log1p(-n / (T - r))) / 2.0
+        return exp(integral + trapezoid)
+
     return exp(
         lgamma(total - drawn + 1.0) - lgamma(total - drawn - removed + 1.0)
         + lgamma(total - removed + 1.0) - lgamma(total + 1.0)

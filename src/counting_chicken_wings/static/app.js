@@ -818,13 +818,14 @@ async function initMix() {
     const p = active.find(x => x.slug === $('#mix-product').value);
     $('#mix-window-wrap').hidden = !p || p.yield_mode !== 'recurring';
   };
-  $('#mix-product').addEventListener('change', syncWindow);
-  $('#mix-product').addEventListener('input', syncWindow);
+  // Assigned, never added: initMix() re-runs on every theme toggle, and
+  // test_static.py::test_view_inits_do_not_add_listeners exists because
+  // addEventListener stacked duplicate handlers on exactly this pattern.
+  $('#mix-product').oninput = syncWindow;
+  $('#mix-product').onchange = () => { syncWindow(); loadMixCurve(); };
+  $('#mix-count').onchange = loadMixCurve;
+  $('#mix-window-days').onchange = loadMixCurve;
   syncWindow();
-
-  ['mix-count', 'mix-product', 'mix-window-days'].forEach(id => {
-    $('#' + id).addEventListener('change', loadMixCurve);
-  });
 
   await loadMixCurve();
 }
@@ -905,9 +906,12 @@ function mixMove() {
   $('#poollabel').textContent = p.pool.toLocaleString();
   $('#poolnoun2').textContent = noun;
   $('#mixout').textContent = fmtDistinct(p.distinct, CURVE.ceiling);
+  // Same naive pluralisation the CLI uses for unit_name -- every unit in
+  // the corpus takes a plain "s" (wing, egg, patty, gram, gallon).
+  const unit = CURVE.unit_name || 'unit';
   $('#mixoutnote').textContent =
     `distinct ${CURVE.individual_plural || 'individuals'} in ${CURVE.count} ${
-      CURVE.unit_name || 'units'}`;
+      CURVE.count === 1 ? unit : unit + 's'}`;
   Plotly.relayout('mixchart', {
     shapes: [{ type: 'line', x0: p.pool, x1: p.pool,
                y0: mixYRange[0], y1: mixYRange[1],
