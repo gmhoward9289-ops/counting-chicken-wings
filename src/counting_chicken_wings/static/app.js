@@ -1808,7 +1808,9 @@ async function impact() {
        <th class="num">Per ${one}</th>
        <th class="num">Allocated to your order</th>
        <th class="num">Since 2010</th><th>Unit</th></tr>` +
-      f.metrics.map(x => `<tr><td>${x.label}</td>
+      f.metrics.map(x => `<tr><td${x.notes
+          ? ` title="${x.notes.replace(/"/g, '&quot;')}"` : ''}>${x.label}${
+          x.notes ? ' ⓘ' : ''}</td>
         <td class="num">${x.per_individual ?? '—'}</td>
         <td class="num">${x.allocated_total != null
             ? x.allocated_total.toFixed(2) : '—'}</td>

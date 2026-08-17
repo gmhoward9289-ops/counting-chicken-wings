@@ -226,6 +226,26 @@ Where the project earns repeat visits rather than one look.
   January 2025 AMS grower-payment rule already flagged in RESEARCH.md.
   Answers "what does the government actually do here?"
 
+- [!] **Two footprint gaps, both blocked on data rather than code.**
+  `resource_footprint`/`economic_stat` are fully generic — a new metric or
+  stat is a YAML-only addition — so neither is waiting on the model, only on
+  a real, verifiable figure:
+  - **Hatchery and processing-plant electricity.** The `electricity` metric
+    added in `data/resources.yaml` (v2.4.2) is on-farm growout only —
+    ventilation, heating/cooling, lighting, feed/water augers. The same
+    source's breeder-operation table reports a per-hatching-egg figure, but
+    converting it to per-broiler would require assumptions the source
+    doesn't support, so it was left out. Processing-plant chilling, freezing
+    and cold-chain draw is a separate, entirely unsourced gap.
+  - **Labor-hours per bird or per dozen wings.** `direct_jobs` is a national
+    employment stock (355,000), not a per-unit figure. Two candidates were
+    found and rejected: a 1955 USDA hand-processing study (70+ years stale)
+    and a BLS/NASS derived ratio that mixes non-chicken poultry into the
+    numerator and could not be verified against a primary BLS document
+    (bls.gov and FRED both 403'd on direct fetch). A modern, chicken-only,
+    verifiable per-unit labor figure — USDA ERS processing-productivity work,
+    or a peer-reviewed study — is the real follow-up.
+
 ---
 
 ## M3 — Presentation and identity
