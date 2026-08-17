@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- average live weight by state and month
-# generated: 2026-08-16
+# generated: 2026-08-17
 # USDA NASS. A month NASS suppresses is an ABSENT ROW, never a zero. The swing across these months is not a season on its own for any state -- see GET /api/seasonality
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

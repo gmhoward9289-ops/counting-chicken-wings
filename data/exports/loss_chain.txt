@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- loss chain
-# generated: 2026-08-16
+# generated: 2026-08-17
 # survive_* are SURVIVING fractions, not loss fractions. applies_to='mass' stages cannot change a unit count
 # ----------------------------------------------------------------------------------------------------------
 
@@ -155,6 +155,21 @@
 
 [11]
   sequence: 30
+  slug: pork_dressing
+  label: Dressing (live weight to hot carcass)
+  phase: slaughter
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.68
+  survive_mode: 0.7
+  survive_hi: 0.72
+  confidence: industry
+  source: wsu-ext-butcher-hog-yield
+
+[12]
+  sequence: 30
   slug: vanilla_curing
   label: Curing (green pods to cured beans)
   phase: processing
@@ -168,7 +183,22 @@
   confidence: industry
   source: vanilla-package-of-practice-2021
 
-[12]
+[13]
+  sequence: 40
+  slug: pork_carcass_to_packaged
+  label: Carcass to packaged pork
+  phase: processing
+  applies_to: mass
+  optional: 0
+  default_enabled: 1
+  product: all
+  survive_lo: 0.65
+  survive_mode: 0.7
+  survive_hi: 0.74
+  confidence: industry
+  source: wisc-ext-hog-yield
+
+[14]
   sequence: 40
   slug: wing_damage
   label: Wing damage and downgrade
@@ -183,7 +213,7 @@
   confidence: study
   source: wing-injuries-loading
 
-[13]
+[15]
   sequence: 45
   slug: egg_checks
   label: Checks (cracked shell, membrane intact)
@@ -198,7 +228,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[14]
+[16]
   sequence: 46
   slug: egg_leakers
   label: Leakers, dirties and loss
@@ -213,7 +243,7 @@
   confidence: industry
   source: ams-shell-egg-grades
 
-[15]
+[17]
   sequence: 50
   slug: grading_downgrade
   label: Grading and trim loss
@@ -228,7 +258,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[16]
+[18]
   sequence: 60
   slug: further_processing
   label: Further processing and marinade pickup
@@ -243,7 +273,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[17]
+[19]
   sequence: 70
   slug: distribution_shrink
   label: Distribution shrink (mass)
@@ -258,7 +288,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[18]
+[20]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -273,7 +303,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[19]
+[21]
   sequence: 71
   slug: transit_rejection
   label: In-transit loss and load rejection
@@ -288,7 +318,7 @@
   confidence: estimate
   source: cold-chain-transport-trade
 
-[20]
+[22]
   sequence: 72
   slug: retail_shrink
   label: Supermarket shrink
@@ -303,7 +333,7 @@
   confidence: measured
   source: ers-supermarket-loss
 
-[21]
+[23]
   sequence: 73
   slug: egg_transit_breakage
   label: In-transit breakage
@@ -318,7 +348,7 @@
   confidence: industry
   source: eggs-unlimited-breakage
 
-[22]
+[24]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -333,7 +363,7 @@
   confidence: industry
   source: refed-foodservice
 
-[23]
+[25]
   sequence: 75
   slug: kitchen_loss
   label: Restaurant pre-consumer loss
@@ -348,7 +378,7 @@
   confidence: industry
   source: refed-foodservice
 
-[24]
+[26]
   sequence: 76
   slug: egg_kitchen_breakage
   label: Kitchen and consumer breakage
@@ -363,7 +393,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[25]
+[27]
   sequence: 80
   slug: cook_loss
   label: Cook loss
@@ -378,7 +408,7 @@
   confidence: estimate
   source: project-estimate-unsourced
 
-[26]
+[28]
   sequence: 90
   slug: plate_waste
   label: Post-consumer plate waste

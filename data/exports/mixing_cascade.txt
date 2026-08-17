@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- mixing cascade
-# generated: 2026-08-16
+# generated: 2026-08-17
 # pool sizes are in INDIVIDUALS. mixing_kind='separating' actively splits one bird's units into different streams
 # ---------------------------------------------------------------------------------------------------------------
 
@@ -180,6 +180,23 @@
 
 [12]
   sequence: 30
+  slug: pork_combo_bin
+  label: Combo bin of trim
+  mixing_kind: random
+  pool_lo: 112
+  pool_mode: 129
+  pool_hi: 146
+  confidence: estimate
+  description:
+    Trim is stripped from every carcass on the line and combined into
+    2,000-pound combo bins, the same equipment and pack size ground beef's
+    cut-up line uses. This is as far upstream as this project can bound the
+    pool for pork - unlike beef, no DNA study measures how many further bins
+    get pooled into one grinder load.
+  source: project-estimate-mixing
+
+[13]
+  sequence: 30
   slug: maple_barrel
   label: Bulk barrel
   mixing_kind: random
@@ -193,7 +210,7 @@
     stand.
   source: project-estimate-mixing
 
-[13]
+[14]
   sequence: 30
   slug: saffron_grading
   label: Grade separation
@@ -209,7 +226,7 @@
     another when they are not identical, and they rarely are.
   source: project-estimate-mixing
 
-[14]
+[15]
   sequence: 30
   slug: silk_weaving_warp
   label: Weaving warp
@@ -225,7 +242,7 @@
     that went into the beam.
   source: project-estimate-mixing
 
-[15]
+[16]
   sequence: 40
   slug: combo_bin
   label: Combo bin
@@ -239,7 +256,7 @@
     wing that is about 8,700 wings in one bin.
   source: project-estimate-mixing
 
-[16]
+[17]
   sequence: 40
   slug: maple_packer_blend
   label: Packer blend
@@ -255,7 +272,7 @@
     count stops being knowable even in principle.
   source: project-estimate-mixing
 
-[17]
+[18]
   sequence: 40
   slug: saffron_packing
   label: Lot packing
@@ -270,7 +287,7 @@
     measured in kilograms.
   source: project-estimate-mixing
 
-[18]
+[19]
   sequence: 50
   slug: iqf_freezer
   label: IQF freezer tunnel
@@ -284,7 +301,7 @@
     lot boundaries are preserved through this step.
   source: project-estimate-mixing
 
-[19]
+[20]
   sequence: 60
   slug: case_pack
   label: Case pack
@@ -299,7 +316,7 @@
     case is from a different bird.
   source: project-estimate-mixing
 
-[20]
+[21]
   sequence: 70
   slug: distributor
   label: Distributor warehouse
@@ -311,7 +328,7 @@
   description: Pallets assembled from many lots, plants, and sometimes producers.
   source: project-estimate-mixing
 
-[21]
+[22]
   sequence: 80
   slug: restaurant_freezer
   label: Restaurant freezer bin
@@ -326,7 +343,7 @@
     weeks of production.
   source: project-estimate-mixing
 
-[22]
+[23]
   sequence: 90
   slug: fryer_basket
   label: Fryer basket
@@ -340,7 +357,7 @@
     which the question finally gets answered.
   source: project-estimate-mixing
 
-[23]
+[24]
   sequence: 110
   slug: egg_collection
   label: Nest and belt collection
@@ -356,7 +373,7 @@
     gathered.
   source: project-estimate-mixing
 
-[24]
+[25]
   sequence: 120
   slug: egg_farm_cooler
   label: On-farm cooler
@@ -371,7 +388,7 @@
     category at all.
   source: project-estimate-mixing
 
-[25]
+[26]
   sequence: 130
   slug: egg_washing
   label: Washing
@@ -386,7 +403,7 @@
     continuous flow.
   source: ams-shell-egg-grades
 
-[26]
+[27]
   sequence: 140
   slug: egg_candling
   label: Candling and grading
@@ -402,7 +419,7 @@
     separate hen.
   source: ams-shell-egg-grades
 
-[27]
+[28]
   sequence: 150
   slug: egg_carton_pack
   label: Carton pack
@@ -417,7 +434,7 @@
     a different hen.
   source: project-estimate-mixing
 
-[28]
+[29]
   sequence: 160
   slug: egg_distributor
   label: Distributor
@@ -433,7 +450,7 @@
     it.
   source: project-estimate-mixing
 
-[29]
+[30]
   sequence: 170
   slug: egg_retail_case
   label: Retail case
@@ -445,7 +462,7 @@
   description: The shelf. Cartons from several lots sit side by side, and you pick one.
   source: project-estimate-mixing
 
-[30]
+[31]
   sequence: 180
   slug: egg_home_fridge
   label: Your fridge

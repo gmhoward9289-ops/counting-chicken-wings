@@ -239,9 +239,10 @@ coverage and how much of the model still rests on estimates.
 ## Scope
 
 The question generalises to "how many X does it take to produce Y", and it is no
-longer only about chickens. Three subjects are live — broiler wings, table eggs,
-and saffron — and each answers the question by a different mechanism. Turkey is
-stubbed as an inactive species, waiting on figures rather than on code.
+longer only about chickens. Seven subjects are live — broiler wings, table eggs,
+saffron, maple syrup, silk, ground beef, and ground pork — and each answers the
+question by a different mechanism. Turkey is stubbed as an inactive species,
+waiting on figures rather than on code.
 
 The abstraction splits three ways on yield:
 

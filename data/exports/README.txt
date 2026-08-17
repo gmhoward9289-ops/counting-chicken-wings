@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- dataset index
-# generated: 2026-08-16
+# generated: 2026-08-17
 # regenerate with: wings export
 # --------------------------------------------
 
@@ -7,10 +7,10 @@ Every file has a .csv twin for spreadsheets and a .txt twin for
 reading. Files are kept small and self-describing so any one of
 them is usable on its own.
 
-  facts               69 rows  chicken facts
-  sources             86 rows  citations
-  loss_chain          26 rows  loss chain
-  mixing_cascade      30 rows  mixing cascade
+  facts               93 rows  chicken facts
+  sources            115 rows  citations
+  loss_chain          28 rows  loss chain
+  mixing_cascade      31 rows  mixing cascade
   states              46 rows  average live weight by state
   states_census       50 rows  broiler presence by state, Census of Agriculture
   states_monthly     276 rows  average live weight by state and month
