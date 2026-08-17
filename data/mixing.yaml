@@ -369,6 +369,70 @@ supply_chains:
       wings from six chickens.
     stages: []
 
+  - slug: organic_small_farm
+    domain: poultry
+    species: broiler
+    label: Organic / small farm
+    is_default: 0
+    description: >-
+      A small, often-organic farm that processes on-site (or via a rented
+      Mobile Poultry Processing Unit) and sells direct to the consumer at a
+      farm stand, farmers' market, or CSA pickup - no grading, no freezer
+      tunnel, no distributor, same shape as the local butcher route. What
+      differs is WHY the pool is small and HOW small: this route sources a
+      real documented batch size instead of estimating one, from NCAT/ATTRA's
+      "Small-Scale Poultry Processing" bulletin (ncat-attra-small-scale-
+      poultry-processing), which puts on-farm processing capacity at 50-100
+      birds per day, run 1-30 days a year - the batch is a single day's kill,
+      not a running commercial line. pool_override: 75 is the midpoint of
+      that documented range.
+
+      ORGANIC VS. SMALL-SCALE, AND WHY THIS IS ONE ROUTE NOT TWO: these are
+      different axes - USDA National Organic Program certification is a
+      feed/inputs/land standard that does not require small-scale slaughter,
+      and plenty of small or on-farm processors (most of them, in fact -
+      NCAT's bulletin is written for "small producers," not specifically
+      certified-organic ones) are not certified organic. But no source found
+      during research gives a genuinely DIFFERENT pool size or loss profile
+      for the certified-organic subset versus small-scale processing
+      generally - the throughput ceiling comes from batch/manual slaughter
+      capacity (a scale fact), not from organic certification (a compliance
+      fact), so there is nothing for a second route to model differently.
+      Shipping one route representing the realistic common case - a small,
+      often-organic farm-to-table operation - is the honest choice: it is
+      the actual demographic these sources describe, and a second
+      "certified-organic-at-commodity-scale" route would need pool and loss
+      figures this research did not turn up.
+
+      LOSS STAGES: no loss_stages override here, deliberately reusing the
+      species defaults - the same choice local_butcher already makes for the
+      same reason (no sourced figure exists that is BOTH route-specific and
+      expressible in this model's species/product-scoped loss-factor schema).
+      One real, sourced difference did turn up: NCAT's bulletin reports
+      "about 16% to 30% of the birds need to be cut up because of bruises,
+      broken bones in the picker, and other damage" at small plants, well
+      above the ~5.7% commodity wing-damage rate this corpus already carries
+      - small/manual processing is LESS gentle on wings than a mechanized
+      line, not more. That is documented but NOT loaded as a route-specific
+      number: it is a whole-bird cut-up rate, not a wing survival fraction,
+      and turning one into the other would mean inventing an unsourced
+      conversion, which this project declines to do (see the source note on
+      ncat-attra-small-scale-poultry-processing). It is recorded in prose
+      rather than silently dropped.
+    floor_note: >-
+      A single day's on-farm kill, sold direct with no grading and no
+      freezer tunnel between the farm and the buyer, is a small pool for the
+      same reason the local butcher's tray is: not much separates before you
+      draw twelve wings from it. The answer lands meaningfully below the
+      commodity ceiling and close to the local-butcher figure, because the
+      documented on-farm batch size (50-100 birds/day) is larger than a
+      single butcher's tray but still nowhere near a commodity pool.
+    stages:
+      - slug: separation
+        pool_override: 75
+      - slug: restaurant_freezer
+        pool_override: 75
+
   - slug: grocery_retail
     domain: poultry
     species: broiler
