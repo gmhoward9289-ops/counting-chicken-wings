@@ -1,0 +1,134 @@
+# Ground pork mixing cascade. Merged with mixing.yaml at build time.
+#
+# NO MEASURED POOL, AND A SOURCED REASON WHY NOT
+# --------------------------------------------------------------------------
+# Ground beef gets to cite Hu et al. 2012, which counted 411 to 1,367 cattle
+# in six real grind batches by DNA. This project searched hard for a pork
+# equivalent - DNA mark-recapture studies, National Pork Board publications,
+# USDA FSIS grinding-log or traceability studies specific to pork - and
+# found none.
+#
+# What it found instead is a plausible, sourced reason one has never been
+# run: FSIS's 2015 grinding recordkeeping rule (9 CFR 320.1(b)(4),
+# fsis-beef-grinding-recordkeeping-rule) requires source-lot logs only for
+# "raw ground beef products". Its own preamble states the purpose is to
+# trace foodborne illness outbreaks in ground beef specifically. That
+# requirement, and the traceability paper trail it created, was never
+# extended to raw ground pork. Hu et al.'s study exists because the beef
+# rule gave regulators and researchers a reason to go looking; nothing
+# analogous exists for pork. This is inference, not proof - the absence of
+# a study is not itself evidence the underlying batch sizes differ - but it
+# is the best honest account this project can give for why the strongest
+# source in ground_beef's mixing file has no counterpart here.
+#
+# So this cascade is graded like every OTHER subject in the corpus except
+# ground beef: `project-estimate-mixing`, reasoned from equipment scale
+# rather than measured. The one piece of real evidence available is that
+# 2,000-lb combo bins are standard equipment for pork trim specifically, not
+# just borrowed from beef by analogy - commercial pork-trim spec sheets
+# (e.g. "Pork 42% Trim" and "Pork Trim Finely Texture" cut specs) list
+# "Case Wt: 2000 lb." as the pack size, and combo bins are described in
+# industry packaging literature as "an established industry standard for
+# bulk storage and transportation of poultry, beef, pork, or fish." Neither
+# is an institutional source clean enough to cite by name in sources.yaml
+# (retailer and spec-sheet pages, the same tier ground_beef's grinder-plate
+# diameter comes from) - recorded here as the trade-page basis for choosing
+# 2,000 lb as the bin size, not asserted as a checked citation.
+#
+# ONE STAGE ONLY, DELIBERATELY
+# --------------------------------------------------------------------------
+# Ground beef also models a second stage - several combo bins pooled into
+# one grinder load, "2 to 15 combo bins" per the National Academies' review
+# of the FSIS ground-beef risk assessment. That figure is scoped to a beef
+# regulatory model and this project will not import it for pork without a
+# pork-specific source. So the cascade stops at one combo bin. The true pool
+# at the grinder, across multiple bins, is almost certainly larger than what
+# is modelled here - this is a floor on the estimate, not a ceiling, and
+# said so in the stage description below.
+
+stages:
+  - slug: pork_combo_bin
+    domain: livestock
+    label: Combo bin of trim
+    sequence: 30
+    # In HOGS represented per 2,000-lb combo bin of trim. Not measured -
+    # reasoned from the bin's standard weight capacity divided by the
+    # per-hog trim yield this project already sourced for
+    # ground_pork_1lb_package (kstate-ext-pork-cutout x
+    # wsu-ext-butcher-hog-yield, taxonomy_ground_pork.yaml):
+    #
+    #   lo   2,000 lb / 17.8 lb trim per hog (the HIGH end of the per-hog
+    #        range, which yields the FEWEST hogs per bin)  -> ~112 hogs
+    #   hi   2,000 lb / 13.7 lb trim per hog (the LOW end of the per-hog
+    #        range, which yields the MOST hogs per bin)    -> ~146 hogs
+    #   mode the midpoint of lo and hi, 129, and it is OURS - matching
+    #        mixing_ground_beef.yaml's own convention (its 889 is likewise
+    #        the midpoint of 411 and 1,367, not an independently-sourced
+    #        point value). K-State's own 15.9 lb/hog implies ~126, close
+    #        enough to confirm the band is reasonable, but the midpoint is
+    #        used here so the confidence distribution stays symmetric.
+    #
+    # This is a FLOOR, not a full estimate of the grinder-level pool: real
+    # combo bins are pooled several at a time before grinding (ground beef's
+    # equivalent stage adds another 2-15x on top), and this cascade does not
+    # model that second stage for lack of a pork-specific source. Whatever
+    # the true grind-batch pool is, it is not smaller than one bin's worth.
+    pool_lo: 112
+    pool_mode: 129
+    pool_hi: 146
+    mixing_kind: random
+    confidence: estimate
+    source: project-estimate-mixing
+    description: >-
+      Trim is stripped from every carcass on the line and combined into
+      2,000-pound combo bins, the same equipment and pack size ground beef's
+      cut-up line uses. This is as far upstream as this project can bound
+      the pool for pork - unlike beef, no DNA study measures how many
+      further bins get pooled into one grinder load.
+
+supply_chains:
+  - slug: commodity_ground_pork
+    domain: livestock
+    species: pig
+    label: Commodity ground pork
+    is_default: 1
+    description: >-
+      The route almost all ground pork takes: trim from every carcass on
+      the shift into 2,000-pound combo bins, at least one of which supplies
+      any given package. Unlike ground beef, this project has no source
+      bounding how many further bins get pooled at the grinder, so only the
+      combo-bin stage applies.
+    stages:
+      - pork_combo_bin
+    floor_note: >-
+      The floor is 1, for the same reason it is 1 for ground beef: one hog
+      is physically enough to supply a package, and reaching that floor
+      requires that no commingling happen at all, which on this route never
+      happens even once.
+
+      What the evidence bounds is the BIN, not the package: the combo bin
+      your package's trim was drawn from likely held on the order of 112 to
+      146 hogs. That is almost certainly an undercount of the true
+      grind-batch pool - ground beef's DNA-measured batches ran several
+      combo bins deep - but this project has no pork-specific source for how
+      many bins get pooled, so it will not guess at the multiplier the way
+      it will not guess at how many of a bin's hogs end up in one particular
+      package.
+
+  - slug: home_ground_pork
+    domain: livestock
+    species: pig
+    label: Home-ground, single hog
+    is_default: 0
+    description: >-
+      Your own hog, or a whole or half hog from one farm, ground by a
+      custom-exempt butcher who keeps it separate. No combo bin, no
+      commingling with any other carcass.
+    # No stages at all, deliberately - the exact analogue of
+    # home_ground_beef. resolve_pool handles the empty case and says so.
+    floor_note: >-
+      The floor, reached. One hog, one grinder, one freezer - the package
+      contains exactly one hog and the answer to the project's question is
+      1. This is the pork counterpart of buying a whole chicken to get two
+      wings from one bird, and the only way a package of ground pork has a
+      knowable provenance at all.

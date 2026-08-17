@@ -1,0 +1,156 @@
+# Ground pork. Merged with taxonomy.yaml at build time.
+#
+# The second product on the no-anatomical-floor pattern ground_beef opened.
+# Same shape, same reason: grinding destroys the individual, so nothing
+# about pig anatomy caps how many pigs can be in a package of ground pork.
+# `is_anatomical_constant: 0`, floor is 1, reachable only by hand - see
+# taxonomy_ground_beef.yaml's header for the fuller argument, which applies
+# here word for word and is not repeated.
+#
+# WHAT IS DIFFERENT FROM GROUND BEEF, AND WHY IT MATTERS
+# --------------------------------------------------------------------------
+# Ground beef's mixing pool is MEASURED - Hu et al. 2012 counted 411 to 1,367
+# cattle in six real grind batches by DNA. No pork equivalent exists. This
+# project looked (DNA mark-recapture studies, National Pork Board
+# publications, USDA FSIS grinding-log/traceability studies) and the most
+# useful thing it found was a NEGATIVE result with its own citation: FSIS's
+# 2015 grinding recordkeeping rule (9 CFR 320.1(b)(4)) requires source-lot
+# logs only for "raw ground beef products". It was never extended to pork.
+# That is almost certainly why nobody has run the pork version of the Hu et
+# al. study - the traceability regime that motivated it doesn't exist for
+# this subject. See fsis-beef-grinding-recordkeeping-rule in sources.yaml and
+# the header of mixing_ground_pork.yaml for the consequence: the mixing pool
+# here is `project-estimate-mixing`, same grade as poultry, eggs, saffron and
+# maple, not the `study`-grade figure ground beef gets to use.
+#
+# WHY THE UNIT IS A ONE-POUND PACKAGE
+# --------------------------------------------------------------------------
+# 1 lb exactly, which needs no citation because it is what the word package
+# means at this size - the common consumer chub of ground pork. Chosen over
+# a sausage-link weight because link size varies by product and grind, while
+# "one pound" is definitionally exact the same way ground_beef's quarter
+# pound is.
+
+species:
+  - slug: pig
+    domain: livestock
+    common_name: Domestic pig
+    scientific_name: Sus scrofa domesticus
+    individual_noun: hog
+    individual_plural: hogs
+    # Deliberately NULL, matching beef_cattle - NASS does publish hog
+    # slaughter, but nothing in this project's stat pipeline reads it yet.
+    stat_category: null
+    active: 1
+    notes: >-
+      Like beef_cattle, the individual does not survive its own processing
+      in any recognisable form once trim reaches a grinder. Unlike beef
+      cattle, this project could not find a measured pool size for how many
+      hogs' trim ends up in one grind batch - see the mixing file for why,
+      and for the sourced reason that absence is itself explainable rather
+      than just a gap.
+
+products:
+  - slug: ground_pork_1lb_package
+    species: pig
+    label: One-pound package of ground pork
+    label_plural: One-pound packages of ground pork
+    display_name: "Pork: Ground pork 1-lb package"
+    yield_mode: continuous
+    # PACKAGES PER HOG, from the trim stream that actually becomes ground
+    # pork and sausage - not total packaged pork.
+    #
+    # K-State Research and Extension (MF3396), Pork Cutout Table, on a
+    # 205-lb hot carcass weight with average muscling and 3% shrink assumed:
+    #   "Trimmings  7.8 [% of hot carcass]  15.9 [lbs]  Ground pork and
+    #    sausage"
+    #
+    # K-State states one point value on one carcass weight, not a range -
+    # unlike SDSU's beef bulletin, which gave lean trim as a range outright.
+    # The lo/hi band below is OUR arithmetic, built by carrying K-State's own
+    # 7.8 percent trim fraction across a real range of hanging carcass
+    # weights from WSU Extension: "Market hogs weighing between 250-325
+    # pounds will dress on average 70% (range 68 to 72%) ... resulting in a
+    # hanging carcass weight range of 175-228 pounds."
+    #
+    #   lo   175 lb carcass x 7.8% = 13.65 lb trim -> 13.7 packages
+    #   mode 205 lb carcass x 7.8% = 15.99 lb, but K-State's OWN stated
+    #        figure is 15.9 lb -> 15.9 packages. Used directly rather than
+    #        our own rounding of their fraction, since it is their number.
+    #   hi   228 lb carcass x 7.8% = 17.78 lb trim -> 17.8 packages
+    #
+    # The near-exact match between K-State's 205-lb example and the midpoint
+    # of WSU's independently-sourced 175-228 lb range (mode 15.99 vs stated
+    # 15.9) is a real cross-check between two land-grant extension services,
+    # not a coincidence engineered by this project - it is the same kind of
+    # agreement ground_beef's SDSU/MSU dressing figures show each other.
+    #
+    # This is an UPPER bound on how much of one hog could become ground pork
+    # from the dedicated trimmings stream alone: no cook loss, no rework, and
+    # it excludes the picnic shoulder and other cuts the same K-State page
+    # says "could also be used to make ground pork or sausage" if a
+    # processor chooses to. Using only the trimmings line, rather than
+    # guessing how much of the rest of the carcass gets diverted to grind,
+    # is the conservative and honest read.
+    units_per_individual_lo: 13.7
+    units_per_individual_mode: 15.9
+    units_per_individual_hi: 17.8
+    unit_name: package
+    source_part: trim
+    named_part: pork
+    named_part_content: 1.0
+    # ZERO, same reasoning as ground_beef_patty. There is no number of
+    # packages a hog must yield and no number of hogs a package must
+    # contain. The floor is 1 because one hog is enough, not typical.
+    is_anatomical_constant: 0
+    # SAME FIELD, SAME BUG IT FIXES - see taxonomy_ground_beef.yaml's long
+    # comment on this field for the full argument; it is not re-derived
+    # here. In short: units_per_individual answers "how much of a hog does
+    # one package need" (the floor question); this field re-expresses one
+    # package as however many separately-sourced grind particles it
+    # actually contains, so the SAME pooling formula that gives "6 chickens"
+    # for a dozen wings gives a real answer here instead of the trivially
+    # true "about one hog".
+    #
+    # THE NUMBER, AND WHY IT IS estimate RATHER THAN ANYTHING STRONGER
+    # ------------------------------------------------------------------
+    # No institutional source for grams-per-grind-particle was found for
+    # pork specifically, same as beef. Reused by analogy: pork grinder
+    # plates are the same trade equipment as beef's, widely reported (trade
+    # and retailer pages, not a checked institutional source) at roughly
+    # 3-10mm hole diameter. Taking 5mm as a round midpoint, one particle as
+    # a short cylinder (length = diameter) at ground pork's typical density
+    # of about 1.04 g/cm^3 (fresh pork trim runs slightly leaner-adjacent
+    # than beef trim but close enough that the difference does not move the
+    # qualitative conclusion) gives roughly 0.10 g per particle, and a
+    # 453.6g one-pound package is then about 4,440 particles.
+    #
+    #   4,440 = round(453.6 / (pi * (0.25)^2 * 0.5 * 1.04))
+    #
+    # This is deliberately not precise, and does not need to be - the same
+    # saturation argument ground_beef makes applies: at 4,440 draws against
+    # a pool on the order of a hundred-odd hogs per combo bin (see
+    # mixing_ground_pork.yaml), the batch is comfortably saturated across
+    # the whole 3-10mm plate range. Swept to the coarsest 10mm plate, one
+    # particle is roughly 0.82g and a package is about 555 particles -
+    # still large enough, against a pool this small, that the qualitative
+    # answer ("most or all of the bin") does not move. Use 555 as the
+    # conservative floor for this figure if a skeptical reading is wanted.
+    mixing_subunits_per_unit: 4440
+    source: kstate-ext-pork-cutout
+    notes: >-
+      "Trimmings  7.8 [percent of hot carcass]  15.9 [lbs]  Ground pork and
+      sausage" - K-State Research and Extension MF3396, on a 205-lb hot
+      carcass with average muscling and 3 percent shrink assumed.
+
+      TRIMMINGS ONLY, not total packaged pork and not the maximum possible
+      ground-pork stream. The same source states "Any of the carcass can be
+      used to make ground product" and singles out picnic shoulder as
+      commonly diverted to grind as well - both excluded here on purpose.
+      loss_chain_ground_pork.yaml carries the broader carcass-to-packaged
+      figure (a different, larger number, from a different source) for
+      narrative context; the two are not merged.
+
+      The number here answers "how many packages could this hog make". It
+      does NOT answer "how many hogs are in this package", which is what
+      mixing_subunits_per_unit and the mixing cascade are for instead.
