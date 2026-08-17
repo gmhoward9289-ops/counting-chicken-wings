@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.5.3 — 2026-08-17
+
+### What changed
+
+Added a family footer linking to Foundation (foundation.swamplink.com — the
+new sister project applying the same sourcing discipline to cosmetics) and
+the blog. Static chrome only; no corpus or data changes.
+
 ## v2.5.2 — 2026-08-17
 
 ### What changed
