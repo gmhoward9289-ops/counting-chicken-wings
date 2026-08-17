@@ -808,10 +808,10 @@ facts:
     headline: One mixing pool in this corpus was measured, and it took DNA to do it
     body: >-
       Every cascade here rests on an estimate of how many animals are in the
-      pool. Nobody in poultry, eggs, saffron or maple measures that, because
-      nobody has a reason to, so the audit prints `project-estimate-mixing`
-      against pool after pool and it has always been the softest joint in the
-      model.
+      pool. Nobody in poultry, eggs, saffron, maple, silk or ground pork
+      measures that, because nobody has a reason to, so the audit prints
+      `project-estimate-mixing` against pool after pool and it has always
+      been the softest joint in the model.
 
       Ground beef is the one exception. Hu et al. profiled DNA markers in six
       commercial grind batches and estimated animal abundance by mark-recapture
@@ -821,9 +821,9 @@ facts:
       the only method that can see through a grinder.
 
       It matters well beyond beef. The commingling model claims that ordinary
-      food is a blend of a great many animals, and for five of six subjects that
-      claim rests on reasoning about how the trade works. Here it rests on
-      somebody reading the DNA and finding the animals were there.
+      food is a blend of a great many animals, and for six of seven subjects
+      that claim rests on reasoning about how the trade works. Here it rests
+      on somebody reading the DNA and finding the animals were there.
     source: plos-hu-2012-grind-batch
     placement: both
     surprise: 5

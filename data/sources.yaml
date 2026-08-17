@@ -1192,6 +1192,112 @@
     percent dressing percent, 75 percent of the carcass is 47 percent of live
     weight, not 40. SDSU's 65 percent does reconcile. Both bounds are kept and
     neither is averaged away.
+
+# --- ground pork (batch, 2026-08-17) ----------------------------------------
+#
+# The second product on the "no anatomical floor" pattern ground_beef opened.
+# See taxonomy_ground_pork.yaml for why the floor is 1 here too, and
+# mixing_ground_pork.yaml for the honest gap: no Hu-et-al-style DNA batch
+# study exists for pork, and the likely reason (FSIS's beef-only grinding
+# recordkeeping rule) is itself sourced below.
+
+- slug: kstate-ext-pork-cutout
+  title: Pork Processing Options for Consumers (MF3396)
+  publisher: Kansas State University Agricultural Experiment Station and Cooperative Extension Service
+  url: https://www.asi.k-state.edu/research/meat-science/Pork.pdf
+  published_on: '2018-02-01'
+  retrieved_on: '2026-08-17'
+  source_type: trade_body
+  notes: >-
+    The pork-specific yield this subject actually needs, and the only source
+    found anywhere that isolates a "ground pork and sausage" line item rather
+    than lumping it into a general boneless/bone-in split. The Pork Cutout
+    Table, "based on a pork carcass with a 205-pound hot (unchilled) carcass
+    weight with average muscling" and "a 3% shrink (cooler shrink and cutting
+    loss)": "Trimmings 7.8 [percent of hot carcass] 15.9 [lbs] / Ground pork
+    and sausage."
+
+    Two things this figure is NOT: it is not the maximum possible ground pork
+    stream (the same page notes "Any of the carcass can be used to make
+    ground product" and that picnic shoulder "could also be used to make
+    ground pork or sausage" beyond the trimmings line), and it is not a
+    stated range - one carcass weight, one point value, unlike SDSU's beef
+    bulletin which gave lean trim as a range outright. The lo/hi band on
+    ground_pork_1lb_package therefore comes from applying this document's own
+    7.8 percent trim fraction across a real range of carcass weights (see
+    wsu-ext-butcher-hog-yield), not from a range this document states itself.
+
+    Prepared by Kassandra McKillip, Alaena Wilfong and Travis O'Quinn, Ph.D.,
+    Kansas State University, February 2018 (MF3396).
+
+- slug: wsu-ext-butcher-hog-yield
+  title: 'From Pig to Pork Chop: How Much Meat to Expect from a Butcher Hog'
+  publisher: Washington State University Extension
+  url: https://s3.wp.wsu.edu/uploads/sites/2049/2021/02/02.21PorkFabVideoDataFactSheet02.16.2021.pdf
+  published_on: '2021-02-16'
+  retrieved_on: '2026-08-17'
+  source_type: trade_body
+  notes: >-
+    Supplies the carcass-weight range the K-State trim fraction is spread
+    across, and the dressing-percent band: "Market hogs weighing between 250
+    - 325 pounds will dress on average 70% (range 68 to 72%) with the
+    skin-on and the head-off, resulting in a hanging carcass weight range of
+    175 - 228 pounds."
+
+    Also states, without isolating a pounds figure: "if you have more cuts
+    made into boneless products, or more grind done for sausage or
+    cured/smoked products, the hanging carcass will yield about 65% boneless
+    retail meat cuts and some cured meat items, about 114-149 pounds of
+    take-home meat." That 65 percent bundles sausage in with cured product
+    and is not usable alone for a ground-pork-only figure, which is why
+    kstate-ext-pork-cutout carries the product-level number and this source
+    carries the carcass-weight range instead.
+
+    By Paul Kuber and Sarah M. Smith, WSU Extension Regional Specialists.
+    Fetched successfully via direct PDF download after WebFetch's HTML
+    conversion choked on the source's embedded font encoding - the retrieval
+    failure was a tooling artifact, not a reason to treat the document as
+    unread.
+
+- slug: wisc-ext-hog-yield
+  title: How much meat should a hog yield?
+  publisher: University of Wisconsin-Madison, Division of Extension
+  url: https://livestock.extension.wisc.edu/articles/how-much-meat-should-a-hog-yield/
+  retrieved_on: '2026-08-17'
+  source_type: trade_body
+  notes: >-
+    Cited for the general carcass-to-packaged band in loss_chain_ground_pork,
+    which is deliberately kept separate from kstate-ext-pork-cutout's
+    ground-pork-specific trim figure to avoid double counting - the same
+    discipline ground_beef uses. Table 2, "Average Carcass Cutting Yield":
+    "Bone-in retail cuts 74%" and "Boneless closely trimmed retail cuts 65%",
+    both as a fraction of chilled carcass weight. "Ground pork and sausage
+    comes from trimmings of multiple primal cuts throughout the carcass."
+
+- slug: fsis-beef-grinding-recordkeeping-rule
+  title: 'Records to Be Kept by Official Establishments and Retail Stores That Grind Raw Beef Products'
+  publisher: USDA Food Safety and Inspection Service
+  url: https://www.fsis.usda.gov/sites/default/files/media_file/2021-02/2009-0011F.pdf
+  published_on: '2015-12-14'
+  retrieved_on: '2026-08-17'
+  source_type: government
+  notes: >-
+    Cited NEGATIVELY, as evidence for an absence rather than a figure. This
+    final rule (9 CFR 320.1(b)(4)) requires grinding logs - source
+    establishment, supplier lot numbers, production dates - ONLY for "raw
+    ground beef products". Its own preamble states the purpose is "to improve
+    FSIS's ability to accurately trace the source of foodborne illness
+    outbreaks involving ground beef products", and the requirement was never
+    extended to raw ground pork.
+
+    That is almost certainly why Hu et al. 2012 (plos-hu-2012-grind-batch)
+    has no pork counterpart: the DNA mark-recapture study of grind-batch
+    animal counts was motivated by exactly this traceability regime, and the
+    regime does not exist for pork. This project searched for a hog-specific
+    equivalent (DNA batch studies, National Pork Board publications, FSIS
+    pork grinding logs) and found none - see mixing_ground_pork.yaml for the
+    honest consequence of that gap.
+
 # --- silk (batch-08-silk, accepted 2026-07-31) ------------------------------
 #
 # The thinnest-sourced subject in the corpus, and labelled as such throughout.

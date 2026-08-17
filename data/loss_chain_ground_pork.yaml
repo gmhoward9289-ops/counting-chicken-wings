@@ -1,0 +1,87 @@
+# The ground pork loss chain. Merged with loss_chain.yaml at build time.
+#
+# Both stages here are `applies_to: mass`, exactly as in loss_chain_ground_
+# beef.yaml, and for the same reason: nothing here can move a hog count.
+# Removing the hide and organs from a hog makes the carcass lighter; it does
+# not make the hog fractional. These stages explain why a 280-lb hog does
+# not produce 280 lb of pork - the head count does not move at all.
+#
+# WHAT IS DELIBERATELY NOT MODELLED HERE
+# --------------------------------------------------------------------------
+# The ground-pork-specific trim share - K-State's 7.8 percent trimmings
+# figure - is NOT a stage in this chain. It is already priced into
+# units_per_individual on ground_pork_1lb_package. Adding it here as well
+# would double-count it, the same trap ground_beef's loss chain calls out
+# for its own lean-trim figure. The stage below uses a BROADER, different
+# figure instead - total carcass-to-packaged yield, bone-in through
+# boneless - for narrative context about the whole hog, not to calculate
+# the ground-pork answer.
+
+stages:
+  - slug: pork_dressing
+    domain: livestock
+    label: Dressing (live weight to hot carcass)
+    sequence: 30
+    phase: slaughter
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Hide (unless left on), head, feet, blood and viscera are removed,
+      leaving the hot carcass. The surviving fraction is the dressing
+      percentage, and for market hogs it runs around 68 to 72 percent of
+      live weight.
+    notes: >-
+      "Market hogs weighing between 250 - 325 pounds will dress on average
+      70% (range 68 to 72%) with the skin-on and the head-off, resulting in
+      a hanging carcass weight range of 175 - 228 pounds." - WSU Extension
+      (Kuber & Smith). Both the average and the range are stated directly by
+      the source, unlike ground_beef's dressing figure, which is this
+      project's own interpolation between two extension bulletins.
+
+      Recorded at confidence=industry, not measured. An extension fact sheet
+      reporting a typical value is not a government agency's enumeration.
+
+      A mass stage, so it cannot touch a head count.
+    factors:
+      - species: pig
+        survive_lo: 0.68
+        survive_mode: 0.70
+        survive_hi: 0.72
+        confidence: industry
+        source: wsu-ext-butcher-hog-yield
+
+  - slug: pork_carcass_to_packaged
+    domain: livestock
+    label: Carcass to packaged pork
+    sequence: 40
+    phase: processing
+    applies_to: mass
+    optional: 0
+    default_enabled: 1
+    description: >-
+      Chilling shrink, bone, and excess fat come off the hanging carcass,
+      leaving the retail cuts that actually go home - hams, loins, bellies
+      and the trimmings that become ground pork and sausage.
+    notes: >-
+      "Bone-in retail cuts 74%" and "Boneless closely trimmed retail cuts
+      65%" of chilled carcass weight - University of Wisconsin-Madison
+      Division of Extension. Unlike ground_beef's carcass-to-packaged band,
+      which reconciles a genuine disagreement between two extension
+      services, this is ONE source stating both ends of its own range
+      directly: how much a customer takes home depends on how closely the
+      cuts are trimmed and how much is left bone-in, not on which bulletin
+      you read.
+
+      The same source: "Ground pork and sausage comes from trimmings of
+      multiple primal cuts throughout the carcass" - qualitative
+      confirmation that grind draws from across the whole animal, not a
+      quantity, which is why the number stays out of this stage and lives
+      on the product instead (kstate-ext-pork-cutout).
+    factors:
+      - species: pig
+        survive_lo: 0.65
+        survive_mode: 0.70
+        survive_hi: 0.74
+        confidence: industry
+        source: wisc-ext-hog-yield
