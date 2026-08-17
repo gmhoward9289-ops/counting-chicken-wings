@@ -1058,6 +1058,20 @@ def test_the_wing_footprint_still_answers_in_full(client):
                 m["naive_total"] * 0.073)
 
 
+def test_footprint_includes_electricity_distinct_from_fossil_resources(client):
+    """resources.yaml gained an `electricity` metric (kWh, on-farm growout
+    only) alongside the pre-existing `fossil_resources` proxy (kg oil eq).
+    They must stay two separate rows, not merged into one."""
+    d = get(client, "/api/footprint", count=12, product="whole_wing")
+    metrics_by_name = {m["metric"]: m for m in d["metrics"]}
+    assert "electricity" in metrics_by_name
+    assert "fossil_resources" in metrics_by_name
+    elec = metrics_by_name["electricity"]
+    assert elec["unit"] == "kWh"
+    assert elec["per_individual"] == pytest.approx(0.251)
+    assert elec["source_slug"] == "ncc-broiler-lca-2020"
+
+
 def test_boneless_wings_carry_the_breast_share_not_the_wing_one(client):
     d = get(client, "/api/footprint", count=12, product="boneless_wing")
     assert d["mass_share"] == pytest.approx(0.23)
