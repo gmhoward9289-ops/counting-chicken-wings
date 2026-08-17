@@ -10,7 +10,7 @@ every published number traces to a real source.
 pip install -e ".[dev,gui]"          # gui extras are required — the API tests import the FastAPI app
 python -m counting_chicken_wings.build   # compile the YAML corpus into SQLite
 python -m counting_chicken_wings.audit   # every statistic must cite a source in sources.yaml
-pytest -q                            # 721 tests
+pytest -q                            # the full test suite
 wings 12                             # CLI: a dozen wings
 wings gui                            # serve the web UI
 ```
@@ -106,8 +106,9 @@ Read `docs/VERSIONING.md` before touching a version. The two rules that catch pe
 
 - **Version lives only in `pyproject.toml`.** Everything else derives it from installed
   package metadata. An editable install can report a stale version until reinstalled.
-- **The scheme is MAJOR.MINOR.MINOR, not SemVer** — the third digit is not a patch
-  level, and routinely carries data. **Version by capability, not by volume.** A new
+- **The scheme is MAJOR.MINOR.MINOR, not SemVer** — read it as
+  major / capability / volume. The third digit is not a patch level, and routinely
+  carries data. **Version by capability, not by volume.** A new
   *kind* of data — a domain, a product, a table, a dimension — takes the second digit.
   **More rows of a kind we already have takes the third**, however many rows: another
   country's series landing in an existing table answers nothing new. The exception runs
