@@ -610,6 +610,33 @@
     UK-specific.
 
 [29]
+  slug: fsis-beef-grinding-recordkeeping-rule
+  title:
+    Records to Be Kept by Official Establishments and Retail Stores That Grind
+    Raw Beef Products
+  publisher: USDA Food Safety and Inspection Service
+  source_type: government
+  published_on: 2015-12-14
+  retrieved_on: 2026-08-17
+  url:
+    
+    https://www.fsis.usda.gov/sites/default/files/media_file/2021-02/2009-0011F.pdf
+  notes:
+    Cited NEGATIVELY, as evidence for an absence rather than a figure. This
+    final rule (9 CFR 320.1(b)(4)) requires grinding logs - source
+    establishment, supplier lot numbers, production dates - ONLY for "raw
+    ground beef products". Its own preamble states the purpose is "to improve
+    FSIS's ability to accurately trace the source of foodborne illness
+    outbreaks involving ground beef products", and the requirement was never
+    extended to raw ground pork. That is almost certainly why Hu et al. 2012
+    (plos-hu-2012-grind-batch) has no pork counterpart: the DNA mark-recapture
+    study of grind-batch animal counts was motivated by exactly this
+    traceability regime, and the regime does not exist for pork. This project
+    searched for a hog-specific equivalent (DNA batch studies, National Pork
+    Board publications, FSIS pork grinding logs) and found none - see
+    mixing_ground_pork.yaml for the honest consequence of that gap.
+
+[30]
   slug: fsis-line-speed-rule
   title:
     Maximum Line Speed Rates for Young Chicken and Turkey Establishments
@@ -632,7 +659,7 @@
     safety and carcass DAMAGE are different questions; the FSIS defence
     addresses the former, not the latter.
 
-[30]
+[31]
   slug: fsis-poultry-labeling-standards
   title: Food Standards and Labeling Policy Book
   publisher: USDA Food Safety and Inspection Service
@@ -648,7 +675,7 @@
     solid-muscle / chunked-and-formed / ground-and-formed distinction that
     separates a whole-muscle boneless wing from a reformed nugget.
 
-[31]
+[32]
   slug: ibge-sidra-1094-abate-frangos
   title:
     Tabela 1094 - Número de informantes, Quantidade e Peso total das carcaças
@@ -702,7 +729,7 @@
     abpa-annual-report-2026 below and docs/BRAZIL-PLAN.md, "Two national head
     counts", for the documented, unresolved 17% conflict between the two.
 
-[32]
+[33]
   slug: maff-chikusan-toukei-broiler-2024
   title:
     畜産統計調査 確報 令和６年畜産統計 ブロイラー（令和６年２月１日現在） ("Livestock Statistics Survey, Reiwa
@@ -750,7 +777,7 @@
     excludes non-commercial keepers (schools, test farms) per the table's own
     note 1.
 
-[33]
+[34]
   slug: maff-shokuryo-jukyuhyo-r5
   title:
     食料需給表 令和５年度 ("Food Balance Sheet, FY2023") — chicken meat (鶏肉) line, plus
@@ -784,7 +811,7 @@
     calorie-basis TOTAL food self-sufficiency figure (38% FY2023) — the two
     are not the same statistic and are not interchangeable.
 
-[34]
+[35]
   slug: nass-census-agriculture-2022
   title: Census of Agriculture 2022, broiler data by state
   publisher: USDA National Agricultural Statistics Service (QuickStats)
@@ -806,7 +833,7 @@
     states raise broilers and at what scale" - never mix them into an annual
     time series.
 
-[35]
+[36]
   slug: nass-chickens-eggs-2025
   title: Chickens and Eggs 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -830,7 +857,7 @@
     2024-2025 against 23 for slaughter. Maryland, South Dakota, and Virginia
     are suppressed for 2025 but present for 2024.
 
-[36]
+[37]
   slug: nass-chickens-eggs-monthly-2026
   title: Chickens and Eggs, monthly releases 2026
   publisher: USDA National Agricultural Statistics Service
@@ -848,7 +875,7 @@
     they are different birds with very different lay rates, and a state's
     headline eggs-per-layer figure is largely a readout of which mix it runs.
 
-[37]
+[38]
   slug: nass-poultry-slaughter-2025
   title: Poultry Slaughter 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -862,7 +889,7 @@
     "commercially grown broilers-fryers and other young immature birds such as
     roasters and capons". Highest-confidence source in the project.
 
-[38]
+[39]
   slug: nass-production-value-2025
   title: Poultry - Production and Value 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -884,7 +911,7 @@
     Florida is individually reported here for 2024 while appearing in no year
     of the slaughter summary.
 
-[39]
+[40]
   slug: nbs-china-2024-communique
   title:
     中华人民共和国2024年国民经济和社会发展统计公报 (Statistical Communiqué of the People's Republic
@@ -908,7 +935,7 @@
     shape of gap CBS left for Israel's chicken figures, but for a different
     reason (aggregation across species, not absence of a count).
 
-[40]
+[41]
   slug: niedersachsen-fleischerzeugung-1994-2014
   title: Fleischerzeugung in Deutschland und Niedersachsen 1994 bis 2014
   publisher:
@@ -939,7 +966,7 @@
     scoped to cattle/pigs/sheep/goats/horses, NOT poultry - not applied to any
     German broiler figure in this project.
 
-[41]
+[42]
   slug: sader-pollos-gallinas-avicultura
   title: Pollos, gallinas y la avicultura en México
   publisher: Secretaría de Agricultura y Desarrollo Rural (SADER)
@@ -959,7 +986,7 @@
     or near the top of the state ranking, though never loaded as a table
     figure since only the leader is named, not a percentage.
 
-[42]
+[43]
   slug: shandong-tjj-2024-livestock-interpretation
   title:
     解读：2024年全省畜牧业生产总体平稳 (Interpretation - 2024 provincial animal husbandry
@@ -982,7 +1009,7 @@
     subnational question", for why no districts: block was built even
     qualitatively.
 
-[43]
+[44]
   slug: statcan-32100117-poultry-meat-2026
   title:
     Table 32-10-0117-01, Production, disposition and farm value of poultry
@@ -1007,7 +1034,7 @@
     lines, 2016-2025) and the national five-year series used to sanity-check
     table 118's chicken-only trend moves in the same direction.
 
-[44]
+[45]
   slug: statcan-32100118-fowl-chicken-2026
   title:
     Table 32-10-0118-01, Fowl and chicken meat production, weight and farm
@@ -1054,7 +1081,7 @@
     the purposes of this corpus's meat_output measure on that basis, though
     the two publications are not the same document.
 
-[45]
+[46]
   slug: statcan-daily-poultry-2026
   title: The Daily — Poultry and egg statistics, 2025
   publisher: Statistics Canada
@@ -1075,7 +1102,7 @@
     the raw figures, not for exact values -- those come from the WDS API pull
     recorded under statcan-32100118-fowl-chicken-2026.
 
-[46]
+[47]
   slug: usda-fas-gain-br2025-0038
   title: Brazil: Poultry and Products Annual (GAIN Report BR2025-0038)
   publisher: USDA Foreign Agricultural Service (FAS GAIN)
@@ -1108,7 +1135,7 @@
     thousand MT - a forecast, not loaded, matching this project's convention
     of loading reported/estimated actuals only.
 
-[47]
+[48]
   slug: usda-fas-gain-ch2024-0108
   title: China: Poultry and Products Annual (GAIN Report CH2024-0108)
   publisher: USDA Foreign Agricultural Service (FAS GAIN)
@@ -1130,7 +1157,7 @@
     Same "Not official USDA data" caveat and confidence=industry ceiling as
     the 2025 edition.
 
-[48]
+[49]
   slug: usda-fas-gain-ch2025-0170
   title: China: Poultry and Products Annual (GAIN Report CH2025-0170)
   publisher: USDA Foreign Agricultural Service (FAS GAIN)
@@ -1170,7 +1197,7 @@
     saved to disk as a side effect extracted cleanly with PyMuPDF (`fitz`) -
     23,339 characters, ordinary embedded text, no font encoding trap.
 
-[49]
+[50]
   slug: usda-fas-gain-ja2024-0043
   title: Japan: Poultry and Products Annual (GAIN Report JA2024-0043)
   publisher: USDA Foreign Agricultural Service (FAS GAIN)
@@ -1200,7 +1227,7 @@
     June, Unit: MT, RTC" (ready-to-cook), corroborating the "bone-in meat
     equivalent" basis documented for MAFF's own production figure.
 
-[50]
+[51]
   slug: usda-fas-gain-mx2024-0040
   title: Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)
   publisher: USDA Foreign Agricultural Service (FAS GAIN)
@@ -1250,7 +1277,7 @@
     TIF (federally-inspected) slaughter coverage - 121 plants, an estimated
     85% of 2024 slaughter, up from 83% in 2023.
 
-[51]
+[52]
   slug: usda-fas-gain-rs2020-0042
   title: Russia: Poultry and Products Annual (GAIN Report RS2020-0042)
   publisher: USDA Foreign Agricultural Service (FAS GAIN), Post Moscow
@@ -1298,7 +1325,7 @@
     necessarily a pre-2022 baseline, not a current one. See
     docs/RUSSIA-PLAN.md.
 
-[52]
+[53]
   slug: usda-fas-livestock-poultry-wmt-2026-04
   title:
     Livestock and Poultry: World Markets and Trade - China Chicken Meat
@@ -1330,7 +1357,7 @@
     largest importer in 2025, and reports 2025 export value of $2.59 billion
     (nearly double 2020).
 
-[53]
+[54]
   slug: usda-fdc-egg-raw
   title: Egg, whole, raw, fresh (FDC 171287)
   publisher: USDA FoodData Central
@@ -1347,7 +1374,7 @@
     Storing one arbitrary cooked row would assert a default that does not
     exist.
 
-[54]
+[55]
   slug: usda-fdc-wing-fried
   title: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
   publisher: USDA FoodData Central
@@ -1358,7 +1385,7 @@
     Breaded and fried. Roughly 59% of calories from fat against 27% from
     protein - the breading and frying oil, not the bird, drive the change.
 
-[55]
+[56]
   slug: usda-fdc-wing-raw
   title: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
   publisher: USDA FoodData Central
@@ -1369,7 +1396,7 @@
     Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure for
     an unbreaded, uncooked whole wing with skin.
 
-[56]
+[57]
   slug: usda-psd-israel-broiler-2000
   title:
     Production, Supply and Distribution database, Israel broiler meat
@@ -1406,7 +1433,7 @@
     and not adjudicated, and because promoting this to a stated basis is a
     human judgement about provenance.
 
-[57]
+[58]
   slug: tyson-foodservice-boneless
   title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
   publisher: Tyson Foodservice
@@ -1422,7 +1449,7 @@
     and the descriptor "whole muscle chicken breast". These are breast chunks,
     and the manufacturer does not pretend otherwise.
 
-[58]
+[59]
   slug: tyson-foodservice-chunks
   title: Boneless wings and chunks product line, ingredient statements
   publisher: Tyson Foodservice
@@ -1438,7 +1465,7 @@
     "chunks" contain no wing meat either, and the phrase "with rib meat" is a
     breast-yield allowance rather than a different cut sneaking in.
 
-[59]
+[60]
   slug: boneless-wing-method
   title:
     A method of production of boneless chicken wings (drumettes and winglets)
@@ -1451,7 +1478,7 @@
     Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
     winglet 30.7 g at 80.1% boneless yield.
 
-[60]
+[61]
   slug: chilling-method-yield
   title:
     Moisture retention by water- and air-chilled broilers, and effect of
@@ -1469,7 +1496,7 @@
     therefore belongs in the mass stages and can never move a count answer -
     but it matters a great deal to anyone buying wings by the pound.
 
-[61]
+[62]
   slug: cold-chain-refrigeration-losses
   title:
     The impact of refrigeration on food losses and associated greenhouse gas
@@ -1487,7 +1514,7 @@
     one. For meat the paper finds post-harvest handling and storage, not
     transport, is where refrigeration matters most.
 
-[62]
+[63]
   slug: gotoh-2018-wagyu-review
   title:
     The Japanese Wagyu beef industry: current situation and future prospects
@@ -1518,7 +1545,7 @@
     as one of four inputs to the quality number). See
     docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
 
-[63]
+[64]
   slug: myopathy-prevalence-ontario
   title:
     Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
@@ -1534,7 +1561,7 @@
     comes from - are the worst affected. Woody breast incidence rose from
     about 5% in 2012 to 29% by 2015.
 
-[64]
+[65]
   slug: ncc-broiler-lca-2020
   title: Broiler Production System Life Cycle Assessment: 2020 Update
   publisher: National Chicken Council / University of Arkansas
@@ -1554,7 +1581,7 @@
     chicks per broiler produced to cover mortality, which independently
     corroborates our farm_mortality stage.
 
-[65]
+[66]
   slug: nrc-2002-ground-beef-risk
   title: Escherichia coli O157:H7 in Ground Beef - Review of a Draft Risk Assessment
   publisher: National Research Council / Institute of Medicine, National Academies Press
@@ -1581,7 +1608,7 @@
     assessment, not an observation, which is why the combo-bin pool derived
     from it is graded `estimate`.
 
-[66]
+[67]
   slug: plos-hu-2012-grind-batch
   title:
     Estimating Animal Abundance in Ground Beef Batches Assayed with Molecular
@@ -1610,7 +1637,7 @@
     shift); and not a mean worth quoting on its own - the paper's own point is
     the variance between batches.
 
-[67]
+[68]
   slug: pubmed-multi-silkworm-cocoon
   title:
     Multi-silkworm cocoon: structure, properties and the collective spinning
@@ -1641,7 +1668,7 @@
     resource. So the constant is one-to-one for commercial silk and is not a
     law of nature.
 
-[68]
+[69]
   slug: rebollar-rebollar-2021-carne-pollo-kkt
   title:
     Distribución regional de carne de pollo en México: Una aplicación de las
@@ -1675,7 +1702,7 @@
     kg (pollo) vs 16 kg pork vs 18 kg beef - one more entry in the per-capita
     trap - and imports of 550,000 t (76% leg-and-thigh cuts).
 
-[69]
+[70]
   slug: welfare-training-carcass-quality
   title:
     The Influence of Welfare Training on Bird Welfare and Carcass Quality in
@@ -1688,7 +1715,7 @@
     90% of bruising occurs in the 12-24 hours before processing. Bruise
     distribution by region: breast 42%, wings 33%, legs 25%.
 
-[70]
+[71]
   slug: wing-injuries-loading
   title:
     Rearing and handling injuries in broiler chickens and risk factors for
@@ -1703,7 +1730,7 @@
     the bird. Load-to-load variance is high, so this is stored with a wide
     lo/hi band.
 
-[71]
+[72]
   slug: wing-yield-eight-strains
   title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
   publisher: Poultry Science
@@ -1714,7 +1741,7 @@
     Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
     (6.7-7.3%), measured across eight commercial broiler strains.
 
-[72]
+[73]
   slug: abpa-annual-report-2026
   title: ABPA Annual Report 2026 (covering 2025 data)
   publisher: Associação Brasileira de Proteína Animal (ABPA)
@@ -1775,7 +1802,7 @@
     kg/head) differs sharply from IBGE's (2.14 kg/head) - a real, unresolved
     discrepancy, not a rounding artifact, discussed in docs/BRAZIL-PLAN.md.
 
-[73]
+[74]
   slug: beefresearch-org-beef-grading
   title:
     Fact Sheet: Beef Grading (Expected Yields of Closely Trimmed, Boneless
@@ -1798,7 +1825,7 @@
     not interchangeable with it -- nor with SDSU's 65% worked-example figure,
     which includes trim the %CTBRC basis excludes.
 
-[74]
+[75]
   slug: cfc-annual-report-2025
   title: 2025 Annual Report
   publisher: Chicken Farmers of Canada
@@ -1830,7 +1857,7 @@
     -- industry-grade, no single year or public methodology stated for the
     multiplier, so kept as fact material rather than a statistic.
 
-[75]
+[76]
   slug: cna-avicultura-altos-vuelos-2021
   title: Avicultura mexicana, una industria de altos vuelos
   publisher: Consejo Nacional Agropecuario (CNA)
@@ -1850,7 +1877,36 @@
     report's ordering on the same Jalisco/Aguascalientes pair - contributing
     to, not resolving, that conflict.
 
-[76]
+[77]
+  slug: cornell-small-farms-1000-bird-exemption
+  title: Producer/Grower - 1,000 Bird Limit Exemption
+  publisher: Cornell Small Farms Program
+  source_type: trade_body
+  retrieved_on: 2026-08-17
+  url:
+    
+    https://smallfarms.cornell.edu/2017/05/producergrower-1000-bird-limit-exemption/
+  notes:
+    Explains the federal Poultry Products Inspection Act producer/grower
+    exemption: a farm may slaughter "no more than 1,000 healthy birds of his
+    or her own raising in a calendar year for distribution as human food"
+    without continuous federal inspection, provided the birds are processed on
+    the farm's own premises and sold within the state. Notes the exemption is
+    used two ways - on-farm processing with owned equipment, or a rented
+    Mobile Poultry Processing Unit (MPPU) brought to the farm - both ending in
+    direct-to-consumer sale (farm stand, roadside stand, farmers' market),
+    never through a distributor. Corroborated by the original USDA FSIS
+    guidance document (Guidance for Determining Whether a Poultry Slaughter or
+    Processing Operation is Exempt from Inspection Requirements of the PPIA,
+    Revision 1, April 2006), whose own URL now 403s behind Akamai bot
+    protection - the identical operative language is preserved verbatim in
+    this Cornell mirror and in several other state-extension mirrors turned up
+    during research, so the figure is treated as verified despite the primary
+    PDF being unreachable directly. Cited for context (why small/organic
+    operations skip grading, a freezer tunnel, and a distributor) rather than
+    for a numeric figure used in the model.
+
+[78]
   slug: interfax-rosptitsesoyuz-2024-forecast
   title:
     Росптицесоюз ждет производства в стране в 2024 году яиц и мяса птицы на
@@ -1878,7 +1934,36 @@
     reaches the corpus secondhand, via press coverage, never from
     rosptitsesoyuz.ru directly. See docs/research/library/poultry-russia.yaml.
 
-[77]
+[79]
+  slug: kstate-ext-pork-cutout
+  title: Pork Processing Options for Consumers (MF3396)
+  publisher:
+    Kansas State University Agricultural Experiment Station and Cooperative
+    Extension Service
+  source_type: trade_body
+  published_on: 2018-02-01
+  retrieved_on: 2026-08-17
+  url: https://www.asi.k-state.edu/research/meat-science/Pork.pdf
+  notes:
+    The pork-specific yield this subject actually needs, and the only source
+    found anywhere that isolates a "ground pork and sausage" line item rather
+    than lumping it into a general boneless/bone-in split. The Pork Cutout
+    Table, "based on a pork carcass with a 205-pound hot (unchilled) carcass
+    weight with average muscling" and "a 3% shrink (cooler shrink and cutting
+    loss)": "Trimmings 7.8 [percent of hot carcass] 15.9 [lbs] / Ground pork
+    and sausage." Two things this figure is NOT: it is not the maximum
+    possible ground pork stream (the same page notes "Any of the carcass can
+    be used to make ground product" and that picnic shoulder "could also be
+    used to make ground pork or sausage" beyond the trimmings line), and it is
+    not a stated range - one carcass weight, one point value, unlike SDSU's
+    beef bulletin which gave lean trim as a range outright. The lo/hi band on
+    ground_pork_1lb_package therefore comes from applying this document's own
+    7.8 percent trim fraction across a real range of carcass weights (see
+    wsu-ext-butcher-hog-yield), not from a range this document states itself.
+    Prepared by Kassandra McKillip, Alaena Wilfong and Travis O'Quinn, Ph.D.,
+    Kansas State University, February 2018 (MF3396).
+
+[80]
   slug: msstate-ext-beef-grades
   title: Beef Grades and Carcass Information
   publisher: Mississippi State University Extension Service
@@ -1899,7 +1984,7 @@
     which is the basis for batch-03-wagyu's honest marbling_vs_yield_tradeoff
     "sources treat the axes as independent" finding.
 
-[78]
+[81]
   slug: msstate-ext-beef-yield
   title: How Much Meat to Expect from a Beef Animal (farm-direct beef)
   publisher: Mississippi State University Extension Service
@@ -1919,7 +2004,40 @@
     is 47 percent of live weight, not 40. SDSU's 65 percent does reconcile.
     Both bounds are kept and neither is averaged away.
 
-[79]
+[82]
+  slug: ncat-attra-small-scale-poultry-processing
+  title: Small-Scale Poultry Processing
+  publisher:
+    National Center for Appropriate Technology (NCAT), ATTRA Sustainable
+    Agriculture
+  source_type: trade_body
+  retrieved_on: 2026-08-17
+  url: https://www.ncat.org/wp-content/uploads/2025/12/poultryprocessing-1.pdf
+  notes:
+    Table 1, "Comparison of Types of Processing", gives daily processing
+    capacity by scale: on-farm 50-100 birds per day, operating 1-30 processing
+    days per year, family labor, non-inspected direct sales; small plant
+    200-5,000 birds per day, operating 50-plus days per year; large plant
+    250,000 birds per day, year-round. On-farm and small-plant processors
+    slaughter manually or with a saw, in batches, one activity at a time - a
+    fundamentally different (and smaller-pool) process than the continuous
+    commodity line this project otherwise models. Separately, in the cut-up
+    section: "about 16% to 30% of the birds need to be cut up because of
+    bruises, broken bones in the picker, and other damage" at small plants
+    (citing Elliot, 2001) - notably higher than the commodity wing-damage rate
+    this corpus already carries (wing-damage stage, ~5.7% median per load,
+    source wing-injuries-loading). This is real, sourced evidence that
+    small-scale processing loses MORE product to handling damage, not less -
+    but it is a whole-bird cut-up rate, not a wing-specific survival fraction,
+    and the model's loss-factor schema ties factors to species/product, not to
+    an individual route. Converting it into a route-specific wing_damage
+    override would require an unsourced assumption about what fraction of that
+    damage lands on the wing specifically, which this project declines to
+    invent. Recorded here so the discrepancy is visible rather than silently
+    reused from the commodity route. See the organic_small_farm route in
+    mixing.yaml.
+
+[83]
   slug: ncc-broiler-performance
   title: U.S. Broiler Performance
   publisher: National Chicken Council
@@ -1933,7 +2051,7 @@
     grow-out mortality going back to 1925. Trade body rather than government,
     so figures are tagged confidence=industry.
 
-[80]
+[84]
   slug: ncc-key-facts
   title: Broiler Chicken Industry Key Facts
   publisher: National Chicken Council
@@ -1944,7 +2062,7 @@
     https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
   notes: Industry structure - plant counts, company counts, contract farms.
 
-[81]
+[85]
   slug: nysmaple-sap-per-tree
   title: How Much Sap Can One Tree Produce?
   publisher: New York State Maple Producers Association
@@ -1960,7 +2078,7 @@
     preferred over UVM's rule. Kept as a source because the one-tap figure is
     genuinely useful, cited for the ratio nowhere.
 
-[82]
+[86]
   slug: ofot-sector-summary-2021
   title: ענף הלול - סיכום 2021 (Poultry sector summary, 2021)
   publisher: ארגון מגדלי עופות בישראל (Israel Poultry Growers Organisation)
@@ -1988,7 +2106,7 @@
     enumerates US slaughter, and the corpus should not imply otherwise by
     placing them in the same tier.
 
-[83]
+[87]
   slug: ou-kosher-shechita
   title: Shechita: All About Kosher Ritual Slaughter
   publisher: Orthodox Union (OU Kosher)
@@ -2007,7 +2125,7 @@
     it would be an 'estimate' of our own making, which is the grade the
     project is trying to reduce. Recorded as a known gap rather than filled.
 
-[84]
+[88]
   slug: psu-extension-saffron
   title: Saffron: A Tale of Red Gold and How to Produce Your Own
   publisher: Penn State Extension
@@ -2032,7 +2150,7 @@
     require assuming the mass of a teaspoon of saffron, and that assumption
     would be ours rather than the source's.
 
-[85]
+[89]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -2048,7 +2166,7 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[86]
+[90]
   slug: sdsu-ext-fed-steer-yield
   title: How Much Meat Can You Expect from a Fed Steer?
   publisher: South Dakota State University Extension
@@ -2071,7 +2189,7 @@
     packaged beef. The two must never be merged; only the trim figure becomes
     patties.
 
-[87]
+[91]
   slug: ucanr-mg-saffron
   title: Saffron - Garden Help, Herbs
   publisher: UC Master Gardeners of Santa Clara County, UC ANR
@@ -2090,7 +2208,7 @@
     a data one, and it is recorded here because it is the reason the raw
     documents come back with every batch.
 
-[88]
+[92]
   slug: ufifas-hs661-saffron
   title: Saffron - Crocus sativus L. (HS661)
   publisher: University of Florida IFAS Extension, Horticultural Sciences
@@ -2110,7 +2228,7 @@
     own words ("Supposedly"), and it is stored at confidence=industry for
     exactly that reason.
 
-[89]
+[93]
   slug: umaine-7036e-maple
   title: Bulletin #7036: How to Tap Maple Trees and Make Maple Syrup
   publisher: University of Maine Cooperative Extension
@@ -2129,7 +2247,7 @@
     quote and no number. That was the correct behaviour: subtracting two dates
     would have been our arithmetic, not the source's.
 
-[90]
+[94]
   slug: una-industria-2025
   title: Industria (statistics page)
   publisher: Unión Nacional de Avicultores (UNA)
@@ -2151,7 +2269,7 @@
     administrative unit - which does not map cleanly onto state-level data and
     is not loaded.
 
-[91]
+[95]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -2167,7 +2285,7 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[92]
+[96]
   slug: uvm-jones-rule-86
   title: The "Jones Rule of 86" Revisited
   publisher: University of Vermont Extension, Proctor Maple Research Center
@@ -2193,7 +2311,7 @@
     own caveat: the rule degrades at the high sugar concentrations reverse
     osmosis now produces, so it is a field rule, not a physical law.
 
-[93]
+[97]
   slug: vanilla-package-of-practice-2021
   title: Package of Practice: Vanilla Cultivation
   publisher:
@@ -2214,7 +2332,25 @@
     kg of green pods produce 1 kg of cured beans." Confirmed to state Vanilla
     planifolia by name.
 
-[94]
+[98]
+  slug: wisc-ext-hog-yield
+  title: How much meat should a hog yield?
+  publisher: University of Wisconsin-Madison, Division of Extension
+  source_type: trade_body
+  retrieved_on: 2026-08-17
+  url:
+    
+    https://livestock.extension.wisc.edu/articles/how-much-meat-should-a-hog-yield/
+  notes:
+    Cited for the general carcass-to-packaged band in loss_chain_ground_pork,
+    which is deliberately kept separate from kstate-ext-pork-cutout's
+    ground-pork-specific trim figure to avoid double counting - the same
+    discipline ground_beef uses. Table 2, "Average Carcass Cutting Yield":
+    "Bone-in retail cuts 74%" and "Boneless closely trimmed retail cuts 65%",
+    both as a fraction of chilled carcass weight. "Ground pork and sausage
+    comes from trimmings of multiple primal cuts throughout the carcass."
+
+[99]
   slug: worldbank-vanilla-cultivation-guide
   title: Guide on Sustainable Vanilla Cultivation
   publisher: World Bank
@@ -2233,7 +2369,35 @@
     1 never appears in that sentence. See
     docs/research/accepted/batch-02-vanilla-REVIEW.md.
 
-[95]
+[100]
+  slug: wsu-ext-butcher-hog-yield
+  title: From Pig to Pork Chop: How Much Meat to Expect from a Butcher Hog
+  publisher: Washington State University Extension
+  source_type: trade_body
+  published_on: 2021-02-16
+  retrieved_on: 2026-08-17
+  url:
+    
+    https://s3.wp.wsu.edu/uploads/sites/2049/2021/02/02.21PorkFabVideoDataFactSheet02.16.2021.pdf
+  notes:
+    Supplies the carcass-weight range the K-State trim fraction is spread
+    across, and the dressing-percent band: "Market hogs weighing between 250 -
+    325 pounds will dress on average 70% (range 68 to 72%) with the skin-on
+    and the head-off, resulting in a hanging carcass weight range of 175 - 228
+    pounds." Also states, without isolating a pounds figure: "if you have more
+    cuts made into boneless products, or more grind done for sausage or
+    cured/smoked products, the hanging carcass will yield about 65% boneless
+    retail meat cuts and some cured meat items, about 114-149 pounds of
+    take-home meat." That 65 percent bundles sausage in with cured product and
+    is not usable alone for a ground-pork-only figure, which is why
+    kstate-ext-pork-cutout carries the product-level number and this source
+    carries the carcass-weight range instead. By Paul Kuber and Sarah M.
+    Smith, WSU Extension Regional Specialists. Fetched successfully via direct
+    PDF download after WebFetch's HTML conversion choked on the source's
+    embedded font encoding - the retrieval failure was a tooling artifact, not
+    a reason to treat the document as unread.
+
+[101]
   slug: agripost-cn-broiler-industry-2024
   title:
     China's Broiler Industry in 2024: White-Feather Broilers Gain Market Share
@@ -2270,7 +2434,7 @@
     own report directly - flagged for a future pass, the same shape of gap as
     Mexico's unreached SIAP portal. confidence_ceiling: industry.
 
-[96]
+[102]
   slug: agromics-proizvodstvo-myasa-2024
   title: Производство и потребление мяса, поголовье скота в РФ — 2024
   publisher: Agromiks (agromics.ru)
@@ -2301,7 +2465,7 @@
     not name a specific Rosstat table or publication. Carried as a fact with
     this caveat stated plainly, not as an output_stat_year row.
 
-[97]
+[103]
   slug: avicola-com-mx-estadisticas-2025
   title: Estadísticas de Producción Avícola en México 2025
   publisher: avicola.com.mx
@@ -2316,7 +2480,7 @@
     egg self-sufficiency - EGGS, a different product, not conflated with the
     chicken-meat self-sufficiency fact this source otherwise corroborates.
 
-[98]
+[104]
   slug: bmeditores-panorama-carne-ave
   title: Panorama de la industria de la carne de ave en México
   publisher: BM Editores
@@ -2343,7 +2507,7 @@
     per-capita trap, roughly a third below every other figure found. Not
     loaded.
 
-[99]
+[105]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -2359,7 +2523,7 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[100]
+[106]
   slug: eggs-unlimited-breakage
   title: Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers
   publisher: Eggs Unlimited
@@ -2377,7 +2541,7 @@
     enough that the industry measures breakage closely - it is what the
     invoice argument is about.
 
-[101]
+[107]
   slug: jc-israeli-mangal
   title: Going up in smoke, Sabra style
   publisher: The Jewish Chronicle
@@ -2395,7 +2559,7 @@
     very little role in the day. Undated on the page, so published_on is NULL
     rather than guessed.
 
-[102]
+[108]
   slug: jfs-independence-day-grilling
   title: The Grilling Tradition of Israel's Independence Day
   publisher: Jewish Food Society
@@ -2411,7 +2575,7 @@
     become distinctly Israeli. Two sources agreeing is why the cultural fact
     is loaded at all.
 
-[103]
+[109]
   slug: lone-mountain-carcass-grading
   title: Carcass Grading (breeding guide technical resources)
   publisher: Lone Mountain Cattle Company
@@ -2433,7 +2597,7 @@
     separate meat quality grade (1-5). See
     docs/research/accepted/batch-03-wagyu-findings-round2.yaml.
 
-[104]
+[110]
   slug: nwe-silkworm
   title: Silkworm
   publisher: New World Encyclopedia
@@ -2452,7 +2616,7 @@
     below the commonly repeated "1,000-1,600 m". The lower sourced figure is
     the one to keep; the folk range has no source we could find.
 
-[105]
+[111]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -2467,7 +2631,7 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[106]
+[112]
   slug: poultryworld-israel-war-2024
   title: Israel poultry industry hit by war and labour shortage
   publisher: Poultry World (Misset)
@@ -2494,7 +2658,7 @@
     9,813 tonnes of broilers in 2024 - so the claim is checkable in principle
     against a Hebrew original.
 
-[107]
+[113]
   slug: smithsonian-silk-road-2002
   title: The Silk Road - Connecting Peoples and Cultures
   publisher: Smithsonian Center for Folklife and Cultural Heritage
@@ -2518,7 +2682,7 @@
     project's fetcher that page contains neither 120 nor 130, so two research
     runs correctly returned nothing and read as model weakness for a week.
 
-[108]
+[114]
   slug: suekayton-silk-thread-and-cloth
   title: Silk Thread and Cloth
   publisher: Sue Kayton (silkworms.com educational pages)
@@ -2543,7 +2707,7 @@
     until fetch_url() learned to call html.unescape() they survived into the
     inbox and made an honest quote from it impossible to verify.
 
-[109]
+[115]
   slug: toi-poultry-imports-2025
   title: Poultry producers warn first-ever imports of chickens will destroy local farms
   publisher: The Times of Israel
@@ -2569,7 +2733,7 @@
     loaded from here. A live article citing a dead one does not resurrect the
     citation.
 
-[110]
+[116]
   slug: tsenovik-imit-dinamika-2023
   title: Динамика производства мяса в России. Результаты 2023 года
   publisher: Tsenovik, citing ИАА "ИМИТ" (Institute of Agrarian Market Studies)
@@ -2595,7 +2759,7 @@
     adjudicates, per the same discipline as Mexico's world-rank and per-capita
     traps.
 
-[111]
+[117]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet
