@@ -99,6 +99,17 @@ Answer is always ≥ 6, usually near 12. Keep these separate in code, tests, and
   rather than leaving them blank or inventing a figure.
 - Small and independent producers are the hardest ask in the roadmap — NASS disclosure
   rules exist specifically to protect them. Expect qualitative coverage.
+- **Never let a small/independent-producer feature resolve to a named, located farm.**
+  `organic_small_farm` (data/mixing.yaml) is the model to follow: an aggregate, sourced
+  figure describing a *category* of operation (NCAT/ATTRA, Cornell Small Farms), not any
+  specific business. If the roadmap's FSIS-directory / USDA Organic / state-ag-directory
+  idea ever gets built, those registries list individual names and towns — treat that as
+  a *different, higher-risk* feature than qualitative category coverage, not an extension
+  of it, and don't ingest per-operation identity or location even though the registries
+  are public opt-in listings. This is also why local-government datasets and law
+  enforcement FOIA logs are off-limits as sources here: mixing them with agricultural
+  data risks exposing exactly the individual-farm geographic detail Section 1619 of the
+  Food, Conservation, and Energy Act protects.
 
 ## Versioning and deploys
 
