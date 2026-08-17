@@ -447,6 +447,66 @@
     this audit. They are here so that "how much does this number matter?"
     is answerable from the corpus rather than from an ad-hoc sweep.
 
+- slug: ncat-attra-small-scale-poultry-processing
+  title: Small-Scale Poultry Processing
+  publisher: National Center for Appropriate Technology (NCAT), ATTRA Sustainable Agriculture
+  url: https://www.ncat.org/wp-content/uploads/2025/12/poultryprocessing-1.pdf
+  retrieved_on: '2026-08-17'
+  source_type: trade_body
+  notes: >-
+    Table 1, "Comparison of Types of Processing", gives daily processing
+    capacity by scale: on-farm 50-100 birds per day, operating 1-30
+    processing days per year, family labor, non-inspected direct sales;
+    small plant 200-5,000 birds per day, operating 50-plus days per year;
+    large plant 250,000 birds per day, year-round. On-farm and small-plant
+    processors slaughter manually or with a saw, in batches, one activity
+    at a time - a fundamentally different (and smaller-pool) process than
+    the continuous commodity line this project otherwise models.
+
+    Separately, in the cut-up section: "about 16% to 30% of the birds need
+    to be cut up because of bruises, broken bones in the picker, and other
+    damage" at small plants (citing Elliot, 2001) - notably higher than the
+    commodity wing-damage rate this corpus already carries (wing-damage
+    stage, ~5.7% median per load, source wing-injuries-loading). This is
+    real, sourced evidence that small-scale processing loses MORE product
+    to handling damage, not less - but it is a whole-bird cut-up rate, not
+    a wing-specific survival fraction, and the model's loss-factor schema
+    ties factors to species/product, not to an individual route. Converting
+    it into a route-specific wing_damage override would require an
+    unsourced assumption about what fraction of that damage lands on the
+    wing specifically, which this project declines to invent. Recorded here
+    so the discrepancy is visible rather than silently reused from the
+    commodity route. See the organic_small_farm route in mixing.yaml.
+
+- slug: cornell-small-farms-1000-bird-exemption
+  title: 'Producer/Grower - 1,000 Bird Limit Exemption'
+  publisher: Cornell Small Farms Program
+  url: https://smallfarms.cornell.edu/2017/05/producergrower-1000-bird-limit-exemption/
+  retrieved_on: '2026-08-17'
+  source_type: trade_body
+  notes: >-
+    Explains the federal Poultry Products Inspection Act producer/grower
+    exemption: a farm may slaughter "no more than 1,000 healthy birds of
+    his or her own raising in a calendar year for distribution as human
+    food" without continuous federal inspection, provided the birds are
+    processed on the farm's own premises and sold within the state. Notes
+    the exemption is used two ways - on-farm processing with owned
+    equipment, or a rented Mobile Poultry Processing Unit (MPPU) brought to
+    the farm - both ending in direct-to-consumer sale (farm stand, roadside
+    stand, farmers' market), never through a distributor. Corroborated by
+    the original USDA FSIS guidance document (Guidance for Determining
+    Whether a Poultry Slaughter or Processing Operation is Exempt from
+    Inspection Requirements of the PPIA, Revision 1, April 2006), whose own
+    URL now 403s behind Akamai bot protection - the identical operative
+    language is preserved verbatim in this Cornell mirror and in several
+    other state-extension mirrors turned up during research, so the
+    figure is treated as verified despite the primary PDF being
+    unreachable directly.
+
+    Cited for context (why small/organic operations skip grading, a
+    freezer tunnel, and a distributor) rather than for a numeric figure
+    used in the model.
+
 - slug: project-estimate-unsourced
   title: Placeholder pending research
   publisher: counting-chicken-wings

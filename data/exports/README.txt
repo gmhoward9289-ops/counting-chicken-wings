@@ -8,9 +8,9 @@ reading. Files are kept small and self-describing so any one of
 them is usable on its own.
 
   facts               93 rows  chicken facts
-  sources            115 rows  citations
-  loss_chain          28 rows  loss chain
-  mixing_cascade      31 rows  mixing cascade
+  sources            111 rows  citations
+  loss_chain          26 rows  loss chain
+  mixing_cascade      30 rows  mixing cascade
   states              46 rows  average live weight by state
   states_census       50 rows  broiler presence by state, Census of Agriculture
   states_monthly     276 rows  average live weight by state and month
@@ -18,7 +18,7 @@ them is usable on its own.
   husbandry           10 rows  grow-out performance by year
   quality_defects      6 rows  meat quality defects
   nutrition            3 rows  nutrition per 100g
-  footprint            5 rows  resource footprint per bird
+  footprint            6 rows  resource footprint per bird
   economics           10 rows  economic measures
   producers            3 rows  producers
 

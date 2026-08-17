@@ -1,5 +1,65 @@
 # Changelog
 
+## v2.5.2 — 2026-08-17
+
+### What changed
+
+Added an `electricity` metric (kWh, on-farm growout only) to the broiler
+resource footprint, alongside the existing five ReCiPe impact categories.
+The figure — 0.251 kWh grid electricity per broiler at 6.37 lb live weight,
+0.0869 kWh per kg live weight — comes straight out of the *same*
+already-cited source's own raw lifecycle inventory table
+(`ncc-broiler-lca-2020`, Table 7), which reports it separately from the
+`fossil_resources` (kg oil eq) proxy already in the corpus. It was never
+transcribed into `resources.yaml` before now. Scoped explicitly to on-farm
+growout — hatchery incubation and processing-plant/cold-chain electricity
+are real additional draws this figure does not cover and are not currently
+sourced anywhere in this project.
+
+Looked for, and did not add, a labor-hours-per-bird or per-dozen-wings
+figure distinct from the existing `direct_jobs` employment total. The two
+candidates found were rejected rather than shipped: a 1955 USDA hand-line
+processing study (70 years out of date for a "how many minutes did this
+take" claim) and a derived BLS/USDA ratio that could not be verified
+against a primary BLS document during this pass and mixes turkey/other
+poultry into a chicken-only denominator. See the comment at the end of
+`data/resources.yaml`'s economics block for the full accounting.
+
+## v2.5.1 — 2026-08-17
+
+### Added an organic / small farm supply-chain route
+
+New `organic_small_farm` supply chain (dropdown label "Organic / small
+farm") for wings from a small, often-organic farm that processes on-site or
+via a rented Mobile Poultry Processing Unit and sells direct to the
+consumer — no grading, no freezer tunnel, no distributor, the same shape as
+the existing local butcher route.
+
+The batch size is sourced rather than estimated: NCAT/ATTRA's *Small-Scale
+Poultry Processing* bulletin puts on-farm processing capacity at 50-100
+birds per day, run 1-30 days a year, so `pool_override: 75` (the midpoint)
+replaces a guess with a documented figure. Loss stages reuse the species
+defaults, the same choice `local_butcher` already makes, because no sourced
+figure exists that is both route-specific and expressible in this model's
+species/product-scoped loss-factor schema — including a real, sourced
+finding that small/manual processing is *harder* on wings than a
+mechanized line (16-30% of birds needing cut-up for bruises and broken
+bones at small plants, against the corpus's existing ~5.7% commodity
+wing-damage rate), which is documented in prose rather than converted into
+an unsourced number.
+
+Organic certification (a USDA National Organic Program inputs/feed/land
+standard) and small-scale processing (a throughput fact) are different
+axes, and research turned up no source giving a genuinely different
+pool or loss profile for the certified-organic subset — so this ships as
+one route representing the realistic common case rather than two routes
+modeling axes nothing here can distinguish.
+
+Two new sources: `ncat-attra-small-scale-poultry-processing` (batch sizes,
+the 16-30% cut-up figure) and `cornell-small-farms-1000-bird-exemption`
+(the federal PPIA 1,000-bird producer/grower exemption, cited for context
+on why this route skips grading/freezer/distributor).
+
 ## v2.5.0 — 2026-08-16
 
 ### The Sources page undercounted citations from 21 international sources

@@ -1,9 +1,40 @@
 # (o>  counting chicken wings -- resource footprint per bird
 # generated: 2026-08-17
-# PER BIRD. Allocate by mass share before charging to one cut -- wings are ~7.3% of live weight
-# ---------------------------------------------------------------------------------------------
+# PER BIRD. Allocate by mass share before charging to one cut -- wings are ~7.3% of live weight. Metrics are not like-for-like: read notes per row, scope differs (e.g. electricity is on-farm growout only, the rest are whole-lifecycle blended-bird figures)
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 [1]
+  metric: electricity
+  label: Electricity use
+  unit: kWh
+  per_individual: 0.251
+  per_kg_liveweight: 0.0869
+  reference_lw_lb: 6.37
+  year: 2020
+  notes:
+    NOT one of the five headline ReCiPe impact categories above (those are the
+    blended "broiler + culled breeder hen" average bird) -- this is a distinct
+    line straight out of the same source's raw lifecycle inventory (Table 7,
+    "2020 broiler operation lifecycle inventory flows"), which reports inputs
+    of 0.251 kWh grid electricity plus 0.235 MJ diesel (generator) and 3.336
+    MJ propane heat per one broiler at 6.37 lb live weight -- the identical
+    reference weight used throughout this block. Electricity alone is reported
+    here because it is the metric this gap asks for; the propane and diesel
+    heat inputs are real too but are not electricity and are left out rather
+    than folded in. Scope matters: this is ON-FARM GROWOUT electricity only
+    (house ventilation, heating/cooling controls, lighting, feed/water auger
+    motors). Hatchery incubation and processing-plant chilling, freezing and
+    cold-chain electricity are real additional draws NOT captured in this
+    figure and NOT currently sourced anywhere in this corpus -- the LCA's
+    breeder-operation table (its Table 8) does report 0.0179 kWh per hatching
+    egg for the parent/grandparent stage, but converting that into a
+    per-broiler hatchery figure would require assumptions this source doesn't
+    support, so it is left out rather than estimated. No 2010 comparison is
+    published for this line item (unlike the five ReCiPe categories above), so
+    pct_change_decade is omitted rather than invented.
+  source: ncc-broiler-lca-2020
+
+[2]
   metric: fossil_resources
   label: Fossil resource use
   unit: kg oil eq
@@ -12,9 +43,10 @@
   reference_lw_lb: 6.37
   year: 2020
   pct_change_decade: -22.1
+  notes: The largest improvement of the five categories.
   source: ncc-broiler-lca-2020
 
-[2]
+[3]
   metric: global_warming
   label: Greenhouse gas
   unit: kg CO2 eq
@@ -23,9 +55,12 @@
   reference_lw_lb: 6.37
   year: 2020
   pct_change_decade: -18.1
+  notes:
+    Driven down by an 8.7% feed conversion improvement and less distillers'
+    grain in the ration. Production rose 21% while feed use rose only 11%.
   source: ncc-broiler-lca-2020
 
-[3]
+[4]
   metric: land_use
   label: Land use
   unit: m2a crop eq
@@ -34,9 +69,10 @@
   reference_lw_lb: 6.37
   year: 2020
   pct_change_decade: -13.0
+  notes: Almost entirely feed crops, not the chicken house.
   source: ncc-broiler-lca-2020
 
-[4]
+[5]
   metric: particulate_matter
   label: Fine particulate formation
   unit: g PM2.5 eq
@@ -47,7 +83,7 @@
   pct_change_decade: -13.8
   source: ncc-broiler-lca-2020
 
-[5]
+[6]
   metric: water
   label: Water consumption
   unit: m3
@@ -56,4 +92,8 @@
   reference_lw_lb: 6.37
   year: 2020
   pct_change_decade: -13.0
+  notes:
+    Dominated by feed crop irrigation. On-farm drinking and cleaning water is
+    under 10% of the total, so "how much water does a chicken drink" is close
+    to irrelevant to the footprint.
   source: ncc-broiler-lca-2020
