@@ -151,11 +151,14 @@ EXPORTS: list[dict] = [
         "title": "resource footprint per bird",
         "sql": """SELECT r.metric, r.label, r.unit, r.per_individual,
                          r.per_kg_liveweight, r.reference_lw_lb, r.year,
-                         r.pct_change_decade, s.slug AS source
+                         r.pct_change_decade, r.notes, s.slug AS source
                   FROM resource_footprint r JOIN source s ON s.id = r.source_id
                   ORDER BY r.metric""",
         "note": ("PER BIRD. Allocate by mass share before charging to one "
-                 "cut -- wings are ~7.3% of live weight"),
+                 "cut -- wings are ~7.3% of live weight. Metrics are not "
+                 "like-for-like: read notes per row, scope differs (e.g. "
+                 "electricity is on-farm growout only, the rest are "
+                 "whole-lifecycle blended-bird figures)"),
     },
     {
         "name": "economics",

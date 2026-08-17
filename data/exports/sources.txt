@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- citations
-# generated: 2026-08-16
+# generated: 2026-08-17
 # every statistic in this dataset cites one of these
 # --------------------------------------------------
 
@@ -146,6 +146,49 @@
     April 2025.
 
 [9]
+  slug: ble-fleischbilanz-2025-pm
+  title: Versorgungsbilanz Fleisch: Verzehr leicht gestiegen
+  publisher: Bundesanstalt für Landwirtschaft und Ernährung (BLE) / BZL
+  source_type: government
+  published_on: 2025-03-27
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.ble.de/SharedDocs/Pressemitteilungen/DE/2025/250327_Fleischbilanz.html
+  notes:
+    THE PER-CAPITA / SELF-SUFFICIENCY TAXONOMY TRAP for Germany: 13.6 kg
+    per-capita consumption and 100.4% self-sufficiency, both for 2024, are
+    stated for "Geflügelfleisch" (ALL poultry meat - chicken, turkey, duck,
+    goose combined), never narrowed to "Hühnerfleisch" (chicken specifically)
+    anywhere in this release, even though the release's own prose says the
+    year-on-year increase was driven "insbesondere" (particularly) by chicken.
+    NEITHER figure is loaded into this project as a chicken statistic - doing
+    so would silently promote a poultry-wide aggregate to a chicken-specific
+    one, the same trap Mexico's carne-de-ave/carne-de-pollo distinction
+    already documents. Used only to source the fact that documents this trap,
+    not to source a loaded statistic.
+
+[10]
+  slug: bmel-versorgungsbilanz-fleisch-doku
+  title: Dokumentation der Versorgungsbilanz Fleisch
+  publisher: Bundesministerium für Ernährung und Landwirtschaft (BMEL) / BLE
+  source_type: government
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.bmel-statistik.de/ernaehrung/versorgungsbilanzen/fleisch/dokumentation-versorgungsbilanz-fleisch
+  notes:
+    THE WEIGHT-BASIS SOURCE for every German broiler meat_output figure this
+    project loads. Exact quote: "Schlachtkörper bei Geflügel bezeichnet den
+    gerupften und ausgenommenen Körper, ohne Kopf und Ständer und ohne Hals,
+    Herz, Leber und Muskelmagen" - plucked and eviscerated, without head,
+    feet, neck, heart, liver or gizzard. Skin and subcutaneous fat ARE
+    included (poultry and pigs are the two exceptions to Destatis's general
+    skin-excluded Schlachtgewicht definition). The page itself states "Das
+    Schlachtgewicht ist nicht einheitlich definiert" (no single uniform
+    definition across species) - kept as a direct quote.
+
+[11]
   slug: cbs-quarterly-agriculture-2025q2
   title:
     Quarterly Agriculture Statistics 2025 Q2, Table 7: Marketing of selected
@@ -175,7 +218,7 @@
     separately published tables. Not loaded as a mass - see the weight basis
     conflict recorded on cbs-st21-11-output-2025.
 
-[10]
+[12]
   slug: cbs-st21-04-marketing-2025
   title:
     Table 21.4, Marketing of animals and animal products by district and
@@ -209,7 +252,7 @@
     qualified with its district - the figure means nothing without knowing
     which district it is outside of.
 
-[11]
+[13]
   slug: cbs-st21-08-livestock-2025
   title: Table 21.8, Livestock - Statistical Abstract of Israel 2025
   publisher: Israel Central Bureau of Statistics
@@ -233,7 +276,7 @@
     docs/ISRAEL-PLAN.md, because a flock of 37.9 million turning over five to
     seven times a year is consistent with it.
 
-[12]
+[14]
   slug: cbs-st21-11-output-2025
   title:
     Table 21.11, Agricultural output by industry and product - Statistical
@@ -262,7 +305,7 @@
     the "otherwise stated" rows and is almost certainly millions of eggs. Not
     loaded: almost certainly is not a citation.
 
-[13]
+[15]
   slug: crs-hpai-outbreak
   title: The Highly Pathogenic Avian Influenza (HPAI) Outbreak in Poultry, 2022-Present
   publisher: Congressional Research Service (R48518)
@@ -276,7 +319,7 @@
     This is the key finding for our purposes - HPAI is overwhelmingly an egg
     story, not a wing story.
 
-[14]
+[16]
   slug: defra-agriculture-uk-2024
   title: Agriculture in the United Kingdom 2024, Chapter 14 (The food chain)
   publisher: DEFRA, with the devolved administrations' statisticians
@@ -299,7 +342,7 @@
     83% self-sufficient net importer of the remainder, worth stating as the
     contrast rather than assumed to be the same story.
 
-[15]
+[17]
   slug: defra-poultry-hatcheries-2026-07
   title:
     UK chick and poultry placings -- monthly dataset (published 2026-07-23,
@@ -325,7 +368,7 @@
     needs. See docs/research/library/poultry-uk.yaml for the number if a
     future pass wants it.
 
-[16]
+[18]
   slug: defra-poultry-slaughter-2026-07
   title:
     UK poultry slaughterings, weights and poultry meat production -- monthly
@@ -366,7 +409,97 @@
     (5-4-4-week quarters) to calendar months in January 2024. Figures are
     provisional and subject to revision per DEFRA's own stated policy.
 
-[17]
+[19]
+  slug: destatis-fleischproduktion-2024-pm
+  title: Fleischproduktion im Jahr 2024 um 1,4 % gestiegen
+  publisher: Statistisches Bundesamt (Destatis)
+  source_type: government
+  published_on: 2025-02-07
+  retrieved_on: 2026-08-16
+  url: https://www.destatis.de/DE/Presse/Pressemitteilungen/2025/02/PD25_050_413.html
+  notes:
+    2024 broiler figures: 626.7 million Jungmasthühner (broiler) slaughtered,
+    kept separate from 27.1 million Suppenhühner (spent/stewing hens) in the
+    same sentence - the species isolation this project needs. Jungmasthühner-
+    fleisch production: "1,1 Millionen Tonnen" (+1.8% vs 2023), rounded to one
+    decimal of a million by Destatis itself - loaded verbatim rather than
+    back-solved to a false precision from the percentage change.
+
+[20]
+  slug: destatis-fleischproduktion-2025-pm
+  title: Fleischproduktion im Jahr 2025 nahezu unverändert
+  publisher: Statistisches Bundesamt (Destatis)
+  source_type: government
+  published_on: 2026-02-13
+  retrieved_on: 2026-08-16
+  url: https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/02/PD26_049_413.html
+  notes:
+    2025 broiler figures: 640.3 million Jungmasthühner slaughtered (vs 20.7
+    million Suppenhühner). Broiler meat production "1,1 Millionen Tonnen"
+    (+3.6% vs 2024) - the same rounded-to-one-decimal-million figure as 2024
+    despite the different growth rate, because that is what Destatis itself
+    publishes in this release. Loaded verbatim, not back-solved.
+
+[21]
+  slug: destatis-gefluegel-fachserie-2018
+  title: Geflügel — Fachserie 3, Reihe 4.2.3 (2018)
+  publisher: Statistisches Bundesamt (Destatis)
+  source_type: government
+  published_on: 2019-01-01
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Landwirtschaft-Forstwirtschaft-Fischerei/Tiere-Tierische-Erzeugung/Publikationen/Downloads-Tiere-und-tierische-Erzeugung/gefluegel-2030423187004.pdf?__blob=publicationFile
+  notes:
+    Cited for STRUCTURE, not figures: this Fachserie's table of contents
+    confirms poultry SLAUGHTER tables (section 3, Geflügelschlachtungen) have
+    no Bundesland dimension anywhere - a Land-level breakdown exists only for
+    LAYING HEN housing (sections 4-5, a different bird category and a
+    housing-census concept, not slaughter throughput). This is the source for
+    why data/output_germany.yaml carries no districts: block: not unreachable
+    data (Mexico's problem) or suppression (Canada's Atlantic provinces), but
+    a publication that genuinely does not produce a Land-level broiler
+    slaughter table. published_on is approximate (the 2018-reference-year
+    Fachserie was not individually dated beyond its cover year in this pass).
+
+[22]
+  slug: destatis-gewerbliche-schlachtung-tabelle-2023
+  title: Gewerbliche Schlachtungen nach Tierarten (Jahresergebnisse)
+  publisher: Statistisches Bundesamt (Destatis)
+  source_type: government
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Landwirtschaft-Forstwirtschaft-Fischerei/Tiere-Tierische-Erzeugung/Tabellen/gewerbliche-schlachtung-jahr-halbjahr.html
+  notes:
+    Jungmasthühner (broiler), exact decimal figures: 631,132.8 thousand
+    animals / 1,074.5 thousand tonnes (2022); 631,476.2 thousand animals /
+    1,086.1 thousand tonnes (2023) - one full precision level above the press
+    releases' rounded 2024/2025 figures, and this file's own notes say so
+    rather than presenting all four years as equally precise. Total Geflügel
+    (all poultry, incl. turkey/duck) was 1,541.7 (2022) / 1,563.8 (2023)
+    thousand tonnes - NOT loaded, since this project's species is broiler
+    chicken specifically.
+
+[23]
+  slug: destatis-lz2020-viehhaltung-pm
+  title: Viehhaltung im letzten Jahrzehnt: Weniger, aber größere Betriebe
+  publisher: Statistisches Bundesamt (Destatis)
+  source_type: government
+  published_on: 2021-07-08
+  retrieved_on: 2026-08-16
+  url: https://www.destatis.de/DE/Presse/Pressemitteilungen/2021/07/PD21_N043_41.html
+  notes:
+    From the 2020 Agricultural Census (reference date 1 March 2020): "Für
+    Hühner gab es demnach im Jahr 2020 etwa 186,3 Millionen Haltungsplätze"
+    and "Die Geflügelhaltung ist mit 50 % der gesamten Haltungsplätze
+    besonders auf Niedersachsen konzentriert." A HOUSING CAPACITY
+    (Haltungsplätze) figure - a stock/infrastructure concept, not slaughter
+    throughput - and it covers "Hühner" (chickens generally, both broilers and
+    laying hens), not broiler-isolated. Loaded as a fact with both caveats
+    stated, never as an output_stat_year row.
+
+[24]
   slug: epa-foodservice-waste
   title: Food waste reduction in commercial kitchens (Winnow, EPA materials)
   publisher: US Environmental Protection Agency
@@ -380,7 +513,7 @@
     Spoilage specifically ranges 1-5% in prepare-ahead operations and 1-6% in
     cook-to-order operations. Corroborates the ReFED band.
 
-[18]
+[25]
   slug: ers-broiler-grower-fees
   title: Fees paid to growers for raising broiler chickens varied widely in 2020
   publisher: USDA Economic Research Service
@@ -394,7 +527,7 @@
     relative "tournament" system in which each farm's rate depends on its
     performance against others delivering in the same period.
 
-[19]
+[26]
   slug: ers-supermarket-loss
   title:
     Supermarket Loss Estimates for Fresh Fruit, Vegetables, Meat, Poultry, and
@@ -409,7 +542,47 @@
     measured supermarket estimates, cutting loss-adjusted fresh meat, poultry,
     and seafood availability by 7.3% for 2012.
 
-[20]
+[27]
+  slug: eurostat-apro-mt-pann-2026-08
+  title:
+    Slaughtering in slaughterhouses -- annual data (apro_mt_pann), poultry
+    series, retrieved via the Eurostat dissemination API
+  publisher: Eurostat (European Commission)
+  source_type: government
+  retrieved_on: 2026-08-16
+  url: https://ec.europa.eu/eurostat/databrowser/view/apro_mt_pann/default/table
+  notes:
+    Retrieved from the dissemination API (statistics/1.0/data/apro_mt_pann,
+    format=JSON, no auth), HTTP 200, on 2026-08-16. Dimensions verified
+    against the live dataset rather than assumed: meat codes B7000 Poultry
+    meat / B7100 Chicken / B7110 Broiler, meatitem SLAUGHT, units THS_HD
+    (thousand heads), THS_T (thousand tonnes), KG_HD (kg per head). Poland,
+    B7100 Chicken, slaughterings: 1,297,913.7 thousand head and 2,433.02
+    thousand tonnes (2024); series loaded back to 2020. The broiler-specific
+    code B7110 publishes NO Polish values, so B7100 -- which includes boiling
+    hens -- is the finest available split. KG_HD carries no poultry values for
+    Poland either, so no per-bird weight is loaded. BASIS, stated by the
+    publisher: carcass weight under Regulation (EC) No 1165/2008 -- for
+    poultry, "plucked and drawn, without head and feet and without neck,
+    heart, liver and gizzard, known as '65 % chicken'" (quality report,
+    apro_mt_esqrs). Collection is administrative sources and exhaustive
+    surveys of slaughterhouses -- Eurostat's quality report states no member
+    state used sample surveys for slaughterhouse statistics. Named deviations
+    from the 65% presentation exist and Poland is not among them (Netherlands:
+    74% presentation; Hungary: heads included in some small-scale operations)
+    -- load-bearing for any future pass that adds NL or HU rows. NO EU-27
+    AGGREGATE: geo=EU27_2020 returns zero poultry values in this table across
+    the entire time axis -- verified, not assumed. An EU total would have to
+    be summed from member states, which would be our computation wearing
+    Eurostat's citation, so none is loaded. Slaughterings in slaughterhouses
+    only. The table's separate "slaughterings other than in slaughterhouses"
+    series (farm and emergency slaughter) is ESTIMATED annually by member
+    states using varying methods per the quality report, and is not loaded.
+    Retrieval route worth recording: the quality-report metadata lives at
+    /eurostat/cache/metadata/EN/apro_mt_esqrs.htm -- the natural guesses
+    (apro_mt_esms.htm, apro_mt_sims.htm) both 404.
+
+[28]
   slug: faostat-qcl-2025-12
   title: FAOSTAT bulk download, Production - Crops and Livestock (QCL), UK rows
   publisher: Food and Agriculture Organization of the United Nations (FAO)
@@ -436,7 +609,7 @@
     as the primary figure because DEFRA is more granular, more current, and
     UK-specific.
 
-[21]
+[29]
   slug: fsis-line-speed-rule
   title:
     Maximum Line Speed Rates for Young Chicken and Turkey Establishments
@@ -459,7 +632,7 @@
     safety and carcass DAMAGE are different questions; the FSIS defence
     addresses the former, not the latter.
 
-[22]
+[30]
   slug: fsis-poultry-labeling-standards
   title: Food Standards and Labeling Policy Book
   publisher: USDA Food Safety and Inspection Service
@@ -475,7 +648,143 @@
     solid-muscle / chunked-and-formed / ground-and-formed distinction that
     separates a whole-muscle boneless wing from a reformed nugget.
 
-[23]
+[31]
+  slug: ibge-sidra-1094-abate-frangos
+  title:
+    Tabela 1094 - Número de informantes, Quantidade e Peso total das carcaças
+    dos frangos abatidos, no mês e no trimestre, por tipo de inspeção
+    (Pesquisa Trimestral do Abate de Animais)
+  publisher: Instituto Brasileiro de Geografia e Estatística (IBGE)
+  source_type: government
+  retrieved_on: 2026-08-16
+  url: https://sidra.ibge.gov.br/tabela/1094
+  notes:
+    Brazil's NASS/StatCan-equivalent quarterly animal slaughter survey,
+    queried directly via IBGE's SIDRA REST API
+    (apisidra.ibge.gov.br/values/t/1094/...), not scraped from the table
+    viewer - the same "real API" shape Statistics Canada's Web Data Service
+    was for Canada, and the opposite of Mexico's unreachable SIAP. Isolates
+    chicken ("frangos") slaughter specifically, by state (UF), with head count
+    (variable 284, "Animais abatidos") and carcass weight in kg (variable 285,
+    "Peso total das carcaças") from federal + state + municipal sanitary
+    inspection combined, plus a machine-readable suppression code ("X" for
+    confidential cells, ".." for not-applicable) per state per quarter.
+    NATIONAL 2025, summed from the four published quarters (this project's own
+    arithmetic on IBGE's real quarterly counts - IBGE does not itself publish
+    a 2025 annual total in this table): 6,695,465,295 head slaughtered
+    (1,647,469,931 + 1,641,006,289 + 1,690,778,193 + 1,716,210,882),
+    14,304,261,496 kg carcass weight = 14,304,261 tonnes (3,492,399,355 +
+    3,558,452,775 + 3,598,165,273 + 3,655,244,093). BY STATE, same summing,
+    for the 19 states with published (non- suppressed) 2025 figures: Paraná
+    2,299,336,111 head / 4,974,439 t, Santa Catarina 918,216,434 / 1,913,851
+    t, Rio Grande do Sul 760,045,190 / 1,393,814 t, São Paulo 753,826,364 /
+    1,692,841 t, Goiás 530,339,846 / 1,178,406 t, Minas Gerais 488,084,751 /
+    1,048,587 t, Mato Grosso 210,597,652 / 449,616 t, Mato Grosso do Sul
+    179,159,145 / 423,522 t, Bahia 136,018,435 / 304,265 t, Pernambuco
+    76,344,838 / 170,098 t, Espírito Santo 57,072,094 / 137,773 t, Pará
+    56,234,740 / 129,831 t, Ceará 40,119,129 / 74,792 t, Rio de Janeiro
+    36,914,303 / 63,932 t, Paraíba 27,991,024 / 64,567 t, Tocantins 25,136,568
+    / 61,556 t, Rondônia 17,848,745 / 44,193 t, Piauí 6,893,446 / 14,478 t,
+    Maranhão 1,107,798 / 2,544 t. SUPPRESSED (confidential "X" in every 2025
+    quarter): Acre, Amazonas, Roraima, Rio Grande do Norte, Alagoas, Sergipe,
+    Distrito Federal. Amapá is marked ".." (not-applicable, distinct from
+    confidential suppression) in every quarter - loaded suppressed=1 alongside
+    the "X" states rather than asserted as a true zero. RECONCILIATION: 19
+    published states sum to 14,143,105 tonnes of 14,304,261 national (98.9%)
+    and 6,621,286,613 of 6,695,465,295 head national (99.0%) - both gaps land
+    at almost the same percentage (1.1-1.13%), a coherence check that the
+    suppression pattern is real rather than a parsing artifact. GRADED
+    MEASURED throughout: a direct government census-type survey, reached at
+    first hand via IBGE's own API, not a trade body's citation of a government
+    figure one step removed. A second, real, industry- grade national head
+    count exists (ABPA, citing MAPA, 5,706,000 thousand head,
+    federal-inspection only) and is NOT loaded alongside this one - see
+    abpa-annual-report-2026 below and docs/BRAZIL-PLAN.md, "Two national head
+    counts", for the documented, unresolved 17% conflict between the two.
+
+[32]
+  slug: maff-chikusan-toukei-broiler-2024
+  title:
+    畜産統計調査 確報 令和６年畜産統計 ブロイラー（令和６年２月１日現在） ("Livestock Statistics Survey, Reiwa
+    6 report, Broiler, as of February 1, 2024") — tables 5(1) and 5(4)
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF), via e-Stat
+  source_type: government
+  published_on: 2024-11-29
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.e-stat.go.jp/stat-search/files?toukei=00500222&tstat=000001015614&tclass1=000001020206&tclass2=000001223340&layout=datalist&cycle=7
+  notes:
+    A genuine annual government enumeration, not an interview or trade-body
+    estimate — the direct MAFF equivalent of StatCan's registered-plant
+    slaughter reports for Canada. Two tables from this survey are loaded,
+    fetched as raw .xlsx directly from e-Stat's file-download endpoint
+    (statInfId=000040226155 for table 5(1), statInfId=000040226158 for table
+    5(4)) and parsed with openpyxl, not read from a rendered page — see
+    docs/research/library/poultry-japan.yaml for the exact URLs. Table 5(1),
+    "飼養戸数・羽数" (farms and rearing/inventory bird count): 144,859 thousand birds
+    nationally as of 2024-02-01 (up 2.4% year on year), across 2,050 farms
+    (down 2.4% year on year -- the farm-count and bird-count columns move in
+    opposite directions and must not be swapped). This is a STANDING-FLOCK
+    snapshot (inventory_eoy), not throughput — the same distinction NASS draws
+    for the US and the same one Mexico's plan could not resolve at all.
+    Independently corroborates the USDA FAS GAIN report's "approximately 145
+    million birds... up two percent" citation of this same MAFF survey
+    (usda-fas-gain-ja2024-0043), confirming the secondhand quote against the
+    primary table itself. Table 5(4), "出荷羽数規模別の出荷羽数" (shipment numbers by
+    shipment-scale category): 731,847 thousand birds shipped nationally, with
+    a full 47-prefecture breakdown and nine regional-agriculture-bureau
+    subtotals. THE BASIS CAVEAT THE PROJECT BRIEF ASKED FOR: this is 出荷羽数
+    (birds SHIPPED from the farm within the past year), not a post-mortem
+    processing-plant count the way StatCan's Canadian figure is. MAFF's own
+    note 2 on this table clarifies the count includes any operation that
+    shipped 3,000+ birds in the past year even if it held no birds on the
+    February 1 census date — i.e. it is an annual throughput figure, not a
+    second inventory snapshot. Loaded as head_slaughtered on the working
+    assumption (not independently verified against a separate post-mortem
+    count) that a broiler shipped from a Japanese farm has no destination
+    other than immediate slaughter — unlike, say, a laying hen, which can be
+    sold on as breeding or backyard stock. Suppressed prefecture cells ('x' in
+    the source) are loaded as suppressed=1/value=NULL; cells marked '-' (no
+    broiler operations meeting survey scope) are loaded as value=0. Survey
+    excludes non-commercial keepers (schools, test farms) per the table's own
+    note 1.
+
+[33]
+  slug: maff-shokuryo-jukyuhyo-r5
+  title:
+    食料需給表 令和５年度 ("Food Balance Sheet, FY2023") — chicken meat (鶏肉) line, plus
+    参考１ (production/per-capita comparison) and 参考４ (self-sufficiency ratio
+    time series)
+  publisher: Ministry of Agriculture, Forestry and Fisheries (MAFF)
+  source_type: government
+  published_on: 2024-08-08
+  retrieved_on: 2026-08-16
+  url: https://www.maff.go.jp/j/press/kanbo/anpo/attach/pdf/240808-4.pdf
+  notes:
+    MAFF's own annual food balance sheet, built (per the document's stated
+    methodology, item 3) to the FAO Food Balance Sheet handbook using MAFF's
+    own survey and estimated values — so "measured" here means MAFF's official
+    headline figure, the same one its own self-sufficiency press release
+    quotes, not a raw slaughter census the way the broiler shipment table is.
+    FY2023 (令和５年度) is itself a preliminary figure (概算値, per the sheet's own
+    title), loaded with provisional=1. Chicken meat (鶏肉) row, 参考１ table:
+    domestic production 1,690 thousand tonnes FY2023 (1,681 thousand tonnes
+    FY2022, +0.5%); per-capita net-food supply 14.4 kg/person FY2023 (14.6 kg
+    FY2022, -0.7%). WEIGHT BASIS: trade press describes this MAFF production
+    figure as "骨付き肉換算" (bone-in meat equivalent) — consistent with the USDA
+    FAS GAIN report's own "Chicken (bone-in)" RTC production table, and
+    NEITHER live weight nor a fully-eviscerated boneless basis.
+    Cross-validates closely against the GAIN report's independent "New Post"
+    2023 production estimate of 1,686 thousand MT (usda-fas-gain-ja2024-0043)
+    — 0.2% apart, two publishers that did not derive one from the other.
+    Chicken meat self-sufficiency ratio (参考４, weight basis): 65% FY2023, 64%
+    FY2022. This is MAFF's own headline "how much of our chicken do we grow
+    ourselves" figure, reported every year alongside the more-quoted
+    calorie-basis TOTAL food self-sufficiency figure (38% FY2023) — the two
+    are not the same statistic and are not interchangeable.
+
+[34]
   slug: nass-census-agriculture-2022
   title: Census of Agriculture 2022, broiler data by state
   publisher: USDA National Agricultural Statistics Service (QuickStats)
@@ -497,7 +806,7 @@
     states raise broilers and at what scale" - never mix them into an annual
     time series.
 
-[24]
+[35]
   slug: nass-chickens-eggs-2025
   title: Chickens and Eggs 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -521,7 +830,7 @@
     2024-2025 against 23 for slaughter. Maryland, South Dakota, and Virginia
     are suppressed for 2025 but present for 2024.
 
-[25]
+[36]
   slug: nass-chickens-eggs-monthly-2026
   title: Chickens and Eggs, monthly releases 2026
   publisher: USDA National Agricultural Statistics Service
@@ -539,7 +848,7 @@
     they are different birds with very different lay rates, and a state's
     headline eggs-per-layer figure is largely a readout of which mix it runs.
 
-[26]
+[37]
   slug: nass-poultry-slaughter-2025
   title: Poultry Slaughter 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -553,7 +862,7 @@
     "commercially grown broilers-fryers and other young immature birds such as
     roasters and capons". Highest-confidence source in the project.
 
-[27]
+[38]
   slug: nass-production-value-2025
   title: Poultry - Production and Value 2025 Summary
   publisher: USDA National Agricultural Statistics Service
@@ -575,7 +884,62 @@
     Florida is individually reported here for 2024 while appearing in no year
     of the slaughter summary.
 
-[28]
+[39]
+  slug: nbs-china-2024-communique
+  title:
+    中华人民共和国2024年国民经济和社会发展统计公报 (Statistical Communiqué of the People's Republic
+    of China on the 2024 National Economic and Social Development)
+  publisher: National Bureau of Statistics of China (NBS)
+  source_type: government
+  published_on: 2025-02-28
+  retrieved_on: 2026-08-16
+  url: https://www.stats.gov.cn/sj/zxfb/202502/t20250228_1958817.html
+  notes:
+    THE PRIMARY GOVERNMENT FIGURE THIS PROJECT COULD REACH FOR CHINA, and it
+    is exactly the taxonomy trap the research brief warned about: "禽肉产量
+    2660万吨，增长3.8%" (poultry meat production reached 26.6 million tonnes, up
+    3.8% year-on-year, 2024) is a figure for 禽肉 (poultry meat broadly -
+    chicken, duck, goose and other fowl together), stated in the same sentence
+    as pork, beef and mutton with no chicken-specific (鸡肉/肉鸡) breakout
+    anywhere in the communiqué. NOT loaded as this project's broiler
+    meat_output: doing so would silently fold duck and goose production into a
+    "chicken" figure. No head count or slaughter number appears in this
+    section either - China's communiqué reports output tonnage only, the same
+    shape of gap CBS left for Israel's chicken figures, but for a different
+    reason (aggregation across species, not absence of a count).
+
+[40]
+  slug: niedersachsen-fleischerzeugung-1994-2014
+  title: Fleischerzeugung in Deutschland und Niedersachsen 1994 bis 2014
+  publisher:
+    Landesamt für Statistik Niedersachsen (Statistische Monatshefte
+    Niedersachsen 2/2016; author Silke Dahl)
+  source_type: government
+  published_on: 2016-02-01
+  retrieved_on: 2026-08-16
+  url: https://www.statistik.niedersachsen.de/download/104987
+  notes:
+    WebFetch's own summarizer initially refused this PDF as "corrupted";
+    `pdftotext -layout` on the saved binary recovered it cleanly - the same
+    finding Mexico's and Canada's research passes made about summarizer
+    refusals not proving a document unreadable. Table T1.1's "Anteil an D" row
+    for 2014 gives Niedersachsen 59.1% of German poultry (Geflügel) SLAUGHTER
+    WEIGHT and 53.0% of Jungmasthühner (broiler) SLAUGHTER COUNT - a genuinely
+    broiler-isolated, government-sourced regional-concentration figure, kept
+    explicitly dated to 2014 (ten years older than the 2020 census
+    housing-share figure above) rather than presented as current. Also
+    explains structurally why no current Land-level broiler-slaughter table
+    exists: "Die Schlachtdaten von Geflügel werden über die Geflügelstatistik
+    beim Statistischen Bundesamt in Tonnen erhoben und können daher in der
+    Regel nur deutschlandweit oder auf der Ebene Niedersachsens ausgewiesen
+    werden" - collected nationally, reportable only at the Germany-wide or
+    Niedersachsen level, corroborating the Fachserie 3 finding above from the
+    opposite direction. Also carries the Schlachtgewicht
+    Warmgewicht/Kaltgewicht (factor 0.98) conversion, but that footnote is
+    scoped to cattle/pigs/sheep/goats/horses, NOT poultry - not applied to any
+    German broiler figure in this project.
+
+[41]
   slug: sader-pollos-gallinas-avicultura
   title: Pollos, gallinas y la avicultura en México
   publisher: Secretaría de Agricultura y Desarrollo Rural (SADER)
@@ -595,7 +959,30 @@
     or near the top of the state ranking, though never loaded as a table
     figure since only the leader is named, not a percentage.
 
-[29]
+[42]
+  slug: shandong-tjj-2024-livestock-interpretation
+  title:
+    解读：2024年全省畜牧业生产总体平稳 (Interpretation - 2024 provincial animal husbandry
+    production overall stable)
+  publisher: Shandong Provincial Bureau of Statistics (山东省统计局)
+  source_type: government
+  retrieved_on: 2026-08-16
+  url: http://tjj.shandong.gov.cn/art/2025/1/23/art_6109_10316111.html
+  notes:
+    NOT LOADED, NOT QUOTED FOR FIGURES - listed here only as a documented
+    access failure, the same discipline Mexico's plan applied to unreached
+    SIAP hosts. The page returned a TLS certificate hostname mismatch
+    (certificate issued for *.ybj.shandong.gov.cn, not tjj.shandong.gov.cn) on
+    every fetch attempt from this research environment - a genuine access
+    failure, not a "the data doesn't exist" finding. Secondary aggregators
+    (search-result summaries only, pages not independently read and therefore
+    not cited as sources) describe Shandong as China's top poultry-producing
+    province by a wide margin, but every figure seen this way is for 家禽 (all
+    poultry), not 肉鸡 (chicken specifically) - see docs/CHINA-PLAN.md, "The
+    subnational question", for why no districts: block was built even
+    qualitatively.
+
+[43]
   slug: statcan-32100117-poultry-meat-2026
   title:
     Table 32-10-0117-01, Production, disposition and farm value of poultry
@@ -620,7 +1007,7 @@
     lines, 2016-2025) and the national five-year series used to sanity-check
     table 118's chicken-only trend moves in the same direction.
 
-[30]
+[44]
   slug: statcan-32100118-fowl-chicken-2026
   title:
     Table 32-10-0118-01, Fowl and chicken meat production, weight and farm
@@ -667,7 +1054,7 @@
     the purposes of this corpus's meat_output measure on that basis, though
     the two publications are not the same document.
 
-[31]
+[45]
   slug: statcan-daily-poultry-2026
   title: The Daily — Poultry and egg statistics, 2025
   publisher: Statistics Canada
@@ -688,7 +1075,132 @@
     the raw figures, not for exact values -- those come from the WDS API pull
     recorded under statcan-32100118-fowl-chicken-2026.
 
-[32]
+[46]
+  slug: usda-fas-gain-br2025-0038
+  title: Brazil: Poultry and Products Annual (GAIN Report BR2025-0038)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  source_type: government
+  published_on: 2025-09-29
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Brasilia_Brazil_BR2025-0038.pdf
+  notes:
+    A US government attaché report (Camila Aquino, approved Frederick Giles),
+    read directly with PyMuPDF after WebFetch's own first-pass extraction
+    misread the PSD table's columns (an error caught by re-extracting rather
+    than trusting a first read at face value). NOT used for any figure loaded
+    into data/output_brazil.yaml - IBGE's own SIDRA data is both more current
+    and a step closer to the primary source - but kept for an independent
+    cross-check: its own state map, captioned "Data Source: IBGE" and covering
+    the first half of 2025 only, gives South region 58.48% and Paraná 35.2% of
+    national chicken meat production, landing within a point of this project's
+    own IBGE-derived full-year 2025 figures (South region 57.9%, Paraná 34.8%,
+    computed from ibge-sidra-1094-abate-frangos above) despite being a
+    different subset of the year and a step further removed from IBGE. Two
+    independent readings of IBGE data converging is a genuine cross-check. PSD
+    table (self-annotated "Source: Not Official USDA Data", never graded above
+    industry regardless of the government publisher): 2025 "New Post"
+    production 15,355 thousand MT, exports 5,000 thousand MT, domestic
+    consumption 10,355 thousand MT. 2024 production 15,000/15,000 thousand MT
+    (USDA Official / New Post agree - close to but not identical to ABPA's own
+    14,972 thousand MT for the same year). 2026 forecast 15,800/15,805
+    thousand MT - a forecast, not loaded, matching this project's convention
+    of loading reported/estimated actuals only.
+
+[47]
+  slug: usda-fas-gain-ch2024-0108
+  title: China: Poultry and Products Annual (GAIN Report CH2024-0108)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  source_type: government
+  published_on: 2024-08-19
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Beijing_China+-+People's+Republic+of_CH2024-0108.pdf
+  notes:
+    The prior year's edition of usda-fas-gain-ch2025-0170, carried separately
+    because it is the only route this project found to a SETTLED 2023
+    chicken-meat production figure - by the time CH2025-0170 published, its
+    own table started at 2024. Table 1 ("Meat, Chicken" PSD, 1,000 MT):
+    Production 14,800 (2023, "USDA Official" and "New Post" agree). Total
+    imports 756; total supply 15,556; total exports 554. Self-sufficiency 2023
+    = 14,800 / 15,556 = 95.1%, the earliest point in this project's three-year
+    China self-sufficiency series (95.1% 2023 -> 97.0% 2024 -> 97.4% 2025).
+    Same "Not official USDA data" caveat and confidence=industry ceiling as
+    the 2025 edition.
+
+[48]
+  slug: usda-fas-gain-ch2025-0170
+  title: China: Poultry and Products Annual (GAIN Report CH2025-0170)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  source_type: government
+  published_on: 2025-09-10
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Beijing_China+-+People's+Republic+of_CH2025-0170.pdf
+  notes:
+    A US government attaché report, not China's own statistical agency - the
+    same remove as Mexico's GAIN report, and for the same reason: NBS
+    publishes poultry meat only as an all-species aggregate (see
+    nbs-china-2024-communique), so this Post estimate, prepared by FAS China
+    staff and explicitly captioned "Not official USDA data", is the only
+    chicken-SPECIFIC production series this project could reach. Loaded at
+    confidence=industry, not measured, on that basis. Table 1 ("Meat, Chicken"
+    PSD, in 1,000 MT): Production 15,350 (2024, both "USDA Official" and "New
+    Post" columns agree - a settled actual by this report's date) and 16,200
+    (2025, "New Post" - still an in-year estimate, loaded provisional). Total
+    imports 477 (2024) / 430 (2025); total exports 770 (2024) / 950 (2025);
+    total supply 15,827 (2024) / 16,630 (2025). SELF-SUFFICIENCY is arithmetic
+    sitting in this same table, exactly as it was for Mexico: production /
+    total supply = 15,350 / 15,827 = 97.0% (2024) and 16,200 / 16,630 = 97.4%
+    (2025) - loaded as a fact, not an output_stat_year row, because this
+    project computed it rather than DEFRA-style-published it directly (see
+    schema.sql's own note on why self_sufficiency_ratio is for a source's OWN
+    published ratio). White broilers are ~70% of total chicken meat
+    production, yellow broilers 17-20%, hybrid broilers 8-10% ("about five
+    years ago, white broilers made up only around 50 percent") -
+    industry-grade structural detail, not itself a production figure, kept as
+    a fact. China became a net chicken-meat exporter in 2024 per this report's
+    own trade tables (imports 477 vs exports 770, 1,000 MT, 2024) -
+    corroborated independently by usda-fas-livestock-poultry-wmt-2026-04. PDF
+    text extraction: WebFetch's own summarizer refused the file as binary
+    ("cannot read"), the same failure Mexico's GAIN PDF hit; the file WebFetch
+    saved to disk as a side effect extracted cleanly with PyMuPDF (`fitz`) -
+    23,339 characters, ordinary embedded text, no font encoding trap.
+
+[49]
+  slug: usda-fas-gain-ja2024-0043
+  title: Japan: Poultry and Products Annual (GAIN Report JA2024-0043)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN)
+  source_type: government
+  published_on: 2024-09-04
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry+and+Products+Annual_Tokyo_Japan_JA2024-0043.pdf
+  notes:
+    A US government attaché report, used here as a CROSS-CHECK rather than the
+    primary route into Japanese figures the way the equivalent report was for
+    Mexico — unlike SIAP, MAFF's own e-Stat portal answered directly (see
+    maff-chikusan-toukei-broiler-2024 and maff-shokuryo-jukyuhyo-r5). Table 1
+    (PSD "Meat, Chicken") reports separate "USDA Official" and "New Post"
+    columns that disagree with each other (2024 production: 1,790 vs 1,720
+    thousand MT) — both are USDA estimates, not raw MAFF data, so NEITHER
+    column is loaded into this corpus's output tables; only the prose citation
+    of MAFF's own broiler-population figure (~145 million birds, 2024-02-01,
+    +2%) is used, and only as independent corroboration of table 5(1)'s
+    primary figure. 2025 figures in Table 1 are themselves marked "0" under
+    "USDA Official" (not yet published at the time of this report) and are
+    FORECASTS under "New Post" — not loaded, following this project's standing
+    rule against loading projections as actuals (see the Mexico precedent in
+    usda-fas-gain-mx2024-0040). Also the source for Japan's stated 2023-2024
+    weight-basis convention: Table 2 reports "Chicken Production in January –
+    June, Unit: MT, RTC" (ready-to-cook), corroborating the "bone-in meat
+    equivalent" basis documented for MAFF's own production figure.
+
+[50]
   slug: usda-fas-gain-mx2024-0040
   title: Mexico: Poultry and Products Annual (GAIN Report MX2024-0040)
   publisher: USDA Foreign Agricultural Service (FAS GAIN)
@@ -738,7 +1250,87 @@
     TIF (federally-inspected) slaughter coverage - 121 plants, an estimated
     85% of 2024 slaughter, up from 83% in 2023.
 
-[33]
+[51]
+  slug: usda-fas-gain-rs2020-0042
+  title: Russia: Poultry and Products Annual (GAIN Report RS2020-0042)
+  publisher: USDA Foreign Agricultural Service (FAS GAIN), Post Moscow
+  source_type: government
+  published_on: 2020-09-21
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry%20and%20Products%20Annual_Moscow_Russian%20Federation_08-15-2020
+  notes:
+    A US government attaché report, the only source this project found that
+    isolates CHICKEN meat specifically (Table 1, "Poultry, Meat, Chicken")
+    from Russia's blended national poultry total. Fetched directly; WebFetch's
+    own summarizer refused the PDF as binary, but the file it saves to disk
+    underneath extracts cleanly with PyMuPDF (`fitz`) - the same workaround
+    Mexico's GAIN report needed. Table 1 gives, in 1,000 MT RTC (ready-to-cook
+    weight, stated explicitly): Production 2019 = 4,668 ("New Post" column;
+    final, adjusted to Rosstat's confirmed 2019 total per the report's own
+    text) and 2020 = 4,715 ("New Post"; still an in-year estimate as of the
+    report's 2020-09-21 publication date - loaded provisional). 2021's 4,725
+    is explicitly a FORECAST ("expected to lift production to 4.725 MMT (RTC)
+    in 2021") and is deliberately not loaded, mirroring Mexico's exclusion of
+    GAIN's 2025 forecast row. Table 1 also carries an "Inventory (Reference)"
+    row in million head (535 for Jan 2019, 520/523 for Jan 2020, 523 for Jan
+    2021) - a chicken-specific standing-stock reference distinct from the
+    report's separate ALL-POULTRY inventory figure (544.691 million head, all
+    fowl, as of 2020-01-01). Not loaded into output_stat_year: the table does
+    not state whether this "Inventory (Reference)" figure is a beginning- or
+    end-of-year snapshot for the labelled market year, and guessing the
+    mapping would risk double-counting or mis-dating a stock figure - see
+    docs/RUSSIA-PLAN.md. CAVEAT CARRIED TO CONFIDENCE GRADE, same reasoning as
+    Mexico's GAIN report: annotated "NOTE: Not Official USDA data; Official
+    USDA data is available at http://apps.fas.usda.gov/psdonline/" - a Post
+    estimate reconciling Rosstat and trade data, not a direct quote of a
+    Rosstat publication. Loaded at confidence=industry, even though
+    source_type is 'government'. STRUCTURAL CONTEXT, not loaded as corpus
+    figures: broilers and layers together are ~96% of Russia's total poultry
+    inventory (544.691 million head, 2020-01-01); industrialized commercial
+    farms account for 93.4% of poultry meat production; chicken meat
+    production and consumption DECLINED year-on-year in 2019 amid market
+    oversaturation and farm bankruptcies, before recovering in 2020. No
+    Russia-specific "Poultry and Products Annual" GAIN report has been
+    published since this one - the USDA FAS website and search of
+    apps.fas.usda.gov turned up no 2021-through-2026 successor, so this is
+    necessarily a pre-2022 baseline, not a current one. See
+    docs/RUSSIA-PLAN.md.
+
+[52]
+  slug: usda-fas-livestock-poultry-wmt-2026-04
+  title:
+    Livestock and Poultry: World Markets and Trade - China Chicken Meat
+    Exports Continue to Soar in 2026, Surpassing Thailand
+  publisher: USDA Foreign Agricultural Service (FAS), World Agricultural Outlook Board
+  source_type: government
+  published_on: 2026-04-09
+  retrieved_on: 2026-08-16
+  url: https://apps.fas.usda.gov/psdonline/circulars/livestock_poultry.pdf
+  notes:
+    THE SOURCE FOR THIS PROJECT'S ONE HEADLINE CLAIM ABOUT CHINA, stated
+    directly rather than pieced together: "China is the world's second largest
+    producer of chicken meat, significantly behind the United States and often
+    on par with Brazil." Unlike Mexico's three conflicting world-rank claims
+    (6th, 5th, "1st" for a narrower category), this is one document, one clear
+    statement, from USDA's own global circular rather than a country attaché
+    report - loaded as a fact at confidence=industry (the circular blends
+    settled figures with forecasts throughout and is not itself a PSD table).
+    Also the source of this project's only per-capita chicken figure for
+    China: "China chicken consumption remains relatively low (11 kg/per
+    capita)" for 2025, against pork (43 kg) and beef (8 kg) within China, and
+    against the United States (55 kg), Japan (24 kg) and Taiwan (42 kg)
+    elsewhere - loaded as a fact, UNLIKE Israel's and Mexico's per-capita
+    figures, this project found no second, independently sourced Chinese
+    figure to cross-validate or conflict with it in this pass; flagged as
+    single-source rather than corroborated, and NOT a reason to promote it
+    above industry grade. Confirms China became a net chicken-meat exporter in
+    2024, ranked world's fifth largest chicken-meat exporter and thirteenth
+    largest importer in 2025, and reports 2025 export value of $2.59 billion
+    (nearly double 2020).
+
+[53]
   slug: usda-fdc-egg-raw
   title: Egg, whole, raw, fresh (FDC 171287)
   publisher: USDA FoodData Central
@@ -755,7 +1347,7 @@
     Storing one arbitrary cooked row would assert a default that does not
     exist.
 
-[34]
+[54]
   slug: usda-fdc-wing-fried
   title: Fast foods, fried chicken, wing, meat and skin and breading (FDC 170360)
   publisher: USDA FoodData Central
@@ -766,7 +1358,7 @@
     Breaded and fried. Roughly 59% of calories from fat against 27% from
     protein - the breading and frying oil, not the bird, drive the change.
 
-[35]
+[55]
   slug: usda-fdc-wing-raw
   title: Chicken, broilers or fryers, wing, meat and skin, raw (FDC 172390)
   publisher: USDA FoodData Central
@@ -777,7 +1369,7 @@
     Per 100 g: 191 kcal, 17.5 g protein, 12.8 g fat. The reference figure for
     an unbreaded, uncooked whole wing with skin.
 
-[36]
+[56]
   slug: usda-psd-israel-broiler-2000
   title:
     Production, Supply and Distribution database, Israel broiler meat
@@ -814,7 +1406,7 @@
     and not adjudicated, and because promoting this to a stated basis is a
     human judgement about provenance.
 
-[37]
+[57]
   slug: tyson-foodservice-boneless
   title: Fully Cooked Breaded Whole Muscle Boneless Chicken Wings, product specs
   publisher: Tyson Foodservice
@@ -830,7 +1422,7 @@
     and the descriptor "whole muscle chicken breast". These are breast chunks,
     and the manufacturer does not pretend otherwise.
 
-[38]
+[58]
   slug: tyson-foodservice-chunks
   title: Boneless wings and chunks product line, ingredient statements
   publisher: Tyson Foodservice
@@ -846,7 +1438,7 @@
     "chunks" contain no wing meat either, and the phrase "with rib meat" is a
     breast-yield allowance rather than a different cut sneaking in.
 
-[39]
+[59]
   slug: boneless-wing-method
   title:
     A method of production of boneless chicken wings (drumettes and winglets)
@@ -859,7 +1451,7 @@
     Segment masses: bone-in drumette 39.9 g at 74.9% boneless yield, bone-in
     winglet 30.7 g at 80.1% boneless yield.
 
-[40]
+[60]
   slug: chilling-method-yield
   title:
     Moisture retention by water- and air-chilled broilers, and effect of
@@ -877,7 +1469,7 @@
     therefore belongs in the mass stages and can never move a count answer -
     but it matters a great deal to anyone buying wings by the pound.
 
-[41]
+[61]
   slug: cold-chain-refrigeration-losses
   title:
     The impact of refrigeration on food losses and associated greenhouse gas
@@ -895,7 +1487,7 @@
     one. For meat the paper finds post-harvest handling and storage, not
     transport, is where refrigeration matters most.
 
-[42]
+[62]
   slug: gotoh-2018-wagyu-review
   title:
     The Japanese Wagyu beef industry: current situation and future prospects
@@ -926,7 +1518,7 @@
     as one of four inputs to the quality number). See
     docs/research/accepted/batch-03-wagyu-REVIEW-round2.md.
 
-[43]
+[63]
   slug: myopathy-prevalence-ontario
   title:
     Prevalence of breast muscle myopathies (spaghetti meat, woody breast,
@@ -942,7 +1534,7 @@
     comes from - are the worst affected. Woody breast incidence rose from
     about 5% in 2012 to 29% by 2015.
 
-[44]
+[64]
   slug: ncc-broiler-lca-2020
   title: Broiler Production System Life Cycle Assessment: 2020 Update
   publisher: National Chicken Council / University of Arkansas
@@ -962,7 +1554,7 @@
     chicks per broiler produced to cover mortality, which independently
     corroborates our farm_mortality stage.
 
-[45]
+[65]
   slug: nrc-2002-ground-beef-risk
   title: Escherichia coli O157:H7 in Ground Beef - Review of a Draft Risk Assessment
   publisher: National Research Council / Institute of Medicine, National Academies Press
@@ -989,7 +1581,7 @@
     assessment, not an observation, which is why the combo-bin pool derived
     from it is graded `estimate`.
 
-[46]
+[66]
   slug: plos-hu-2012-grind-batch
   title:
     Estimating Animal Abundance in Ground Beef Batches Assayed with Molecular
@@ -1018,7 +1610,7 @@
     shift); and not a mean worth quoting on its own - the paper's own point is
     the variance between batches.
 
-[47]
+[67]
   slug: pubmed-multi-silkworm-cocoon
   title:
     Multi-silkworm cocoon: structure, properties and the collective spinning
@@ -1049,7 +1641,7 @@
     resource. So the constant is one-to-one for commercial silk and is not a
     law of nature.
 
-[48]
+[68]
   slug: rebollar-rebollar-2021-carne-pollo-kkt
   title:
     Distribución regional de carne de pollo en México: Una aplicación de las
@@ -1083,7 +1675,7 @@
     kg (pollo) vs 16 kg pork vs 18 kg beef - one more entry in the per-capita
     trap - and imports of 550,000 t (76% leg-and-thigh cuts).
 
-[49]
+[69]
   slug: welfare-training-carcass-quality
   title:
     The Influence of Welfare Training on Bird Welfare and Carcass Quality in
@@ -1096,7 +1688,7 @@
     90% of bruising occurs in the 12-24 hours before processing. Bruise
     distribution by region: breast 42%, wings 33%, legs 25%.
 
-[50]
+[70]
   slug: wing-injuries-loading
   title:
     Rearing and handling injuries in broiler chickens and risk factors for
@@ -1111,7 +1703,7 @@
     the bird. Load-to-load variance is high, so this is stored with a wide
     lo/hi band.
 
-[51]
+[71]
   slug: wing-yield-eight-strains
   title: Yield of Carcass, Parts, Meat, Skin, and Bone of Eight Strains of Broilers
   publisher: Poultry Science
@@ -1122,7 +1714,68 @@
     Whole wing as a share of carcass weight (9.1-10.2%) and of live weight
     (6.7-7.3%), measured across eight commercial broiler strains.
 
-[52]
+[72]
+  slug: abpa-annual-report-2026
+  title: ABPA Annual Report 2026 (covering 2025 data)
+  publisher: Associação Brasileira de Proteína Animal (ABPA)
+  source_type: trade_body
+  published_on: 2026-04-28
+  retrieved_on: 2026-08-16
+  url: https://abpa-br.org/wp-content/uploads/2026/04/ABPA_Annual_Report_2026.pdf
+  notes:
+    Brazil's national poultry-and-pork trade body, the equivalent of the
+    National Chicken Council. Reached directly as a 43 MB PDF, found via the
+    report's own download archive (abpa-br.org/abpa-relatorio-anual/), and
+    read with PyMuPDF (WebFetch's own extraction refused the file for
+    exceeding its 10 MB cap). Corroborated by the report's own launch press
+    release, which quotes identical figures verbatim. HEADLINE 2025 "CHICKEN
+    MEAT" FIGURES (not the broader "aves" aggregate the same report gives
+    separately for eggs, turkey and duck meat, each with their own
+    production/export/per-capita figures on the same summary page): production
+    15.289 million tonnes (3rd largest producer in the world, behind USA
+    21.812M and China 16.200M t, per the report's own World Chicken Meat
+    Market table); exports 5.324 million tonnes to 153 countries, US$9.8
+    billion revenue (world's largest exporter, 34.82% of production -
+    "Destination of Brazilian Chicken Meat Production in 2025": 65.18%
+    domestic market, 34.82% exports); per-capita consumption 46.7
+    kg/inhabitant; Gross Production Value R$ 112.6 billion; breeding hens
+    housed ("Matrizes de corte, alojamento") 63.0 million head. 2024
+    production given cleanly as 14,972 thousand MT in the same World Market
+    table, loaded here as this project's only 2024 national tonnage figure.
+    TWO STATE-LEVEL CHARTS, NEITHER LOADED into output_stat_year (both would
+    collide with ibge-sidra-1094-abate-frangos above under this project's
+    one-row-per-cell schema constraint): (1) "Chicken Slaughtering by Federal
+    Unit in 2025", sourced by ABPA itself to "Ministry Of Agriculture And
+    Livestock (MAPA) *Slaughtering Under Federal Inspection" -
+    federal-inspection-only, narrower than IBGE's all-inspection-types
+    population above. Total Brazil 5.706 billion head; Paraná 38.93% / 2.221
+    billion, Santa Catarina 13.65% / 779 million, Rio Grande do Sul 13.13% /
+    749 million, Goiás 9.20% / 525 million, São Paulo 8.28% / 472 million,
+    Minas Gerais 5.93% / 338 million, Mato Grosso 3.68% / 210 million, Mato
+    Grosso do Sul 3.01% / 172 million, Distrito Federal 0.93% / 53.1 million,
+    Pernambuco 1.09% / 62.1 million, Bahia 0.61% / 34.8 million, Espírito
+    Santo 0.58% / 32.9 million, Rondônia 0.31% / 17.7 million, Paraíba 0.38% /
+    21.5 million, Pará 0.17% / 9.9 million, Others 0.13%. (2) "Brazilian
+    Chicken Meat Exports by Federal Unit in 2025", sourced to SECEX (Brazil's
+    foreign-trade secretariat). Paraná 40.76% / 2,103,688 t, Santa Catarina
+    23.28% / 1,201,818 t, Rio Grande do Sul 13.30% / 686,359 t - "the three
+    states that make up the southern region of Brazil represent 77.3% of
+    Brazilian chicken meat exports" (ABPA's own words). Goiás 5.29% / 272,908
+    t, São Paulo 6.41% / 330,828 t, Mato Grosso do Sul 3.45% / 178,244 t,
+    Minas Gerais 3.87% / 199,637 t, Mato Grosso 1.93% / 99,639 t, Distrito
+    Federal 1.46% / 75,241 t, Espírito Santo 0.06% / 3,354 t, Others 0.19% /
+    10,047 t. Not loaded because this project's schema has no 'exports'
+    measure and the closest existing one ('marketed') means domestic sales
+    elsewhere in this corpus, not export volume - reusing it would misstate
+    the figure. CAVEAT CARRIED TO CONFIDENCE GRADE: a trade body's own report,
+    never promoted past 'industry' even where it cites a government source
+    (MAPA, SECEX) one step removed - the same rule Mexico's GAIN-sourced
+    figures and Canada's CFC-sourced figures both follow. ABPA's own implied
+    average carcass weight (15,289,000 t / 5,706,000 thousand head = 2.68
+    kg/head) differs sharply from IBGE's (2.14 kg/head) - a real, unresolved
+    discrepancy, not a rounding artifact, discussed in docs/BRAZIL-PLAN.md.
+
+[73]
   slug: beefresearch-org-beef-grading
   title:
     Fact Sheet: Beef Grading (Expected Yields of Closely Trimmed, Boneless
@@ -1145,7 +1798,7 @@
     not interchangeable with it -- nor with SDSU's 65% worked-example figure,
     which includes trim the %CTBRC basis excludes.
 
-[53]
+[74]
   slug: cfc-annual-report-2025
   title: 2025 Annual Report
   publisher: Chicken Farmers of Canada
@@ -1177,7 +1830,7 @@
     -- industry-grade, no single year or public methodology stated for the
     multiplier, so kept as fact material rather than a statistic.
 
-[54]
+[75]
   slug: cna-avicultura-altos-vuelos-2021
   title: Avicultura mexicana, una industria de altos vuelos
   publisher: Consejo Nacional Agropecuario (CNA)
@@ -1197,7 +1850,35 @@
     report's ordering on the same Jalisco/Aguascalientes pair - contributing
     to, not resolving, that conflict.
 
-[55]
+[76]
+  slug: interfax-rosptitsesoyuz-2024-forecast
+  title:
+    Росптицесоюз ждет производства в стране в 2024 году яиц и мяса птицы на
+    уровне 2023 года
+  publisher: Interfax, quoting Rosptitsesoyuz (Elena Stepanova, Deputy Director General)
+  source_type: trade_body
+  retrieved_on: 2026-08-16
+  url: https://www.interfax.ru/russia/995122
+  notes:
+    The clearest direct quote from Rosptitsesoyuz (Росптицесоюз, the Russian
+    poultry union) found in this pass, and it is explicitly an ALL-POULTRY
+    figure, not chicken-specific: "поголовье птицы" forecast poultry meat
+    production of 5.46 million tonnes (carcass/"убойный" weight, all farm
+    categories) for 2024, of which 5.08 million tonnes from agricultural
+    organizations specifically; egg production 46.44 billion units. Confirms
+    that even Rosptitsesoyuz's own public statements, at least via this
+    outlet, report poultry as a whole rather than publishing a broiler-only
+    national total the way this project would need to load a `measured` or
+    `industry` broiler figure directly from the union. graded trade_body (a
+    national industry association, one step from a government statistical
+    release) rather than government. Rosptitsesoyuz's own web presence
+    (rosptitsesoyuz.ru) could not be reached AT ALL from this research
+    environment - DNS failure, the same shape of dead end Mexico's SIAP
+    portals hit. Every Rosptitsesoyuz figure in this project's Russia research
+    reaches the corpus secondhand, via press coverage, never from
+    rosptitsesoyuz.ru directly. See docs/research/library/poultry-russia.yaml.
+
+[77]
   slug: msstate-ext-beef-grades
   title: Beef Grades and Carcass Information
   publisher: Mississippi State University Extension Service
@@ -1218,7 +1899,7 @@
     which is the basis for batch-03-wagyu's honest marbling_vs_yield_tradeoff
     "sources treat the axes as independent" finding.
 
-[56]
+[78]
   slug: msstate-ext-beef-yield
   title: How Much Meat to Expect from a Beef Animal (farm-direct beef)
   publisher: Mississippi State University Extension Service
@@ -1238,7 +1919,7 @@
     is 47 percent of live weight, not 40. SDSU's 65 percent does reconcile.
     Both bounds are kept and neither is averaged away.
 
-[57]
+[79]
   slug: ncc-broiler-performance
   title: U.S. Broiler Performance
   publisher: National Chicken Council
@@ -1252,7 +1933,7 @@
     grow-out mortality going back to 1925. Trade body rather than government,
     so figures are tagged confidence=industry.
 
-[58]
+[80]
   slug: ncc-key-facts
   title: Broiler Chicken Industry Key Facts
   publisher: National Chicken Council
@@ -1263,7 +1944,7 @@
     https://www.nationalchickencouncil.org/about-the-industry/statistics/broiler-chicken-industry-key-facts/
   notes: Industry structure - plant counts, company counts, contract farms.
 
-[59]
+[81]
   slug: nysmaple-sap-per-tree
   title: How Much Sap Can One Tree Produce?
   publisher: New York State Maple Producers Association
@@ -1279,7 +1960,7 @@
     preferred over UVM's rule. Kept as a source because the one-tap figure is
     genuinely useful, cited for the ratio nowhere.
 
-[60]
+[82]
   slug: ofot-sector-summary-2021
   title: ענף הלול - סיכום 2021 (Poultry sector summary, 2021)
   publisher: ארגון מגדלי עופות בישראל (Israel Poultry Growers Organisation)
@@ -1307,7 +1988,7 @@
     enumerates US slaughter, and the corpus should not imply otherwise by
     placing them in the same tier.
 
-[61]
+[83]
   slug: ou-kosher-shechita
   title: Shechita: All About Kosher Ritual Slaughter
   publisher: Orthodox Union (OU Kosher)
@@ -1326,7 +2007,7 @@
     it would be an 'estimate' of our own making, which is the grade the
     project is trying to reduce. Recorded as a known gap rather than filled.
 
-[62]
+[84]
   slug: psu-extension-saffron
   title: Saffron: A Tale of Red Gold and How to Produce Your Own
   publisher: Penn State Extension
@@ -1351,7 +2032,7 @@
     require assuming the mass of a teaspoon of saffron, and that assumption
     would be ours rather than the source's.
 
-[63]
+[85]
   slug: refed-foodservice
   title: Foodservice methodology, Insights Engine Food Waste Monitor
   publisher: ReFED
@@ -1367,7 +2048,7 @@
     but is deliberately EXCLUDED from this model: those wings reached the
     plate, which is where our question stops.
 
-[64]
+[86]
   slug: sdsu-ext-fed-steer-yield
   title: How Much Meat Can You Expect from a Fed Steer?
   publisher: South Dakota State University Extension
@@ -1390,7 +2071,7 @@
     packaged beef. The two must never be merged; only the trim figure becomes
     patties.
 
-[65]
+[87]
   slug: ucanr-mg-saffron
   title: Saffron - Garden Help, Herbs
   publisher: UC Master Gardeners of Santa Clara County, UC ANR
@@ -1409,7 +2090,7 @@
     a data one, and it is recorded here because it is the reason the raw
     documents come back with every batch.
 
-[66]
+[88]
   slug: ufifas-hs661-saffron
   title: Saffron - Crocus sativus L. (HS661)
   publisher: University of Florida IFAS Extension, Horticultural Sciences
@@ -1429,7 +2110,7 @@
     own words ("Supposedly"), and it is stored at confidence=industry for
     exactly that reason.
 
-[67]
+[89]
   slug: umaine-7036e-maple
   title: Bulletin #7036: How to Tap Maple Trees and Make Maple Syrup
   publisher: University of Maine Cooperative Extension
@@ -1448,7 +2129,7 @@
     quote and no number. That was the correct behaviour: subtracting two dates
     would have been our arithmetic, not the source's.
 
-[68]
+[90]
   slug: una-industria-2025
   title: Industria (statistics page)
   publisher: Unión Nacional de Avicultores (UNA)
@@ -1470,7 +2151,7 @@
     administrative unit - which does not map cleanly onto state-level data and
     is not loaded.
 
-[69]
+[91]
   slug: usapeec-paws-export
   title: Chinese appetite for chicken paws proves a boon for U.S. producers
   publisher: USA Poultry & Egg Export Council
@@ -1486,7 +2167,7 @@
     fetch $0.80-$1.00/lb exported against $0.05-$0.10/lb as domestic animal
     feed - close to a tenfold difference.
 
-[70]
+[92]
   slug: uvm-jones-rule-86
   title: The "Jones Rule of 86" Revisited
   publisher: University of Vermont Extension, Proctor Maple Research Center
@@ -1512,7 +2193,7 @@
     own caveat: the rule degrades at the high sugar concentrations reverse
     osmosis now produces, so it is a field rule, not a physical law.
 
-[71]
+[93]
   slug: vanilla-package-of-practice-2021
   title: Package of Practice: Vanilla Cultivation
   publisher:
@@ -1533,7 +2214,7 @@
     kg of green pods produce 1 kg of cured beans." Confirmed to state Vanilla
     planifolia by name.
 
-[72]
+[94]
   slug: worldbank-vanilla-cultivation-guide
   title: Guide on Sustainable Vanilla Cultivation
   publisher: World Bank
@@ -1552,7 +2233,75 @@
     1 never appears in that sentence. See
     docs/research/accepted/batch-02-vanilla-REVIEW.md.
 
-[73]
+[95]
+  slug: agripost-cn-broiler-industry-2024
+  title:
+    China's Broiler Industry in 2024: White-Feather Broilers Gain Market Share
+    as Yellow-Feather Chickens Decline
+  publisher:
+    AgriPost.CN, citing China's National Broiler Industry Technology System
+    (中国肉鸡产业技术体系)
+  source_type: trade_press
+  published_on: 2025-02-17
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.agripost.cn/2025/02/17/chinas-broiler-industry-in-2024-white-feather-broilers-gain-market-share-as-yellow-feather-chickens-decline/
+  notes:
+    THE ONLY BROILER-SPECIFIC HEAD COUNT this project found for China, and it
+    is not loaded into output_stat_year - see docs/CHINA-PLAN.md, "The
+    production-estimate conflict". Total broiler output 14.84 billion birds in
+    2024 (+1.02% YoY): white-feather 9.03 billion (+2.24%), yellow-feather
+    3.33 billion (-7.25%), small white-feather 2.48 billion (+9.36%). Meat
+    output: white-feather 17.79 million tonnes (72.17% of total),
+    yellow-feather 4.32 million tonnes (17.53%) - white + yellow alone already
+    sum to 22.11 million tonnes, 44% above usda-fas-gain-ch2025-0170's 15.35
+    million tonne "Meat, Chicken" PSD figure for the same year, and small
+    white-feather tonnage is not even included in that sum. Neither this
+    source nor the GAIN report states its weight basis (live vs.
+    processed/carcass-equivalent) explicitly, so THIS PASS DOES NOT ASSERT
+    which basis explains the gap - recorded as an unresolved conflict, per
+    this project's discipline of reporting disagreeing production estimates
+    side by side rather than picking a winner. Two removes from a primary
+    count: AgriPost.CN (trade press) attributes its figures to "China's
+    National Broiler Industry Technology System" (中国肉鸡产业技术体系, a national
+    agricultural technology system under China's Agriculture Research System,
+    not a statistical agency), and this project did not locate that system's
+    own report directly - flagged for a future pass, the same shape of gap as
+    Mexico's unreached SIAP portal. confidence_ceiling: industry.
+
+[96]
+  slug: agromics-proizvodstvo-myasa-2024
+  title: Производство и потребление мяса, поголовье скота в РФ — 2024
+  publisher: Agromiks (agromics.ru)
+  source_type: trade_press
+  retrieved_on: 2026-08-16
+  url: https://agromics.ru/novosti/proizvodstvo-myasa-2024/
+  notes:
+    Trade-press analytics site, attributing its figures to Rosstat. States
+    "5,42 миллиона тонн" (5.42 million tonnes, slaughter/carcass weight) of
+    what it labels "мясо бройлеров" (broiler meat) for 2024, up 1.5% from
+    "5,34 миллиона тонн" in 2023, plus a broiler headcount of "556,03 миллиона
+    особей" (556.03 million birds) as of end-2024 (+2.2% y/y). Also states
+    chicken is 44.48% of Russia's 12.2-million-tonne total meat output (all
+    species, not just poultry) in 2024, and derives a per-capita figure of
+    36.49 kg/person/year from production plus net trade. NOT LOADED AS A
+    CHICKEN-SPECIFIC CORPUS FIGURE. Both the 2023 tonnage (5.34 million) and
+    the shape of the 2024 tonnage (5.42 million) are numerically
+    indistinguishable, to three significant figures, from Rosstat's own
+    ALL-POULTRY slaughter-weight total for the same years (5,339,467 t
+    reported for 2023 in Rosstat's national workbook, per independent research
+    - see docs/RUSSIA-PLAN.md and docs/research/library/poultry-russia.yaml).
+    This site's own separate "мясо птицы" (poultry meat, not broiler-specific)
+    article (rynok-myasa) reports figures in the same range for the same
+    years. Whether this source has genuinely isolated broiler-only production,
+    or is relabeling Rosstat's all-poultry total as "бройлеров" the way trade
+    press sometimes conflates "ave" and "pollo" for Mexico, could not be
+    resolved from the page itself - it names Rosstat as its source but does
+    not name a specific Rosstat table or publication. Carried as a fact with
+    this caveat stated plainly, not as an output_stat_year row.
+
+[97]
   slug: avicola-com-mx-estadisticas-2025
   title: Estadísticas de Producción Avícola en México 2025
   publisher: avicola.com.mx
@@ -1567,7 +2316,7 @@
     egg self-sufficiency - EGGS, a different product, not conflated with the
     chicken-meat self-sufficiency fact this source otherwise corroborates.
 
-[74]
+[98]
   slug: bmeditores-panorama-carne-ave
   title: Panorama de la industria de la carne de ave en México
   publisher: BM Editores
@@ -1594,7 +2343,7 @@
     per-capita trap, roughly a third below every other figure found. Not
     loaded.
 
-[75]
+[99]
   slug: cold-chain-transport-trade
   title: Overcoming challenges in refrigerated transport
   publisher: The National Provisioner
@@ -1610,7 +2359,7 @@
     LOADING causes more rejected shipments than transit failures. No
     quantified rejection rate is given, in this or any source found.
 
-[76]
+[100]
   slug: eggs-unlimited-breakage
   title: Broken Eggs 101: A Practical Guide for Commercial Egg Buyers and Sellers
   publisher: Eggs Unlimited
@@ -1628,7 +2377,7 @@
     enough that the industry measures breakage closely - it is what the
     invoice argument is about.
 
-[77]
+[101]
   slug: jc-israeli-mangal
   title: Going up in smoke, Sabra style
   publisher: The Jewish Chronicle
@@ -1646,7 +2395,7 @@
     very little role in the day. Undated on the page, so published_on is NULL
     rather than guessed.
 
-[78]
+[102]
   slug: jfs-independence-day-grilling
   title: The Grilling Tradition of Israel's Independence Day
   publisher: Jewish Food Society
@@ -1662,7 +2411,7 @@
     become distinctly Israeli. Two sources agreeing is why the cultural fact
     is loaded at all.
 
-[79]
+[103]
   slug: lone-mountain-carcass-grading
   title: Carcass Grading (breeding guide technical resources)
   publisher: Lone Mountain Cattle Company
@@ -1684,7 +2433,7 @@
     separate meat quality grade (1-5). See
     docs/research/accepted/batch-03-wagyu-findings-round2.yaml.
 
-[80]
+[104]
   slug: nwe-silkworm
   title: Silkworm
   publisher: New World Encyclopedia
@@ -1703,7 +2452,7 @@
     below the commonly repeated "1,000-1,600 m". The lower sourced figure is
     the one to keep; the folk range has no source we could find.
 
-[81]
+[105]
   slug: poultrysite-contract-economics
   title: Contract Broiler Production: Questions and Answers
   publisher: The Poultry Site
@@ -1718,7 +2467,7 @@
     $6,000-$12,000 to the grower's land, labour, and management during the
     15-year mortgage period.
 
-[82]
+[106]
   slug: poultryworld-israel-war-2024
   title: Israel poultry industry hit by war and labour shortage
   publisher: Poultry World (Misset)
@@ -1745,7 +2494,7 @@
     9,813 tonnes of broilers in 2024 - so the claim is checkable in principle
     against a Hebrew original.
 
-[83]
+[107]
   slug: smithsonian-silk-road-2002
   title: The Silk Road - Connecting Peoples and Cultures
   publisher: Smithsonian Center for Folklife and Cultural Heritage
@@ -1769,7 +2518,7 @@
     project's fetcher that page contains neither 120 nor 130, so two research
     runs correctly returned nothing and read as model weakness for a week.
 
-[84]
+[108]
   slug: suekayton-silk-thread-and-cloth
   title: Silk Thread and Cloth
   publisher: Sue Kayton (silkworms.com educational pages)
@@ -1794,7 +2543,7 @@
     until fetch_url() learned to call html.unescape() they survived into the
     inbox and made an honest quote from it impossible to verify.
 
-[85]
+[109]
   slug: toi-poultry-imports-2025
   title: Poultry producers warn first-ever imports of chickens will destroy local farms
   publisher: The Times of Israel
@@ -1820,7 +2569,33 @@
     loaded from here. A live article citing a dead one does not resurrect the
     citation.
 
-[86]
+[110]
+  slug: tsenovik-imit-dinamika-2023
+  title: Динамика производства мяса в России. Результаты 2023 года
+  publisher: Tsenovik, citing ИАА "ИМИТ" (Institute of Agrarian Market Studies)
+  source_type: trade_press
+  retrieved_on: 2026-08-16
+  url:
+    
+    https://www.tsenovik.ru/articles/veterinariya/dinamika-proizvodstva-myasa-v-rossii-rezultaty-2023-goda/
+  notes:
+    An independent industry-analytics source for the SAME 2023 year gives a
+    THIRD number for "мясо птицы" (poultry meat, not broiler-specific): 5.156
+    million tonnes in slaughter weight, +0.3% / +15,000 t over 2022 - a
+    different figure again from both Rosstat's own 5,339,467 t all-poultry
+    total and agromics's 5.34 million tonnes labelled "broiler". The article
+    explicitly discusses "мясо птицы" throughout and does not separate a
+    chicken/broiler-only line. Regional detail (three federal districts grew,
+    three declined) is poultry-wide, not broiler-specific, and is not loaded.
+    Used in docs/RUSSIA-PLAN.md as the clearest evidence that Russian 2023
+    poultry-meat production has at least three mutually inconsistent published
+    figures (5.156M, 5.339M, 5.34M tonnes) even before the
+    chicken-vs-all-poultry taxonomy question is applied - a genuine,
+    unresolved conflict this project reports side-by-side rather than
+    adjudicates, per the same discipline as Mexico's world-rank and per-capita
+    traps.
+
+[111]
   slug: wattpoultry-top-producers
   title: Top 10 US chicken producers grow in new directions
   publisher: WATTPoultry / WATTAgNet

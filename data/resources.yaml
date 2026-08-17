@@ -64,6 +64,41 @@ footprint:
       per_kg_liveweight: 2.03
       pct_change_decade: -13.8
 
+    - metric: electricity
+      label: Electricity use
+      unit: kWh
+      per_individual: 0.251
+      # 0.251 kWh / 2.8894 kg (6.37 lb converted) -- OUR division, not the
+      # source's; the source reports the per-bird figure only.
+      per_kg_liveweight: 0.0869
+      notes: >-
+        NOT one of the five headline ReCiPe impact categories above (those
+        are the blended "broiler + culled breeder hen" average bird) --
+        this is a distinct line straight out of the same source's raw
+        lifecycle inventory (Table 7, "2020 broiler operation lifecycle
+        inventory flows"), which reports inputs of 0.251 kWh grid
+        electricity plus 0.235 MJ diesel (generator) and 3.336 MJ propane
+        heat per one broiler at 6.37 lb live weight -- the identical
+        reference weight used throughout this block. Electricity alone is
+        reported here because it is the metric this gap asks for; the
+        propane and diesel heat inputs are real too but are not
+        electricity and are left out rather than folded in.
+
+        Scope matters: this is ON-FARM GROWOUT electricity only (house
+        ventilation, heating/cooling controls, lighting, feed/water
+        auger motors). Hatchery incubation and processing-plant chilling,
+        freezing and cold-chain electricity are real additional draws
+        NOT captured in this figure and NOT currently sourced anywhere in
+        this corpus -- the LCA's breeder-operation table (its Table 8)
+        does report 0.0179 kWh per hatching egg for the parent/grandparent
+        stage, but converting that into a per-broiler hatchery figure
+        would require assumptions this source doesn't support, so it is
+        left out rather than estimated.
+
+        No 2010 comparison is published for this line item (unlike the
+        five ReCiPe categories above), so pct_change_decade is omitted
+        rather than invented.
+
 # Feed, derived rather than asserted: feed conversion ratio times market
 # weight. FCR 1.69 (2024) against a 6.57 lb market weight.
 derived_feed:
@@ -139,3 +174,40 @@ economics:
       basis: national
       confidence: industry
       source: ncc-key-facts
+
+# LABOR-HOURS PER BIRD / PER DOZEN WINGS -- LOOKED FOR, NOT ADDED.
+# ------------------------------------------------------------------
+# direct_jobs above (355,000) is a national employment STOCK, not a
+# per-unit figure, and does not answer "how many person-minutes did this
+# plate take". Searched for a real per-unit labor-intensity figure and
+# found two candidates, both rejected:
+#
+#   1. USDA AMS Marketing Research Report No. 83 (1955), "Marketing
+#      Georgia Broilers Through Commercial Processing Plants" -- reports
+#      28-41 birds processed per labor-hour (~1.5-2.1 labor-minutes/bird)
+#      on hand-run processing lines observed in spring 1953. A real,
+#      verifiable government figure, but describing 1953-54 hand
+#      processing technology 70+ years before line-speed automation,
+#      mechanical evisceration, and modern plant throughput. Presenting
+#      it as today's labor intensity would be the kind of false precision
+#      this project exists to refuse.
+#
+#   2. A derived ratio: BLS "Hours Worked, Poultry Processing (NAICS
+#      311615)" total industry hours divided by USDA NASS young-chicken
+#      headcount/weight (Poultry Slaughter, 2024 Summary). Rejected for
+#      two reasons. First, NAICS 311615 hours cover ALL poultry
+#      processing establishments -- turkey and other poultry are
+#      commingled with chicken in the numerator, while the USDA
+#      denominator is young chickens only, so the ratio overstates
+#      chicken-specific labor by an un-quantified amount. Second, and
+#      decisive: the BLS series could not actually be verified against a
+#      primary BLS page during this pass -- fred.stlouisfed.org and
+#      bls.gov both returned HTTP 403 to direct fetch, leaving only a
+#      third-party-reported number with no primary document this project
+#      could point at, which fails the "verify a source actually loads
+#      and says what you think" bar the rest of this corpus holds to.
+#
+# A modern, chicken-specific, verifiable labor-hours-per-unit figure
+# (USDA ERS poultry processing productivity work, or a peer-reviewed
+# study breaking out broiler-only processing labor) is a real follow-up
+# worth another pass. Nothing is better than a fabricated precision here.

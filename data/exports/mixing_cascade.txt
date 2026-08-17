@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- mixing cascade
-# generated: 2026-08-16
+# generated: 2026-08-17
 # pool sizes are in INDIVIDUALS. mixing_kind='separating' actively splits one bird's units into different streams
 # ---------------------------------------------------------------------------------------------------------------
 

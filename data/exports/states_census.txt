@@ -1,5 +1,5 @@
 # (o>  counting chicken wings -- broiler presence by state, Census of Agriculture
-# generated: 2026-08-16
+# generated: 2026-08-17
 # USDA Census of Agriculture, five-yearly, ALL 50 states -- no state is suppressed here. sales_head is a sales count, not the head_slaughtered/certified_klb in states.csv; the two are different USDA programmes and must not be summed or averaged together
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
