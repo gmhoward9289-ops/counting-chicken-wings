@@ -186,6 +186,26 @@ applyTheme();
 const CFG = { displayModeBar: false, responsive: true };
 let META = null, loaded = {};
 
+// ---- server-rendered boot data
+//
+// GET / computes the calculator's default answer, the scope anchor, the
+// brand art, the build stamp, the meta controls and the fact deck in
+// process (after validating the API key -- see require_page_key in api.py)
+// and embeds them as window.__CCW_BOOT__, so first paint needs no
+// unauthenticated fetch for any of them. Every other view keeps calling its
+// /api/* endpoint through api() as before -- those are no longer public and
+// unauthenticated either, since the browser now carries the same key in the
+// ccw_api_key cookie GET / sets, and api() sends cookies same-origin without
+// this file ever holding the key itself.
+//
+// Each of BOOT_* below is consumed exactly once, by whichever call site
+// would otherwise have made the FIRST fetch for that data on a fresh page
+// load. A later call -- the reader changes the count, revisits a view,
+// toggles the theme -- goes to the network like it always did.
+const BOOT = window.__CCW_BOOT__ || null;
+let BOOT_CALC = BOOT ? BOOT.calculate : null;
+let BOOT_FACTS_DECK = BOOT ? BOOT.facts_deck : null;
+
 // Show enough decimals to keep a near-ceiling value visibly below it.
 function fmtDistinct(v, ceil) {
   // Same-day eggs actually REACH the ceiling -- a hen lays at most one a day,
@@ -406,12 +426,23 @@ async function calc() {
     q.set('window_days', $('#window-days').value);
 
   let d;
-  try {
-    d = await api('/api/calculate?' + q);
-  } catch (err) {
-    if (mine !== calcSeq) return;   // superseded by a newer request
-    setError('calc-error', `Could not calculate: ${err.message}`);
-    return;
+  // The very first call to calc() runs at boot with the page's untouched
+  // defaults (count 12, the headline product, its default chain, no pieces,
+  // no mortality) -- exactly what GET / already computed server-side. Using
+  // that instead of a fresh fetch is what keeps the calculator's first
+  // paint off the network entirely; every call after this one finds
+  // BOOT_CALC already consumed and fetches like it always did.
+  if (BOOT_CALC) {
+    d = BOOT_CALC;
+    BOOT_CALC = null;
+  } else {
+    try {
+      d = await api('/api/calculate?' + q);
+    } catch (err) {
+      if (mine !== calcSeq) return;   // superseded by a newer request
+      setError('calc-error', `Could not calculate: ${err.message}`);
+      return;
+    }
   }
   if (mine !== calcSeq) return;     // superseded by a newer request
   setError('calc-error', '');       // clear whatever the last attempt showed
@@ -1939,8 +1970,17 @@ function filterDeck() {
 
 async function initFacts() {
   // limit high enough to take everything; the deck filters client-side so
-  // changing the surprise floor does not re-fetch.
-  const d = await api('/api/facts?placement=learning&limit=500');
+  // changing the surprise floor does not re-fetch. GET / already computed
+  // this exact fetch server-side (BOOT_FACTS_DECK); a theme toggle re-runs
+  // initFacts and finds it already consumed, so it fetches like it always
+  // did.
+  let d;
+  if (BOOT_FACTS_DECK) {
+    d = BOOT_FACTS_DECK;
+    BOOT_FACTS_DECK = null;
+  } else {
+    d = await api('/api/facts?placement=learning&limit=500');
+  }
   VIEW_SCOPE.facts = d.scope;
   FACTS = d.facts;
 
@@ -2066,14 +2106,17 @@ function renderBuild(v) {
 
 // ---- boot
 READY = (async () => {
-  // Logo is decorative, so a failure here must never block the page.
-  api('/api/brand')
+  // Logo is decorative, so a failure here must never block the page. BOOT
+  // already has it -- GET / computed it server-side -- so this only ever
+  // hits the network on a boot with no embedded data at all (BOOT === null).
+  (BOOT ? Promise.resolve(BOOT.brand) : api('/api/brand'))
     .then(b => { $('#logo').textContent = b.chicken; })
     .catch(() => {});
 
   // Same rule for the build stamp: informational, so it must never be able to
   // take the page down with it. It stays hidden if the fetch fails.
-  api('/api/version').then(renderBuild).catch(() => {});
+  (BOOT ? Promise.resolve(BOOT.version) : api('/api/version'))
+    .then(renderBuild).catch(() => {});
 
   // The anchor sentence under the strapline. The species is never named in
   // this file: /api/scope computes it from v_species_coverage as the active
@@ -2083,7 +2126,7 @@ READY = (async () => {
   //
   // Non-blocking, like the logo and the build stamp: the page is entirely
   // usable without it, so it must not be able to take boot down.
-  api('/api/scope').then(s => {
+  (BOOT ? Promise.resolve(BOOT.scope) : api('/api/scope')).then(s => {
     const a = s.anchor, el = $('#anchor-note');
     if (!a || !el) return;
     el.innerHTML = `<b>${a.common_name}</b> is the anchor dataset — the
@@ -2098,7 +2141,7 @@ READY = (async () => {
   // as quietly: every dropdown stayed empty and the headline sat on its
   // initial em-dash forever, with nothing on screen saying why.
   try {
-    META = await api('/api/meta');
+    META = BOOT ? BOOT.meta : await api('/api/meta');
   } catch (err) {
     const el = document.getElementById('boot-error');
     if (el) {

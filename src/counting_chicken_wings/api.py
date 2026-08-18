@@ -7,11 +7,13 @@ without having the source available to render beside it.
 
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import Cookie, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from . import audit
 from . import db as dbm
@@ -28,11 +30,95 @@ from .model import (
 )
 
 STATIC = Path(__file__).parent / "static"
+TEMPLATES = Path(__file__).parent / "templates"
 
 app = FastAPI(
     title="counting-chicken-wings",
     description="How many chickens does it take to make a dozen wings?",
 )
+
+templates = Jinja2Templates(directory=str(TEMPLATES))
+
+# ---------------------------------------------------------------------------
+# API key gate
+#
+# Every /api/* route below except /healthz depends on `require_api_key`. The
+# key is compared against the API_KEY environment variable, never hardcoded
+# and never defaulted -- an unset API_KEY fails every gated request closed
+# (500) rather than quietly waving everyone through.
+#
+# THE PART THAT MAKES THIS MORE THAN A PUBLIC-API GATE: GET / -- the page
+# itself -- depends on `require_page_key`, which is the SAME check against
+# the SAME env var, just read from `?key=` or the `ccw_api_key` cookie
+# instead of a header (a plain navigation cannot set a custom header). GET /
+# computes the calculator's default answer, the scope anchor, the brand art,
+# the build stamp and the fact deck IN PROCESS via the `compute_*` functions
+# below and embeds the result in the HTML it returns -- and it can only reach
+# that code because `require_page_key` already ran and raised otherwise.
+# There is no path from an HTTP request to a `compute_*` call that has not
+# gone through one of these two dependencies first, which is what "even the
+# GUI's own internal use of the calculation logic requires the key" means
+# here concretely: the server-rendering route is not exempt from the gate
+# that guards its own JSON twin, it is gated by the same predicate on a
+# different transport.
+#
+# Once `ccw_api_key` is set (by presenting a valid `?key=` once), the
+# browser attaches it to same-origin requests automatically, including
+# app.js's existing `fetch('/api/...')` calls -- so `require_api_key` also
+# accepts the cookie, not only the header. That is deliberate: it is what
+# lets the SPA's own JSON calls for the views this change does not embed
+# (Scientific, states, by-country, and the rest -- see the module docstring
+# note in templates/index.html for what IS embedded) keep working without the
+# API key ever being written into the page's JavaScript, where anyone
+# viewing source could read it back out. A caller presenting neither the
+# header nor a matching cookie gets 401 either way.
+# ---------------------------------------------------------------------------
+
+
+def _configured_key() -> str | None:
+    return os.environ.get("API_KEY")
+
+
+def require_api_key(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    ccw_api_key: str | None = Cookie(default=None),
+) -> None:
+    """Dependency for every /api/* route except /healthz.
+
+    Accepts the key via the `X-API-Key` header (the contract for a
+    programmatic caller) OR the `ccw_api_key` cookie GET / sets after a valid
+    `?key=` was presented -- see the module-level comment above for why the
+    cookie path exists and is not a back door.
+    """
+    expected = _configured_key()
+    if not expected:
+        raise HTTPException(500, "API_KEY is not configured on the server")
+    if x_api_key == expected or ccw_api_key == expected:
+        return
+    raise HTTPException(401, "missing or invalid API key (X-API-Key header)")
+
+
+def require_page_key(
+    key: str | None = None,
+    ccw_api_key: str | None = Cookie(default=None),
+) -> str:
+    """Dependency for GET / -- the same predicate as `require_api_key`, read
+    from `?key=` or the cookie instead of a header, because a plain page
+    navigation cannot set one. Returns the validated key so the route can
+    tell whether the QUERY STRING carried it (and therefore whether the
+    cookie needs to be (re)issued) rather than re-deriving that afterward.
+    """
+    expected = _configured_key()
+    if not expected:
+        raise HTTPException(500, "API_KEY is not configured on the server")
+    provided = key or ccw_api_key
+    if provided != expected:
+        raise HTTPException(
+            401,
+            "an API key is required to view this page: append ?key=... once "
+            "-- the page will remember it in a cookie after that",
+        )
+    return expected
 
 
 def _source_payload(row) -> dict:
@@ -130,8 +216,7 @@ def _borrow_note(product_label: str, product_species: str,
             f"measured on {scope_species} is its to borrow.")
 
 
-@app.get("/api/scope")
-def scope(product: str | None = None):
+def compute_scope(conn, product: str | None = None) -> dict:
     """Which species the corpus answers, in how many dimensions, and the anchor.
 
     The page's strapline needs to say that one species is the anchor dataset
@@ -150,72 +235,83 @@ def scope(product: str | None = None):
     pre-composed sentence per species comes back in `selected.borrow_notes`, so
     switching tabs costs no request and the page never composes the sentence
     itself. See `_borrow_note`.
+
+    Extracted out of the `/api/scope` route (which now just opens a
+    connection and calls this) so GET / can compute the same payload
+    in-process for the boot data it embeds -- see the api-key-gate comment
+    near the top of this module for why that route still has to go through
+    `require_page_key` first rather than calling this for free.
     """
+    rows = conn.execute(
+        "SELECT * FROM v_species_coverage ORDER BY id"
+    ).fetchall()
+    keys = [k for k in (rows[0].keys() if rows else [])
+            if k not in _SPECIES_COLUMNS]
+
+    species = []
+    for r in rows:
+        dims = {k: bool(r[k]) for k in keys}
+        species.append({
+            "slug": r["slug"],
+            "common_name": r["common_name"],
+            "individual_noun": r["individual_noun"],
+            "individual_plural": r["individual_plural"],
+            "domain": r["domain"],
+            "dimensions": dims,
+            "depth": sum(dims.values()),
+        })
+
+    anchor = None
+    if species:
+        depths = sorted((s["depth"] for s in species), reverse=True)
+        # Strictly deepest, or nothing. Two species at the same depth is
+        # not an anchor, and a tie-break would invent one.
+        if len(depths) == 1 or depths[0] > depths[1]:
+            anchor = max(species, key=lambda s: s["depth"])
+
+    selected = None
+    if product is not None:
+        try:
+            prod = dbm.get_product(conn, product)
+        except KeyError:
+            raise HTTPException(404, f"unknown product: {product}")
+        mine = next((s for s in species
+                     if s["slug"] == prod["species_slug"]), None)
+        selected = {
+            "slug": prod["slug"],
+            "label": prod["label"],
+            "species": prod["species_slug"],
+            "common_name": mine["common_name"] if mine else None,
+            # One sentence per species this product is NOT. Keyed by slug
+            # so a client holding a view's scope can look its own up
+            # without asking again on every tab switch, and so a species
+            # that gains a view needs no new field.
+            "borrow_notes": {
+                s["slug"]: _borrow_note(
+                    prod["label"],
+                    mine["common_name"] if mine else prod["species_slug"],
+                    s["common_name"])
+                for s in species if s["slug"] != prod["species_slug"]
+            },
+        }
+
+    return {
+        "anchor": anchor,
+        "species": species,
+        "selected": selected,
+        "dimensions": [
+            {"key": k, "label": _DIMENSION_LABELS.get(k, k),
+             "species": [s["slug"] for s in species if s["dimensions"][k]]}
+            for k in keys
+        ],
+    }
+
+
+@app.get("/api/scope", dependencies=[Depends(require_api_key)])
+def scope(product: str | None = None):
     conn = dbm.connect()
     try:
-        rows = conn.execute(
-            "SELECT * FROM v_species_coverage ORDER BY id"
-        ).fetchall()
-        keys = [k for k in (rows[0].keys() if rows else [])
-                if k not in _SPECIES_COLUMNS]
-
-        species = []
-        for r in rows:
-            dims = {k: bool(r[k]) for k in keys}
-            species.append({
-                "slug": r["slug"],
-                "common_name": r["common_name"],
-                "individual_noun": r["individual_noun"],
-                "individual_plural": r["individual_plural"],
-                "domain": r["domain"],
-                "dimensions": dims,
-                "depth": sum(dims.values()),
-            })
-
-        anchor = None
-        if species:
-            depths = sorted((s["depth"] for s in species), reverse=True)
-            # Strictly deepest, or nothing. Two species at the same depth is
-            # not an anchor, and a tie-break would invent one.
-            if len(depths) == 1 or depths[0] > depths[1]:
-                anchor = max(species, key=lambda s: s["depth"])
-
-        selected = None
-        if product is not None:
-            try:
-                prod = dbm.get_product(conn, product)
-            except KeyError:
-                raise HTTPException(404, f"unknown product: {product}")
-            mine = next((s for s in species
-                         if s["slug"] == prod["species_slug"]), None)
-            selected = {
-                "slug": prod["slug"],
-                "label": prod["label"],
-                "species": prod["species_slug"],
-                "common_name": mine["common_name"] if mine else None,
-                # One sentence per species this product is NOT. Keyed by slug
-                # so a client holding a view's scope can look its own up
-                # without asking again on every tab switch, and so a species
-                # that gains a view needs no new field.
-                "borrow_notes": {
-                    s["slug"]: _borrow_note(
-                        prod["label"],
-                        mine["common_name"] if mine else prod["species_slug"],
-                        s["common_name"])
-                    for s in species if s["slug"] != prod["species_slug"]
-                },
-            }
-
-        return {
-            "anchor": anchor,
-            "species": species,
-            "selected": selected,
-            "dimensions": [
-                {"key": k, "label": _DIMENSION_LABELS.get(k, k),
-                 "species": [s["slug"] for s in species if s["dimensions"][k]]}
-                for k in keys
-            ],
-        }
+        return compute_scope(conn, product)
     finally:
         conn.close()
 
@@ -234,8 +330,7 @@ def healthz():
     return {"ok": True}
 
 
-@app.get("/api/version")
-def version():
+def compute_version(conn) -> dict:
     """What is actually deployed here.
 
     Exists because this was not answerable from outside. Recent commits added
@@ -257,7 +352,6 @@ def version():
     Absent both, the value is None, which is itself informative: it means
     nobody told this process what it is, so it is almost certainly local.
     """
-    import os
     from importlib.metadata import PackageNotFoundError
     from importlib.metadata import version as pkg_version
 
@@ -267,20 +361,16 @@ def version():
         pkg = None
 
     sha = os.environ.get("GIT_COMMIT") or os.environ.get("RENDER_GIT_COMMIT")
-    conn = dbm.connect()
-    try:
-        counts = {
-            t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
-            for t in ("source", "fact", "loss_factor", "product",
-                      "quality_defect", "regional_size_stat")
-        }
-        # Row counts are the practical way to tell a data-only change apart
-        # from a code change, since data ships in the same push.
-        tables = conn.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
-        ).fetchone()[0]
-    finally:
-        conn.close()
+    counts = {
+        t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+        for t in ("source", "fact", "loss_factor", "product",
+                  "quality_defect", "regional_size_stat")
+    }
+    # Row counts are the practical way to tell a data-only change apart
+    # from a code change, since data ships in the same push.
+    tables = conn.execute(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+    ).fetchone()[0]
 
     return {
         "package_version": pkg,
@@ -302,8 +392,16 @@ def version():
     }
 
 
-@app.get("/api/brand")
-def brand():
+@app.get("/api/version", dependencies=[Depends(require_api_key)])
+def version():
+    conn = dbm.connect()
+    try:
+        return compute_version(conn)
+    finally:
+        conn.close()
+
+
+def compute_brand() -> dict:
     """ASCII identity, served rather than duplicated in the HTML.
 
     The CLI banner and the web header render the same art from the same
@@ -318,6 +416,11 @@ def brand():
         "chicken_raw": CHICKEN,
         "wing_raw": WING,
     }
+
+
+@app.get("/api/brand", dependencies=[Depends(require_api_key)])
+def brand():
+    return compute_brand()
 
 
 def _resolve_chain(conn, prod, chain: str | None) -> str:
@@ -364,7 +467,163 @@ def _resolve_chain(conn, prod, chain: str | None) -> str:
     return chain
 
 
-@app.get("/api/calculate")
+def compute_calculate(
+    conn,
+    *,
+    count: float = 12,
+    product: str = "whole_wing",
+    chain: str | None = None,
+    pieces: bool = False,
+    include_mortality: bool = False,
+    iterations: int = 0,
+    window_days: float | None = None,
+) -> dict:
+    """The main calculation, with a full per-stage audit trail.
+
+    `window_days` applies only to recurring products such as eggs, where the
+    per-individual yield is a rate and means nothing without a window. Left
+    unset it comes from the product: one day for eggs, because a hen lays at
+    most one egg a day and twelve same-day eggs came from twelve different
+    hens; a whole 45-day season for maple syrup, because a tree is tapped for
+    a spring rather than an afternoon. Ignored for wings, which need no clock.
+
+    Extracted out of the `/api/calculate` route so GET / can call it
+    in-process for the boot payload it embeds -- see the api-key-gate
+    comment near the top of this module. Both callers validate a key before
+    reaching here; this function itself has no idea which one it was.
+    """
+    try:
+        prod = dbm.get_product(conn, product)
+    except KeyError:
+        raise HTTPException(404, f"unknown product: {product}")
+
+    units = count
+    segments = None
+    if pieces:
+        segments = conn.execute(
+            """SELECT COUNT(*) FROM product_segment
+               WHERE product_id = ? AND sold_as_product = 1""",
+            (prod["id"],),
+        ).fetchone()[0] or 1
+        units = count / segments
+
+    chain = _resolve_chain(conn, prod, chain)
+    loss = dbm.load_loss_stages(
+        conn, prod["species_slug"], prod["slug"],
+        include_optional=include_mortality,
+        chain_slug=chain,
+    )
+    mixing = dbm.load_mixing_stages(conn, chain)
+
+    try:
+        recurring = dbm.make_recurring(prod, window_days)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    res = run(
+        units_requested=units,
+        units_per_individual=prod["units_per_individual_mode"],
+        loss_stages=loss,
+        mixing_stages=mixing,
+        iterations=iterations,
+        recurring=recurring,
+        # Derived inside run() from the figures -- see unit_is_aggregate.
+        anatomical=bool(prod["is_anatomical_constant"]),
+        floor_source=dbm.product_source_slug(conn, prod["slug"]),
+        # From the corpus -- see model.MixingParams.
+        params=dbm.load_mixing_params(conn),
+        # Lets the Monte Carlo loop resample these too (#98), not just
+        # pool sizes.
+        param_bands=dbm.load_mixing_param_bands(conn),
+        correlated_groups=dbm.load_correlated_groups(
+            conn, prod["species_slug"]),
+        mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
+    )
+
+    slugs = list({s.source_slug for s in res.trace if s.source_slug})
+    sources = {k: _source_payload(v)
+               for k, v in dbm.get_sources(conn, slugs).items()}
+
+    return {
+        "question": {
+            "count": count,
+            "units": units,
+            "basis": "segment" if pieces else "whole unit",
+            "segments_per_unit": segments,
+            "product": prod["label"],
+            "unit_name": prod["unit_name"],
+            "individual_noun": prod["individual_noun"],
+            "individual_plural": prod["individual_plural"],
+            "chain": chain,
+            "include_mortality": include_mortality,
+        },
+        "answer": {
+            "floor": res.floor,
+            # From the Result, NOT from `units`. For a countable product
+            # the two are identical, which is why `units` looked correct
+            # for as long as every product was countable. For a CONTINUOUS
+            # product the unit count is not a headcount -- one gram is not
+            # one flower -- and this endpoint was returning ceiling=1
+            # beside floor=150 for a gram of saffron. The same
+            # contradiction was fixed in the CLI and, until now, only in
+            # the CLI: the field was added to Result precisely so the two
+            # surfaces could not disagree, and then one of them was not
+            # wired up.
+            "ceiling": res.distinct_ceiling,
+            "required": res.required,
+            "required_estimator": res.required_estimator,
+            "required_lo": res.required_lo,
+            "required_hi": res.required_hi,
+            "distinct": res.distinct_mean,
+            "iterations": res.iterations,
+            "container_units": res.container_units,
+            "paired_individuals": res.paired_individuals,
+            # NOTE: `ceiling` above comes from the Result, not from
+            # `units`. See the comment there.
+            # Recurring products only; null for wings. hard_floor is the
+            # physiological minimum and `floor` is what you actually need
+            # at the real production rate -- for same-day eggs, 12 and
+            # 15.2. Both are returned because quoting either alone
+            # misleads.
+            "hard_floor": res.hard_floor,
+            "window_days": res.window_days,
+            "rate_per_day": res.rate_per_day,
+            "cap_per_individual": res.cap_per_individual,
+            # What this species calls its rate, and why its ceiling is
+            # physiology -- both out of the row. The pages hardcoded
+            # "laying rate" and "a hen lays at most one egg a day", so a
+            # maple was narrated as a bird. Same bug as floor_note,
+            # third copy.
+            "rate_label": prod["rate_label"],
+            "cap_note": prod["cap_note"],
+            "yield_mode": prod["yield_mode"],
+        },
+        "trace": [
+            {
+                "sequence": s.sequence,
+                "kind": s.kind,
+                "slug": s.stage_slug,
+                "label": s.stage_label,
+                "value": s.value_used,
+                "running_total": s.running_total,
+                "explanation": s.explanation,
+                "confidence": s.confidence,
+                "source": s.source_slug,
+            }
+            for s in res.trace
+        ],
+        "mixing_notes": res.mixing_notes,
+        # Why the answer is not exactly the floor, in this chain's own
+        # words. The CLI has read this since floor_note was introduced;
+        # the web page went on printing a hardcoded wing paragraph, so
+        # asking about eggs got "the instant the wings leave the bird"
+        # and a description of a cut-up line. Same bug, second copy.
+        "floor_note": dbm.chain_floor_note(conn, chain),
+        "sources": sources,
+    }
+
+
+@app.get("/api/calculate", dependencies=[Depends(require_api_key)])
 def calculate(
     count: float = Query(12, gt=0, le=100000),
     product: str = "whole_wing",
@@ -374,146 +633,13 @@ def calculate(
     iterations: int = Query(0, ge=0, le=200000),
     window_days: float | None = Query(None, gt=0, le=3650),
 ):
-    """The main calculation, with a full per-stage audit trail.
-
-    `window_days` applies only to recurring products such as eggs, where the
-    per-individual yield is a rate and means nothing without a window. Left
-    unset it comes from the product: one day for eggs, because a hen lays at
-    most one egg a day and twelve same-day eggs came from twelve different
-    hens; a whole 45-day season for maple syrup, because a tree is tapped for
-    a spring rather than an afternoon. Ignored for wings, which need no clock.
-    """
     conn = dbm.connect()
     try:
-        try:
-            prod = dbm.get_product(conn, product)
-        except KeyError:
-            raise HTTPException(404, f"unknown product: {product}")
-
-        units = count
-        segments = None
-        if pieces:
-            segments = conn.execute(
-                """SELECT COUNT(*) FROM product_segment
-                   WHERE product_id = ? AND sold_as_product = 1""",
-                (prod["id"],),
-            ).fetchone()[0] or 1
-            units = count / segments
-
-        chain = _resolve_chain(conn, prod, chain)
-        loss = dbm.load_loss_stages(
-            conn, prod["species_slug"], prod["slug"],
-            include_optional=include_mortality,
-            chain_slug=chain,
+        return compute_calculate(
+            conn, count=count, product=product, chain=chain, pieces=pieces,
+            include_mortality=include_mortality, iterations=iterations,
+            window_days=window_days,
         )
-        mixing = dbm.load_mixing_stages(conn, chain)
-
-        try:
-            recurring = dbm.make_recurring(prod, window_days)
-        except ValueError as e:
-            raise HTTPException(400, str(e))
-
-        res = run(
-            units_requested=units,
-            units_per_individual=prod["units_per_individual_mode"],
-            loss_stages=loss,
-            mixing_stages=mixing,
-            iterations=iterations,
-            recurring=recurring,
-            # Derived inside run() from the figures -- see unit_is_aggregate.
-            anatomical=bool(prod["is_anatomical_constant"]),
-            floor_source=dbm.product_source_slug(conn, prod["slug"]),
-            # From the corpus -- see model.MixingParams.
-            params=dbm.load_mixing_params(conn),
-            # Lets the Monte Carlo loop resample these too (#98), not just
-            # pool sizes.
-            param_bands=dbm.load_mixing_param_bands(conn),
-            correlated_groups=dbm.load_correlated_groups(
-                conn, prod["species_slug"]),
-            mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
-        )
-
-        slugs = list({s.source_slug for s in res.trace if s.source_slug})
-        sources = {k: _source_payload(v)
-                   for k, v in dbm.get_sources(conn, slugs).items()}
-
-        return {
-            "question": {
-                "count": count,
-                "units": units,
-                "basis": "segment" if pieces else "whole unit",
-                "segments_per_unit": segments,
-                "product": prod["label"],
-                "unit_name": prod["unit_name"],
-                "individual_noun": prod["individual_noun"],
-                "individual_plural": prod["individual_plural"],
-                "chain": chain,
-                "include_mortality": include_mortality,
-            },
-            "answer": {
-                "floor": res.floor,
-                # From the Result, NOT from `units`. For a countable product
-                # the two are identical, which is why `units` looked correct
-                # for as long as every product was countable. For a CONTINUOUS
-                # product the unit count is not a headcount -- one gram is not
-                # one flower -- and this endpoint was returning ceiling=1
-                # beside floor=150 for a gram of saffron. The same
-                # contradiction was fixed in the CLI and, until now, only in
-                # the CLI: the field was added to Result precisely so the two
-                # surfaces could not disagree, and then one of them was not
-                # wired up.
-                "ceiling": res.distinct_ceiling,
-                "required": res.required,
-                "required_estimator": res.required_estimator,
-                "required_lo": res.required_lo,
-                "required_hi": res.required_hi,
-                "distinct": res.distinct_mean,
-                "iterations": res.iterations,
-                "container_units": res.container_units,
-                "paired_individuals": res.paired_individuals,
-                # NOTE: `ceiling` above comes from the Result, not from
-                # `units`. See the comment there.
-                # Recurring products only; null for wings. hard_floor is the
-                # physiological minimum and `floor` is what you actually need
-                # at the real production rate -- for same-day eggs, 12 and
-                # 15.2. Both are returned because quoting either alone
-                # misleads.
-                "hard_floor": res.hard_floor,
-                "window_days": res.window_days,
-                "rate_per_day": res.rate_per_day,
-                "cap_per_individual": res.cap_per_individual,
-                # What this species calls its rate, and why its ceiling is
-                # physiology -- both out of the row. The pages hardcoded
-                # "laying rate" and "a hen lays at most one egg a day", so a
-                # maple was narrated as a bird. Same bug as floor_note,
-                # third copy.
-                "rate_label": prod["rate_label"],
-                "cap_note": prod["cap_note"],
-                "yield_mode": prod["yield_mode"],
-            },
-            "trace": [
-                {
-                    "sequence": s.sequence,
-                    "kind": s.kind,
-                    "slug": s.stage_slug,
-                    "label": s.stage_label,
-                    "value": s.value_used,
-                    "running_total": s.running_total,
-                    "explanation": s.explanation,
-                    "confidence": s.confidence,
-                    "source": s.source_slug,
-                }
-                for s in res.trace
-            ],
-            "mixing_notes": res.mixing_notes,
-            # Why the answer is not exactly the floor, in this chain's own
-            # words. The CLI has read this since floor_note was introduced;
-            # the web page went on printing a hardcoded wing paragraph, so
-            # asking about eggs got "the instant the wings leave the bird"
-            # and a description of a cut-up line. Same bug, second copy.
-            "floor_note": dbm.chain_floor_note(conn, chain),
-            "sources": sources,
-        }
     finally:
         conn.close()
 
@@ -534,7 +660,7 @@ def _histogram(values: list[float], bins: int = 40) -> dict:
     return {"centres": centres, "counts": counts, "width": width}
 
 
-@app.get("/api/scientific")
+@app.get("/api/scientific", dependencies=[Depends(require_api_key)])
 def scientific(
     count: float = Query(12, gt=0, le=100000),
     product: str = "whole_wing",
@@ -666,7 +792,7 @@ def scientific(
         conn.close()
 
 
-@app.get("/api/variance")
+@app.get("/api/variance", dependencies=[Depends(require_api_key)])
 def variance(
     count: float = Query(12, gt=0, le=100000),
     product: str = "whole_wing",
@@ -785,7 +911,7 @@ def variance(
         conn.close()
 
 
-@app.get("/api/mixing-curve")
+@app.get("/api/mixing-curve", dependencies=[Depends(require_api_key)])
 def mixing_curve(
     count: float = Query(12, gt=0, le=100000),
     product: str = "whole_wing",
@@ -882,7 +1008,7 @@ def mixing_curve(
         conn.close()
 
 
-@app.get("/api/states")
+@app.get("/api/states", dependencies=[Depends(require_api_key)])
 def states(year: int | None = None):
     """Average live weight by state, with production volume where reported.
 
@@ -1047,7 +1173,7 @@ def states(year: int | None = None):
         conn.close()
 
 
-@app.get("/api/countries")
+@app.get("/api/countries", dependencies=[Depends(require_api_key)])
 def countries():
     """What each country can actually answer, not just which countries exist.
 
@@ -1163,7 +1289,7 @@ def countries():
         conn.close()
 
 
-@app.get("/api/output/{iso3}")
+@app.get("/api/output/{iso3}", dependencies=[Depends(require_api_key)])
 def output(
     iso3: str,
     species: str = "broiler",
@@ -1393,7 +1519,7 @@ def _seasonality_summary(
     )
 
 
-@app.get("/api/seasonality")
+@app.get("/api/seasonality", dependencies=[Depends(require_api_key)])
 def seasonality(year: int | None = None, species: str = "broiler"):
     """Does bird weight have a season, and does the answer change with it?
 
@@ -1543,7 +1669,7 @@ def seasonality(year: int | None = None, species: str = "broiler"):
         conn.close()
 
 
-@app.get("/api/trends")
+@app.get("/api/trends", dependencies=[Depends(require_api_key)])
 def trends():
     """Year-over-year husbandry and slaughter series."""
     conn = dbm.connect()
@@ -1584,7 +1710,7 @@ def trends():
         conn.close()
 
 
-@app.get("/api/quality-axes")
+@app.get("/api/quality-axes", dependencies=[Depends(require_api_key)])
 def quality_axes():
     """Every species' size question, and whether the corpus can answer it.
 
@@ -1647,7 +1773,7 @@ def quality_axes():
         conn.close()
 
 
-@app.get("/api/bird-size")
+@app.get("/api/bird-size", dependencies=[Depends(require_api_key)])
 def bird_size(year: int = 2025, species: str = "broiler"):
     """One species' size question, and everything needed to answer it.
 
@@ -1816,7 +1942,7 @@ def bird_size(year: int = 2025, species: str = "broiler"):
         conn.close()
 
 
-@app.get("/api/nutrition")
+@app.get("/api/nutrition", dependencies=[Depends(require_api_key)])
 def nutrition(product: str | None = None):
     """Nutrition per product and preparation, with citations."""
     conn = dbm.connect()
@@ -1854,7 +1980,7 @@ def nutrition(product: str | None = None):
         conn.close()
 
 
-@app.get("/api/footprint")
+@app.get("/api/footprint", dependencies=[Depends(require_api_key)])
 def footprint(
     # `le` mirrors /api/calculate and /api/scientific, which both cap here --
     # this one did not, so count=999999999 returned 200 with half a billion
@@ -2060,7 +2186,36 @@ def footprint(
         conn.close()
 
 
-@app.get("/api/facts")
+def compute_facts(conn, placement: str = "learning", limit: int = 20) -> dict:
+    rows = dbm.get_facts(conn, placement, limit)
+    # Facts hang off a DOMAIN, not a species, so the domain's own label is
+    # the truer name for what the deck covers -- "Poultry" rather than
+    # "Broiler chicken and Laying hen". The species list comes back too,
+    # because that is what a caller compares a selected product against.
+    doms = conn.execute(
+        """SELECT DISTINCT d.slug, d.label FROM fact f
+           JOIN domain d ON d.id = f.domain_id
+           WHERE f.slug IN (%s) ORDER BY d.id"""
+        % (",".join("?" * len(rows)) or "NULL"),
+        tuple(r["slug"] for r in rows),
+    ).fetchall()
+    spp = conn.execute(
+        """SELECT sp.slug FROM species sp
+           WHERE sp.active = 1 AND sp.domain_id IN
+             (SELECT id FROM domain WHERE slug IN (%s))
+           ORDER BY sp.id"""
+        % (",".join("?" * len(doms)) or "NULL"),
+        tuple(d["slug"] for d in doms),
+    ).fetchall()
+    return {
+        "scope": _scope(conn, [r["slug"] for r in spp],
+                        label=" and ".join(d["label"] for d in doms)
+                        or None),
+        "facts": [dict(r) for r in rows],
+    }
+
+
+@app.get("/api/facts", dependencies=[Depends(require_api_key)])
 def facts(
     placement: str = "learning",
     # Unbounded before this: `limit` was a plain int, and SQLite reads a
@@ -2071,37 +2226,12 @@ def facts(
 ):
     conn = dbm.connect()
     try:
-        rows = dbm.get_facts(conn, placement, limit)
-        # Facts hang off a DOMAIN, not a species, so the domain's own label is
-        # the truer name for what the deck covers -- "Poultry" rather than
-        # "Broiler chicken and Laying hen". The species list comes back too,
-        # because that is what a caller compares a selected product against.
-        doms = conn.execute(
-            """SELECT DISTINCT d.slug, d.label FROM fact f
-               JOIN domain d ON d.id = f.domain_id
-               WHERE f.slug IN (%s) ORDER BY d.id"""
-            % (",".join("?" * len(rows)) or "NULL"),
-            tuple(r["slug"] for r in rows),
-        ).fetchall()
-        spp = conn.execute(
-            """SELECT sp.slug FROM species sp
-               WHERE sp.active = 1 AND sp.domain_id IN
-                 (SELECT id FROM domain WHERE slug IN (%s))
-               ORDER BY sp.id"""
-            % (",".join("?" * len(doms)) or "NULL"),
-            tuple(d["slug"] for d in doms),
-        ).fetchall()
-        return {
-            "scope": _scope(conn, [r["slug"] for r in spp],
-                            label=" and ".join(d["label"] for d in doms)
-                            or None),
-            "facts": [dict(r) for r in rows],
-        }
+        return compute_facts(conn, placement, limit)
     finally:
         conn.close()
 
 
-@app.get("/api/sources")
+@app.get("/api/sources", dependencies=[Depends(require_api_key)])
 def sources():
     """Every source, with a count of how many figures depend on it.
 
@@ -2134,66 +2264,137 @@ def sources():
         conn.close()
 
 
-@app.get("/api/meta")
-def meta():
+def compute_meta(conn) -> dict:
     """Supply chains, products, and the loss chain, for populating controls."""
+    chains = [dict(r) for r in dbm.list_supply_chains(conn)]
+    products = [dict(r) for r in dbm.list_products(conn)]
+    stages = conn.execute(
+        """SELECT ls.slug, ls.label, ls.sequence, ls.phase,
+                  ls.applies_to, ls.optional, ls.description, ls.notes,
+                  lf.survive_lo, lf.survive_mode, lf.survive_hi,
+                  lf.confidence, s.slug AS source_slug
+           FROM loss_stage ls
+           JOIN loss_factor lf ON lf.loss_stage_id = ls.id
+           JOIN source s ON s.id = lf.source_id
+           ORDER BY ls.sequence"""
+    ).fetchall()
+    mixing = conn.execute(
+        """SELECT ms.slug, ms.label, ms.sequence, ms.pool_lo,
+                  ms.pool_mode, ms.pool_hi, ms.mixing_kind,
+                  ms.description, ms.confidence
+           FROM mixing_stage ms ORDER BY ms.sequence"""
+    ).fetchall()
+    industry = conn.execute(
+        """SELECT p.slug, p.name, p.market_share_pct,
+                  p.throughput_per_week, p.facility_count,
+                  s.slug AS source_slug
+           FROM producer p JOIN source s ON s.id = p.source_id
+           ORDER BY p.market_share_pct DESC"""
+    ).fetchall()
+    segments = conn.execute(
+        """SELECT ps.slug, ps.label, ps.mass_grams, ps.edible_yield_pct,
+                  ps.sold_as_product, ps.notes, s.slug AS source_slug
+           FROM product_segment ps JOIN source s ON s.id = ps.source_id"""
+    ).fetchall()
+    return {
+        "chains": chains,
+        "products": products,
+        "loss_stages": [dict(r) for r in stages],
+        "mixing_stages": [dict(r) for r in mixing],
+        "producers": [dict(r) for r in industry],
+        "segments": [dict(r) for r in segments],
+    }
+
+
+@app.get("/api/meta", dependencies=[Depends(require_api_key)])
+def meta():
     conn = dbm.connect()
     try:
-        chains = [dict(r) for r in dbm.list_supply_chains(conn)]
-        products = [dict(r) for r in dbm.list_products(conn)]
-        stages = conn.execute(
-            """SELECT ls.slug, ls.label, ls.sequence, ls.phase,
-                      ls.applies_to, ls.optional, ls.description, ls.notes,
-                      lf.survive_lo, lf.survive_mode, lf.survive_hi,
-                      lf.confidence, s.slug AS source_slug
-               FROM loss_stage ls
-               JOIN loss_factor lf ON lf.loss_stage_id = ls.id
-               JOIN source s ON s.id = lf.source_id
-               ORDER BY ls.sequence"""
-        ).fetchall()
-        mixing = conn.execute(
-            """SELECT ms.slug, ms.label, ms.sequence, ms.pool_lo,
-                      ms.pool_mode, ms.pool_hi, ms.mixing_kind,
-                      ms.description, ms.confidence
-               FROM mixing_stage ms ORDER BY ms.sequence"""
-        ).fetchall()
-        industry = conn.execute(
-            """SELECT p.slug, p.name, p.market_share_pct,
-                      p.throughput_per_week, p.facility_count,
-                      s.slug AS source_slug
-               FROM producer p JOIN source s ON s.id = p.source_id
-               ORDER BY p.market_share_pct DESC"""
-        ).fetchall()
-        segments = conn.execute(
-            """SELECT ps.slug, ps.label, ps.mass_grams, ps.edible_yield_pct,
-                      ps.sold_as_product, ps.notes, s.slug AS source_slug
-               FROM product_segment ps JOIN source s ON s.id = ps.source_id"""
-        ).fetchall()
-        return {
-            "chains": chains,
-            "products": products,
-            "loss_stages": [dict(r) for r in stages],
-            "mixing_stages": [dict(r) for r in mixing],
-            "producers": [dict(r) for r in industry],
-            "segments": [dict(r) for r in segments],
-        }
+        return compute_meta(conn)
     finally:
         conn.close()
 
 
-@app.get("/")
-def index():
-    """Serve the frontend.
+def _embed_json(data: dict) -> str:
+    """A JSON blob safe to sit inside a `<script>` tag.
 
-    One page, sent as a file. It was rendered per request while two designs
-    shared this URL and each needed a signed token naming which one it was;
-    with a single page there is nothing per-visitor left to substitute.
-
-    `no-cache` keeps a deploy visible without a hard reload -- the markup is
-    small and the assets under `/static` carry the weight.
+    `json.dumps` alone is not: a string value containing a literal
+    `</script>` would close the tag early and let whatever follows execute
+    as markup rather than JSON. `<` is not special to JSON, so escaping it as
+    `\\u003c` is invisible to `JSON.parse` and closes that hole -- the
+    standard mitigation for embedding JSON in HTML.
     """
-    return FileResponse(STATIC / "index.html",
-                        headers={"Cache-Control": "no-cache"})
+    return json.dumps(data).replace("<", "\\u003c")
+
+
+@app.get("/")
+def index(request: Request, key: str | None = None,
+          _validated_key: str = Depends(require_page_key)):
+    """Serve the frontend, with the boot data computed and embedded server-side.
+
+    THIS ROUTE GATES ON THE SAME KEY AS EVERY /api/* ROUTE -- see the
+    api-key-gate comment near the top of this module. `require_page_key` runs
+    as a FastAPI dependency BEFORE this function body executes, so there is
+    no way to reach the `compute_*` calls below without it having already
+    validated `?key=` or the `ccw_api_key` cookie against `API_KEY`.
+
+    What gets embedded, and why only this much: the page used to open on a
+    boot sequence of client fetches -- /api/brand (the logo), /api/version
+    (the footer build stamp), /api/scope (the anchor sentence under the
+    strapline), /api/meta (every dropdown), and /api/calculate for the
+    headline answer the calculator opens on -- all against public,
+    unauthenticated endpoints. Those five are now computed here, in process,
+    after the key has been validated, and embedded as `window.__CCW_BOOT__`
+    for app.js to read instead of fetching. The learning-placement fact deck
+    (the Facts tab) is embedded too, since it is likewise a fixed,
+    parameter-free boot fetch app.js used to make unconditionally.
+
+    WHAT IS DELIBERATELY NOT EMBEDDED: the other ten views (Scientific,
+    Mixing, By state, By country, Does size matter, Nutrition & impact,
+    Trends, Seasons, and the calculator's own recalculation once a reader
+    changes an input) still call their /api/* endpoints from app.js exactly
+    as before. That is no longer a public-unauthenticated flow -- every one
+    of those endpoints depends on `require_api_key`, which accepts the
+    `ccw_api_key` cookie this route sets below, so the browser carries proof
+    of the same validated key on every one of those calls automatically. A
+    full SSR rewrite of eleven views' worth of Plotly-driven interactivity
+    was judged out of scope for this change; see the PR description / final
+    report for the explicit reasoning.
+    """
+    conn = dbm.connect()
+    try:
+        boot = {
+            "brand": compute_brand(),
+            "version": compute_version(conn),
+            "scope": compute_scope(conn, product=None),
+            "meta": compute_meta(conn),
+            "calculate": compute_calculate(conn),   # the page's own defaults
+            "facts_deck": compute_facts(conn, placement="learning", limit=500),
+        }
+    finally:
+        conn.close()
+
+    response = templates.TemplateResponse(
+        request,
+        "index.html",
+        {"boot_json": _embed_json(boot)},
+        headers={"Cache-Control": "no-cache"},
+    )
+
+    # Only (re)issue the cookie when a query-string key was what authorized
+    # this request -- a request already riding the cookie does not need it
+    # rewritten every load. `?key=` in a URL is exactly the kind of thing
+    # that ends up in browser history and referrer headers, so it is traded
+    # for a cookie on first use rather than kept as the ongoing credential.
+    if key is not None and key == _validated_key:
+        response.set_cookie(
+            "ccw_api_key", _validated_key,
+            httponly=True,
+            secure=request.url.scheme == "https",
+            samesite="lax",
+            max_age=60 * 60 * 12,
+        )
+    return response
 
 
 if STATIC.exists():
