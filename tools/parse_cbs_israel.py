@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import re
 import sys
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
@@ -70,11 +71,30 @@ PROVISIONAL = "*"
 # Suppression markers, identical in meaning to NASS's withheld cells.
 SUPPRESSED = {"-", ". .", "..", ". ."}
 
+# Named for the project and reachable, not a browser impersonation: this
+# fetcher goes after exactly three known filenames on one host, not a crawl,
+# so the point of the UA is to give CBS someone to email, not to blend in.
+FETCH_UA = ("counting-chicken-wings/research "
+            "(+https://github.com/gmhoward9289-ops/counting-chicken-wings; "
+            "contact: dev@swamplink.com)")
+
+# Only three fixed files on one host, but a bare loop still fires three
+# requests back to back with no gap at all. This is the same courtesy
+# tools/cooper/runner.py applies to fetches at a much larger scale.
+_MIN_INTERVAL = 1.5
+_last_fetch = 0.0
+
 
 def fetch(name: str) -> bytes:
+    global _last_fetch
+    wait = _MIN_INTERVAL - (time.monotonic() - _last_fetch)
+    if wait > 0:
+        time.sleep(wait)
     url = f"{BASE}{name}.xlsx"
-    with urllib.request.urlopen(url, timeout=60) as r:
+    req = urllib.request.Request(url, headers={"User-Agent": FETCH_UA})
+    with urllib.request.urlopen(req, timeout=60) as r:
         data = r.read()
+    _last_fetch = time.monotonic()
     expected = FILES[name]
     if len(data) != expected:
         print(f"warning: {name}.xlsx is {len(data)} bytes, expected "
