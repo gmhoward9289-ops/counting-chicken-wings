@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.6.1 — 2026-08-18
+
+### Link the SwampLink data policy
+
+The sourcing standard this site follows is now written down in one place —
+https://www.swamplink.com/data/policy/ — and the Sources view and site footer
+link to it.
+
 ## v2.6.0 — 2026-08-17
 
 ### Ground pork joins the livestock domain
