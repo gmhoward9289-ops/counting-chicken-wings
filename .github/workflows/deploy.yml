@@ -70,9 +70,19 @@ jobs:
           git push --force "${HOST}:/srv/git/wings.git" "HEAD:refs/heads/main"
 
       - name: Verify what is actually serving
+        # /api/version now requires the API key -- see the api-key-gate
+        # comment near the top of api.py. WINGS_API_KEY has to be set on the
+        # `production` environment (same value as the server's API_KEY, see
+        # compose.yml) or this curl gets 401 and the loop below just times
+        # out, which reads as "not serving $GITHUB_SHA" rather than the
+        # actual cause. Deliberately NOT switched to /healthz instead:
+        # /healthz proves the process is alive, not which commit it is
+        # running, and confirming the latter is the whole point of this step.
+        env:
+          API_KEY: ${{ secrets.WINGS_API_KEY }}
         run: |
           for i in $(seq 1 30); do
-            body="$(curl -fsS https://wings.swamplink.com/api/version || true)"
+            body="$(curl -fsS -H "X-API-Key: ${API_KEY}" https://wings.swamplink.com/api/version || true)"
             if [ -n "$body" ]; then
               got="$(printf '%s' "$body" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("git_commit") or "")')"
               if [ "$got" = "$GITHUB_SHA" ]; then

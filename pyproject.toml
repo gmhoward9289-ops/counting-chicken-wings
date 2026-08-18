@@ -11,6 +11,11 @@ dependencies = [
 gui = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
+    # GET / renders templates/index.html through Jinja2Templates so the boot
+    # payload (calculator answer, scope, brand, meta, fact deck) can be
+    # embedded server-side instead of fetched by the client. Not a transitive
+    # dependency of fastapi -- it has to be requested explicitly.
+    "jinja2>=3.1",
 ]
 dev = [
     "pytest>=8.0",
