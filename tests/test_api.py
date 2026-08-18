@@ -1455,6 +1455,19 @@ def test_healthz_needs_no_key(bypass_removed):
         assert c.get("/healthz").status_code == 200
 
 
+def test_an_unconfigured_key_fails_open_not_closed(bypass_removed, monkeypatch):
+    """The site must keep serving while API_KEY is being provisioned on the
+    server and in CI: an absent env var means every request passes through
+    unauthenticated, not that every request 500s. This is a deliberate
+    tradeoff, not the gate's steady state -- once API_KEY is set, the other
+    tests in this class show it enforces normally."""
+    monkeypatch.delenv("API_KEY", raising=False)
+    with TestClient(app) as c:
+        assert c.get("/api/meta").status_code == 200
+        assert c.get("/").status_code == 200
+        assert c.cookies.get("ccw_api_key") is None
+
+
 def test_the_page_itself_requires_the_key(bypass_removed):
     """The requirement this whole change exists to satisfy: the GUI's own
     page load is gated by the same check as the JSON API, not exempt from

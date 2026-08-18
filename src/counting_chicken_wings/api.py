@@ -43,9 +43,12 @@ templates = Jinja2Templates(directory=str(TEMPLATES))
 # API key gate
 #
 # Every /api/* route below except /healthz depends on `require_api_key`. The
-# key is compared against the API_KEY environment variable, never hardcoded
-# and never defaulted -- an unset API_KEY fails every gated request closed
-# (500) rather than quietly waving everyone through.
+# key is compared against the API_KEY environment variable, never hardcoded.
+#
+# Deliberately fails OPEN, not closed, when API_KEY is unset: the site must
+# keep serving while the key is provisioned on the server and in CI, so an
+# absent env var means every request passes through unauthenticated rather
+# than every request 500ing. Once API_KEY is set, the gate enforces for real.
 #
 # THE PART THAT MAKES THIS MORE THAN A PUBLIC-API GATE: GET / -- the page
 # itself -- depends on `require_page_key`, which is the SAME check against
@@ -89,10 +92,13 @@ def require_api_key(
     programmatic caller) OR the `ccw_api_key` cookie GET / sets after a valid
     `?key=` was presented -- see the module-level comment above for why the
     cookie path exists and is not a back door.
+
+    Fails OPEN when API_KEY is unset on the server -- see the module-level
+    comment above. Once it's set, this enforces normally.
     """
     expected = _configured_key()
     if not expected:
-        raise HTTPException(500, "API_KEY is not configured on the server")
+        return
     if x_api_key == expected or ccw_api_key == expected:
         return
     raise HTTPException(401, "missing or invalid API key (X-API-Key header)")
@@ -107,10 +113,15 @@ def require_page_key(
     navigation cannot set one. Returns the validated key so the route can
     tell whether the QUERY STRING carried it (and therefore whether the
     cookie needs to be (re)issued) rather than re-deriving that afterward.
+
+    Fails OPEN when API_KEY is unset on the server -- see the module-level
+    comment above -- returning None rather than raising, so the page renders
+    with no key required and no cookie gets issued for a key that doesn't
+    exist yet.
     """
     expected = _configured_key()
     if not expected:
-        raise HTTPException(500, "API_KEY is not configured on the server")
+        return None
     provided = key or ccw_api_key
     if provided != expected:
         raise HTTPException(
@@ -2329,7 +2340,7 @@ def _embed_json(data: dict) -> str:
 
 @app.get("/")
 def index(request: Request, key: str | None = None,
-          _validated_key: str = Depends(require_page_key)):
+          _validated_key: str | None = Depends(require_page_key)):
     """Serve the frontend, with the boot data computed and embedded server-side.
 
     THIS ROUTE GATES ON THE SAME KEY AS EVERY /api/* ROUTE -- see the
