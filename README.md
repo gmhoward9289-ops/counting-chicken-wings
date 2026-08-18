@@ -303,7 +303,7 @@ bot are deliberately post-1.0.
 
 ## License
 
-Dual-licensed: the source code is [MIT](LICENSE); the research corpus and
+Dual-licensed: the source code is [Apache-2.0](LICENSE); the research corpus and
 written documentation under `docs/` and `data/` are
 [CC BY 4.0](LICENSE-DOCS) — reuse them freely with credit. The figures
 themselves are facts from the cited primary sources and carry no copyright.
