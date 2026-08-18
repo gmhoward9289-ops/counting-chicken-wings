@@ -25,7 +25,11 @@ import socket
 import ssl
 import subprocess
 import sys
+import time
+import urllib.error
+import urllib.parse
 import urllib.request
+import urllib.robotparser
 from pathlib import Path
 
 # COOPER is Windows and its console encoding is cp1252, so ANY non-Latin
@@ -430,18 +434,145 @@ def _note_if_walled(url: str, text: str, path: Path) -> None:
           "reason, not a source one.")
 
 
+# Contact info in the UA is the single highest-value courtesy for an
+# unattended fetcher: it gives a host operator someone to email before they
+# reach for a block. Named for the project, not the machine -- this same
+# string is sent whether it runs on the Mac or on COOPER.
+FETCH_UA = ("counting-chicken-wings/research "
+            "(+https://github.com/gmhoward9289-ops/counting-chicken-wings; "
+            "low-volume research batches, contact: dev@swamplink.com)")
+
+# Seconds between requests to the same host. A batch is single digits to low
+# tens of URLs, so this costs seconds per run, not minutes -- there is no
+# reason to skip it for a tool that fetches on a human's say-so rather than
+# crawling.
+MIN_HOST_INTERVAL = 1.5
+
+_ROBOTS_CACHE: dict[str, urllib.robotparser.RobotFileParser | None] = {}
+_LAST_FETCH: dict[str, float] = {}
+
+
+def _robots_allows(url: str) -> bool:
+    """Check robots.txt for this URL's host, caching the parser per host.
+
+    A disallow SKIPS the fetch with a warning; it does not raise. This tool is
+    a human triggering retrieval of specific pages they already decided to
+    fetch -- closer to a browser than a spider -- so robots.txt is a courtesy
+    to honour, not a gate to enforce absolutely. But honouring it by default
+    costs nothing and removes an argument against us.
+
+    Any failure to fetch robots.txt itself -- dead host, timeout, no
+    robots.txt at all, a host that 404s it -- is treated as "allowed". A
+    missing or broken robots.txt must never block a legitimate fetch; that
+    would be the opposite of what the file is for.
+    """
+    host = urllib.parse.urlparse(url).netloc
+    if host not in _ROBOTS_CACHE:
+        scheme = urllib.parse.urlparse(url).scheme or "https"
+        rp = urllib.robotparser.RobotFileParser()
+        rp.set_url(f"{scheme}://{host}/robots.txt")
+        try:
+            req = urllib.request.Request(
+                rp.url, headers={"User-Agent": FETCH_UA})
+            with urllib.request.urlopen(req, timeout=15,
+                                        context=_SSL_CTX) as resp:
+                body = resp.read().decode("utf-8", errors="replace")
+            rp.parse(body.splitlines())
+        except Exception:                            # noqa: BLE001
+            rp = None                    # unreachable/missing: treat as allow
+        _ROBOTS_CACHE[host] = rp
+    rp = _ROBOTS_CACHE[host]
+    if rp is None:
+        return True
+    try:
+        return rp.can_fetch(FETCH_UA, url)
+    except Exception:                                # noqa: BLE001
+        return True                      # a broken parse must not block a fetch
+
+
+def _throttle(url: str) -> None:
+    """Sleep, if needed, so this host is not hit more than once every
+    MIN_HOST_INTERVAL seconds. Per-host, not global: a batch that cites two
+    different sites should not slow down waiting on a host it is not talking
+    to."""
+    host = urllib.parse.urlparse(url).netloc
+    if host in _LAST_FETCH:
+        wait = MIN_HOST_INTERVAL - (time.monotonic() - _LAST_FETCH[host])
+        if wait > 0:
+            time.sleep(wait)
+    _LAST_FETCH[host] = time.monotonic()
+
+
+def _log_fetch(dest: Path, url: str, status: str, body: bytes | None) -> None:
+    """Append one line of fetch provenance beside the documents this run
+    produces.
+
+    This pipeline exists to verify citations, so what was fetched, from
+    where, and when IS the product, not an afterthought. Logging failures are
+    swallowed deliberately -- a fetch that succeeded must never be reported as
+    failed because a log write hit a permissions problem.
+    """
+    entry = {
+        "url": url,
+        "status": status,
+        "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "chars": len(body) if body is not None else None,
+        "sha256": hashlib.sha256(body).hexdigest() if body is not None else None,
+    }
+    try:
+        log_path = dest.parent / "_fetch_log.jsonl"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        pass
+
+
 def fetch_url(url: str, dest: Path) -> Path | None:
     """Save a URL to disk. The artifact is the evidence, so it must persist."""
     _warn_once_about_trust_store()
     dest.parent.mkdir(parents=True, exist_ok=True)
+
+    if not _robots_allows(url):
+        print(f"    robots.txt disallows fetching this page, skipping: {url}")
+        _log_fetch(dest, url, "robots-disallow", None)
+        return None
+
+    _throttle(url)
+
+    req = urllib.request.Request(url, headers={"User-Agent": FETCH_UA})
     try:
-        req = urllib.request.Request(
-            url, headers={"User-Agent": "counting-chicken-wings/research"})
         with urllib.request.urlopen(req, timeout=60, context=_SSL_CTX) as resp:
             body = resp.read()
+    except urllib.error.HTTPError as e:
+        if e.code in (429, 503):
+            # Respect Retry-After when the host bothers to send one; a flat
+            # fallback otherwise. One retry only -- this is a batch of a few
+            # URLs run once, not a queue worth re-driving.
+            retry_after = e.headers.get("Retry-After")
+            delay = (float(retry_after) if retry_after
+                     and retry_after.strip().isdigit() else 5.0)
+            print(f"    got {e.code} from {url}, retrying once after "
+                  f"{delay:.0f}s")
+            time.sleep(delay)
+            try:
+                with urllib.request.urlopen(req, timeout=60,
+                                            context=_SSL_CTX) as resp:
+                    body = resp.read()
+            except Exception as e2:                  # noqa: BLE001
+                print(f"    fetch failed: {url} -- {type(e2).__name__}: {e2}")
+                _log_fetch(dest, url, f"error:{type(e2).__name__}", None)
+                return None
+        else:
+            print(f"    fetch failed: {url} -- {type(e).__name__}: {e}")
+            _log_fetch(dest, url, f"error:{type(e).__name__}", None)
+            return None
     except Exception as e:                          # noqa: BLE001
         print(f"    fetch failed: {url} -- {type(e).__name__}: {e}")
+        _log_fetch(dest, url, f"error:{type(e).__name__}", None)
         return None
+
+    _log_fetch(dest, url, "ok", body)
 
     if url.lower().endswith(".pdf") or body[:4] == b"%PDF":
         pdf = dest.with_suffix(".pdf")
