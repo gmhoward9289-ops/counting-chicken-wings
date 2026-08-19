@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.6.2 — 2026-08-19
+
+### The footer links home
+
+Every page now carries the swamplink family strip in its footer: swamplink.com
+first, then the sibling properties, then the data policy and the blog. wings
+cross-linked Foundation but never linked back up to the estate root. Links now
+use the apex rather than the `www.` redirect.
+
 ## v2.6.1 — 2026-08-18
 
 ### Link the SwampLink data policy
