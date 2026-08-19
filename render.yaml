@@ -37,16 +37,6 @@ services:
       - key: PYTHON_VERSION
         value: '3.12'
 
-      # Gates every /api/* route (except /healthz) and GET / itself -- see
-      # the api-key-gate comment near the top of api.py. sync: false means
-      # Render will not overwrite a value set by hand in its dashboard, and
-      # will prompt for one on first deploy of this blueprint rather than
-      # deploying with the gate silently open or (worse) silently unset,
-      # which fails every request closed rather than open -- see
-      # require_api_key's docstring.
-      - key: API_KEY
-        sync: false
-
       # This service is stateless on purpose: the corpus is baked into the
       # image at build time and nothing here is written back. No disk, so
       # nothing survives a deploy or a wake from the free tier's idle

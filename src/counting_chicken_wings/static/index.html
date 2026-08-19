@@ -24,16 +24,6 @@ try {
     (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 } catch (e) { document.documentElement.dataset.theme = 'light'; }
 </script>
-<!-- The boot payload: the calculator's default answer, the scope anchor,
-     the brand art, the build stamp, the meta controls and the fact deck --
-     computed server-side, in process, by api.py's GET / AFTER it has
-     validated the API key (see require_page_key in api.py). app.js reads
-     this instead of making an unauthenticated fetch for each of them; see
-     the comment on GET / in api.py for exactly what is and is not covered.
-     Placed before app.js (deferred, so it runs after parsing regardless)
-     so window.__CCW_BOOT__ is guaranteed to exist by the time boot() reads
-     it. -->
-<script>window.__CCW_BOOT__ = {{ boot_json | safe }};</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">

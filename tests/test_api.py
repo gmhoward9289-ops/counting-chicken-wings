@@ -4,33 +4,19 @@ The load-bearing one here is test_every_cited_step_ships_its_source. The
 whole project rests on "no number without a citation", and the API is where
 that promise either survives contact with the outside world or quietly
 stops being true.
-
-Every /api/* route (except /healthz) and GET / itself require an API key --
-see the api-key-gate comment near the top of api.py. `tests/conftest.py`
-overrides that dependency to a no-op for the whole session, so every test in
-this file (and every other test file that hits the app through TestClient)
-runs as if the gate were not there. The `client` fixture below ALSO attaches
-`X-API-Key` explicitly, so this module keeps working correctly even if the
-session-wide override in conftest.py is ever narrowed or removed -- see the
-"Auth gate" section for the tests that actually exercise the override being
-absent.
 """
-
-import os
 
 import pytest
 from fastapi.testclient import TestClient
 
 from counting_chicken_wings import audit
 from counting_chicken_wings import db as dbm
-from counting_chicken_wings.api import app, require_api_key, require_page_key
-
-API_KEY = os.environ["API_KEY"]  # set by tests/conftest.py before this import
+from counting_chicken_wings.api import app
 
 
 @pytest.fixture(scope="module")
 def client():
-    with TestClient(app, headers={"X-API-Key": API_KEY}) as c:
+    with TestClient(app) as c:
         yield c
 
 
@@ -45,7 +31,7 @@ def get(client, path, **params):
 # ---------------------------------------------------------------------------
 
 def test_index_serves_html(client):
-    r = client.get("/", params={"key": API_KEY})
+    r = client.get("/")
     assert r.status_code == 200
     assert "Counting Chicken Wings" in r.text
 
@@ -1397,121 +1383,3 @@ def test_scope_without_a_product_says_nothing_about_one(client):
 def test_an_unknown_product_is_404_not_a_silent_null(client):
     r = client.get("/api/scope", params={"product": "nope"})
     assert r.status_code == 404
-
-
-# ---------------------------------------------------------------------------
-# Auth gate
-#
-# Every other test in this file (and in every other test file) runs with
-# tests/conftest.py's session-wide dependency override in place, so none of
-# them exercise the gate itself -- they would pass identically if the gate
-# had never been added. These do: the override is removed for the duration
-# of each test, so a request has to satisfy the real `require_api_key` /
-# `require_page_key` dependency to succeed.
-# ---------------------------------------------------------------------------
-
-@pytest.fixture
-def bypass_removed():
-    """Temporarily restores the real API-key check for one test.
-
-    Removing BOTH overrides, not just one: `require_api_key` and
-    `require_page_key` are separate dependency callables (a header check and
-    a query/cookie check), and leaving either overridden would let that half
-    of the gate through unauthenticated while this fixture claims to test it.
-    """
-    had_api = app.dependency_overrides.pop(require_api_key, None)
-    had_page = app.dependency_overrides.pop(require_page_key, None)
-    try:
-        yield
-    finally:
-        if had_api is not None:
-            app.dependency_overrides[require_api_key] = had_api
-        if had_page is not None:
-            app.dependency_overrides[require_page_key] = had_page
-
-
-def test_api_routes_reject_a_request_with_no_key(bypass_removed):
-    with TestClient(app) as c:
-        assert c.get("/api/meta").status_code == 401
-        assert c.get("/api/calculate").status_code == 401
-
-
-def test_api_routes_reject_the_wrong_key(bypass_removed):
-    with TestClient(app) as c:
-        r = c.get("/api/meta", headers={"X-API-Key": "not-the-key"})
-        assert r.status_code == 401
-
-
-def test_api_routes_accept_the_correct_header(bypass_removed):
-    with TestClient(app) as c:
-        r = c.get("/api/meta", headers={"X-API-Key": API_KEY})
-        assert r.status_code == 200
-
-
-def test_healthz_needs_no_key(bypass_removed):
-    """The liveness probe stays open -- render.yaml and compose.yml both
-    poll it, and neither carries a key."""
-    with TestClient(app) as c:
-        assert c.get("/healthz").status_code == 200
-
-
-def test_an_unconfigured_key_fails_open_not_closed(bypass_removed, monkeypatch):
-    """The site must keep serving while API_KEY is being provisioned on the
-    server and in CI: an absent env var means every request passes through
-    unauthenticated, not that every request 500s. This is a deliberate
-    tradeoff, not the gate's steady state -- once API_KEY is set, the other
-    tests in this class show it enforces normally."""
-    monkeypatch.delenv("API_KEY", raising=False)
-    with TestClient(app) as c:
-        assert c.get("/api/meta").status_code == 200
-        assert c.get("/").status_code == 200
-        assert c.cookies.get("ccw_api_key") is None
-
-
-def test_the_page_itself_requires_the_key(bypass_removed):
-    """The requirement this whole change exists to satisfy: the GUI's own
-    page load is gated by the same check as the JSON API, not exempt from
-    it. No `?key=`, no cookie, no page -- and therefore no server-side call
-    into compute_calculate() / compute_scope() / etc. either, since those
-    only run after this dependency has already returned."""
-    with TestClient(app) as c:
-        assert c.get("/").status_code == 401
-
-
-def test_a_query_string_key_unlocks_the_page_and_sets_a_cookie(bypass_removed):
-    with TestClient(app) as c:
-        r = c.get("/", params={"key": API_KEY})
-        assert r.status_code == 200
-        assert "Counting Chicken Wings" in r.text
-        assert c.cookies.get("ccw_api_key") == API_KEY
-
-
-def test_the_cookie_alone_unlocks_a_later_visit(bypass_removed):
-    with TestClient(app) as c:
-        c.get("/", params={"key": API_KEY})           # sets the cookie
-        r = c.get("/")                                  # no ?key= this time
-        assert r.status_code == 200
-
-
-def test_the_cookie_also_authorizes_the_gui_s_own_json_calls(bypass_removed):
-    """Same cookie, same predicate, no key ever written into app.js.
-
-    This is the concrete behaviour behind "even the GUI's own internal use
-    of the calculation logic requires the key": a browser that never sent
-    an X-API-Key header still gets a 200 from /api/calculate, but only
-    because it is carrying the cookie a validated ?key= already earned it.
-    """
-    with TestClient(app) as c:
-        c.get("/", params={"key": API_KEY})
-        r = c.get("/api/calculate")   # cookie only, no header
-        assert r.status_code == 200
-
-
-def test_the_boot_payload_is_embedded_and_gated(bypass_removed):
-    """GET / does not merely link to the data, it contains it."""
-    with TestClient(app) as c:
-        r = c.get("/", params={"key": API_KEY})
-        assert r.status_code == 200
-        assert "window.__CCW_BOOT__" in r.text
-        assert '"calculate"' in r.text
-        assert '"facts_deck"' in r.text

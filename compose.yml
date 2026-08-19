@@ -42,15 +42,6 @@ services:
       GIT_COMMIT: "${GIT_COMMIT:-}"
       SERVICE_NAME: "wings@swamplink"
       GIT_BRANCH: "master"
-      # Gates every /api/* route (except /healthz) and GET / itself -- see
-      # the api-key-gate comment near the top of api.py. Passed through from
-      # whatever the shell that runs `docker compose up -d --build` has in
-      # its environment; nothing here is a real value. It has to be set
-      # server-side (e.g. an env file the post-receive hook sources before
-      # `docker compose up`, not committed to this repo) AND match the
-      # WINGS_API_KEY secret deploy.yml's "Verify what is actually serving"
-      # step uses, or that CI check starts failing every deploy with 401.
-      API_KEY: "${API_KEY:-}"
     healthcheck:
       # /healthz touches no database and builds no payload -- it exists to be
       # pinged cheaply.
