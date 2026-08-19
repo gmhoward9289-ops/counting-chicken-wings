@@ -85,3 +85,37 @@ jobs:
           done
           echo "::error::wings.swamplink.com is not serving $GITHUB_SHA"
           exit 1
+
+      # THE CHECK A GATED DEPLOY CANNOT PASS.
+      #
+      # On 2026-08-19 wings.swamplink.com served 401 to every anonymous
+      # visitor for roughly twelve hours while all five deploys above it went
+      # green. An API-key gate (#174) covered `GET /` as well as `/api/*`,
+      # and this job's only probe was `/api/version` sent WITH the key. A
+      # health check that authenticates cannot discover that the public is
+      # locked out -- an authenticated request is the one request a visitor
+      # never makes.
+      #
+      # The gate also failed OPEN while API_KEY was unset, so the outage did
+      # not begin at merge; it began hours later when the key was
+      # provisioned, long after anyone was watching the deploy that shipped
+      # it. Nothing in CI connected the two events.
+      #
+      # Hence: no header, no cookie, no credential -- and assert the body,
+      # not just the status. A 200 carrying a JSON error object would mean an
+      # error document is being served with a success code, which the status
+      # alone cannot distinguish from a healthy page.
+      - name: Verify the page is reachable anonymously
+        run: |
+          code="$(curl -s -o /tmp/home.html -w '%{http_code}' https://wings.swamplink.com/)"
+          if [ "$code" != "200" ]; then
+            echo "::error::anonymous GET / returned $code, expected 200 -- the public site is not reachable"
+            head -c 500 /tmp/home.html
+            exit 1
+          fi
+          if ! grep -qi '<title>Counting Chicken Wings</title>' /tmp/home.html; then
+            echo "::error::anonymous GET / returned 200 but did not serve the page"
+            head -c 500 /tmp/home.html
+            exit 1
+          fi
+          echo "anonymous GET / is 200 and serves the page"
