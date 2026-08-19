@@ -404,10 +404,26 @@ jobs:
                 # protection, not just the review requirement, so calling it
                 # on an unverified BLOCKED (checks still running) would merge
                 # an unfinished build.
+                #
+                # "pass" ALONE IS THE WRONG TEST, and it is why no release
+                # PR ever actually took this path. `version-consistency` is
+                # a required check that only runs on tag refs, so on a
+                # release PR it always reports bucket `skipping`, never
+                # `pass`. The old predicate -- `unique == ["pass"]` --
+                # therefore evaluated false on every release: the admin
+                # merge never fired, the PR sat BLOCKED until the 40-minute
+                # deadline, and the NEXT push died on "release/vX already
+                # has an open PR". Observed on v2.6.2, wedged ~3h across
+                # three pushes before it was cleared by hand.
+                #
+                # So accept `skipping` too -- and require that something
+                # actually reported: an empty required-check list must not
+                # read as green, or a misconfigured ruleset would admin
+                # merge a wholly unverified tree.
                 if [ "$(gh pr view "$PR" --json reviewDecision --jq .reviewDecision)" \
                     = "REVIEW_REQUIRED" ] \
                   && [ "$(gh pr checks "$PR" --required --json bucket \
-                      --jq '[.[].bucket] | unique == ["pass"]' 2>/dev/null)" \
+                      --jq '[.[].bucket] | (length > 0) and all(. == "pass" or . == "skipping")' 2>/dev/null)" \
                     = "true" ]; then
                   echo "review is the only blocker and required checks are green; merging as an admin"
                   gh pr merge --squash --admin --delete-branch "$PR" || true
