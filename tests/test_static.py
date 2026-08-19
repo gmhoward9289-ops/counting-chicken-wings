@@ -9,49 +9,15 @@ hardcoded in both `cli.py` and the page, so fixing the data fixed neither. A
 country's coverage claim was written into the page, was true when written,
 and was false hours later. Both were caught by a human noticing, which does
 not scale.
-
-GET / MOVED FROM A STATIC FILE TO A JINJA TEMPLATE (see the api-key-gate
-comment near the top of api.py): the page is now gated behind an API key,
-and the route computes a boot payload -- the calculator's default answer,
-the scope anchor, the brand art, the build stamp, meta and the fact deck --
-and embeds it as `window.__CCW_BOOT__` rather than leaving app.js to fetch
-those five from public, unauthenticated endpoints. `doc` below reads the
-TEMPLATE SOURCE (`templates/index.html`), unrendered -- `{{ boot_json |
-safe }}` sits in it as literal Jinja syntax, not real data, which is exactly
-what every test in this file wants: they are static-analysing what SHIPS as
-markup and script, not this one request's runtime output. A handful of
-tests near the bottom of this file (`TestBootPayloadIsComputed`) instead
-render the template through the app with a valid key, specifically to check
-that what GET / embeds is computed, not hardcoded -- that is the one place
-in this file that legitimately needs the app running rather than the file
-on disk.
-
-THE OTHER TEN VIEWS (Scientific, Mixing, By state, By country, Does size
-matter, Nutrition & impact, Trends, Seasons, and the calculator's own
-recalculation once a reader changes an input) still fetch their /api/*
-endpoint from app.js exactly as before boot-data embedding existed --
-api.py's module docstring on GET / explains why that scope was chosen. So
-the tests that look for a literal `/api/quality-axes` or `/api/scope` string
-in the shipped script are still checking something true: app.js still makes
-that fetch, on its own view's first open, as the fallback path behind the
-boot-data cache. What changed is that the fetch is no longer public --
-`require_api_key` now gates every one of those endpoints, accepting the
-`ccw_api_key` cookie GET / sets after a valid key, so the fetch succeeds
-only because the browser already proved it holds the key to load the page
-at all.
 """
 
-import json
 import re
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 
 STATIC = Path(__file__).resolve().parents[1] / \
     "src" / "counting_chicken_wings" / "static"
-TEMPLATES = Path(__file__).resolve().parents[1] / \
-    "src" / "counting_chicken_wings" / "templates"
 
 
 def _linked(doc, ext):
@@ -59,9 +25,6 @@ def _linked(doc, ext):
 
     Anchored on `/static/` so a CDN stays out of it: Plotly is not ours and
     its minified bundle would swamp every check below in false positives.
-    Still `/static/...ext` even though the document itself now lives in
-    `templates/` -- app.css and app.js did not move, and the served URL
-    (what a real browser resolves) never named the source directory anyway.
     """
     return [STATIC / rel for rel in
             re.findall(rf'(?:href|src)="/static/([^"]+\.{ext})"', doc)]
@@ -69,9 +32,8 @@ def _linked(doc, ext):
 
 @pytest.fixture(scope="module")
 def doc():
-    """The page's template SOURCE -- unrendered, `{{ boot_json | safe }}`
-    and all. See the module docstring for why that is what belongs here."""
-    return (TEMPLATES / "index.html").read_text(encoding="utf-8")
+    """The page itself, exactly as served."""
+    return (STATIC / "index.html").read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -530,75 +492,3 @@ def _fn_body(script, name):
             depth -= 1
         i += 1
     return script[m.end():i]
-
-
-# ---------------------------------------------------------------------------
-# The boot payload GET / embeds -- computed, not typed
-#
-# Everything above this line is static analysis of the shipped files, on
-# purpose: no browser runs in CI. GET / now computes five of the boot-time
-# fetches server-side and embeds the result (see api.py's module docstring
-# on `require_api_key`/`require_page_key` and on GET / itself), and that
-# computation can only be checked by actually calling the route -- there is
-# no equivalent of "grep app.js for a hardcoded string" for a value that
-# never touches app.js at all. These are the one place in this file that
-# legitimately needs the running app rather than the files on disk, and they
-# check the same thing the fetch-based tests above check: the embedded
-# figures track the corpus, not a value someone typed once.
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="module")
-def boot():
-    from counting_chicken_wings.api import app
-
-    with TestClient(app) as c:
-        r = c.get("/")
-    assert r.status_code == 200, \
-        "GET / rejected the test client -- see tests/conftest.py's " \
-        "session-wide dependency override for require_page_key"
-    m = re.search(r"window\.__CCW_BOOT__ = (\{.*?\});</script>",
-                   r.text, re.S)
-    assert m, "GET / does not embed window.__CCW_BOOT__ at all"
-    return json.loads(m.group(1))
-
-
-class TestBootPayloadIsComputed:
-
-    def test_the_anchor_is_embedded_and_matches_a_live_computation(self, boot):
-        """Same guarantee as test_the_anchor_sentence_comes_from_the_api
-        above, aimed at the embedded copy instead of the fetched one."""
-        from counting_chicken_wings import db as dbm
-        from counting_chicken_wings.api import compute_scope
-
-        conn = dbm.connect()
-        try:
-            live = compute_scope(conn, product=None)
-        finally:
-            conn.close()
-        assert boot["scope"]["anchor"] == live["anchor"]
-
-    def test_the_default_calculator_answer_matches_a_live_computation(self, boot):
-        """The headline figure app.js used to fetch on every fresh load is
-        now embedded instead -- it still has to be the corpus talking."""
-        from counting_chicken_wings import db as dbm
-        from counting_chicken_wings.api import compute_calculate
-
-        conn = dbm.connect()
-        try:
-            live = compute_calculate(conn)
-        finally:
-            conn.close()
-        assert boot["calculate"]["question"]["product"] == \
-            live["question"]["product"]
-        assert boot["calculate"]["answer"]["distinct"] == \
-            pytest.approx(live["answer"]["distinct"])
-
-    def test_the_fact_deck_is_embedded_for_the_facts_tab(self, boot):
-        assert boot["facts_deck"]["facts"], \
-            "no facts embedded; the Facts tab would fall back to a fetch " \
-            "on every fresh page load instead of opening instantly"
-
-    def test_app_js_actually_reads_the_embedded_payload(self, script):
-        assert "window.__CCW_BOOT__" in script or "__CCW_BOOT__" in script, \
-            "app.js never reads the boot payload GET / computed for it"
