@@ -1,7 +1,7 @@
 # counting-chicken-wings
 
-+[![discussions](https://img.shields.io/github/discussions/gmhoward9289-ops/counting-chicken-wings)](https://github.com/gmhoward9289-ops/counting-chicken-wings/discussions)
-+
+[![discussions](https://img.shields.io/github/discussions/gmhoward9289-ops/counting-chicken-wings)](https://github.com/gmhoward9289-ops/counting-chicken-wings/discussions)
+
 **How many chickens does it take to make a dozen chicken wings?**
 
 The naive answer is 6. A chicken has two wings, so twelve wings is six chickens.
