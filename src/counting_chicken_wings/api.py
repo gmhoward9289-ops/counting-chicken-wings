@@ -43,6 +43,10 @@ def _source_payload(row) -> dict:
         "url": row["url"],
         "published_on": row["published_on"],
         "source_type": row["source_type"],
+        # Why a source with no loaded figure is kept: 'corroboration',
+        # 'context', or null. Lets the Sources view say "held" instead of
+        # reporting "0 figures" as if it were an accident.
+        "held_reason": row["held_reason"],
         "notes": row["notes"],
     }
 
@@ -2024,6 +2028,58 @@ def sources():
             d["used_by"] = uses
             out.append(d)
         return {"sources": out}
+    finally:
+        conn.close()
+
+
+@app.get("/api/conflicts")
+def conflicts():
+    """Disagreements the corpus records rather than resolves.
+
+    The point of the endpoint is that these were already in the corpus, held
+    as prose in a source's `notes:` where no reader reached them. Each conflict
+    comes back with its positions, and every position ships its citation --
+    the same rule every other endpoint obeys, so a disagreement cannot be
+    rendered without the sources on both sides available to render beside it.
+
+    Neither figure is loaded into the model for any of these (`loaded` is
+    almost always false); the disagreement itself is the datum.
+    """
+    conn = dbm.connect()
+    try:
+        rows = conn.execute(
+            """SELECT c.id, c.slug, c.subject, c.question, c.summary,
+                      c.status, c.loaded, c.notes,
+                      d.slug AS domain, d.label AS domain_label
+               FROM conflict c
+               LEFT JOIN domain d ON d.id = c.domain_id
+               ORDER BY c.id"""
+        ).fetchall()
+        out = []
+        for c in rows:
+            positions = conn.execute(
+                """SELECT p.label, p.claim, p.value_text, p.notes,
+                          s.slug AS source_slug, s.title AS source_title,
+                          s.publisher, s.url, s.source_type
+                   FROM conflict_position p
+                   JOIN source s ON s.id = p.source_id
+                   WHERE p.conflict_id = ?
+                   ORDER BY p.id""",
+                (c["id"],),
+            ).fetchall()
+            out.append({
+                "slug": c["slug"],
+                "subject": c["subject"],
+                "question": c["question"],
+                "summary": c["summary"],
+                "status": c["status"],
+                "loaded": bool(c["loaded"]),
+                "domain": c["domain"],
+                "domain_label": c["domain_label"],
+                "notes": c["notes"],
+                "positions": [dict(p) for p in positions],
+            })
+        return {"conflicts": out}
     finally:
         conn.close()
 

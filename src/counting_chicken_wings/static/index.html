@@ -86,6 +86,7 @@ try {
     <button data-v="trends">Trends</button>
     <button data-v="season">Seasons</button>
     <button data-v="facts">Chicken facts</button>
+    <button data-v="conflicts">Conflicts</button>
     <button data-v="sources">Sources</button>
   </nav>
 
@@ -609,6 +610,30 @@ try {
       Arrow keys or swipe to move between cards.
     </p>
   </div>
+</section>
+
+<!-- ------------------------------------------------ conflicts
+
+     Where two sources we hold give different figures for the same quantity and
+     we have chosen not to pick one. These were in the corpus long before this
+     view existed -- held as prose in a source's notes, where no reader reached
+     them -- so the whole section is written by app.js from /api/conflicts. No
+     subject or figure is typed here, for the same reason the scope markers are
+     empty in the markup: a number in this file would bypass the citation audit
+     and go stale besides. -->
+<section class="view" id="v-conflicts">
+  <div class="panel">
+    <h3>Where the sources disagree</h3>
+    <p class="muted">
+      Some of the most honest things in this dataset are the numbers that do
+      not agree. Where two credible sources give different figures for the same
+      quantity, averaging them would invent a precision neither supports and
+      picking one would hide a real uncertainty — so the disagreement is
+      recorded as data, with both sides cited, and neither figure is fed into
+      the model.
+    </p>
+  </div>
+  <div id="conflictlist"></div>
 </section>
 
 <!-- ------------------------------------------------ sources -->

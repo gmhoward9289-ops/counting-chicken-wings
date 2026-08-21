@@ -171,6 +171,19 @@ EXPORTS: list[dict] = [
         "note": "",
     },
     {
+        "name": "conflicts",
+        "title": "recorded disagreements",
+        "sql": """SELECT c.slug AS conflict, c.subject, c.status, c.question,
+                         p.label AS position, p.value_text, p.claim,
+                         s.slug AS source
+                  FROM conflict c
+                  JOIN conflict_position p ON p.conflict_id = c.id
+                  JOIN source s ON s.id = p.source_id
+                  ORDER BY c.id, p.id""",
+        "note": ("two or more positions per conflict. NEITHER figure is loaded "
+                 "into the model -- the disagreement is recorded, not resolved"),
+    },
+    {
         "name": "producers",
         "title": "producers",
         "sql": """SELECT p.slug, p.name, p.headquarters, p.market_share_pct,
