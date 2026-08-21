@@ -382,140 +382,34 @@ def calculate(
     most one egg a day and twelve same-day eggs came from twelve different
     hens; a whole 45-day season for maple syrup, because a tree is tapped for
     a spring rather than an afternoon. Ignored for wings, which need no clock.
+
+    Payload is built by ``tools.wings_calculate`` so HTTP and MCP cannot drift.
     """
-    conn = dbm.connect()
-    try:
-        try:
-            prod = dbm.get_product(conn, product)
-        except KeyError:
-            raise HTTPException(404, f"unknown product: {product}")
+    from . import tools as tools_mod
 
-        units = count
-        segments = None
-        if pieces:
-            segments = conn.execute(
-                """SELECT COUNT(*) FROM product_segment
-                   WHERE product_id = ? AND sold_as_product = 1""",
-                (prod["id"],),
-            ).fetchone()[0] or 1
-            units = count / segments
-
-        chain = _resolve_chain(conn, prod, chain)
-        loss = dbm.load_loss_stages(
-            conn, prod["species_slug"], prod["slug"],
-            include_optional=include_mortality,
-            chain_slug=chain,
-        )
-        mixing = dbm.load_mixing_stages(conn, chain)
-
-        try:
-            recurring = dbm.make_recurring(prod, window_days)
-        except ValueError as e:
-            raise HTTPException(400, str(e))
-
-        res = run(
-            units_requested=units,
-            units_per_individual=prod["units_per_individual_mode"],
-            loss_stages=loss,
-            mixing_stages=mixing,
-            iterations=iterations,
-            recurring=recurring,
-            # Derived inside run() from the figures -- see unit_is_aggregate.
-            anatomical=bool(prod["is_anatomical_constant"]),
-            floor_source=dbm.product_source_slug(conn, prod["slug"]),
-            # From the corpus -- see model.MixingParams.
-            params=dbm.load_mixing_params(conn),
-            # Lets the Monte Carlo loop resample these too (#98), not just
-            # pool sizes.
-            param_bands=dbm.load_mixing_param_bands(conn),
-            correlated_groups=dbm.load_correlated_groups(
-                conn, prod["species_slug"]),
-            mixing_subunits_per_unit=prod["mixing_subunits_per_unit"],
-        )
-
-        slugs = list({s.source_slug for s in res.trace if s.source_slug})
-        sources = {k: _source_payload(v)
-                   for k, v in dbm.get_sources(conn, slugs).items()}
-
-        return {
-            "question": {
-                "count": count,
-                "units": units,
-                "basis": "segment" if pieces else "whole unit",
-                "segments_per_unit": segments,
-                "product": prod["label"],
-                "unit_name": prod["unit_name"],
-                "individual_noun": prod["individual_noun"],
-                "individual_plural": prod["individual_plural"],
-                "chain": chain,
-                "include_mortality": include_mortality,
-            },
-            "answer": {
-                "floor": res.floor,
-                # From the Result, NOT from `units`. For a countable product
-                # the two are identical, which is why `units` looked correct
-                # for as long as every product was countable. For a CONTINUOUS
-                # product the unit count is not a headcount -- one gram is not
-                # one flower -- and this endpoint was returning ceiling=1
-                # beside floor=150 for a gram of saffron. The same
-                # contradiction was fixed in the CLI and, until now, only in
-                # the CLI: the field was added to Result precisely so the two
-                # surfaces could not disagree, and then one of them was not
-                # wired up.
-                "ceiling": res.distinct_ceiling,
-                "required": res.required,
-                "required_estimator": res.required_estimator,
-                "required_lo": res.required_lo,
-                "required_hi": res.required_hi,
-                "distinct": res.distinct_mean,
-                "iterations": res.iterations,
-                "container_units": res.container_units,
-                "paired_individuals": res.paired_individuals,
-                # NOTE: `ceiling` above comes from the Result, not from
-                # `units`. See the comment there.
-                # Recurring products only; null for wings. hard_floor is the
-                # physiological minimum and `floor` is what you actually need
-                # at the real production rate -- for same-day eggs, 12 and
-                # 15.2. Both are returned because quoting either alone
-                # misleads.
-                "hard_floor": res.hard_floor,
-                "window_days": res.window_days,
-                "rate_per_day": res.rate_per_day,
-                "cap_per_individual": res.cap_per_individual,
-                # What this species calls its rate, and why its ceiling is
-                # physiology -- both out of the row. The pages hardcoded
-                # "laying rate" and "a hen lays at most one egg a day", so a
-                # maple was narrated as a bird. Same bug as floor_note,
-                # third copy.
-                "rate_label": prod["rate_label"],
-                "cap_note": prod["cap_note"],
-                "yield_mode": prod["yield_mode"],
-            },
-            "trace": [
-                {
-                    "sequence": s.sequence,
-                    "kind": s.kind,
-                    "slug": s.stage_slug,
-                    "label": s.stage_label,
-                    "value": s.value_used,
-                    "running_total": s.running_total,
-                    "explanation": s.explanation,
-                    "confidence": s.confidence,
-                    "source": s.source_slug,
-                }
-                for s in res.trace
-            ],
-            "mixing_notes": res.mixing_notes,
-            # Why the answer is not exactly the floor, in this chain's own
-            # words. The CLI has read this since floor_note was introduced;
-            # the web page went on printing a hardcoded wing paragraph, so
-            # asking about eggs got "the instant the wings leave the bird"
-            # and a description of a cut-up line. Same bug, second copy.
-            "floor_note": dbm.chain_floor_note(conn, chain),
-            "sources": sources,
-        }
-    finally:
-        conn.close()
+    body = tools_mod.wings_calculate(
+        count=count,
+        product=product,
+        chain=chain,
+        pieces=pieces,
+        include_mortality=include_mortality,
+        iterations=iterations,
+        window_days=window_days,
+    )
+    err = body.get("error")
+    if err:
+        # Match prior status codes: unknown product / chain → 404; cross-species
+        # chain → 422; bad window / other ValueError → 400.
+        lower = err.lower()
+        if lower.startswith("unknown product") or lower.startswith(
+            "unknown supply chain"
+        ):
+            raise HTTPException(404, err)
+        if "belongs to" in lower and "comes from" in lower:
+            raise HTTPException(422, err)
+        raise HTTPException(400, err)
+    body.pop("package_version", None)
+    return body
 
 
 def _histogram(values: list[float], bins: int = 40) -> dict:
