@@ -225,6 +225,64 @@ table. Every figure carries a colour-coded confidence badge — green measured, 
 cyan industry, amber estimate — so you can see at a glance which numbers are
 solid and which are placeholders.
 
+### MCP (agents)
+
+The same cited calculator, exposed as stdio tools so an assistant answers from
+the corpus instead of from memory. Optional install — core and `gui` stay free
+of the MCP SDK.
+
+```bash
+pip install -e ".[mcp]"
+wings-mcp   # or: python -m counting_chicken_wings.server
+```
+
+Build the DB first (`python -m counting_chicken_wings.build`), or let
+`db.connect()` self-build on first use. Payloads match `/api/*`: HTTP and MCP
+share `tools.wings_calculate`, so the two surfaces cannot drift.
+
+#### What it is for
+
+An agent that should say *how many individuals a plate represents*, with every
+stage of the answer traceable to `data/sources.yaml`. There is no bare-number
+tool. The server instructions (and `skills/wings/SKILL.md`) restate the
+project's two-question rule:
+
+| Field | Question |
+|-------|----------|
+| `answer.required` | Birds' worth of wing through the supply funnel (loss chain) |
+| `answer.distinct` | Expected individuals physically on the plate (mixing) |
+
+For a dozen whole wings, floor is ≥ 6 and distinct usually sits near 12. Quoting
+one number as "the chickens" is wrong.
+
+#### Tools
+
+| Tool | Does |
+|------|------|
+| `wings_meta` | Lists products, supply chains, loss stages, mixing stages, producers, segments — discovery before you calculate |
+| `wings_scope` | Species coverage depth, corpus anchor, and borrow-notes when a selected product is not the species a view is about |
+| `wings_calculate` | The main answer: `question`, `answer` (floor / required / distinct / ceiling), per-stage `trace` with source slugs, and a `sources` map |
+| `wings_sources` | Full citation catalog with `used_by` (how many figures depend on each source) |
+| `wings_facts` | Surprising cited facts with embedded source fields and domain scope |
+
+Typical agent path: `wings_meta` → optional `wings_scope` → `wings_calculate` →
+cite from `sources[trace[i].source]` (title, publisher, URL).
+
+`wings_calculate` accepts the same knobs as the CLI/API: `count`, `product`,
+`chain`, `pieces`, `include_mortality`, `iterations`, `window_days`.
+
+#### Cursor wiring
+
+```json
+"counting-chicken-wings": {
+  "command": "<venv>/python.exe",
+  "args": ["-m", "counting_chicken_wings.server"],
+  "cwd": "C:\\Users\\gmhow\\dev\\counting-chicken-wings"
+}
+```
+
+A later estate shell for citations is planned as [cite-mcp](https://github.com/gmhoward9289-ops/cite-mcp); this server does not depend on it.
+
 ### Rebuilding the database
 
 ```bash

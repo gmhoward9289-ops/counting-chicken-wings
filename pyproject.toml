@@ -12,6 +12,9 @@ gui = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
 ]
+mcp = [
+    "mcp[cli]>=2.0.0",
+]
 dev = [
     "pytest>=8.0",
     # FastAPI's TestClient is a thin wrapper over an HTTP client; without
@@ -39,6 +42,7 @@ dev = [
 
 [project.scripts]
 wings = "counting_chicken_wings.cli:main"
+wings-mcp = "counting_chicken_wings.server:main"
 
 [build-system]
 requires = ["setuptools>=68"]
