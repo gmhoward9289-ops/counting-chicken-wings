@@ -61,7 +61,6 @@ def test_sitemap_xml_is_at_the_site_root(client):
     assert r.status_code == 200
     assert "json" not in r.headers.get("content-type", "").lower()
     assert "xml" in r.headers["content-type"]
-    assert "https://wings.swamplink.com/" in r.text
     # Homepage only -- no invented inner URLs.
     assert r.text.count("<loc>") == 1
     assert r.text.count("<loc>https://wings.swamplink.com/</loc>") == 1
