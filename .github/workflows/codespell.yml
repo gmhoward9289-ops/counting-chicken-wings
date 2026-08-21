@@ -11,6 +11,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: codespell-project/actions-codespell@v2
         with:
-          # ONS = UK Office for National Statistics, CNA = Comisión Nacional
+          # ONS = UK Office for National Statistics, CNA = ComisiA3n Nacional
           # del Agua (Mexico), avance = Spanish in cited source titles.
+          path: src,tests,docs,tools,.
+          skip: .git,*.pyc,__pycache__,*.svg,*.png,dist,build,.venv,data
           ignore_words_list: ons,cna,avance
