@@ -2090,5 +2090,22 @@ def index():
                         headers={"Cache-Control": "no-cache"})
 
 
+@app.get("/robots.txt")
+def robots():
+    """Crawl instructions at the site root.
+
+    Files next to the HTML are only reachable under `/static/` unless they
+    have their own routes. A crawler asks for `/robots.txt`, and without this
+    FastAPI answers 404 as JSON.
+    """
+    return FileResponse(STATIC / "robots.txt", media_type="text/plain")
+
+
+@app.get("/sitemap.xml")
+def sitemap():
+    """Homepage-only sitemap at the site root. Same reason as robots.txt."""
+    return FileResponse(STATIC / "sitemap.xml", media_type="application/xml")
+
+
 if STATIC.exists():
     app.mount("/static", StaticFiles(directory=STATIC), name="static")

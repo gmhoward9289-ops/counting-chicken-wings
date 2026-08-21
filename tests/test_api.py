@@ -34,6 +34,36 @@ def test_index_serves_html(client):
     r = client.get("/")
     assert r.status_code == 200
     assert "Counting Chicken Wings" in r.text
+    assert '<meta name="description" content="How many chickens for a dozen wings? Always six or more, usually near twelve. 600+ cited poultry figures, a mixing simulator, a provenance gate on every number.">' in r.text
+    assert '<link rel="canonical" href="https://wings.swamplink.com/">' in r.text
+
+
+def test_robots_txt_is_at_the_site_root(client):
+    """Crawlers fetch /robots.txt, not /static/robots.txt.
+
+    FastAPI's default 404 is JSON, which is why dropping the file next to
+    the HTML was not enough -- the StaticFiles mount only covers /static/.
+    """
+    r = client.get("/robots.txt")
+    assert r.status_code == 200
+    assert "json" not in r.headers.get("content-type", "").lower()
+    assert r.headers["content-type"].startswith("text/plain")
+    assert r.text == (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "\n"
+        "Sitemap: https://wings.swamplink.com/sitemap.xml\n"
+    )
+
+
+def test_sitemap_xml_is_at_the_site_root(client):
+    r = client.get("/sitemap.xml")
+    assert r.status_code == 200
+    assert "json" not in r.headers.get("content-type", "").lower()
+    assert "xml" in r.headers["content-type"]
+    # Homepage only -- no invented inner URLs.
+    assert r.text.count("<loc>") == 1
+    assert r.text.count("<loc>https://wings.swamplink.com/</loc>") == 1
 
 
 @pytest.mark.parametrize("path", [
