@@ -83,6 +83,34 @@ body {
 a { color: var(--stamp); }
 :focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
 
+
+/* Quiet family bar — hub chrome in this instrument's tokens. */
+.chrome {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.85rem 22px 0.7rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+.chrome .home {
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.chrome .home:hover { color: var(--stamp); }
+.chrome .home svg { width: 0.95rem; height: 0.95rem; }
+.chrome nav { display: flex; gap: 1.1rem; }
+.chrome nav a { color: var(--dim); text-decoration: none; }
+.chrome nav a:hover { color: var(--ink); }
+
 /* --------------------------------------------------------------- shell
    Two columns: a sticky instrument rail and the readout beside it. Variant
    A ran a horizontal tab strip over eleven views, which wrapped to three
