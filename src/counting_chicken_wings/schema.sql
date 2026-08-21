@@ -47,6 +47,21 @@ CREATE TABLE source (
                         'derived',        -- computed from other sources
                         'estimate'        -- our own reasoned estimate
                     )),
+    -- Why a source that cites no loaded figure is kept anyway, in one word the
+    -- audit can read. The audit lists "cited by nothing" as a warning because
+    -- it usually means a figure was dropped and left its citation behind -- but
+    -- five of the current ones are uncited ON PURPOSE (held as corroboration,
+    -- held for context around a figure sourced elsewhere), and a warning that
+    -- is always five false positives stops being read. A source held as one
+    -- side of a `conflict` needs no reason here: the conflict IS the reason,
+    -- and the position row citing it already removes it from the orphan list.
+    --
+    -- CHECK values are a closed vocabulary so a typo cannot invent a new kind
+    -- of "held", which would defeat the point of grading them at all.
+    held_reason     TEXT CHECK (held_reason IN (
+                        'corroboration',  -- backs a figure whose own source is cited
+                        'context'         -- background around a figure sourced elsewhere
+                    )),
     notes           TEXT
 );
 
@@ -1113,6 +1128,80 @@ CREATE TABLE fact (
 );
 
 CREATE INDEX idx_fact_placement ON fact (placement, surprise DESC);
+
+
+-- ---------------------------------------------------------------------------
+-- Disagreements -- where the honest thing is to record the fight, not settle it
+--
+-- Two credible sources sometimes give different figures for the same quantity,
+-- and for a project whose whole claim is that every number traces to a source,
+-- the temptation is to average them or to pick the one we like. Both destroy
+-- information. A three-fold spread between two extension services is the most
+-- honest thing the corpus knows about saffron yields, and averaging it would
+-- manufacture a false precision no source supports.
+--
+-- So a disagreement is DATA. Neither figure is loaded into the model (that is
+-- what `loaded=0` records); the disagreement itself is loaded, so the page can
+-- show it instead of the corpus quietly holding it in a `notes:` field where no
+-- reader ever reaches it. Until this table existed the word "conflict" appeared
+-- zero times in the served page while five sources sat in `sources.yaml` marked
+-- as conflicts in prose.
+--
+-- A conflict is NOT a statistic, so it carries no source_id of its own -- it is
+-- a relationship BETWEEN statistics, and each side's citation lives on its
+-- `conflict_position`. That is also what quietly fixes the orphan-source
+-- warning: a source held as one side of a conflict is now cited by a position
+-- row, so the audit stops reporting it as "cited by nothing".
+CREATE TABLE conflict (
+    id          INTEGER PRIMARY KEY,
+    slug        TEXT    NOT NULL UNIQUE,
+    -- Grouping only, like everywhere else domain is used. NULL for a
+    -- disagreement that is not about one domain's figures.
+    domain_id   INTEGER REFERENCES domain(id),
+    subject     TEXT    NOT NULL,   -- 'Saffron yield per acre'
+    -- The quantity actually in dispute, stated once so the two positions can
+    -- each be read against it rather than re-explaining it.
+    question    TEXT    NOT NULL,
+    -- Why it is recorded rather than resolved. This is the paragraph that used
+    -- to live in a source's `notes:` and never reached a reader.
+    summary     TEXT    NOT NULL,
+    -- 'unresolved' : we cannot honestly pick a side.
+    -- 'held'       : one side is defensible but adopting it is a human
+    --                judgement about provenance we have chosen not to make.
+    status      TEXT    NOT NULL DEFAULT 'unresolved'
+                    CHECK (status IN ('unresolved', 'held')),
+    -- Is EITHER figure loaded into the model? Almost always 0: the point of
+    -- recording a conflict is usually that neither number can be trusted enough
+    -- to compute with. A 1 would mean the model uses one figure and the page
+    -- still shows the disagreement, which is a legitimate but rarer state.
+    loaded      INTEGER NOT NULL DEFAULT 0,
+    notes       TEXT
+);
+
+-- One side of a disagreement: a figure, who said it, and its citation. Two or
+-- more per conflict -- a single position is not a disagreement, which the
+-- loader enforces because the schema cannot count rows per parent.
+CREATE TABLE conflict_position (
+    id          INTEGER PRIMARY KEY,
+    conflict_id INTEGER NOT NULL REFERENCES conflict(id),
+    -- Who holds this position, short enough for a table cell: a publisher, an
+    -- agency, or a reading ('as live weight').
+    label       TEXT    NOT NULL,
+    -- The claim in the source's own terms, quoted where possible.
+    claim       TEXT    NOT NULL,
+    -- The figure, compact, for a side-by-side column ('~3 lb/acre'). NULL when
+    -- the position is a reading of an ambiguous figure rather than a number of
+    -- its own.
+    value_text  TEXT,
+    -- NOT NULL: a position is a cited claim, so it obeys the same rule as every
+    -- other statistic in the corpus. This is the column the audit discovers to
+    -- keep the source off the orphan list.
+    source_id   INTEGER NOT NULL REFERENCES source(id),
+    notes       TEXT
+);
+
+CREATE INDEX idx_conflict_position_parent
+    ON conflict_position (conflict_id);
 
 
 -- ---------------------------------------------------------------------------

@@ -126,6 +126,7 @@ class Builder:
                 slug=r["slug"], title=r["title"], publisher=r["publisher"],
                 url=r.get("url"), published_on=r.get("published_on"),
                 retrieved_on=r["retrieved_on"], source_type=r["source_type"],
+                held_reason=r.get("held_reason"),
                 notes=r.get("notes"),
             )
             self.source[r["slug"]] = sid
@@ -702,6 +703,50 @@ class Builder:
                 source_id=self.src(f["source"], f"fact {f['slug']}"),
             )
 
+    def conflicts(self):
+        """Disagreements the corpus records rather than resolves.
+
+        Each conflict needs at least two positions -- a single citable side is
+        not a disagreement -- and the schema cannot count rows per parent, so
+        the loader does. Every position cites a real source, resolved through
+        self.src() exactly like any other statistic, which is what lifts the
+        held-as-conflict sources off the audit's orphan list.
+        """
+        t = load("conflicts.yaml") or {}
+        for c in t.get("conflicts", []):
+            positions = c.get("positions", [])
+            if len(positions) < 2:
+                raise BuildError(
+                    f"conflict {c['slug']}: needs at least two positions, "
+                    f"got {len(positions)}. A one-sided conflict is a single "
+                    f"weak figure and belongs in its source's notes."
+                )
+            dom = c.get("domain")
+            if dom and dom not in self.domain:
+                raise BuildError(
+                    f"conflict {c['slug']}: unknown domain '{dom}'"
+                )
+            cid = self.ins(
+                "conflict",
+                slug=c["slug"],
+                domain_id=self.domain.get(dom) if dom else None,
+                subject=c["subject"], question=c["question"],
+                summary=c["summary"],
+                status=c.get("status", "unresolved"),
+                loaded=int(bool(c.get("loaded", 0))),
+                notes=c.get("notes"),
+            )
+            for p in positions:
+                self.ins(
+                    "conflict_position",
+                    conflict_id=cid,
+                    label=p["label"], claim=p["claim"],
+                    value_text=p.get("value_text"),
+                    source_id=self.src(p["source"],
+                                       f"conflict {c['slug']} position"),
+                    notes=p.get("notes"),
+                )
+
     def quality(self):
         t = load("quality.yaml")
         for d in t["defects"]:
@@ -819,6 +864,7 @@ class Builder:
         self.nutrition()
         self.resources()
         self.facts()
+        self.conflicts()
 
 
 def build(db_path: Path = DEFAULT_DB) -> Path:
