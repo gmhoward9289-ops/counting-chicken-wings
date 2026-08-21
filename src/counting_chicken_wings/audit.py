@@ -52,6 +52,7 @@ TABLE_LABELS = {
     "resource_footprint": "resource footprint",
     "economic_stat": "economic stats",
     "fact": "learning-centre facts",
+    "conflict_position": "conflict positions",
 }
 
 
@@ -142,9 +143,19 @@ def corpus_stats(conn: sqlite3.Connection) -> dict:
 
     return {
         "sources": scalar("SELECT COUNT(*) FROM source"),
+        # Cited by no loaded figure AND with no held_reason: a genuine orphan,
+        # as opposed to a source kept on purpose (corroboration, context, or as
+        # one side of a conflict). The held ones are not defects, so they do not
+        # belong in the same count.
         "orphan_sources": scalar(
-            f"SELECT COUNT(*) FROM source s WHERE 1=1 {clauses}"
+            f"SELECT COUNT(*) FROM source s "
+            f"WHERE s.held_reason IS NULL {clauses}"
         ),
+        "held_sources": scalar(
+            f"SELECT COUNT(*) FROM source s "
+            f"WHERE s.held_reason IS NOT NULL {clauses}"
+        ),
+        "conflicts": scalar("SELECT COUNT(*) FROM conflict"),
         "facts": scalar("SELECT COUNT(*) FROM fact"),
         "tables": scalar(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' "
@@ -229,18 +240,33 @@ def audit(db_path: Path) -> int:
         if required:
             failures += missing
 
-    # Orphaned sources are not an error, but they usually mean a fact was
-    # dropped and its citation was left behind.
+    # Sources cited by no loaded figure. This warning used to fire on five
+    # sources every build, none of which wanted acting on, which is how a
+    # warning stops being read. Two of the five are now cited by a
+    # conflict_position row (conflict_position carries a source_id, so it is in
+    # `tables` and its citations count here), and the other three declare a
+    # held_reason. So the check now separates the two states the roadmap asked
+    # it to: "held deliberately, and here is why" from "orphaned -- probably a
+    # dropped figure that left its citation behind".
     clauses = " ".join(
         f"AND NOT EXISTS (SELECT 1 FROM {t} WHERE source_id = s.id)"
         for t, _, _ in tables
     )
-    orphans = conn.execute(
-        f"SELECT s.slug FROM source s WHERE 1=1 {clauses} ORDER BY s.slug"
+    uncited = conn.execute(
+        f"SELECT s.slug, s.held_reason FROM source s WHERE 1=1 {clauses} "
+        "ORDER BY s.slug"
     ).fetchall()
+    held = [(slug, reason) for slug, reason in uncited if reason]
+    orphans = [slug for slug, reason in uncited if not reason]
+    if held:
+        print(f"\n  {len(held)} source(s) held deliberately, cited by no "
+              f"loaded figure:")
+        for slug, reason in held:
+            print(f"    - {slug}  ({reason})")
     if orphans:
-        print(f"\n  {len(orphans)} source(s) cited by nothing:")
-        for (slug,) in orphans:
+        print(f"\n  {len(orphans)} source(s) cited by nothing and with no "
+              f"reason recorded -- probably a dropped figure:")
+        for slug in orphans:
             print(f"    - {slug}")
 
     print("\nconfidence mix across loss factors")
