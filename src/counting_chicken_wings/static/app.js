@@ -1997,6 +1997,47 @@ function bindFactsGestures() {
     x0 = y0 = null;
   }, { passive: true });
 }
+// ---- conflicts
+//
+// Every subject, figure and citation is rendered from /api/conflicts. Nothing
+// is written into the markup, which is the same rule the scope markers follow:
+// a figure typed into the page bypasses the citation audit and goes stale. The
+// status pill reuses the evidence badges deliberately -- 'unresolved' borrows
+// the dashed estimate look because "we cannot settle this" is exactly the kind
+// of uncertainty that styling already signals everywhere else on the page.
+async function initConflicts() {
+  const d = await api('/api/conflicts');
+  const box = $('#conflictlist');
+  if (!d.conflicts.length) {
+    box.innerHTML = '<div class="panel"><p class="muted">No disagreements ' +
+      'are recorded.</p></div>';
+    return;
+  }
+  box.innerHTML = d.conflicts.map(c => {
+    const flag = c.status === 'held' ? 'b-industry' : 'b-estimate';
+    const positions = c.positions.map(p => `
+      <div class="step count">
+        <h4>${p.label}</h4>
+        <p>${p.value_text ? `<b>${p.value_text}</b> — ` : ''}${p.claim}</p>
+        <div class="cite">${p.source_title} — ${p.publisher}${p.url
+          ? ` · <a href="${p.url}" target="_blank" rel="noopener">source</a>`
+          : ''}</div>
+      </div>`).join('');
+    return `<div class="panel">
+      <h3>${c.subject}
+        <span class="badge ${flag}">${c.status}</span>
+        ${c.domain_label
+          ? `<span class="note">${c.domain_label}</span>` : ''}</h3>
+      <p class="muted">${c.question}</p>
+      <div class="grid2">${positions}</div>
+      <p class="note">${c.summary}</p>
+      ${c.loaded ? '' : `<p class="note warn">Neither figure is loaded into
+        the model — the disagreement is what is recorded, not a resolution of
+        it.</p>`}
+    </div>`;
+  }).join('');
+}
+
 async function initSources() {
   const d = await api('/api/sources');
   $('#sourcelist').innerHTML = `<table><tr><th>Source</th><th>Type</th>
@@ -2007,7 +2048,9 @@ async function initSources() {
         : s.source_type === 'peer_reviewed' ? 'study'
         : s.source_type === 'estimate' ? 'estimate' : 'industry')}
        <span class="note">${s.source_type.replace('_',' ')}</span></td>
-     <td class="num">${s.used_by}</td></tr>`).join('') + '</table>';
+     <td class="num">${s.used_by || (s.held_reason
+        ? `<span class="note">held: ${s.held_reason}</span>` : 0)}</td>
+     </tr>`).join('') + '</table>';
 }
 
 // Views that read META must not initialise before the boot fetch resolves.
@@ -2023,7 +2066,7 @@ async function load(v) {
                  country: initCountry,
                  size: initSize, impact: initImpact,
                  trends: initTrends, season: initSeason, facts: initFacts,
-                 sources: initSources }[v];
+                 conflicts: initConflicts, sources: initSources }[v];
   if (!init) return;
   try {
     await READY;

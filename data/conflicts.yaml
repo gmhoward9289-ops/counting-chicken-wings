@@ -1,0 +1,116 @@
+# Disagreements the corpus records rather than resolves.
+#
+# Each of these was already in the corpus before this file existed -- as prose
+# buried in a source's `notes:` field, where no reader of the site ever reached
+# it. The roadmap's own words: "The word 'conflict' appears zero times in
+# either front end." This file lifts those disagreements out of prose and makes
+# them queryable, so the page can show a three-fold spread between two extension
+# services instead of quietly holding it.
+#
+# The rule for what belongs here: two (or more) sources we actually hold give
+# different figures for the same quantity, AND we have chosen not to pick one.
+# Every position cites a real source row in sources.yaml -- a disagreement with
+# only one citable side is not a disagreement, it is a single weak figure, and
+# belongs in that source's notes instead.
+#
+# Neither figure in any of these is loaded into the model (loaded: 0). That is
+# the point: the reason to record a conflict is usually that neither number can
+# be trusted enough to compute with.
+
+conflicts:
+  - slug: saffron-yield-per-acre
+    domain: horticulture
+    subject: Saffron yield per acre
+    status: unresolved
+    loaded: 0
+    question: >-
+      How much dried saffron an acre yields -- the figure a prospective grower
+      most wants, and the one two university extension services most disagree
+      on.
+    summary: >-
+      A three-fold spread between two extension services is the most honest
+      thing the corpus knows about saffron yields, so it is recorded rather
+      than averaged. The two are probably not even measuring the same thing:
+      HS661's figure is explicitly "in an established planting", and a saffron
+      field takes several years to reach that state. Neither figure is loaded
+      as data -- picking one, or splitting the difference, would invent a
+      precision no source supports.
+    positions:
+      - label: Penn State Extension
+        claim: >-
+          "one acre of land produces only about 3 pounds" of dried saffron.
+        value_text: "~3 lb/acre"
+        source: psu-extension-saffron
+      - label: UF/IFAS (HS661)
+        claim: >-
+          "an annual yield of 8-10 pounds of dried saffron per acre is obtained
+          in an established planting."
+        value_text: "8-10 lb/acre"
+        source: ufifas-hs661-saffron
+
+  - slug: israel-broiler-weight-basis
+    domain: poultry
+    subject: Israeli broiler tonnage -- live weight or carcass weight?
+    status: held
+    loaded: 0
+    question: >-
+      Israel's statistics agency publishes broiler output in tonnes but never
+      states whether that tonnage is live weight or dressed carcass weight. The
+      basis is exactly what a tonnage-to-birds conversion depends on, so without
+      it the figure cannot answer this project's headline question for Israel.
+    summary: >-
+      Recorded as a conflict rather than resolved, per the project's rule that a
+      source disagreement is reported and not adjudicated -- and because
+      promoting either reading to a stated basis is a human judgement about
+      provenance, not a figure a source hands us. Read as live weight the CBS
+      tonnage implies a plausible ~2.2 kg bird for Israel's smaller birds; read
+      as carcass weight it implies roughly 2.9 kg live. Both are defensible and
+      the publication does not say which, so neither is loaded.
+    positions:
+      - label: CBS output figure (basis unstated)
+        claim: >-
+          CBS table 21.11 reports broiler "agricultural output" in tonnes and
+          never defines it as live or dressed weight, so the tonnage cannot be
+          mapped onto a weight basis without assuming one.
+        value_text: "basis not stated"
+        source: cbs-st21-11-output-2025
+      - label: USDA PSD cross-check
+        claim: >-
+          USDA's Production, Supply and Distribution figures imply about
+          2.18 kg per bird if the CBS tonnage is read as live weight, or about
+          2.9 kg live per bird if it is read as carcass weight.
+        value_text: "~2.2 kg live vs ~2.9 kg live"
+        source: usda-psd-israel-broiler-2000
+
+  - slug: beef-carcass-to-packaged-yield
+    domain: livestock
+    subject: How much of a beef animal comes home as packaged meat
+    status: unresolved
+    loaded: 0
+    question: >-
+      The carcass-to-packaged yield -- what share of the carcass (and of the
+      live animal) ends up as boxed, take-home beef. One source's own two
+      figures for this do not reconcile with each other.
+    summary: >-
+      Mississippi State's take-home sentence gives two figures that do not agree
+      with each other: at its own 63% dressing percentage, "75 percent of the
+      hot carcass weight" is 47% of live weight, not the "approximately 40
+      percent" it states in the same breath. South Dakota State's ~65% of
+      carcass does internally reconcile. Both bounds are kept and neither is
+      averaged away, because the disagreement is a real feature of how loosely
+      this yield is reported.
+    positions:
+      - label: South Dakota State Extension
+        claim: >-
+          Boneless, trimmed beef is "about 65% of the carcass weight ...
+          approximately 40% of the live weight" -- and at 63% dressing these
+          two reconcile.
+        value_text: "~65% of carcass"
+        source: sdsu-ext-fed-steer-yield
+      - label: Mississippi State Extension
+        claim: >-
+          "the take-home weight of packaged beef will be approximately 40
+          percent of the animal's live weight, or 75 percent of the hot carcass
+          weight" -- two figures that do not reconcile at a 63% dressing rate.
+        value_text: "~75% of carcass"
+        source: msstate-ext-beef-yield

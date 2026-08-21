@@ -901,6 +901,11 @@
   url: https://www.jewishfoodsociety.org/stories/the-grilling-tradition-of-israels-independence-day
   retrieved_on: '2026-07-29'
   source_type: trade_press
+  # Cited by nothing on purpose: it is the SECOND source agreeing that
+  # Yom Ha'atzmaut grilling is near-universal, and two sources agreeing is why
+  # the cultural fact is loaded at all -- the fact cites the other one. The
+  # audit reads this so it stops reporting the source as an accidental orphan.
+  held_reason: corroboration
   notes: >-
     Independent corroboration that Yom Ha'atzmaut grilling is near-universal
     rather than a niche custom - the mangal treated as as essential to the day
@@ -1067,6 +1072,11 @@
   published_on: '2019-01-01'
   retrieved_on: '2026-07-30'
   source_type: trade_body
+  # Held for context around figures sourced elsewhere: its per-tap yield is
+  # kept as one end of a range rather than loaded as a number, and its "most
+  # trees today have only one tap" is load-bearing background without being a
+  # cited figure of its own.
+  held_reason: context
   notes: >-
     Source for taps-per-tree by trunk diameter and for the conservative end of
     the per-tap seasonal yield. Its tapping guidance is stricter than older
@@ -1086,6 +1096,10 @@
   url: https://nysmaple.com/how-much-sap-can-one-tree-produce/
   retrieved_on: '2026-07-30'
   source_type: trade_body
+  # Held for context: its per-tree sap figures disagree with the other maple
+  # extension services and are kept as a range rather than averaged into a
+  # single loaded number, so nothing cites it directly.
+  held_reason: context
   notes: >-
     A producers' association page, and the most quotable of the three - which
     is exactly why it needs watching. It supplies the modal "most trees today

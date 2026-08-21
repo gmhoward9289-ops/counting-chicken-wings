@@ -7,6 +7,7 @@
     wings facts                 learning-centre facts
     wings states                average bird size by state
     wings sources               every citation
+    wings conflicts             where the sources disagree
     wings gui                   launch the web interface
 
 The answer comes first in plain language. The reasoning hides behind a
@@ -457,6 +458,49 @@ def cmd_sources(args) -> int:
     return 0
 
 
+def cmd_conflicts(args) -> int:
+    c = colour(sys.stdout.isatty() and not args.no_colour)
+    conn = dbm.connect(args.db)
+    rows = conn.execute(
+        """SELECT c.id, c.slug, c.subject, c.question, c.summary,
+                  c.status, c.loaded
+           FROM conflict c ORDER BY c.id"""
+    ).fetchall()
+    print()
+    print(f"  {c('WHERE THE SOURCES DISAGREE', BOLD)}")
+    print(f"  {DIM}Recorded, not resolved: neither figure is loaded into the "
+          f"model.{RESET}")
+    print()
+    for r in rows:
+        print(f"  {c(r['subject'], BOLD)}  {DIM}[{r['status']}]{RESET}")
+        for line in textwrap.wrap(r["question"], 68):
+            print(f"  {line}")
+        print()
+        positions = conn.execute(
+            """SELECT p.label, p.claim, p.value_text,
+                      s.title AS source_title, s.publisher
+               FROM conflict_position p
+               JOIN source s ON s.id = p.source_id
+               WHERE p.conflict_id = ? ORDER BY p.id""",
+            (r["id"],),
+        ).fetchall()
+        for p in positions:
+            head = p["label"]
+            if p["value_text"]:
+                head += f"  {p['value_text']}"
+            print(f"    {c(head, BOLD)}")
+            for line in textwrap.wrap(p["claim"], 64):
+                print(f"      {line}")
+            print(f"      {DIM}source: {p['source_title']} - "
+                  f"{p['publisher']}{RESET}")
+        print()
+        for line in textwrap.wrap(r["summary"], 68):
+            print(f"  {DIM}{line}{RESET}")
+        print()
+    conn.close()
+    return 0
+
+
 def cmd_chains(args) -> int:
     c = colour(sys.stdout.isatty() and not args.no_colour)
     conn = dbm.connect(args.db)
@@ -567,6 +611,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     add("chains", help="available supply chains") \
         .set_defaults(func=cmd_chains)
+
+    add("conflicts", help="where the sources disagree") \
+        .set_defaults(func=cmd_conflicts)
 
     g = add("gui", help="launch the web interface")
     g.add_argument("--host", default="127.0.0.1")
