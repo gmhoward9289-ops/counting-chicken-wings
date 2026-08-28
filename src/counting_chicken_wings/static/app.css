@@ -107,9 +107,14 @@ a { color: var(--stamp); }
 }
 .chrome .home:hover { color: var(--stamp); }
 .chrome .home svg { width: 0.95rem; height: 0.95rem; }
-.chrome nav { display: flex; gap: 1.1rem; }
-.chrome nav a { color: var(--dim); text-decoration: none; }
+.chrome nav { display: flex; flex: 1; align-items: center; gap: 1.1rem; min-width: 0; }
+.chrome nav a { color: var(--dim); text-decoration: none; white-space: nowrap; }
 .chrome nav a:hover { color: var(--ink); }
+#swampid-link { flex: none; }
+@media (max-width: 400px) {
+  .chrome { gap: 0.5rem; }
+  .chrome nav { gap: 0.55rem; }
+}
 
 /* --------------------------------------------------------------- shell
    Two columns: a sticky instrument rail and the readout beside it. Variant
