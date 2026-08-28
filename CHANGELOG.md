@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.9.1 — 2026-08-28
+
+### Sign-in on the chrome is the hub's, not ours
+
+The site nav now carries the same `swampid-link` the hub uses, pointed at
+https://auth.swamplink.com/login, and loads https://swamplink.com/swampid-nav.js
+once. The script is reused from the hub; Wings does not ship a copy or grow
+an auth stack of its own.
+
 ## v2.9.0 — 2026-08-21
 
 ### Recorded disagreements are now a first-class part of the corpus
