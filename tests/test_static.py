@@ -142,6 +142,29 @@ def test_theme_is_applied_before_first_paint(doc):
     assert "localStorage" in boot, "stored theme not read before paint"
 
 
+def test_chrome_loads_hub_swampid_once(doc):
+    """Sign-in is the hub's control. Wings must not grow a second copy.
+
+    The live pattern is one `#swampid-link` in the site chrome, pointed at
+    auth.swamplink.com, plus one load of the hub's `swampid-nav.js`. Copying
+    that script into this repo, or adding a second sign-in control, is the
+    failure this guards.
+    """
+    nav = re.search(r'<nav aria-label="site">(.*?)</nav>', doc, re.S)
+    assert nav, "site chrome nav is gone"
+    assert nav.group(1).count('id="swampid-link"') == 1, \
+        "chrome must carry exactly one swampid-link"
+    assert re.search(
+        r'<a id="swampid-link" href="https://auth.swamplink.com/login"',
+        nav.group(1),
+    ), "swampid-link must point at the hub login"
+    assert doc.count('src="https://swamplink.com/swampid-nav.js"') == 1, \
+        "the hub swampid-nav.js must load exactly once"
+    assert "swampid-nav.js" not in "".join(
+        p.read_text(encoding="utf-8") for p in _linked(doc, "js")
+    ), "do not copy swampid-nav.js into this repo"
+
+
 # ---------------------------------------------------------------------------
 # Prose that belongs to the data must not be retyped in the page
 # ---------------------------------------------------------------------------
