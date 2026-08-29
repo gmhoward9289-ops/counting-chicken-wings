@@ -1,6 +1,6 @@
 [project]
 name = "counting-chicken-wings"
-version = "2.9.2"
+version = "2.9.3"
 description = "How many chickens does it take to make a dozen chicken wings?"
 requires-python = ">=3.11"
 dependencies = [
