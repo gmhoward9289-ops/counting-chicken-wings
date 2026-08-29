@@ -165,6 +165,23 @@ def test_chrome_loads_hub_swampid_once(doc):
     ), "do not copy swampid-nav.js into this repo"
 
 
+def test_footer_llc_links_hub_legal(doc):
+    """The LLC line reuses the hub legal pages. Do not invent local copies.
+
+    Exactly two links, those two URLs, those two labels. A terms or privacy
+    page here would be a Wings-owned legal stack, which this is not.
+    """
+    llc = re.search(r'<p class="llc">(.*?)</p>', doc, re.S)
+    assert llc, "footer LLC line is gone"
+    hrefs = re.findall(r'href="([^"]+)"', llc.group(1))
+    labels = re.findall(r'<a href="[^"]+">([^<]*)</a>', llc.group(1))
+    assert hrefs == [
+        "https://swamplink.com/legal/",
+        "https://swamplink.com/legal/dmca/",
+    ], "llc must link the hub legal and dmca pages only"
+    assert labels == ["legal", "dmca"], "llc labels must be legal and dmca"
+
+
 # ---------------------------------------------------------------------------
 # Prose that belongs to the data must not be retyped in the page
 # ---------------------------------------------------------------------------
